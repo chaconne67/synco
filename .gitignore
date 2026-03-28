@@ -29,5 +29,11 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Django
+db.sqlite3
+staticfiles/
+media/
+
 # Node (Tailwind build)
 node_modules/
+.gstack/
