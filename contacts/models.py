@@ -149,6 +149,11 @@ class Contact(BaseModel):
 
 
 class Task(BaseModel):
+    class Status(models.TextChoices):
+        PENDING = "pending", "할 일"
+        WAITING = "waiting", "대기"
+        DONE = "done", "완료"
+
     class Source(models.TextChoices):
         MANUAL = "manual", "직접 입력"
         AI_EXTRACTED = "ai_extracted", "AI 추출"
@@ -166,8 +171,13 @@ class Task(BaseModel):
         related_name="tasks",
     )
     title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
     due_date = models.DateField(null=True, blank=True)
-    is_completed = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
     source = models.CharField(
         max_length=15,
         choices=Source.choices,
@@ -181,7 +191,7 @@ class Task(BaseModel):
 
     class Meta:
         db_table = "tasks"
-        ordering = ["is_completed", "due_date", "-created_at"]
+        ordering = ["status", "due_date", "-created_at"]
 
     def __str__(self):
         return self.title
