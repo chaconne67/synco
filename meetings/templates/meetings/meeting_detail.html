@@ -1,0 +1,7 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}{{ meeting.title }} - synco{% endblock %}
+
+{% block content %}
+{% include "meetings/partials/meeting_detail_content.html" %}
+{% endblock %}

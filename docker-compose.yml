@@ -17,10 +17,13 @@ services:
       retries: 5
 
   web:
+    # 배포 전용. 개발 시에는 사용하지 않음 (호스트에서 Django 직접 실행).
+    # 사용 시: docker compose --profile deploy up web
+    profiles: ["deploy"]
     build: .
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8080:8000"  # 호스트 8080 → 컨테이너 8000. 개발 서버(8000)와 겹치지 않음.
     depends_on:
       db:
         condition: service_healthy

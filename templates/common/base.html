@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>{% block title %}synco{% endblock %}</title>
+
+  <!-- Pretendard Font -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#5B6ABF',
+              dark: '#4A59AE',
+              light: '#E8EAFF',
+            },
+          },
+        },
+      },
+    }
+  </script>
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+  <!-- PWA -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="theme-color" content="#5B6ABF">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100 font-sans text-gray-900" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+  <div class="max-w-md mx-auto lg:max-w-7xl lg:flex min-h-screen lg:bg-white lg:shadow-sm lg:rounded-none lg:my-0">
+
+    <!-- Desktop sidebar (lg+) -->
+    <nav class="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:border-gray-200 lg:bg-gray-50 lg:p-6">
+      {% include "common/nav_sidebar.html" %}
+    </nav>
+
+    <!-- Main content -->
+    <main id="main-content" class="flex-1 pb-20 lg:pb-0 bg-gray-50 lg:bg-white">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+  <!-- Mobile bottom nav (< lg) -->
+  {% include "common/nav_bottom.html" %}
+
+  <!-- Modal overlay container -->
+  <div id="modal-container" class="fixed inset-0 z-50 hidden"></div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 lg:bottom-8"></div>
+
+  <!-- Global loading button handler -->
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-spinner { display: inline-block; width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .5s linear infinite; vertical-align: middle; }
+  </style>
+  <script>
+  (function(){
+    var SPINNER = '<span class="btn-spinner"></span> 처리 중...';
+
+    function startLoading(btn) {
+      if (btn.dataset.loading) return;
+      btn.dataset.loading = '1';
+      btn.dataset.originalText = btn.innerHTML;
+      btn.innerHTML = SPINNER;
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.style.pointerEvents = 'none';
+    }
+
+    function stopLoading(btn) {
+      if (!btn.dataset.loading) return;
+      btn.innerHTML = btn.dataset.originalText;
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+      delete btn.dataset.loading;
+      delete btn.dataset.originalText;
+    }
+
+    // Regular form submissions
+    document.addEventListener('submit', function(e) {
+      var btn = e.target.querySelector('button[type="submit"], button:not([type])');
+      if (btn) startLoading(btn);
+    });
+
+    // HTMX requests
+    document.addEventListener('htmx:beforeRequest', function(e) {
+      var el = e.detail.elt;
+      if (el.tagName === 'BUTTON' || el.tagName === 'A') {
+        // Only for POST requests or elements with data-loading attribute
+        if (e.detail.requestConfig.verb === 'post' || el.hasAttribute('data-loading')) {
+          startLoading(el);
+        }
+      }
+    });
+
+    document.addEventListener('htmx:afterRequest', function(e) {
+      var el = e.detail.elt;
+      stopLoading(el);
+    });
+
+    document.addEventListener('htmx:responseError', function(e) {
+      var el = e.detail.elt;
+      stopLoading(el);
+    });
+
+    // Fallback: restore all loading buttons after page swap
+    document.addEventListener('htmx:afterSettle', function() {
+      document.querySelectorAll('[data-loading]').forEach(stopLoading);
+    });
+  })();
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

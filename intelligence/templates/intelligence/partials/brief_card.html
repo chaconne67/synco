@@ -1,0 +1,31 @@
+<!-- Brief card for embedding in contact detail / dashboard -->
+<div class="bg-white rounded-2xl border border-gray-100 p-4">
+  <div class="flex items-start">
+    <span class="text-lg mr-2">&#129302;</span>
+    <div class="flex-1 min-w-0">
+      {% if contact.company_name %}
+      <p class="text-sm font-semibold text-gray-900">{{ contact.company_name }}</p>
+      {% endif %}
+      {% if brief %}
+      <p class="text-sm text-gray-600 mt-1 line-clamp-2">{{ brief.company_analysis|truncatewords:20 }}</p>
+      <div class="mt-3">
+        <a href="{% url 'intelligence:brief_detail' contact.pk %}"
+           hx-get="{% url 'intelligence:brief_detail' contact.pk %}" hx-target="#main-content" hx-push-url="true"
+           class="text-xs font-semibold text-primary hover:text-primary-dark transition">
+          &#51088;&#49464;&#55176; &gt;
+        </a>
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-400 mt-1">&#48652;&#47532;&#54609;&#51060; &#50500;&#51649; &#50630;&#49845;&#45768;&#45796;</p>
+      <div class="mt-3">
+        <button hx-post="{% url 'intelligence:brief_generate' contact.pk %}"
+                hx-target="closest div.bg-white"
+                hx-swap="outerHTML"
+                class="text-xs font-semibold text-primary hover:text-primary-dark transition">
+          AI &#48652;&#47532;&#54609; &#49373;&#49457;&#54616;&#44592;
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

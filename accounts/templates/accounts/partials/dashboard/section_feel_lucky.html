@@ -1,0 +1,38 @@
+{% if fortunate_insights %}
+<section>
+  <div class="flex items-center gap-2 mb-3">
+    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+    </svg>
+    <h3 class="text-base font-semibold">Feel Lucky</h3>
+  </div>
+
+  <div class="space-y-2">
+    {% for insight in fortunate_insights %}
+    <div class="bg-amber-50/50 rounded-2xl border border-amber-200/50 shadow-sm p-4" id="insight-{{ insight.pk }}">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-lg flex-shrink-0">
+          {% if insight.signal_type == 'personal_event' %}🎉
+          {% elif insight.signal_type == 'promotion' %}🎊
+          {% elif insight.signal_type == 'business_opportunity' %}💡
+          {% else %}🍀{% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <a href="/contacts/{{ insight.contact.pk }}/"
+             hx-get="/contacts/{{ insight.contact.pk }}/" hx-target="#main-content" hx-push-url="true"
+             class="text-sm font-semibold hover:text-primary">{{ insight.contact.name }} ({{ insight.contact.company_name }})</a>
+          <p class="text-xs text-gray-600 mt-1 leading-relaxed">{{ insight.reason }}</p>
+        </div>
+        <button hx-post="/intelligence/insights/{{ insight.pk }}/dismiss/"
+                hx-target="#insight-{{ insight.pk }}" hx-swap="outerHTML"
+                class="text-gray-300 hover:text-gray-500 flex-shrink-0 p-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

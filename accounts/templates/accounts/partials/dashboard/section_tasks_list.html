@@ -1,0 +1,11 @@
+{% if pending_tasks %}
+<div class="space-y-2">
+  {% for task in pending_tasks %}
+  {% include "accounts/partials/dashboard/_task_card.html" %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 text-center">
+  <p class="text-sm text-gray-400">처리할 업무가 없습니다</p>
+</div>
+{% endif %}

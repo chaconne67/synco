@@ -1,0 +1,7 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}{{ contact.name }} - synco{% endblock %}
+
+{% block content %}
+{% include "contacts/partials/contact_detail_content.html" %}
+{% endblock %}

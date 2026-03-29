@@ -1,0 +1,9 @@
+<div class="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm shadow-lg"
+     x-data="{ show: true }"
+     x-show="show"
+     x-init="setTimeout(() => { $el.remove() }, 3000)"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+  {{ message }}
+</div>

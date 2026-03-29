@@ -1,0 +1,11 @@
+<div hx-get="/intelligence/analysis/status/{{ job.pk }}/"
+     hx-trigger="every 3s" hx-swap="outerHTML">
+  <div class="flex items-center gap-2 text-sm text-gray-500">
+    <span class="btn-spinner"></span>
+    {{ job.processed_contacts }}/{{ job.total_contacts }} 분석 중...
+  </div>
+  <div class="mt-1 bg-gray-100 rounded-full h-1.5">
+    {% widthratio job.processed_contacts job.total_contacts 100 as pct %}
+    <div class="bg-primary h-1.5 rounded-full transition-all" style="width: {% widthratio job.processed_contacts job.total_contacts 100 %}%"></div>
+  </div>
+</div>

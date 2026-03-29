@@ -1,0 +1,111 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}시트 선택 - synco{% endblock %}
+
+{% block content %}
+<div class="px-4 pt-6 pb-8">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-5">
+    <a href="{% url 'contacts:import' %}"
+       hx-get="{% url 'contacts:import' %}" hx-target="#main-content" hx-push-url="true"
+       class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-lg font-bold">시트 분석 결과</h1>
+  </div>
+
+  <!-- AI Analysis Result -->
+  <div class="bg-primary-light rounded-2xl p-4 mb-5">
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-primary">AI가 {{ total_sheets }}개 시트를 분석했습니다</h3>
+        <p class="text-xs text-primary/70 mt-0.5">{{ filename }} · 연락처 시트 {{ contact_sheets|length }}개 ({{ total_contact_rows }}건)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet List -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
+    <div class="px-4 py-3 border-b border-gray-100">
+      <h3 class="text-sm font-semibold">시트 목록</h3>
+    </div>
+    <div class="divide-y divide-gray-50">
+      {% for sheet in sheet_results %}
+      <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition" data-sheet-row>
+        <input type="checkbox" name="sheets" value="{{ sheet.name }}"
+               {% if sheet.is_contact %}checked{% endif %}
+               class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-800">{{ sheet.name }}</span>
+            {% if sheet.is_contact %}
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-50 text-green-600">연락처</span>
+            {% else %}
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-400">제외</span>
+            {% endif %}
+          </div>
+          <p class="text-xs text-gray-400 mt-0.5">{{ sheet.reason }}</p>
+          {% if sheet.headers %}
+          <p class="text-[11px] text-gray-300 mt-0.5 truncate">{{ sheet.headers|join:", " }}</p>
+          {% endif %}
+        </div>
+        <span class="text-xs text-gray-400 flex-shrink-0">{{ sheet.rows }}건</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="space-y-3">
+    {% if contact_sheets %}
+    <!-- Option 1: Merge recommended sheets -->
+    <form method="post" action="{% url 'contacts:import_sheets' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="merge">
+      <button type="submit"
+              class="w-full bg-primary text-white font-semibold py-3 rounded-xl text-sm hover:bg-primary-dark transition">
+        연락처 시트 합쳐서 처리 ({{ total_contact_rows }}건)
+      </button>
+    </form>
+    {% endif %}
+
+    <!-- Option 2: Manual sheet selection -->
+    <form method="post" action="{% url 'contacts:import_sheets' %}" id="select-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="select">
+      <div id="select-sheets-hidden"></div>
+      <button type="submit"
+              class="w-full border border-gray-200 text-gray-700 font-semibold py-3 rounded-xl text-sm hover:bg-gray-50 transition">
+        선택한 시트만 처리
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var selectForm = document.getElementById('select-form');
+  var hiddenDiv = document.getElementById('select-sheets-hidden');
+
+  selectForm.addEventListener('submit', function() {
+    hiddenDiv.innerHTML = '';
+    document.querySelectorAll('[data-sheet-row] input[type="checkbox"]:checked').forEach(function(cb) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'sheets';
+      input.value = cb.value;
+      hiddenDiv.appendChild(input);
+    });
+  });
+})();
+</script>
+{% endblock %}

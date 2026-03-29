@@ -1,11 +1,10 @@
 {% if contacts %}
-<div class="space-y-3">
-  {% for contact in contacts %}
+{% for contact in contacts %}
   <a href="{% url 'contacts:detail' contact.pk %}"
      hx-get="{% url 'contacts:detail' contact.pk %}"
      hx-target="#main-content"
      hx-push-url="true"
-     class="block bg-white rounded-2xl border border-gray-200 shadow-sm p-4 active:bg-gray-50 transition">
+     class="block bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-3 active:bg-gray-50 transition">
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-2.5">
         <span class="text-base flex-shrink-0">{{ contact.tier_emoji }}</span>
@@ -41,8 +40,7 @@
     {% endif %}
     {% endwith %}
   </a>
-  {% endfor %}
-</div>
+{% endfor %}
 
 {% if has_more %}
 <div hx-get="{% url 'contacts:list' %}?page={{ page|add:1 }}{% if q %}&q={{ q }}{% endif %}{% if industry %}&industry={{ industry }}{% endif %}"

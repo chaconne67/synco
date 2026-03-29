@@ -1,0 +1,3 @@
+- [Modular functions](feedback_modular_functions.md) — micro single-purpose functions, never bundle capabilities
+- [Auto-orchestration](feedback_auto_orchestration.md) — system auto-runs analysis, user sees only finished results, no manual trigger buttons
+- [User journey continuity](feedback_user_journey_continuity.md) — action→feedback→navigate, all downstream screens must reflect results immediately

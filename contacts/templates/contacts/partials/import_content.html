@@ -1,0 +1,58 @@
+<div class="px-4 pt-6">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-5">
+    <a href="{% url 'contacts:list' %}"
+       hx-get="{% url 'contacts:list' %}"
+       hx-target="#main-content"
+       hx-push-url="true"
+       class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-lg font-bold">엑셀 임포트</h1>
+  </div>
+
+  <!-- Upload form -->
+  <form method="post" action="{% url 'contacts:import' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- File upload area -->
+    <label class="block mb-6 cursor-pointer">
+      <div id="upload-area"
+           class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-primary/40 transition">
+        <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+        </div>
+        <p class="text-sm font-medium text-gray-700 mb-1">파일을 선택하세요</p>
+        <p class="text-xs text-gray-400">CSV, XLSX 파일을 지원합니다</p>
+        <p id="file-name" class="text-sm text-primary font-medium mt-3 hidden"></p>
+      </div>
+      <input type="file"
+             name="file"
+             accept=".csv,.xlsx,.xls"
+             required
+             class="hidden"
+             onchange="document.getElementById('file-name').textContent=this.files[0].name; document.getElementById('file-name').classList.remove('hidden');">
+    </label>
+
+    <!-- Instructions -->
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2">필수 컬럼</h3>
+      <ul class="text-xs text-gray-500 space-y-1">
+        <li>- <span class="font-medium text-gray-600">이름</span> (필수)</li>
+        <li>- 전화번호, 회사명, 업종, 지역, 매출규모</li>
+      </ul>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit"
+            class="w-full bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm">
+      임포트 시작
+    </button>
+  </form>
+
+</div>

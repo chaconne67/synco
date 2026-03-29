@@ -21,7 +21,19 @@ urlpatterns = [
         views.interaction_create,
         name="interaction_create",
     ),
+    path(
+        "<uuid:contact_pk>/interactions/<uuid:pk>/edit/",
+        views.interaction_edit,
+        name="interaction_edit",
+    ),
+    path(
+        "<uuid:contact_pk>/interactions/<uuid:pk>/delete/",
+        views.interaction_delete,
+        name="interaction_delete",
+    ),
     # Tasks
     path("tasks/new/", views.task_create, name="task_create"),
     path("tasks/<uuid:pk>/complete/", views.task_complete, name="task_complete"),
+    path("tasks/<uuid:pk>/edit/", views.task_edit, name="task_edit"),
+    path("tasks/<uuid:pk>/delete/", views.task_delete, name="task_delete"),
 ]

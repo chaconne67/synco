@@ -1,0 +1,127 @@
+<div class="px-4 pt-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex items-center gap-3">
+      <a href="{% if editing %}{% url 'contacts:detail' contact.pk %}{% else %}{% url 'contacts:list' %}{% endif %}"
+         hx-get="{% if editing %}{% url 'contacts:detail' contact.pk %}{% else %}{% url 'contacts:list' %}{% endif %}"
+         hx-target="#main-content"
+         hx-push-url="true"
+         class="text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1 class="text-lg font-bold">{% if editing %}연락처 편집{% else %}연락처 추가{% endif %}</h1>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form method="post"
+        action="{% if editing %}{% url 'contacts:edit' contact.pk %}{% else %}{% url 'contacts:create' %}{% endif %}"
+        hx-post="{% if editing %}{% url 'contacts:edit' contact.pk %}{% else %}{% url 'contacts:create' %}{% endif %}"
+        class="space-y-4">
+    {% csrf_token %}
+
+    <!-- 이름 (required) -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">이름 <span class="text-red-500">*</span></label>
+      <input type="text" name="name" required
+             value="{% if editing %}{{ contact.name }}{% endif %}"
+             placeholder="이름을 입력하세요"
+             class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20">
+    </div>
+
+    <!-- 전화번호 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">전화번호</label>
+      <input type="tel" name="phone"
+             value="{% if editing %}{{ contact.phone }}{% endif %}"
+             placeholder="010-0000-0000"
+             class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20">
+    </div>
+
+    <!-- 회사명 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">회사명</label>
+      <input type="text" name="company_name"
+             value="{% if editing %}{{ contact.company_name }}{% endif %}"
+             placeholder="회사명을 입력하세요"
+             class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20">
+    </div>
+
+    <!-- 업종 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">업종</label>
+      <select name="industry"
+              class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white">
+        <option value="">선택하세요</option>
+        <option value="제조업" {% if editing and contact.industry == '제조업' %}selected{% endif %}>제조업</option>
+        <option value="유통/물류" {% if editing and contact.industry == '유통/물류' %}selected{% endif %}>유통/물류</option>
+        <option value="IT/소프트웨어" {% if editing and contact.industry == 'IT/소프트웨어' %}selected{% endif %}>IT/소프트웨어</option>
+        <option value="건설" {% if editing and contact.industry == '건설' %}selected{% endif %}>건설</option>
+        <option value="서비스업" {% if editing and contact.industry == '서비스업' %}selected{% endif %}>서비스업</option>
+        <option value="금융" {% if editing and contact.industry == '금융' %}selected{% endif %}>금융</option>
+        <option value="기타" {% if editing and contact.industry == '기타' %}selected{% endif %}>기타</option>
+      </select>
+    </div>
+
+    <!-- 지역 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">지역</label>
+      <select name="region"
+              class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white">
+        <option value="">선택하세요</option>
+        <option value="서울" {% if editing and contact.region == '서울' %}selected{% endif %}>서울</option>
+        <option value="경기" {% if editing and contact.region == '경기' %}selected{% endif %}>경기</option>
+        <option value="인천" {% if editing and contact.region == '인천' %}selected{% endif %}>인천</option>
+        <option value="부산" {% if editing and contact.region == '부산' %}selected{% endif %}>부산</option>
+        <option value="대구" {% if editing and contact.region == '대구' %}selected{% endif %}>대구</option>
+        <option value="대전" {% if editing and contact.region == '대전' %}selected{% endif %}>대전</option>
+        <option value="광주" {% if editing and contact.region == '광주' %}selected{% endif %}>광주</option>
+        <option value="기타" {% if editing and contact.region == '기타' %}selected{% endif %}>기타</option>
+      </select>
+    </div>
+
+    <!-- 매출규모 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">매출규모</label>
+      <select name="revenue_range"
+              class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white">
+        <option value="">선택하세요</option>
+        <option value="10억 미만" {% if editing and contact.revenue_range == '10억 미만' %}selected{% endif %}>10억 미만</option>
+        <option value="10-50억" {% if editing and contact.revenue_range == '10-50억' %}selected{% endif %}>10-50억</option>
+        <option value="50-100억" {% if editing and contact.revenue_range == '50-100억' %}selected{% endif %}>50-100억</option>
+        <option value="100-500억" {% if editing and contact.revenue_range == '100-500억' %}selected{% endif %}>100-500억</option>
+        <option value="500억 이상" {% if editing and contact.revenue_range == '500억 이상' %}selected{% endif %}>500억 이상</option>
+      </select>
+    </div>
+
+    <!-- 직원수 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">직원수</label>
+      <input type="number" name="employee_count"
+             value="{% if editing and contact.employee_count %}{{ contact.employee_count }}{% endif %}"
+             placeholder="직원수를 입력하세요"
+             class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20">
+    </div>
+
+    <!-- 메모 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">메모</label>
+      <textarea name="memo"
+                rows="3"
+                placeholder="메모를 입력하세요"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none">{% if editing %}{{ contact.memo }}{% endif %}</textarea>
+    </div>
+
+    <!-- Submit -->
+    <div class="pt-2 pb-6">
+      <button type="submit"
+              class="w-full bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm">
+        {% if editing %}저장하기{% else %}등록하기{% endif %}
+      </button>
+    </div>
+  </form>
+
+</div>

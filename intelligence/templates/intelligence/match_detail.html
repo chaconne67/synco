@@ -1,0 +1,7 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}매칭 상세 - synco{% endblock %}
+
+{% block content %}
+{% include "intelligence/partials/match_detail_content.html" %}
+{% endblock %}

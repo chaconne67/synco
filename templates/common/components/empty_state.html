@@ -1,0 +1,13 @@
+<div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+  {% if icon %}
+  <div class="text-gray-300 mb-4">{{ icon }}</div>
+  {% endif %}
+  <p class="text-gray-500 text-sm mb-4">{{ message }}</p>
+  {% if cta_url and cta_text %}
+  <a href="{{ cta_url }}"
+     hx-get="{{ cta_url }}" hx-target="#main-content" hx-push-url="true"
+     class="bg-primary text-white font-semibold py-2.5 px-5 rounded-xl text-sm hover:bg-primary-dark transition">
+    {{ cta_text }}
+  </a>
+  {% endif %}
+</div>

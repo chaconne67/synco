@@ -1,0 +1,17 @@
+<form hx-post="{% url 'contacts:task_edit' task.pk %}" hx-target="#task-list" hx-swap="innerHTML"
+      class="bg-white rounded-2xl border border-primary/30 shadow-sm p-4 mb-2">
+  {% csrf_token %}
+  <div class="flex items-center gap-2">
+    <input type="text" name="title" value="{{ task.title }}"
+           class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary" required autofocus>
+    <input type="date" name="due_date" value="{{ task.due_date|date:'Y-m-d' }}"
+           class="text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+    <button type="submit" class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg">저장</button>
+    <button type="button" onclick="this.closest('form').remove()"
+            class="text-gray-400 hover:text-gray-600 p-1">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+</form>

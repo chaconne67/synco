@@ -876,6 +876,53 @@ def interaction_create(request, contact_pk):
 
 
 @login_required
+def interaction_edit(request, contact_pk, pk):
+    contact = get_object_or_404(Contact, pk=contact_pk, fc=request.user)
+    interaction = get_object_or_404(Interaction, pk=pk, contact=contact, fc=request.user)
+
+    if request.method == "POST":
+        interaction.summary = request.POST["summary"]
+        interaction.type = request.POST.get("type", interaction.type)
+        interaction.sentiment = request.POST.get("sentiment", interaction.sentiment)
+        interaction.save(update_fields=["summary", "type", "sentiment"])
+
+        if request.htmx:
+            interactions = contact.interactions.all()[:INTERACTION_PAGE_SIZE]
+            return render(request, "contacts/partials/interaction_timeline.html", {
+                "contact": contact,
+                "interactions": interactions,
+            })
+        return redirect("contacts:detail", pk=contact.pk)
+
+    return render(request, "contacts/partials/interaction_edit_form.html", {
+        "contact": contact,
+        "interaction": interaction,
+    })
+
+
+@login_required
+def interaction_delete(request, contact_pk, pk):
+    contact = get_object_or_404(Contact, pk=contact_pk, fc=request.user)
+    interaction = get_object_or_404(Interaction, pk=pk, contact=contact, fc=request.user)
+
+    if request.method == "POST":
+        interaction.delete()
+
+        from intelligence.services import calculate_relationship_score
+        calculate_relationship_score(contact)
+
+        if request.htmx:
+            interactions = contact.interactions.all()[:INTERACTION_PAGE_SIZE]
+            return render(request, "contacts/partials/interaction_timeline.html", {
+                "contact": contact,
+                "interactions": interactions,
+            })
+        return redirect("contacts:detail", pk=contact.pk)
+
+    return HttpResponse(status=405)
+
+
+@login_required
 def contact_ai_section(request, pk):
     """HTMX lazy-load endpoint: AI analysis for contact detail page.
 
@@ -929,3 +976,31 @@ def task_complete(request, pk):
     task.is_completed = True
     task.save(update_fields=["is_completed"])
     return HttpResponse("")  # Remove the element via hx-swap="outerHTML"
+
+
+@login_required
+def task_edit(request, pk):
+    task = get_object_or_404(Task, pk=pk, fc=request.user)
+
+    if request.method == "POST":
+        task.title = request.POST["title"]
+        task.due_date = request.POST.get("due_date") or None
+        task.save(update_fields=["title", "due_date"])
+
+        pending_tasks = Task.objects.filter(fc=request.user, is_completed=False).select_related("contact")[:10]
+        return render(request, "contacts/partials/task_list_items.html", {"pending_tasks": pending_tasks})
+
+    return render(request, "contacts/partials/task_edit_form.html", {"task": task})
+
+
+@login_required
+def task_delete(request, pk):
+    task = get_object_or_404(Task, pk=pk, fc=request.user)
+
+    if request.method == "POST":
+        task.delete()
+        if request.htmx:
+            return HttpResponse("")  # Remove the element
+        return redirect("home")
+
+    return HttpResponse(status=405)

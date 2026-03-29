@@ -1,0 +1,88 @@
+<!-- Bottom sheet style interaction form -->
+<div class="bg-white rounded-2xl border border-gray-100 p-4 mb-4 animate-slide-up">
+  <h3 class="text-sm font-bold text-gray-900 mb-4">메모 남기기</h3>
+
+  <form hx-post="{% url 'contacts:interaction_create' contact.pk %}"
+        hx-target="#interaction-timeline"
+        hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.successful) this.closest('#interaction-form-container').innerHTML=''">
+
+    {% csrf_token %}
+
+    {% if meeting_id %}
+    <input type="hidden" name="meeting_id" value="{{ meeting_id }}">
+    {% endif %}
+
+    <!-- Type chips -->
+    <div class="mb-4">
+      <p class="text-xs text-gray-500 mb-2">유형</p>
+      <div class="flex gap-2 flex-wrap">
+        <label class="cursor-pointer">
+          <input type="radio" name="type" value="call" class="hidden peer">
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-primary peer-checked:text-white transition">&#128222; 통화</span>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="type" value="meeting" class="hidden peer">
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-primary peer-checked:text-white transition">&#129309; 미팅</span>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="type" value="message" class="hidden peer">
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-primary peer-checked:text-white transition">&#128172; 메시지</span>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="type" value="memo" class="hidden peer" checked>
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-primary peer-checked:text-white transition">&#128203; 메모</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Summary textarea -->
+    <div class="mb-4">
+      <textarea name="summary"
+                rows="3"
+                required
+                placeholder="메모를 입력하세요"
+                class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"></textarea>
+    </div>
+
+    <!-- Sentiment chips -->
+    <div class="mb-4">
+      <p class="text-xs text-gray-500 mb-2">분위기 (선택)</p>
+      <div class="flex gap-2">
+        <label class="cursor-pointer">
+          <input type="radio" name="sentiment" value="positive" class="hidden peer">
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-green-50 peer-checked:text-green-600 transition">&#128522; 긍정</span>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="sentiment" value="neutral" class="hidden peer">
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-amber-50 peer-checked:text-amber-600 transition">&#128528; 보통</span>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="sentiment" value="negative" class="hidden peer">
+          <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 peer-checked:bg-red-50 peer-checked:text-red-600 transition">&#128542; 부정</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex gap-2">
+      <button type="submit"
+              class="flex-1 bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm">
+        저장하기
+      </button>
+      <button type="button"
+              class="border border-gray-200 text-gray-700 font-semibold py-3 px-5 rounded-xl text-sm"
+              onclick="this.closest('#interaction-form-container').innerHTML=''">
+        취소
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.2s ease-out; }
+</style>

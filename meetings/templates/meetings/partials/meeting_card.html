@@ -1,0 +1,21 @@
+<!-- Single meeting card component -->
+<a href="{% url 'meetings:detail' meeting.pk %}"
+   hx-get="{% url 'meetings:detail' meeting.pk %}" hx-target="#main-content" hx-push-url="true"
+   class="block bg-white rounded-2xl border border-gray-100 p-4 hover:border-primary/30 transition">
+  <div class="flex items-start justify-between">
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-gray-900 truncate">{{ meeting.title }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ meeting.contact.name }}{% if meeting.contact.company_name %} &middot; {{ meeting.contact.company_name }}{% endif %}</p>
+    </div>
+    <div class="text-right ml-3 shrink-0">
+      <p class="text-xs font-medium text-primary">{{ meeting.scheduled_at|time:"H:i" }}</p>
+      <p class="text-[10px] text-gray-400">~ {{ meeting.scheduled_end_at|time:"H:i" }}</p>
+    </div>
+  </div>
+  {% if meeting.location %}
+  <div class="flex items-center mt-2 text-xs text-gray-400">
+    <span class="mr-1">&#128205;</span>
+    <span class="truncate">{{ meeting.location }}</span>
+  </div>
+  {% endif %}
+</a>

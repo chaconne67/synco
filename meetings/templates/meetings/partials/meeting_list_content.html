@@ -1,0 +1,48 @@
+{% load tz %}
+<!-- Header -->
+<div class="flex items-center justify-between px-4 pt-6 pb-4">
+  <h1 class="text-xl font-bold text-gray-900">&#51204;&#52404; &#51068;&#51221;</h1>
+  <a href="{% url 'meetings:create' %}"
+     hx-get="{% url 'meetings:create' %}" hx-target="#main-content" hx-push-url="true"
+     class="w-10 h-10 flex items-center justify-center bg-primary text-white rounded-xl text-lg font-bold hover:bg-primary-dark transition">
+    +
+  </a>
+</div>
+
+{% if meetings %}
+<div class="px-4 space-y-6 pb-6">
+  {% regroup meetings by scheduled_at.date as date_groups %}
+  {% for group in date_groups %}
+  <div>
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+      {{ group.grouper|date:"n월 j일 (D)" }}
+    </p>
+    <div class="space-y-2">
+      {% for meeting in group.list %}
+        {% include "meetings/partials/meeting_card.html" with meeting=meeting %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if has_more %}
+  <div hx-get="{% url 'meetings:list' %}?page={{ page|add:1 }}"
+       hx-trigger="revealed"
+       hx-target="this"
+       hx-swap="outerHTML"
+       class="py-4 text-center">
+    <span class="btn-spinner"></span>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+  <div class="text-4xl text-gray-300 mb-4">&#128197;</div>
+  <p class="text-gray-500 text-sm mb-4">&#50696;&#51221;&#46108; &#51068;&#51221;&#51060; &#50630;&#49845;&#45768;&#45796;</p>
+  <a href="{% url 'meetings:create' %}"
+     hx-get="{% url 'meetings:create' %}" hx-target="#main-content" hx-push-url="true"
+     class="bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm hover:bg-primary-dark transition">
+    &#48120;&#54021; &#46321;&#47197;&#54616;&#44592;
+  </a>
+</div>
+{% endif %}
