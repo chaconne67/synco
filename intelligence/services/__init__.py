@@ -10,7 +10,11 @@ from .embedding import build_contact_text, embed_contact, embed_contacts_batch
 from .sentiment import classify_sentiment, classify_sentiments_batch
 from .task_detect import detect_task, detect_tasks_batch
 from .similarity import find_similar_contacts, find_contacts_like
-from .orchestration import ensure_embedding, ensure_sentiments_and_tasks, ensure_deep_analysis
+from .orchestration import (
+    ensure_embedding,
+    ensure_sentiments_and_tasks,
+    ensure_deep_analysis,
+)
 from .deep_analysis import generate_summary, generate_insights
 
 __all__ = [

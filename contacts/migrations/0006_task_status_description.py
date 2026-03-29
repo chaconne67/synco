@@ -24,23 +24,22 @@ def migrate_status_to_is_completed(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('contacts', '0005_migrate_fk_to_m2m'),
+        ("contacts", "0005_migrate_fk_to_m2m"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='task',
-            name='description',
-            field=models.TextField(blank=True, default=''),
+            model_name="task",
+            name="description",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='task',
-            name='status',
+            model_name="task",
+            name="status",
             field=models.CharField(
-                choices=[('pending', '할 일'), ('waiting', '대기'), ('done', '완료')],
-                default='pending',
+                choices=[("pending", "할 일"), ("waiting", "대기"), ("done", "완료")],
+                default="pending",
                 max_length=10,
             ),
         ),
@@ -49,11 +48,11 @@ class Migration(migrations.Migration):
             migrate_status_to_is_completed,
         ),
         migrations.RemoveField(
-            model_name='task',
-            name='is_completed',
+            model_name="task",
+            name="is_completed",
         ),
         migrations.AlterModelOptions(
-            name='task',
-            options={'ordering': ['status', 'due_date', '-created_at']},
+            name="task",
+            options={"ordering": ["status", "due_date", "-created_at"]},
         ),
     ]

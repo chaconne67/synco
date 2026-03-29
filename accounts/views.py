@@ -31,7 +31,9 @@ def _build_task_context(user):
     today = timezone.localdate()
     week_end = today + timedelta(days=(6 - today.weekday()))  # Sunday
 
-    pending = Task.objects.filter(fc=user, status=Task.Status.PENDING).select_related("contact")
+    pending = Task.objects.filter(fc=user, status=Task.Status.PENDING).select_related(
+        "contact"
+    )
 
     overdue_tasks = pending.filter(due_date__lt=today)
     today_tasks = pending.filter(due_date=today)
@@ -74,19 +76,22 @@ def _fc_dashboard(request):
 
     # Section 3: AI 브리핑 (latest)
     latest_brief = (
-        Brief.objects.filter(fc=request.user)
-        .select_related("contact")
-        .first()
+        Brief.objects.filter(fc=request.user).select_related("contact").first()
     )
 
     # Section 4: Feel Lucky
     from django.db.models import Q
-    fortunate_insights = FortunateInsight.objects.filter(
-        fc=request.user,
-        is_dismissed=False,
-    ).filter(
-        Q(expires_at__isnull=True) | Q(expires_at__gte=now),
-    ).select_related("contact")[:5]
+
+    fortunate_insights = (
+        FortunateInsight.objects.filter(
+            fc=request.user,
+            is_dismissed=False,
+        )
+        .filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gte=now),
+        )
+        .select_related("contact")[:5]
+    )
 
     # Section 5: 분석
     contacts = Contact.objects.filter(fc=request.user)
@@ -97,7 +102,9 @@ def _fc_dashboard(request):
         .values("relationship_tier")
         .annotate(count=Count("id"))
     )
-    tier_summary = {item["relationship_tier"]: item["count"] for item in tier_counts_raw}
+    tier_summary = {
+        item["relationship_tier"]: item["count"] for item in tier_counts_raw
+    }
     unscored = total_contacts - sum(tier_summary.values())
     if unscored > 0:
         tier_summary["gray"] = tier_summary.get("gray", 0) + unscored
@@ -113,30 +120,39 @@ def _fc_dashboard(request):
 
     # Analysis progress (embedding-based)
     from intelligence.models import ContactEmbedding
-    embedding_count = ContactEmbedding.objects.filter(contact__fc=request.user).count()
-    analysis_in_progress = total_contacts > 0 and embedding_count < total_contacts * 0.95
-    analysis_progress = round(embedding_count / total_contacts * 100) if total_contacts else 0
 
-    return render(request, "accounts/dashboard_fc.html", {
-        # Section 1
-        **task_ctx,
-        # Section 2
-        "todays_meetings": todays_meetings,
-        "show_week_meetings": show_week_meetings,
-        "week_meetings": week_meetings,
-        # Section 3
-        "latest_brief": latest_brief,
-        # Section 4
-        "fortunate_insights": fortunate_insights,
-        # Section 5
-        "tier_summary": tier_summary,
-        "management_rate": management_rate,
-        "total_contacts": total_contacts,
-        "attention_contacts": attention_contacts,
-        "latest_job": latest_job,
-        "analysis_in_progress": analysis_in_progress,
-        "analysis_progress": analysis_progress,
-    })
+    embedding_count = ContactEmbedding.objects.filter(contact__fc=request.user).count()
+    analysis_in_progress = (
+        total_contacts > 0 and embedding_count < total_contacts * 0.95
+    )
+    analysis_progress = (
+        round(embedding_count / total_contacts * 100) if total_contacts else 0
+    )
+
+    return render(
+        request,
+        "accounts/dashboard_fc.html",
+        {
+            # Section 1
+            **task_ctx,
+            # Section 2
+            "todays_meetings": todays_meetings,
+            "show_week_meetings": show_week_meetings,
+            "week_meetings": week_meetings,
+            # Section 3
+            "latest_brief": latest_brief,
+            # Section 4
+            "fortunate_insights": fortunate_insights,
+            # Section 5
+            "tier_summary": tier_summary,
+            "management_rate": management_rate,
+            "total_contacts": total_contacts,
+            "attention_contacts": attention_contacts,
+            "latest_job": latest_job,
+            "analysis_in_progress": analysis_in_progress,
+            "analysis_progress": analysis_progress,
+        },
+    )
 
 
 @login_required

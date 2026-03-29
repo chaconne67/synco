@@ -33,10 +33,9 @@ def noop(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('contacts', '0003_contact_business_urgency_score_and_more'),
-        ('intelligence', '0002_analysisjob_fortunateinsight_relationshipanalysis'),
+        ("contacts", "0003_contact_business_urgency_score_and_more"),
+        ("intelligence", "0002_analysisjob_fortunateinsight_relationshipanalysis"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -47,42 +46,75 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(deduplicate_fortunate_insights, noop),
         migrations.AlterUniqueTogether(
-            name='fortunateinsight',
-            unique_together={('fc', 'contact')},
+            name="fortunateinsight",
+            unique_together={("fc", "contact")},
         ),
         migrations.CreateModel(
-            name='ContactEmbedding',
+            name="ContactEmbedding",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('vector', pgvector.django.vector.VectorField(dimensions=3072)),
-                ('source_text', models.TextField()),
-                ('source_hash', models.CharField(max_length=64)),
-                ('model_version', models.CharField(default='gemini-embedding-001', max_length=50)),
-                ('contact', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='embedding', to='contacts.contact')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("vector", pgvector.django.vector.VectorField(dimensions=3072)),
+                ("source_text", models.TextField()),
+                ("source_hash", models.CharField(max_length=64)),
+                (
+                    "model_version",
+                    models.CharField(default="gemini-embedding-001", max_length=50),
+                ),
+                (
+                    "contact",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="embedding",
+                        to="contacts.contact",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'contact_embeddings',
+                "db_table": "contact_embeddings",
             },
         ),
         migrations.CreateModel(
-            name='ImportBatch',
+            name="ImportBatch",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('contact_count', models.PositiveIntegerField()),
-                ('interaction_count', models.PositiveIntegerField()),
-                ('embedding_done', models.BooleanField(default=False)),
-                ('sentiment_done', models.BooleanField(default=False)),
-                ('task_done', models.BooleanField(default=False)),
-                ('error_message', models.TextField(blank=True, default='')),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='import_batches', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("contact_count", models.PositiveIntegerField()),
+                ("interaction_count", models.PositiveIntegerField()),
+                ("embedding_done", models.BooleanField(default=False)),
+                ("sentiment_done", models.BooleanField(default=False)),
+                ("task_done", models.BooleanField(default=False)),
+                ("error_message", models.TextField(blank=True, default="")),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="import_batches",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'import_batches',
-                'ordering': ['-created_at'],
+                "db_table": "import_batches",
+                "ordering": ["-created_at"],
             },
         ),
     ]

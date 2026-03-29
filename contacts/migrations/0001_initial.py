@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -16,43 +15,110 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Contact',
+            name="Contact",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=50)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('company_name', models.CharField(blank=True, max_length=100)),
-                ('industry', models.CharField(blank=True, max_length=100)),
-                ('region', models.CharField(blank=True, max_length=50)),
-                ('revenue_range', models.CharField(blank=True, max_length=50)),
-                ('employee_count', models.IntegerField(blank=True, null=True)),
-                ('memo', models.TextField(blank=True)),
-                ('last_interaction_at', models.DateTimeField(blank=True, null=True)),
-                ('ceo', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='contact_profiles', to=settings.AUTH_USER_MODEL)),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contacts', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=50)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("company_name", models.CharField(blank=True, max_length=100)),
+                ("industry", models.CharField(blank=True, max_length=100)),
+                ("region", models.CharField(blank=True, max_length=50)),
+                ("revenue_range", models.CharField(blank=True, max_length=50)),
+                ("employee_count", models.IntegerField(blank=True, null=True)),
+                ("memo", models.TextField(blank=True)),
+                ("last_interaction_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "ceo",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="contact_profiles",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="contacts",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'contacts',
-                'ordering': ['-last_interaction_at', '-created_at'],
+                "db_table": "contacts",
+                "ordering": ["-last_interaction_at", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Interaction',
+            name="Interaction",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('type', models.CharField(choices=[('call', '통화'), ('meeting', '미팅'), ('message', '메시지'), ('memo', '메모')], max_length=10)),
-                ('summary', models.TextField()),
-                ('sentiment', models.CharField(blank=True, choices=[('positive', '긍정'), ('neutral', '보통'), ('negative', '부정')], max_length=10)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='interactions', to='contacts.contact')),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("call", "통화"),
+                            ("meeting", "미팅"),
+                            ("message", "메시지"),
+                            ("memo", "메모"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                ("summary", models.TextField()),
+                (
+                    "sentiment",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("positive", "긍정"),
+                            ("neutral", "보통"),
+                            ("negative", "부정"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="interactions",
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'interactions',
-                'ordering': ['-created_at'],
+                "db_table": "interactions",
+                "ordering": ["-created_at"],
             },
         ),
     ]

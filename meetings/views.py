@@ -20,14 +20,24 @@ def meeting_list(request):
     page = int(request.GET.get("page", 1))
     offset = (page - 1) * MEETING_PAGE_SIZE
     page_meetings = meetings[offset : offset + MEETING_PAGE_SIZE]
-    has_more = meetings[offset + MEETING_PAGE_SIZE : offset + MEETING_PAGE_SIZE + 1].exists()
+    has_more = meetings[
+        offset + MEETING_PAGE_SIZE : offset + MEETING_PAGE_SIZE + 1
+    ].exists()
 
-    template = "meetings/partials/meeting_list_content.html" if request.htmx else "meetings/meeting_list.html"
-    return render(request, template, {
-        "meetings": page_meetings,
-        "page": page,
-        "has_more": has_more,
-    })
+    template = (
+        "meetings/partials/meeting_list_content.html"
+        if request.htmx
+        else "meetings/meeting_list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "meetings": page_meetings,
+            "page": page,
+            "has_more": has_more,
+        },
+    )
 
 
 @login_required
@@ -55,26 +65,45 @@ def meeting_create(request):
     contact_id = request.GET.get("contact")
     selected_contact = None
     if contact_id:
-        selected_contact = Contact.objects.filter(pk=contact_id, fc=request.user).first()
+        selected_contact = Contact.objects.filter(
+            pk=contact_id, fc=request.user
+        ).first()
 
-    template = "meetings/partials/meeting_form_content.html" if request.htmx else "meetings/meeting_form.html"
-    return render(request, template, {
-        "contacts": contacts,
-        "selected_contact": selected_contact,
-    })
+    template = (
+        "meetings/partials/meeting_form_content.html"
+        if request.htmx
+        else "meetings/meeting_form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "contacts": contacts,
+            "selected_contact": selected_contact,
+        },
+    )
 
 
 @login_required
 def meeting_detail(request, pk):
     meeting = get_object_or_404(Meeting, pk=pk, fc=request.user)
     from contacts.models import Interaction
+
     meeting_memo = Interaction.objects.filter(meeting=meeting).first()
 
-    template = "meetings/partials/meeting_detail_content.html" if request.htmx else "meetings/meeting_detail.html"
-    return render(request, template, {
-        "meeting": meeting,
-        "meeting_memo": meeting_memo,
-    })
+    template = (
+        "meetings/partials/meeting_detail_content.html"
+        if request.htmx
+        else "meetings/meeting_detail.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "meeting": meeting,
+            "meeting_memo": meeting_memo,
+        },
+    )
 
 
 @login_required
@@ -96,13 +125,21 @@ def meeting_edit(request, pk):
         return redirect("meetings:detail", pk=meeting.pk)
 
     contacts = Contact.objects.filter(fc=request.user)
-    template = "meetings/partials/meeting_form_content.html" if request.htmx else "meetings/meeting_form.html"
-    return render(request, template, {
-        "meeting": meeting,
-        "contacts": contacts,
-        "selected_contact": meeting.contact,
-        "editing": True,
-    })
+    template = (
+        "meetings/partials/meeting_form_content.html"
+        if request.htmx
+        else "meetings/meeting_form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "meeting": meeting,
+            "contacts": contacts,
+            "selected_contact": meeting.contact,
+            "editing": True,
+        },
+    )
 
 
 @login_required

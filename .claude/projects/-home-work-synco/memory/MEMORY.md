@@ -1,3 +1,5 @@
+- [Dev server ports](project_dev_ports.md) — 개발 8000 고정, Docker web은 개발 시 사용 안 함, 포트 충돌 시 원인 제거
 - [Modular functions](feedback_modular_functions.md) — micro single-purpose functions, never bundle capabilities
 - [Auto-orchestration](feedback_auto_orchestration.md) — system auto-runs analysis, user sees only finished results, no manual trigger buttons
 - [User journey continuity](feedback_user_journey_continuity.md) — action→feedback→navigate, all downstream screens must reflect results immediately
+- [Task UX issues](feedback_task_ux.md) — 업무 카드에 raw 데이터, 상세뷰 없음, 클릭 반응 없음, 분류 무의미

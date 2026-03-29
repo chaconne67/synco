@@ -31,7 +31,9 @@ def _extract_title_and_date(interaction) -> dict:
             TITLE_USER_TEMPLATE.format(
                 summary=interaction.summary[:500],
                 contact_name=interaction.contact.name if interaction.contact else "",
-                company_name=interaction.contact.company_name if interaction.contact else "",
+                company_name=interaction.contact.company_name
+                if interaction.contact
+                else "",
             ),
             system=TITLE_SYSTEM_PROMPT,
             timeout=30,
@@ -71,7 +73,9 @@ def detect_task(interaction, embedding=None):
     vec = np.array(embedding)
     scores = {label: cosine_similarity(vec, ref_vec) for label, ref_vec in refs.items()}
 
-    task_score = max(scores.get("task", 0), scores.get("followup", 0), scores.get("promise", 0))
+    task_score = max(
+        scores.get("task", 0), scores.get("followup", 0), scores.get("promise", 0)
+    )
     waiting_score = scores.get("waiting", 0)
     not_task_score = scores.get("not_task", 0)
 
@@ -128,9 +132,13 @@ def detect_tasks_batch(interactions, embeddings=None):
             continue
 
         vec = np.array(emb)
-        scores = {label: cosine_similarity(vec, ref_vec) for label, ref_vec in refs.items()}
+        scores = {
+            label: cosine_similarity(vec, ref_vec) for label, ref_vec in refs.items()
+        }
 
-        task_score = max(scores.get("task", 0), scores.get("followup", 0), scores.get("promise", 0))
+        task_score = max(
+            scores.get("task", 0), scores.get("followup", 0), scores.get("promise", 0)
+        )
         waiting_score = scores.get("waiting", 0)
         not_task_score = scores.get("not_task", 0)
 

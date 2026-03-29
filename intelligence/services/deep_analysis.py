@@ -25,7 +25,9 @@ def generate_summary(contact) -> str:
     for i in interactions:
         date_str = i["created_at"].strftime("%Y-%m-%d")
         sentiment_str = f" [{i['sentiment']}]" if i["sentiment"] else ""
-        interaction_lines.append(f"- {date_str} ({i['type']}{sentiment_str}): {i['summary'][:150]}")
+        interaction_lines.append(
+            f"- {date_str} ({i['type']}{sentiment_str}): {i['summary'][:150]}"
+        )
 
     meeting_lines = []
     for m in meetings_data:
@@ -34,14 +36,14 @@ def generate_summary(contact) -> str:
 
     prompt = f"""아래 고객과 FC(보험설계사)의 관계를 한 문단으로 요약해.
 
-**고객:** {contact.name} ({contact.company_name}, {contact.industry or '업종미상'}, {contact.region or '지역미상'})
-**메모:** {(contact.memo or '')[:200]}
+**고객:** {contact.name} ({contact.company_name}, {contact.industry or "업종미상"}, {contact.region or "지역미상"})
+**메모:** {(contact.memo or "")[:200]}
 
 **인터랙션 ({len(interactions)}건):**
-{chr(10).join(interaction_lines) or '없음'}
+{chr(10).join(interaction_lines) or "없음"}
 
 **미팅 ({len(meetings_data)}건):**
-{chr(10).join(meeting_lines) or '없음'}
+{chr(10).join(meeting_lines) or "없음"}
 
 JSON으로 응답: {{"summary": "한 문단 요약"}}"""
 
@@ -69,11 +71,11 @@ def generate_insights(contact) -> list[dict]:
 
     prompt = f"""아래 고객 정보에서 FC(보험설계사)가 활용할 수 있는 기회 신호를 추출해.
 
-**고객:** {contact.name} ({contact.company_name}, {contact.industry or '업종미상'})
-**메모:** {(contact.memo or '')[:200]}
+**고객:** {contact.name} ({contact.company_name}, {contact.industry or "업종미상"})
+**메모:** {(contact.memo or "")[:200]}
 
 **인터랙션:**
-{chr(10).join(interaction_lines) or '없음'}
+{chr(10).join(interaction_lines) or "없음"}
 
 기회 신호 예시: 승진, 경조사, 사업 확장, 신규 프로젝트, 계약 갱신 시기
 

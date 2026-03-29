@@ -34,7 +34,9 @@ def build_contact_text(contact) -> str:
         parts.append(f"메모: {contact.memo[:200]}")
 
     # 3. Recent interactions (up to 5)
-    recent = contact.interactions.order_by("-created_at").values_list("type", "summary")[:5]
+    recent = contact.interactions.order_by("-created_at").values_list(
+        "type", "summary"
+    )[:5]
     for itype, summary in recent:
         parts.append(f"- {itype}: {summary[:100]}")
 

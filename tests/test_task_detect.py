@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from intelligence.services.task_detect import detect_task
 from intelligence.services._references import TASK_REFS
@@ -12,7 +12,7 @@ def test_task_refs_has_waiting():
 
 @pytest.mark.django_db
 def test_detect_task_creates_with_llm_title(user, contact):
-    from contacts.models import Interaction, Task
+    from contacts.models import Interaction
 
     interaction = Interaction.objects.create(
         fc=user,
@@ -32,8 +32,12 @@ def test_detect_task_creates_with_llm_title(user, contact):
 
     llm_result = {"title": "견적서 발송 팔로업", "due_date": "2026-04-07"}
 
-    with patch("intelligence.services.task_detect.get_task_vectors", return_value=fake_refs):
-        with patch("intelligence.services.task_detect.call_llm_json", return_value=llm_result):
+    with patch(
+        "intelligence.services.task_detect.get_task_vectors", return_value=fake_refs
+    ):
+        with patch(
+            "intelligence.services.task_detect.call_llm_json", return_value=llm_result
+        ):
             task = detect_task(interaction, embedding=fake_embedding)
 
     assert task is not None
@@ -45,7 +49,7 @@ def test_detect_task_creates_with_llm_title(user, contact):
 
 @pytest.mark.django_db
 def test_detect_task_waiting_status(user, contact):
-    from contacts.models import Interaction, Task
+    from contacts.models import Interaction
 
     interaction = Interaction.objects.create(
         fc=user,
@@ -65,8 +69,12 @@ def test_detect_task_waiting_status(user, contact):
 
     llm_result = {"title": "재연락 대기", "due_date": None}
 
-    with patch("intelligence.services.task_detect.get_task_vectors", return_value=fake_refs):
-        with patch("intelligence.services.task_detect.call_llm_json", return_value=llm_result):
+    with patch(
+        "intelligence.services.task_detect.get_task_vectors", return_value=fake_refs
+    ):
+        with patch(
+            "intelligence.services.task_detect.call_llm_json", return_value=llm_result
+        ):
             task = detect_task(interaction, embedding=fake_embedding)
 
     assert task is not None
@@ -94,7 +102,9 @@ def test_detect_task_not_task_returns_none(user, contact):
         "not_task": np.array([0.1] * 3072),
     }
 
-    with patch("intelligence.services.task_detect.get_task_vectors", return_value=fake_refs):
+    with patch(
+        "intelligence.services.task_detect.get_task_vectors", return_value=fake_refs
+    ):
         task = detect_task(interaction, embedding=fake_embedding)
 
     assert task is None

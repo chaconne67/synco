@@ -28,7 +28,9 @@ class Contact(BaseModel):
     last_interaction_at = models.DateTimeField(null=True, blank=True)
 
     # Relationship scoring
-    relationship_score = models.FloatField(null=True, blank=True, help_text="0-100 가중평균 점수")
+    relationship_score = models.FloatField(
+        null=True, blank=True, help_text="0-100 가중평균 점수"
+    )
     relationship_tier = models.CharField(
         max_length=10,
         blank=True,
@@ -40,7 +42,9 @@ class Contact(BaseModel):
             ("gray", "Gray"),
         ],
     )
-    business_urgency_score = models.FloatField(null=True, blank=True, help_text="업무 긴급도 0-100")
+    business_urgency_score = models.FloatField(
+        null=True, blank=True, help_text="업무 긴급도 0-100"
+    )
     closeness_score = models.FloatField(null=True, blank=True, help_text="친밀도 0-100")
     score_updated_at = models.DateTimeField(null=True, blank=True)
 
@@ -69,28 +73,44 @@ class Contact(BaseModel):
     @property
     def last_sentiment(self):
         """Most recent interaction sentiment."""
-        latest = self.interactions.exclude(sentiment="").values_list("sentiment", flat=True).first()
+        latest = (
+            self.interactions.exclude(sentiment="")
+            .values_list("sentiment", flat=True)
+            .first()
+        )
         return latest  # 'positive', 'neutral', 'negative', or None
 
     @property
     def tier_emoji(self):
-        return {"gold": "⭐", "green": "🟢", "yellow": "🟡", "red": "🔴", "gray": "⚪"}.get(
-            self.relationship_tier, "⚪"
-        )
+        return {
+            "gold": "⭐",
+            "green": "🟢",
+            "yellow": "🟡",
+            "red": "🔴",
+            "gray": "⚪",
+        }.get(self.relationship_tier, "⚪")
 
     @property
     def tier_label(self):
-        return {"gold": "골드", "green": "양호", "yellow": "주의", "red": "위험", "gray": "미분석"}.get(
-            self.relationship_tier, "미분석"
-        )
+        return {
+            "gold": "골드",
+            "green": "양호",
+            "yellow": "주의",
+            "red": "위험",
+            "gray": "미분석",
+        }.get(self.relationship_tier, "미분석")
 
     @property
     def health_level(self):
         """Relationship health. Uses relationship_tier if available, else time-decay fallback."""
         if self.relationship_tier:
-            return {"gold": "good", "green": "good", "yellow": "caution", "red": "risk", "gray": "unknown"}.get(
-                self.relationship_tier, "unknown"
-            )
+            return {
+                "gold": "good",
+                "green": "good",
+                "yellow": "caution",
+                "red": "risk",
+                "gray": "unknown",
+            }.get(self.relationship_tier, "unknown")
 
         days = self.days_since_contact
         sentiment = self.last_sentiment

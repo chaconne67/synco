@@ -18,9 +18,17 @@ urlpatterns = [
     path("dashboard-briefing/", views.dashboard_briefing, name="dashboard_briefing"),
     # Report modal
     path("report/<uuid:contact_pk>/", views.contact_report, name="contact_report"),
-    path("report/<uuid:contact_pk>/analysis/", views.contact_report_analysis, name="contact_report_analysis"),
+    path(
+        "report/<uuid:contact_pk>/analysis/",
+        views.contact_report_analysis,
+        name="contact_report_analysis",
+    ),
     # Import analysis polling
-    path("analysis/import-status/<uuid:batch_id>/", views.import_analysis_status, name="import_analysis_status"),
+    path(
+        "analysis/import-status/<uuid:batch_id>/",
+        views.import_analysis_status,
+        name="import_analysis_status",
+    ),
     # Insights
     path("insights/<uuid:pk>/dismiss/", views.dismiss_insight, name="dismiss_insight"),
 ]

@@ -25,15 +25,17 @@ def generate_dashboard_briefing(fc, meetings, attention_contacts):
 
     attention_lines = []
     for c in attention_contacts[:5]:
-        attention_lines.append(f"- {c.tier_emoji} {c.name} ({c.company_name}) — {c.health_detail}")
+        attention_lines.append(
+            f"- {c.tier_emoji} {c.name} ({c.company_name}) — {c.health_detail}"
+        )
 
     prompt = f"""당신은 보험설계사(FC)의 개인 비서입니다. 오늘의 브리핑을 작성해주세요.
 
 **오늘 미팅:**
-{chr(10).join(meeting_lines) or '없음'}
+{chr(10).join(meeting_lines) or "없음"}
 
 **주의 필요 고객:**
-{chr(10).join(attention_lines) or '없음'}
+{chr(10).join(attention_lines) or "없음"}
 
 다음 JSON 형식으로 브리핑을 작성해:
 {{

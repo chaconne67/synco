@@ -1,7 +1,5 @@
-import json
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from common.llm import call_llm_json
 
@@ -22,7 +20,9 @@ def test_claude_cli_provider():
 def test_openai_compatible_provider():
     mock_response = MagicMock()
     mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = '{"title": "자료 전달", "due_date": "2026-04-01"}'
+    mock_response.choices[
+        0
+    ].message.content = '{"title": "자료 전달", "due_date": "2026-04-01"}'
 
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response

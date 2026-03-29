@@ -7,52 +7,112 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('contacts', '0001_initial'),
+        ("contacts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Brief',
+            name="Brief",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('company_analysis', models.TextField()),
-                ('action_suggestion', models.TextField()),
-                ('insights', models.JSONField(default=dict)),
-                ('generated_at', models.DateTimeField(auto_now_add=True)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='briefs', to='contacts.contact')),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("company_analysis", models.TextField()),
+                ("action_suggestion", models.TextField()),
+                ("insights", models.JSONField(default=dict)),
+                ("generated_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="briefs",
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'briefs',
-                'ordering': ['-generated_at'],
+                "db_table": "briefs",
+                "ordering": ["-generated_at"],
             },
         ),
         migrations.CreateModel(
-            name='Match',
+            name="Match",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('score', models.IntegerField()),
-                ('industry_fit', models.IntegerField()),
-                ('region_proximity', models.IntegerField()),
-                ('size_balance', models.IntegerField()),
-                ('synergy_description', models.TextField(blank=True)),
-                ('status', models.CharField(choices=[('proposed', '제안'), ('viewed', '열람'), ('accepted', '수락'), ('rejected', '거절')], default='proposed', max_length=10)),
-                ('contact_a', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='matches_as_a', to='contacts.contact')),
-                ('contact_b', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='matches_as_b', to='contacts.contact')),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("score", models.IntegerField()),
+                ("industry_fit", models.IntegerField()),
+                ("region_proximity", models.IntegerField()),
+                ("size_balance", models.IntegerField()),
+                ("synergy_description", models.TextField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("proposed", "제안"),
+                            ("viewed", "열람"),
+                            ("accepted", "수락"),
+                            ("rejected", "거절"),
+                        ],
+                        default="proposed",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "contact_a",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="matches_as_a",
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "contact_b",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="matches_as_b",
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'matches',
-                'ordering': ['-score'],
+                "db_table": "matches",
+                "ordering": ["-score"],
             },
         ),
     ]

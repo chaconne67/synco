@@ -99,7 +99,9 @@ class AnalysisJob(BaseModel):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Analysis {self.status} ({self.processed_contacts}/{self.total_contacts})"
+        return (
+            f"Analysis {self.status} ({self.processed_contacts}/{self.total_contacts})"
+        )
 
 
 class RelationshipAnalysis(BaseModel):

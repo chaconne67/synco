@@ -77,11 +77,15 @@ def ensure_sentiments_and_tasks(contact) -> None:
 
     # Classify sentiments (only unprocessed)
     if sentiment_targets:
-        sentiment_embs = [embeddings[interaction_to_idx[i.pk]] for i in sentiment_targets]
+        sentiment_embs = [
+            embeddings[interaction_to_idx[i.pk]] for i in sentiment_targets
+        ]
         try:
             classify_sentiments_batch(sentiment_targets, embeddings=sentiment_embs)
         except Exception:
-            logger.exception("ensure_sentiments_and_tasks: sentiment classification failed")
+            logger.exception(
+                "ensure_sentiments_and_tasks: sentiment classification failed"
+            )
 
     # Detect tasks (only unchecked)
     if task_targets:
@@ -120,9 +124,13 @@ def ensure_deep_analysis(contact):
 
         # Check if new interactions since analysis
         latest_interaction = (
-            contact.interactions.order_by("-created_at").values_list("created_at", flat=True).first()
+            contact.interactions.order_by("-created_at")
+            .values_list("created_at", flat=True)
+            .first()
         )
-        no_new_interactions = latest_interaction is None or latest_interaction < analysis.created_at
+        no_new_interactions = (
+            latest_interaction is None or latest_interaction < analysis.created_at
+        )
 
         if is_recent and no_new_interactions:
             return analysis  # Cache hit

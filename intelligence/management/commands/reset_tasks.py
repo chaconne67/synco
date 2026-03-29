@@ -4,7 +4,9 @@ from contacts.models import Interaction, Task
 
 
 class Command(BaseCommand):
-    help = "Delete all AI-extracted tasks and reset task_checked flags for re-processing"
+    help = (
+        "Delete all AI-extracted tasks and reset task_checked flags for re-processing"
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -24,12 +26,16 @@ class Command(BaseCommand):
 
         if dry_run:
             self.stdout.write(f"Would delete {task_count} AI-extracted tasks")
-            self.stdout.write(f"Would reset {interaction_count} interactions (task_checked → False)")
+            self.stdout.write(
+                f"Would reset {interaction_count} interactions (task_checked → False)"
+            )
             return
 
         ai_tasks.delete()
         checked.update(task_checked=False)
 
-        self.stdout.write(self.style.SUCCESS(
-            f"Deleted {task_count} AI tasks, reset {interaction_count} interactions"
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Deleted {task_count} AI tasks, reset {interaction_count} interactions"
+            )
+        )

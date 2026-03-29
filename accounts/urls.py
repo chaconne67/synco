@@ -10,6 +10,14 @@ urlpatterns = [
     path("accounts/role-select/", views.role_select, name="role_select"),
     path("accounts/settings/", views.settings_page, name="settings"),
     path("accounts/logout/", views.logout_view, name="logout"),
-    path("accounts/dashboard/tasks-all/", views.dashboard_tasks_all, name="dashboard_tasks_all"),
-    path("accounts/dashboard/tasks-overdue/", views.dashboard_tasks_overdue, name="dashboard_tasks_overdue"),
+    path(
+        "accounts/dashboard/tasks-all/",
+        views.dashboard_tasks_all,
+        name="dashboard_tasks_all",
+    ),
+    path(
+        "accounts/dashboard/tasks-overdue/",
+        views.dashboard_tasks_overdue,
+        name="dashboard_tasks_overdue",
+    ),
 ]

@@ -13,11 +13,19 @@ def brief_detail(request, contact_pk):
     contact = get_object_or_404(Contact, pk=contact_pk, fc=request.user)
     brief = contact.briefs.first()
 
-    template = "intelligence/partials/brief_detail_content.html" if request.htmx else "intelligence/brief_detail.html"
-    return render(request, template, {
-        "contact": contact,
-        "brief": brief,
-    })
+    template = (
+        "intelligence/partials/brief_detail_content.html"
+        if request.htmx
+        else "intelligence/brief_detail.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "contact": contact,
+            "brief": brief,
+        },
+    )
 
 
 @login_required
@@ -35,16 +43,24 @@ def brief_generate(request, contact_pk):
 
     # If called from brief_detail page (hx-target=#main-content), return full detail
     if request.htmx and request.htmx.target == "main-content":
-        return render(request, "intelligence/partials/brief_detail_content.html", {
-            "contact": contact,
-            "brief": brief,
-        })
+        return render(
+            request,
+            "intelligence/partials/brief_detail_content.html",
+            {
+                "contact": contact,
+                "brief": brief,
+            },
+        )
 
     # If called from contact detail (#ai-brief-slot), return card
-    return render(request, "intelligence/partials/brief_card.html", {
-        "contact": contact,
-        "brief": brief,
-    })
+    return render(
+        request,
+        "intelligence/partials/brief_card.html",
+        {
+            "contact": contact,
+            "brief": brief,
+        },
+    )
 
 
 MATCH_PAGE_SIZE = 20
@@ -61,19 +77,31 @@ def match_list(request):
     page_matches = matches[offset : offset + MATCH_PAGE_SIZE]
     has_more = matches[offset + MATCH_PAGE_SIZE : offset + MATCH_PAGE_SIZE + 1].exists()
 
-    template = "intelligence/partials/match_list_content.html" if request.htmx else "intelligence/match_list.html"
-    return render(request, template, {
-        "matches": page_matches,
-        "page": page,
-        "has_more": has_more,
-    })
+    template = (
+        "intelligence/partials/match_list_content.html"
+        if request.htmx
+        else "intelligence/match_list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "matches": page_matches,
+            "page": page,
+            "has_more": has_more,
+        },
+    )
 
 
 @login_required
 def match_detail(request, pk):
     match = get_object_or_404(Match, pk=pk, fc=request.user)
 
-    template = "intelligence/partials/match_detail_content.html" if request.htmx else "intelligence/match_detail.html"
+    template = (
+        "intelligence/partials/match_detail_content.html"
+        if request.htmx
+        else "intelligence/match_detail.html"
+    )
     return render(request, template, {"match": match})
 
 
@@ -81,7 +109,9 @@ def match_detail(request, pk):
 def contact_report(request, contact_pk):
     """리포트 보기 모달 — 기본 정보 즉시 렌더, AI 분석은 lazy-load."""
     contact = get_object_or_404(Contact, pk=contact_pk, fc=request.user)
-    analysis = RelationshipAnalysis.objects.filter(contact=contact, fc=request.user).first()
+    analysis = RelationshipAnalysis.objects.filter(
+        contact=contact, fc=request.user
+    ).first()
     brief = contact.briefs.first()
     interactions = contact.interactions.all()[:10]
     meetings = contact.meetings.filter(status="completed").order_by("-scheduled_at")[:5]
@@ -89,14 +119,18 @@ def contact_report(request, contact_pk):
     # Determine if AI analysis section needs lazy-load
     needs_analysis = analysis is None or _is_stale(analysis, contact)
 
-    return render(request, "intelligence/partials/contact_report_modal.html", {
-        "contact": contact,
-        "analysis": analysis,
-        "brief": brief,
-        "interactions": interactions,
-        "meetings": meetings,
-        "needs_analysis": needs_analysis,
-    })
+    return render(
+        request,
+        "intelligence/partials/contact_report_modal.html",
+        {
+            "contact": contact,
+            "analysis": analysis,
+            "brief": brief,
+            "interactions": interactions,
+            "meetings": meetings,
+            "needs_analysis": needs_analysis,
+        },
+    )
 
 
 def _is_stale(analysis, contact) -> bool:
@@ -104,7 +138,11 @@ def _is_stale(analysis, contact) -> bool:
     now = timezone.now()
     if (now - analysis.created_at).total_seconds() > 86400:
         return True
-    latest = contact.interactions.order_by("-created_at").values_list("created_at", flat=True).first()
+    latest = (
+        contact.interactions.order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
     if latest and latest > analysis.created_at:
         return True
     return False
@@ -119,10 +157,13 @@ def contact_report_analysis(request, contact_pk):
 
     analysis = ensure_deep_analysis(contact)
 
-    return render(request, "intelligence/partials/report_analysis_section.html", {
-        "analysis": analysis,
-    })
-
+    return render(
+        request,
+        "intelligence/partials/report_analysis_section.html",
+        {
+            "analysis": analysis,
+        },
+    )
 
     # analysis_trigger and analysis_status removed in Phase 6.
     # Replaced by automatic embedding-based analysis pipeline.
@@ -140,10 +181,14 @@ def dashboard_briefing(request):
     today = timezone.localdate()
 
     # Check for cached briefing (generated today)
-    latest_brief = Brief.objects.filter(
-        fc=request.user,
-        generated_at__date=today,
-    ).select_related("contact").first()
+    latest_brief = (
+        Brief.objects.filter(
+            fc=request.user,
+            generated_at__date=today,
+        )
+        .select_related("contact")
+        .first()
+    )
 
     if not latest_brief:
         # Generate new briefing
@@ -160,9 +205,13 @@ def dashboard_briefing(request):
 
         latest_brief = generate_dashboard_briefing(request.user, meetings, attention)
 
-    return render(request, "accounts/partials/dashboard/section_briefing.html", {
-        "latest_brief": latest_brief,
-    })
+    return render(
+        request,
+        "accounts/partials/dashboard/section_briefing.html",
+        {
+            "latest_brief": latest_brief,
+        },
+    )
 
 
 @login_required
@@ -190,16 +239,26 @@ def import_analysis_status(request, batch_id):
 
         batch_interactions = Interaction.objects.filter(import_batch=batch)
         for sentiment in ["positive", "neutral", "negative"]:
-            sentiment_counts[sentiment] = batch_interactions.filter(sentiment=sentiment).count()
-        tasks_detected = Task.objects.filter(source_interactions__import_batch=batch).distinct().count()
+            sentiment_counts[sentiment] = batch_interactions.filter(
+                sentiment=sentiment
+            ).count()
+        tasks_detected = (
+            Task.objects.filter(source_interactions__import_batch=batch)
+            .distinct()
+            .count()
+        )
 
-    return render(request, "intelligence/partials/import_analysis_status.html", {
-        "batch": batch,
-        "is_done": is_done,
-        "timed_out": timed_out,
-        "sentiment_counts": sentiment_counts,
-        "tasks_detected": tasks_detected,
-    })
+    return render(
+        request,
+        "intelligence/partials/import_analysis_status.html",
+        {
+            "batch": batch,
+            "is_done": is_done,
+            "timed_out": timed_out,
+            "sentiment_counts": sentiment_counts,
+            "tasks_detected": tasks_detected,
+        },
+    )
 
 
 @login_required

@@ -34,7 +34,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--fc-id", type=str, help="Process only this FC's contacts")
         parser.add_argument("--dry-run", action="store_true", help="Show counts only")
-        parser.add_argument("--contacts-only", action="store_true", help="Skip interaction processing")
+        parser.add_argument(
+            "--contacts-only", action="store_true", help="Skip interaction processing"
+        )
 
     def handle(self, *args, **options):
         from contacts.models import Contact, Interaction
@@ -51,7 +53,9 @@ class Command(BaseCommand):
             interactions_qs = interactions_qs.filter(fc_id=fc_id)
 
         total_contacts = contacts_qs.count()
-        existing_embeddings = ContactEmbedding.objects.filter(contact__in=contacts_qs).count()
+        existing_embeddings = ContactEmbedding.objects.filter(
+            contact__in=contacts_qs
+        ).count()
         needs_embedding = total_contacts - existing_embeddings
 
         total_interactions = interactions_qs.count()
@@ -59,8 +63,12 @@ class Command(BaseCommand):
         needs_task = interactions_qs.filter(task_checked=False).count()
 
         self.stdout.write("\n=== Backfill Summary ===")
-        self.stdout.write(f"Contacts: {total_contacts} total, {existing_embeddings} embedded, {needs_embedding} remaining")
-        self.stdout.write(f"Interactions: {total_interactions} total, {needs_sentiment} need sentiment, {needs_task} need task check")
+        self.stdout.write(
+            f"Contacts: {total_contacts} total, {existing_embeddings} embedded, {needs_embedding} remaining"
+        )
+        self.stdout.write(
+            f"Interactions: {total_interactions} total, {needs_sentiment} need sentiment, {needs_task} need task check"
+        )
 
         if dry_run:
             self.stdout.write("\n--dry-run: exiting without processing")
@@ -71,7 +79,9 @@ class Command(BaseCommand):
         svecs = get_sentiment_vectors()
         tvecs = get_task_vectors()
         if not svecs or not tvecs:
-            self.stderr.write("ERROR: Reference vector initialization failed. Check Gemini API.")
+            self.stderr.write(
+                "ERROR: Reference vector initialization failed. Check Gemini API."
+            )
             return
 
         self.stdout.write("  Sentiment refs: OK")
@@ -79,14 +89,18 @@ class Command(BaseCommand):
 
         # Step 1: Contact embeddings
         contacts_to_embed = list(contacts_qs.order_by("created_at"))
-        self.stdout.write(f"\nStep 1: Embedding {len(contacts_to_embed)} contacts (100/batch)...")
+        self.stdout.write(
+            f"\nStep 1: Embedding {len(contacts_to_embed)} contacts (100/batch)..."
+        )
         start = time.time()
         embedded_count = 0
 
         for chunk in chunked(contacts_to_embed, 100):
             results = embed_contacts_batch(chunk)
             embedded_count += len(results)
-            self.stdout.write(f"  {embedded_count}/{len(contacts_to_embed)} contacts embedded")
+            self.stdout.write(
+                f"  {embedded_count}/{len(contacts_to_embed)} contacts embedded"
+            )
 
         elapsed = time.time() - start
         self.stdout.write(f"  Done in {elapsed:.1f}s — {embedded_count} embeddings")
@@ -102,7 +116,9 @@ class Command(BaseCommand):
             .union(interactions_qs.filter(task_checked=False))
             .order_by("created_at")
         )
-        self.stdout.write(f"\nStep 2: Processing {len(interactions_to_process)} interactions (100/batch)...")
+        self.stdout.write(
+            f"\nStep 2: Processing {len(interactions_to_process)} interactions (100/batch)..."
+        )
         start = time.time()
         processed = 0
         sentiment_set = 0
@@ -127,9 +143,13 @@ class Command(BaseCommand):
                 tasks_created += len(new_tasks)
 
             processed += len(chunk)
-            self.stdout.write(f"  {processed}/{len(interactions_to_process)} interactions processed")
+            self.stdout.write(
+                f"  {processed}/{len(interactions_to_process)} interactions processed"
+            )
 
         elapsed = time.time() - start
-        self.stdout.write(f"  Done in {elapsed:.1f}s — {sentiment_set} sentiments, {tasks_created} tasks")
+        self.stdout.write(
+            f"  Done in {elapsed:.1f}s — {sentiment_set} sentiments, {tasks_created} tasks"
+        )
 
         self.stdout.write(self.style.SUCCESS("\nBackfill complete!"))

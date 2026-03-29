@@ -33,31 +33,58 @@ def contact_list(request):
 
     # Filter chips → return chips + count + list together
     if request.htmx and request.htmx.target == "contact-filter-area":
-        return render(request, "contacts/partials/contact_filter_section.html", {
-            "contacts": page_contacts, "q": q, "industry": industry,
-            "page": page, "has_more": has_more, "total_count": total_count,
-        })
+        return render(
+            request,
+            "contacts/partials/contact_filter_section.html",
+            {
+                "contacts": page_contacts,
+                "q": q,
+                "industry": industry,
+                "page": page,
+                "has_more": has_more,
+                "total_count": total_count,
+            },
+        )
     # Search or infinite scroll → return list items only
     if request.htmx and request.htmx.target == "contact-list":
-        return render(request, "contacts/partials/contact_list_items.html", {
-            "contacts": page_contacts, "q": q, "industry": industry,
-            "page": page, "has_more": has_more,
-        })
+        return render(
+            request,
+            "contacts/partials/contact_list_items.html",
+            {
+                "contacts": page_contacts,
+                "q": q,
+                "industry": industry,
+                "page": page,
+                "has_more": has_more,
+            },
+        )
     # Infinite scroll "load more" → return just the new items
     if request.htmx and request.GET.get("page"):
-        return render(request, "contacts/partials/contact_list_items.html", {
-            "contacts": page_contacts, "q": q, "industry": industry,
-            "page": page, "has_more": has_more, "append": True,
-        })
+        return render(
+            request,
+            "contacts/partials/contact_list_items.html",
+            {
+                "contacts": page_contacts,
+                "q": q,
+                "industry": industry,
+                "page": page,
+                "has_more": has_more,
+                "append": True,
+            },
+        )
 
-    return render(request, "contacts/contact_list.html", {
-        "contacts": page_contacts,
-        "q": q,
-        "industry": industry,
-        "page": 1,
-        "has_more": has_more,
-        "total_count": total_count,
-    })
+    return render(
+        request,
+        "contacts/contact_list.html",
+        {
+            "contacts": page_contacts,
+            "q": q,
+            "industry": industry,
+            "page": 1,
+            "has_more": has_more,
+            "total_count": total_count,
+        },
+    )
 
 
 @login_required
@@ -81,7 +108,11 @@ def contact_create(request):
             )
         return redirect("contacts:detail", pk=contact.pk)
 
-    template = "contacts/partials/contact_form_content.html" if request.htmx else "contacts/contact_form.html"
+    template = (
+        "contacts/partials/contact_form_content.html"
+        if request.htmx
+        else "contacts/contact_form.html"
+    )
     return render(request, template, {"editing": False})
 
 
@@ -95,27 +126,41 @@ def contact_detail(request, pk):
     page = int(request.GET.get("ipage", 1))
     offset = (page - 1) * INTERACTION_PAGE_SIZE
     interactions = contact.interactions.all()[offset : offset + INTERACTION_PAGE_SIZE]
-    has_more_interactions = contact.interactions.all()[offset + INTERACTION_PAGE_SIZE : offset + INTERACTION_PAGE_SIZE + 1].exists()
+    has_more_interactions = contact.interactions.all()[
+        offset + INTERACTION_PAGE_SIZE : offset + INTERACTION_PAGE_SIZE + 1
+    ].exists()
     latest_brief = contact.briefs.first()
 
     # Infinite scroll for interactions
     if request.htmx and request.GET.get("ipage"):
-        return render(request, "contacts/partials/interaction_timeline.html", {
+        return render(
+            request,
+            "contacts/partials/interaction_timeline.html",
+            {
+                "contact": contact,
+                "interactions": interactions,
+                "ipage": page,
+                "has_more_interactions": has_more_interactions,
+                "append": True,
+            },
+        )
+
+    template = (
+        "contacts/partials/contact_detail_content.html"
+        if request.htmx
+        else "contacts/contact_detail.html"
+    )
+    return render(
+        request,
+        template,
+        {
             "contact": contact,
             "interactions": interactions,
-            "ipage": page,
+            "latest_brief": latest_brief,
+            "ipage": 1,
             "has_more_interactions": has_more_interactions,
-            "append": True,
-        })
-
-    template = "contacts/partials/contact_detail_content.html" if request.htmx else "contacts/contact_detail.html"
-    return render(request, template, {
-        "contact": contact,
-        "interactions": interactions,
-        "latest_brief": latest_brief,
-        "ipage": 1,
-        "has_more_interactions": has_more_interactions,
-    })
+        },
+    )
 
 
 @login_required
@@ -140,7 +185,11 @@ def contact_edit(request, pk):
             )
         return redirect("contacts:detail", pk=contact.pk)
 
-    template = "contacts/partials/contact_form_content.html" if request.htmx else "contacts/contact_form.html"
+    template = (
+        "contacts/partials/contact_form_content.html"
+        if request.htmx
+        else "contacts/contact_form.html"
+    )
     return render(request, template, {"contact": contact, "editing": True})
 
 
@@ -188,9 +237,13 @@ def contact_search(request):
         contacts = contacts.filter(
             db_models.Q(name__icontains=q) | db_models.Q(company_name__icontains=q)
         )[:10]
-    return render(request, "contacts/partials/search_results.html", {
-        "contacts": contacts,
-    })
+    return render(
+        request,
+        "contacts/partials/search_results.html",
+        {
+            "contacts": contacts,
+        },
+    )
 
 
 @login_required
@@ -250,7 +303,11 @@ def _save_uploaded_file(request):
     filename = uploaded.name
 
     if uploaded.size > MAX_IMPORT_FILE_SIZE:
-        return None, filename, f"파일 크기가 5MB를 초과합니다 ({uploaded.size / (1024*1024):.1f}MB)."
+        return (
+            None,
+            filename,
+            f"파일 크기가 5MB를 초과합니다 ({uploaded.size / (1024 * 1024):.1f}MB).",
+        )
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=filename)
     for chunk in uploaded.chunks():
@@ -303,8 +360,8 @@ def _parse_sheet_basic(ws, max_rows=MAX_IMPORT_ROWS):
             start = i
             break
     total = _count_data_rows(raw_rows, start)
-    max_cols = _get_max_cols(raw_rows[start:start + 6])
-    first_rows = raw_rows[start:start + 6]
+    max_cols = _get_max_cols(raw_rows[start : start + 6])
+    first_rows = raw_rows[start : start + 6]
     return first_rows, total, max_cols
 
 
@@ -322,7 +379,9 @@ def _import_analyze(request):
     # Single sheet → go straight to column mapping
     if len(sheet_names) == 1:
         wb.close()
-        return _analyze_single_sheet(request, clean_path, filename, sheet_names=[sheet_names[0]])
+        return _analyze_single_sheet(
+            request, clean_path, filename, sheet_names=[sheet_names[0]]
+        )
 
     # Multiple sheets → AI classification
     sheets_info = []
@@ -330,18 +389,29 @@ def _import_analyze(request):
         ws = wb[name]
         first_rows, total_rows, max_cols = _parse_sheet_basic(ws)
         if total_rows == 0:
-            sheets_info.append({
-                "name": name, "headers": [], "sample": [], "rows": 0,
-            })
+            sheets_info.append(
+                {
+                    "name": name,
+                    "headers": [],
+                    "sample": [],
+                    "rows": 0,
+                }
+            )
         else:
             # Use first row as preview headers (may or may not be actual headers)
             preview_headers = [c for c in first_rows[0] if c][:10] if first_rows else []
-            sheets_info.append({
-                "name": name,
-                "headers": preview_headers,
-                "sample": [dict(zip(preview_headers, row)) for row in first_rows[1:3]] if len(first_rows) > 1 else [],
-                "rows": total_rows,
-            })
+            sheets_info.append(
+                {
+                    "name": name,
+                    "headers": preview_headers,
+                    "sample": [
+                        dict(zip(preview_headers, row)) for row in first_rows[1:3]
+                    ]
+                    if len(first_rows) > 1
+                    else [],
+                    "rows": total_rows,
+                }
+            )
     wb.close()
 
     # AI classify sheets
@@ -352,7 +422,11 @@ def _import_analyze(request):
     except Exception:
         # Fallback: treat all non-empty sheets as contacts
         classifications = [
-            {"name": s["name"], "is_contact": s["rows"] > 0, "reason": "자동 판단 실패 — 데이터 있음"}
+            {
+                "name": s["name"],
+                "is_contact": s["rows"] > 0,
+                "reason": "자동 판단 실패 — 데이터 있음",
+            }
             for s in sheets_info
         ]
 
@@ -364,13 +438,15 @@ def _import_analyze(request):
         cls = next((c for c in classifications if c["name"] == info["name"]), None)
         is_contact = cls["is_contact"] if cls else False
         reason = cls["reason"] if cls else ""
-        sheet_results.append({
-            "name": info["name"],
-            "rows": info["rows"],
-            "headers": info["headers"][:5],
-            "is_contact": is_contact,
-            "reason": reason,
-        })
+        sheet_results.append(
+            {
+                "name": info["name"],
+                "rows": info["rows"],
+                "headers": info["headers"][:5],
+                "is_contact": is_contact,
+                "reason": reason,
+            }
+        )
         if is_contact:
             contact_sheets.append(info["name"])
             total_contact_rows += info["rows"]
@@ -380,13 +456,17 @@ def _import_analyze(request):
     request.session["import_filename"] = filename
     request.session["import_sheet_results"] = sheet_results
 
-    return render(request, "contacts/import_sheets.html", {
-        "filename": filename,
-        "sheet_results": sheet_results,
-        "contact_sheets": contact_sheets,
-        "total_contact_rows": total_contact_rows,
-        "total_sheets": len(sheet_names),
-    })
+    return render(
+        request,
+        "contacts/import_sheets.html",
+        {
+            "filename": filename,
+            "sheet_results": sheet_results,
+            "contact_sheets": contact_sheets,
+            "total_contact_rows": total_contact_rows,
+            "total_sheets": len(sheet_names),
+        },
+    )
 
 
 def _analyze_single_sheet(request, clean_path, filename, sheet_names):
@@ -416,24 +496,34 @@ def _analyze_single_sheet(request, clean_path, filename, sheet_names):
     wb.close()
 
     if not all_first_rows:
-        return render(request, "contacts/import.html", {
-            "error": "선택한 시트에 데이터가 없습니다.",
-        })
+        return render(
+            request,
+            "contacts/import.html",
+            {
+                "error": "선택한 시트에 데이터가 없습니다.",
+            },
+        )
 
     if merged_total_rows > MAX_IMPORT_ROWS:
         try:
             os.unlink(clean_path)
         except OSError:
             pass
-        return render(request, "contacts/import.html", {
-            "error": f"데이터가 {merged_total_rows:,}건입니다. 최대 {MAX_IMPORT_ROWS:,}건까지 임포트 가능합니다.",
-        })
+        return render(
+            request,
+            "contacts/import.html",
+            {
+                "error": f"데이터가 {merged_total_rows:,}건입니다. 최대 {MAX_IMPORT_ROWS:,}건까지 임포트 가능합니다.",
+            },
+        )
 
     # AI: detect header + map columns in one call
     from intelligence.services import detect_header_and_map
 
     try:
-        result = detect_header_and_map(all_first_rows, len(all_first_rows[0]) if all_first_rows else 0)
+        result = detect_header_and_map(
+            all_first_rows, len(all_first_rows[0]) if all_first_rows else 0
+        )
     except Exception:
         result = {"has_header": False, "mapping": {}}
 
@@ -492,16 +582,20 @@ def _analyze_single_sheet(request, clean_path, filename, sheet_names):
     request.session["import_sheets"] = sheet_names
     request.session["import_has_header"] = has_header
 
-    return render(request, "contacts/import_preview.html", {
-        "mapping": mapping,
-        "headers": headers,
-        "preview_rows": preview_rows,
-        "sample_rows": sample_rows,
-        "total_rows": merged_total_rows,
-        "filename": filename,
-        "sheet_names": sheet_names,
-        "has_header": has_header,
-    })
+    return render(
+        request,
+        "contacts/import_preview.html",
+        {
+            "mapping": mapping,
+            "headers": headers,
+            "preview_rows": preview_rows,
+            "sample_rows": sample_rows,
+            "total_rows": merged_total_rows,
+            "filename": filename,
+            "sheet_names": sheet_names,
+            "has_header": has_header,
+        },
+    )
 
 
 @login_required
@@ -527,9 +621,13 @@ def contact_import_sheets(request):
         selected = request.POST.getlist("sheets")
 
     if not selected:
-        return render(request, "contacts/import.html", {
-            "error": "시트를 선택해주세요.",
-        })
+        return render(
+            request,
+            "contacts/import.html",
+            {
+                "error": "시트를 선택해주세요.",
+            },
+        )
 
     # Clean up session keys from sheet selection step
     request.session.pop("import_sheet_results", None)
@@ -601,7 +699,6 @@ def contact_import_confirm(request):
     pending_sentiments = []  # [(interaction_id, memo_text), ...]
 
     for row in data_rows:
-
         try:
             mapped = {}
             for j, h in enumerate(headers):
@@ -639,7 +736,9 @@ def contact_import_confirm(request):
                 industry=mapped.get("industry", ""),
                 region=mapped.get("region", ""),
                 revenue_range=mapped.get("revenue_range", ""),
-                employee_count=int(mapped["employee_count"]) if mapped.get("employee_count", "").isdigit() else None,
+                employee_count=int(mapped["employee_count"])
+                if mapped.get("employee_count", "").isdigit()
+                else None,
                 memo=mapped.get("memo", ""),
             )
 
@@ -651,9 +750,16 @@ def contact_import_confirm(request):
 
                 try:
                     # Parse various date formats
-                    for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%Y.%m.%d", "%Y/%m/%d"]:
+                    for fmt in [
+                        "%Y-%m-%d %H:%M:%S",
+                        "%Y-%m-%d",
+                        "%Y.%m.%d",
+                        "%Y/%m/%d",
+                    ]:
                         try:
-                            dt = datetime.strptime(meeting_date.split(" ")[0][:10], fmt.split(" ")[0])
+                            dt = datetime.strptime(
+                                meeting_date.split(" ")[0][:10], fmt.split(" ")[0]
+                            )
                             break
                         except ValueError:
                             continue
@@ -662,6 +768,7 @@ def contact_import_confirm(request):
 
                     if dt:
                         from django.utils import timezone as tz
+
                         scheduled = tz.make_aware(dt.replace(hour=10))
                         Meeting.objects.get_or_create(
                             fc=request.user,
@@ -675,7 +782,10 @@ def contact_import_confirm(request):
                             },
                         )
                         # Update last_interaction_at to meeting date
-                        if not contact.last_interaction_at or scheduled > contact.last_interaction_at:
+                        if (
+                            not contact.last_interaction_at
+                            or scheduled > contact.last_interaction_at
+                        ):
                             contact.last_interaction_at = scheduled
                             contact.save(update_fields=["last_interaction_at"])
                 except Exception:
@@ -690,10 +800,12 @@ def contact_import_confirm(request):
                     type=Interaction.Type.MEMO,
                     summary=memo_text,
                 )
-                pending_sentiments.append({
-                    "id": str(interaction.pk),
-                    "text": memo_text,
-                })
+                pending_sentiments.append(
+                    {
+                        "id": str(interaction.pk),
+                        "text": memo_text,
+                    }
+                )
                 if not contact.last_interaction_at:
                     contact.last_interaction_at = interaction.created_at
                     contact.save(update_fields=["last_interaction_at"])
@@ -710,7 +822,12 @@ def contact_import_confirm(request):
         calculate_relationship_score(c)
 
     # === Collect IDs for background processing ===
-    new_contact_ids = [str(c.pk) for c in Contact.objects.filter(fc=request.user).order_by("-created_at")[:created]]
+    new_contact_ids = [
+        str(c.pk)
+        for c in Contact.objects.filter(fc=request.user).order_by("-created_at")[
+            :created
+        ]
+    ]
     new_interaction_ids = [entry["id"] for entry in pending_sentiments]
 
     # === Create ImportBatch ===
@@ -724,7 +841,9 @@ def contact_import_confirm(request):
 
     # Link interactions to this batch
     if new_interaction_ids:
-        Interaction.objects.filter(pk__in=new_interaction_ids).update(import_batch=batch)
+        Interaction.objects.filter(pk__in=new_interaction_ids).update(
+            import_batch=batch
+        )
 
     # === Background analysis pipeline (Gemini embedding + sentiment + task detection) ===
     if created > 0 or new_interaction_ids:
@@ -748,7 +867,9 @@ def contact_import_confirm(request):
 
                 bg_batch = BgBatch.objects.get(id=batch_id)
                 bg_contacts = list(Contact.objects.filter(id__in=contact_ids))
-                bg_interactions = list(Interaction.objects.filter(id__in=interaction_ids))
+                bg_interactions = list(
+                    Interaction.objects.filter(id__in=interaction_ids)
+                )
 
                 # Step 1: Batch embed contacts (Gemini API, 100-chunk)
                 embed_contacts_batch(bg_contacts)
@@ -761,12 +882,16 @@ def contact_import_confirm(request):
                     interaction_embeddings = get_embeddings_batch(texts)
 
                     # Step 3: Sentiment classification (embedding reuse)
-                    classify_sentiments_batch(bg_interactions, embeddings=interaction_embeddings)
+                    classify_sentiments_batch(
+                        bg_interactions, embeddings=interaction_embeddings
+                    )
                     bg_batch.sentiment_done = True
                     bg_batch.save(update_fields=["sentiment_done"])
 
                     # Step 4: Task detection (embedding reuse)
-                    detect_tasks_batch(bg_interactions, embeddings=interaction_embeddings)
+                    detect_tasks_batch(
+                        bg_interactions, embeddings=interaction_embeddings
+                    )
                     bg_batch.task_done = True
                     bg_batch.save(update_fields=["task_done"])
                 else:
@@ -778,7 +903,9 @@ def contact_import_confirm(request):
                 for c in bg_contacts:
                     calculate_relationship_score(c)
             except Exception:
-                logger.exception("Import analysis pipeline failed for batch %s", batch_id)
+                logger.exception(
+                    "Import analysis pipeline failed for batch %s", batch_id
+                )
                 BgBatch.objects.filter(id=batch_id).update(
                     error_message=f"Pipeline failed: {traceback.format_exc()[:500]}"
                 )
@@ -799,7 +926,15 @@ def contact_import_confirm(request):
         os.unlink(file_path)
     except OSError:
         pass
-    for key in ["import_mapping", "import_file", "import_header_idx", "import_total", "import_headers", "import_sheets", "import_has_header"]:
+    for key in [
+        "import_mapping",
+        "import_file",
+        "import_header_idx",
+        "import_total",
+        "import_headers",
+        "import_sheets",
+        "import_has_header",
+    ]:
         request.session.pop(key, None)
 
     # Tier distribution for import result
@@ -808,14 +943,18 @@ def contact_import_confirm(request):
         tier = c.relationship_tier or "gray"
         tier_counts[tier] = tier_counts.get(tier, 0) + 1
 
-    return render(request, "contacts/import_result.html", {
-        "created": created,
-        "skipped": skipped,
-        "errors": errors,
-        "total": created + skipped + errors,
-        "batch": batch,
-        "tier_counts": tier_counts,
-    })
+    return render(
+        request,
+        "contacts/import_result.html",
+        {
+            "created": created,
+            "skipped": skipped,
+            "errors": errors,
+            "total": created + skipped + errors,
+            "batch": batch,
+            "tier_counts": tier_counts,
+        },
+    )
 
 
 @login_required
@@ -869,23 +1008,33 @@ def interaction_create(request, contact_pk):
 
         if request.htmx:
             interactions = contact.interactions.all()[:20]
-            return render(request, "contacts/partials/interaction_timeline.html", {
-                "contact": contact,
-                "interactions": interactions,
-                "task_created": task_created,
-            })
+            return render(
+                request,
+                "contacts/partials/interaction_timeline.html",
+                {
+                    "contact": contact,
+                    "interactions": interactions,
+                    "task_created": task_created,
+                },
+            )
         return redirect("contacts:detail", pk=contact.pk)
 
-    return render(request, "contacts/partials/interaction_form.html", {
-        "contact": contact,
-        "meeting_id": request.GET.get("meeting"),
-    })
+    return render(
+        request,
+        "contacts/partials/interaction_form.html",
+        {
+            "contact": contact,
+            "meeting_id": request.GET.get("meeting"),
+        },
+    )
 
 
 @login_required
 def interaction_edit(request, contact_pk, pk):
     contact = get_object_or_404(Contact, pk=contact_pk, fc=request.user)
-    interaction = get_object_or_404(Interaction, pk=pk, contact=contact, fc=request.user)
+    interaction = get_object_or_404(
+        Interaction, pk=pk, contact=contact, fc=request.user
+    )
 
     if request.method == "POST":
         interaction.summary = request.POST["summary"]
@@ -895,35 +1044,50 @@ def interaction_edit(request, contact_pk, pk):
 
         if request.htmx:
             interactions = contact.interactions.all()[:INTERACTION_PAGE_SIZE]
-            return render(request, "contacts/partials/interaction_timeline.html", {
-                "contact": contact,
-                "interactions": interactions,
-            })
+            return render(
+                request,
+                "contacts/partials/interaction_timeline.html",
+                {
+                    "contact": contact,
+                    "interactions": interactions,
+                },
+            )
         return redirect("contacts:detail", pk=contact.pk)
 
-    return render(request, "contacts/partials/interaction_edit_form.html", {
-        "contact": contact,
-        "interaction": interaction,
-    })
+    return render(
+        request,
+        "contacts/partials/interaction_edit_form.html",
+        {
+            "contact": contact,
+            "interaction": interaction,
+        },
+    )
 
 
 @login_required
 def interaction_delete(request, contact_pk, pk):
     contact = get_object_or_404(Contact, pk=contact_pk, fc=request.user)
-    interaction = get_object_or_404(Interaction, pk=pk, contact=contact, fc=request.user)
+    interaction = get_object_or_404(
+        Interaction, pk=pk, contact=contact, fc=request.user
+    )
 
     if request.method == "POST":
         interaction.delete()
 
         from intelligence.services import calculate_relationship_score
+
         calculate_relationship_score(contact)
 
         if request.htmx:
             interactions = contact.interactions.all()[:INTERACTION_PAGE_SIZE]
-            return render(request, "contacts/partials/interaction_timeline.html", {
-                "contact": contact,
-                "interactions": interactions,
-            })
+            return render(
+                request,
+                "contacts/partials/interaction_timeline.html",
+                {
+                    "contact": contact,
+                    "interactions": interactions,
+                },
+            )
         return redirect("contacts:detail", pk=contact.pk)
 
     return HttpResponse(status=405)
@@ -953,10 +1117,14 @@ def contact_ai_section(request, pk):
     # Step 3: Find similar contacts (pgvector, <10ms)
     similar = find_similar_contacts(contact, n=3)
 
-    return render(request, "contacts/partials/contact_ai_section.html", {
-        "contact": contact,
-        "similar_contacts": similar,
-    })
+    return render(
+        request,
+        "contacts/partials/contact_ai_section.html",
+        {
+            "contact": contact,
+            "similar_contacts": similar,
+        },
+    )
 
 
 @login_required
@@ -973,8 +1141,11 @@ def task_create(request):
         )
         # Return updated task list
         from accounts.views import _build_task_context
+
         ctx = _build_task_context(request.user)
-        return render(request, "accounts/partials/dashboard/section_tasks_list.html", ctx)
+        return render(
+            request, "accounts/partials/dashboard/section_tasks_list.html", ctx
+        )
 
     # GET: return inline form
     return render(request, "contacts/partials/task_form.html")
@@ -991,9 +1162,9 @@ def task_complete(request, pk):
         '<svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
         '<span class="text-sm text-green-700">완료되었습니다</span></div>'
-        '<script>setTimeout(function(){var el=document.currentScript.previousElementSibling;'
+        "<script>setTimeout(function(){var el=document.currentScript.previousElementSibling;"
         'el.style.opacity="0";el.style.maxHeight="0";el.style.padding="0";el.style.margin="0";el.style.overflow="hidden";'
-        'setTimeout(function(){el.remove()},300)},1000)</script>'
+        "setTimeout(function(){el.remove()},300)},1000)</script>"
     )
 
 
@@ -1008,8 +1179,11 @@ def task_edit(request, pk):
         task.save(update_fields=["title", "description", "due_date"])
 
         from accounts.views import _build_task_context
+
         ctx = _build_task_context(request.user)
-        return render(request, "accounts/partials/dashboard/section_tasks_list.html", ctx)
+        return render(
+            request, "accounts/partials/dashboard/section_tasks_list.html", ctx
+        )
 
     return render(request, "contacts/partials/task_edit_form.html", {"task": task})
 

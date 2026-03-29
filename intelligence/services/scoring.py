@@ -73,7 +73,9 @@ def calculate_relationship_score(contact):
     closeness += min(interaction_count * 3, 25)
 
     # Positive sentiment ratio (0-35)
-    sentiments = list(interactions.exclude(sentiment="").values_list("sentiment", flat=True))
+    sentiments = list(
+        interactions.exclude(sentiment="").values_list("sentiment", flat=True)
+    )
     if sentiments:
         positive_ratio = sentiments.count("positive") / len(sentiments)
         closeness += int(positive_ratio * 35)

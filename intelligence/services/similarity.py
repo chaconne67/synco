@@ -38,7 +38,9 @@ def find_similar_contacts(contact, n=5) -> list[tuple]:
     return results
 
 
-def find_contacts_like(reference_tier="gold", target_tier="yellow", fc=None, n=10) -> list[dict]:
+def find_contacts_like(
+    reference_tier="gold", target_tier="yellow", fc=None, n=10
+) -> list[dict]:
     """Find target_tier contacts similar to reference_tier centroid.
 
     Fallback: gold → green → empty list.
@@ -115,10 +117,12 @@ def find_contacts_like(reference_tier="gold", target_tier="yellow", fc=None, n=1
                 best_sim = sim
                 best_exemplar = ref_contact
 
-        results.append({
-            "contact": te.contact,
-            "similarity": similarity,
-            "exemplar": best_exemplar,
-        })
+        results.append(
+            {
+                "contact": te.contact,
+                "similarity": similarity,
+                "exemplar": best_exemplar,
+            }
+        )
 
     return results

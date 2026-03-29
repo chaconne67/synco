@@ -5,22 +5,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('contacts', '0001_initial'),
-        ('meetings', '0001_initial'),
+        ("contacts", "0001_initial"),
+        ("meetings", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='interaction',
-            name='meeting',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='meetings.meeting'),
+            model_name="interaction",
+            name="meeting",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="meetings.meeting",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='contact',
-            constraint=models.UniqueConstraint(condition=models.Q(('phone__gt', '')), fields=('fc', 'phone'), name='unique_fc_contact_phone'),
+            model_name="contact",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("phone__gt", "")),
+                fields=("fc", "phone"),
+                name="unique_fc_contact_phone",
+            ),
         ),
     ]

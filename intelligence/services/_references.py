@@ -43,7 +43,9 @@ def _compute_hash(refs: dict[str, str]) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def _load_cache(cache_path: Path, refs: dict[str, str]) -> dict[str, list[float]] | None:
+def _load_cache(
+    cache_path: Path, refs: dict[str, str]
+) -> dict[str, list[float]] | None:
     if not cache_path.exists():
         return None
     try:
@@ -56,13 +58,17 @@ def _load_cache(cache_path: Path, refs: dict[str, str]) -> dict[str, list[float]
         return None
 
 
-def _save_cache(cache_path: Path, refs: dict[str, str], vectors: dict[str, list[float]]):
+def _save_cache(
+    cache_path: Path, refs: dict[str, str], vectors: dict[str, list[float]]
+):
     CACHE_DIR.mkdir(exist_ok=True)
     with open(cache_path, "w") as f:
         json.dump({"hash": _compute_hash(refs), "vectors": vectors}, f)
 
 
-def _init_vectors(refs: dict[str, str], cache_path: Path) -> dict[str, np.ndarray] | None:
+def _init_vectors(
+    refs: dict[str, str], cache_path: Path
+) -> dict[str, np.ndarray] | None:
     """Initialize reference vectors from cache or API."""
     # Try file cache
     cached = _load_cache(cache_path, refs)

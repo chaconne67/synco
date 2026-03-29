@@ -7,68 +7,136 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('contacts', '0003_contact_business_urgency_score_and_more'),
-        ('intelligence', '0001_initial'),
+        ("contacts", "0003_contact_business_urgency_score_and_more"),
+        ("intelligence", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AnalysisJob',
+            name="AnalysisJob",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('status', models.CharField(choices=[('pending', '대기'), ('running', '진행 중'), ('completed', '완료'), ('failed', '실패')], default='pending', max_length=10)),
-                ('total_contacts', models.IntegerField(default=0)),
-                ('processed_contacts', models.IntegerField(default=0)),
-                ('error_message', models.TextField(blank=True)),
-                ('started_at', models.DateTimeField(blank=True, null=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='analysis_jobs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "대기"),
+                            ("running", "진행 중"),
+                            ("completed", "완료"),
+                            ("failed", "실패"),
+                        ],
+                        default="pending",
+                        max_length=10,
+                    ),
+                ),
+                ("total_contacts", models.IntegerField(default=0)),
+                ("processed_contacts", models.IntegerField(default=0)),
+                ("error_message", models.TextField(blank=True)),
+                ("started_at", models.DateTimeField(blank=True, null=True)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="analysis_jobs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'analysis_jobs',
-                'ordering': ['-created_at'],
+                "db_table": "analysis_jobs",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='FortunateInsight',
+            name="FortunateInsight",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('reason', models.TextField()),
-                ('signal_type', models.CharField(blank=True, max_length=30)),
-                ('expires_at', models.DateTimeField(blank=True, null=True)),
-                ('is_dismissed', models.BooleanField(default=False)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fortunate_insights', to='contacts.contact')),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("reason", models.TextField()),
+                ("signal_type", models.CharField(blank=True, max_length=30)),
+                ("expires_at", models.DateTimeField(blank=True, null=True)),
+                ("is_dismissed", models.BooleanField(default=False)),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="fortunate_insights",
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'fortunate_insights',
-                'ordering': ['-created_at'],
+                "db_table": "fortunate_insights",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='RelationshipAnalysis',
+            name="RelationshipAnalysis",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('business_signals', models.JSONField(default=dict)),
-                ('relationship_signals', models.JSONField(default=dict)),
-                ('ai_summary', models.TextField(blank=True)),
-                ('extracted_tasks', models.JSONField(default=list)),
-                ('fortunate_insights', models.JSONField(default=list)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='analyses', to='contacts.contact')),
-                ('fc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("business_signals", models.JSONField(default=dict)),
+                ("relationship_signals", models.JSONField(default=dict)),
+                ("ai_summary", models.TextField(blank=True)),
+                ("extracted_tasks", models.JSONField(default=list)),
+                ("fortunate_insights", models.JSONField(default=list)),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="analyses",
+                        to="contacts.contact",
+                    ),
+                ),
+                (
+                    "fc",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'relationship_analyses',
-                'ordering': ['-created_at'],
+                "db_table": "relationship_analyses",
+                "ordering": ["-created_at"],
             },
         ),
     ]
