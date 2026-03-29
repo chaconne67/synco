@@ -25,3 +25,7 @@ dev = [
     "pytest>=8.0.0",
     "pytest-django>=4.9.0",
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "main.settings"
+pythonpath = ["."]
