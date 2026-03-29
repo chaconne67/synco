@@ -79,22 +79,29 @@
   <!-- AI Briefing section -->
   <div class="mb-4">
     <h3 class="text-sm font-bold text-gray-900 mb-3">AI 브리핑</h3>
-    {% if latest_brief %}
-    <div class="bg-white rounded-2xl border border-gray-100 p-4">
-      <p class="text-sm text-gray-700 mb-2">{{ latest_brief.company_analysis|truncatewords:30 }}</p>
-      <p class="text-sm text-primary font-medium">{{ latest_brief.action_suggestion|truncatewords:20 }}</p>
-      <p class="text-xs text-gray-500 mt-2">{{ latest_brief.generated_at|date:"n월 j일" }} 생성</p>
+    <div id="ai-brief-slot">
+      {% if latest_brief %}
+      <div class="bg-white rounded-2xl border border-gray-100 p-4">
+        <p class="text-sm text-gray-700 mb-2">{{ latest_brief.company_analysis|truncatewords:30 }}</p>
+        <p class="text-sm text-primary font-medium">{{ latest_brief.action_suggestion|truncatewords:20 }}</p>
+        <div class="flex items-center justify-between mt-3">
+          <p class="text-xs text-gray-500">{{ latest_brief.generated_at|date:"n월 j일" }} 생성</p>
+          <a href="{% url 'intelligence:brief_detail' contact.pk %}"
+             hx-get="{% url 'intelligence:brief_detail' contact.pk %}" hx-target="#main-content" hx-push-url="true"
+             class="text-xs font-semibold text-primary">자세히 &gt;</a>
+        </div>
+      </div>
+      {% else %}
+      <button class="w-full bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm text-primary font-semibold hover:bg-primary/10 transition"
+              hx-post="{% url 'intelligence:brief_generate' contact.pk %}"
+              hx-target="#ai-brief-slot"
+              hx-swap="innerHTML"
+              hx-indicator="#brief-spinner">
+        <span id="brief-spinner" class="htmx-indicator inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2"></span>
+        AI 브리핑 생성하기
+      </button>
+      {% endif %}
     </div>
-    {% else %}
-    <button class="w-full bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm text-primary font-semibold hover:bg-primary/10 transition"
-            hx-post="/intelligence/briefs/{{ contact.pk }}/"
-            hx-target="closest div"
-            hx-swap="innerHTML"
-            hx-indicator="#brief-spinner">
-      <span id="brief-spinner" class="htmx-indicator inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2"></span>
-      AI 브리핑 생성하기
-    </button>
-    {% endif %}
   </div>
 
   <!-- AI section: similar contacts + sentiment/task補完 (lazy-load) -->
