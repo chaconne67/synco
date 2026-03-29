@@ -4,7 +4,6 @@
 from .scoring import calculate_relationship_score
 from .briefing import generate_dashboard_briefing
 from .excel import detect_header_and_map, classify_sheets
-from .legacy import analyze_contact_relationship, analyze_sentiments
 
 # New (Phase 3)
 from .embedding import build_contact_text, embed_contact, embed_contacts_batch
@@ -42,7 +41,4 @@ __all__ = [
     # Deep analysis
     "generate_summary",
     "generate_insights",
-    # Legacy (Phase 6 removal)
-    "analyze_contact_relationship",
-    "analyze_sentiments",
 ]

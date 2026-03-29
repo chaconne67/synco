@@ -1,5 +1,3 @@
-import threading
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -7,7 +5,7 @@ from django.utils import timezone
 
 from contacts.models import Contact
 
-from .models import AnalysisJob, Brief, FortunateInsight, Match, RelationshipAnalysis
+from .models import Brief, FortunateInsight, Match, RelationshipAnalysis
 
 
 @login_required
@@ -118,76 +116,8 @@ def contact_report_analysis(request, contact_pk):
     })
 
 
-@login_required
-def analysis_trigger(request):
-    """관계 분석 실행 트리거 — 백그라운드 스레드."""
-    if request.method != "POST":
-        return HttpResponse(status=405)
-
-    contacts = Contact.objects.filter(fc=request.user)
-    total = contacts.count()
-    if total == 0:
-        return HttpResponse('<p class="text-sm text-gray-500">분석할 연락처가 없습니다.</p>')
-
-    job = AnalysisJob.objects.create(
-        fc=request.user,
-        total_contacts=total,
-        started_at=timezone.now(),
-        status=AnalysisJob.Status.RUNNING,
-    )
-
-    def _run_analysis(job_pk, user_pk):
-        import django
-        django.setup()
-        from intelligence.services import analyze_contact_relationship, calculate_relationship_score
-        from contacts.models import Contact as BgContact
-
-        try:
-            job = AnalysisJob.objects.get(pk=job_pk)
-            contacts = BgContact.objects.filter(fc_id=user_pk)
-            for contact in contacts:
-                # AI analysis if contact has interactions, else pure Python
-                has_data = contact.interactions.exists()
-                if has_data:
-                    try:
-                        analyze_contact_relationship(contact)
-                    except Exception:
-                        calculate_relationship_score(contact)
-                else:
-                    calculate_relationship_score(contact)
-                job.processed_contacts += 1
-                job.save(update_fields=["processed_contacts"])
-            job.status = AnalysisJob.Status.COMPLETED
-            job.completed_at = timezone.now()
-            job.save(update_fields=["status", "completed_at"])
-        except Exception as e:
-            try:
-                job = AnalysisJob.objects.get(pk=job_pk)
-                job.status = AnalysisJob.Status.FAILED
-                job.error_message = str(e)
-                job.save(update_fields=["status", "error_message"])
-            except Exception:
-                pass
-
-    thread = threading.Thread(
-        target=_run_analysis,
-        args=(job.pk, request.user.pk),
-        daemon=True,
-    )
-    thread.start()
-
-    return render(request, "intelligence/partials/analysis_progress.html", {"job": job})
-
-
-@login_required
-def analysis_status(request, job_pk):
-    """분석 진행 상태 폴링."""
-    job = get_object_or_404(AnalysisJob, pk=job_pk, fc=request.user)
-
-    if job.status in (AnalysisJob.Status.COMPLETED, AnalysisJob.Status.FAILED):
-        return render(request, "intelligence/partials/analysis_complete.html", {"job": job})
-
-    return render(request, "intelligence/partials/analysis_progress.html", {"job": job})
+    # analysis_trigger and analysis_status removed in Phase 6.
+    # Replaced by automatic embedding-based analysis pipeline.
 
 
 @login_required

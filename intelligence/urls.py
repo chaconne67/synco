@@ -13,9 +13,7 @@ urlpatterns = [
     ),
     path("matches/", views.match_list, name="match_list"),
     path("matches/<uuid:pk>/", views.match_detail, name="match_detail"),
-    # Analysis
-    path("analysis/trigger/", views.analysis_trigger, name="analysis_trigger"),
-    path("analysis/status/<uuid:job_pk>/", views.analysis_status, name="analysis_status"),
+    # Analysis (legacy trigger/status removed — replaced by auto pipeline)
     # Dashboard briefing (lazy-load)
     path("dashboard-briefing/", views.dashboard_briefing, name="dashboard_briefing"),
     # Report modal
