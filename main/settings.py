@@ -144,3 +144,29 @@ STORAGES = {
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# LLM Provider Configuration
+# Default: claude_cli (uses Claude Code subscription, no API key needed)
+# Fallback chain: kimi > minimax (configured but not active until tested)
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "claude_cli")
+LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
+LLM_MODEL = os.environ.get("LLM_MODEL", "")
+
+# Provider-specific configs (options ready for future testing)
+LLM_PROVIDERS = {
+    "claude_cli": {
+        "model": "",
+    },
+    "kimi": {
+        "base_url": os.environ.get("KIMI_BASE_URL", "https://api.moonshot.cn/v1"),
+        "model": os.environ.get("LLM_MODEL", "kimi-k2.5"),
+    },
+    "minimax": {
+        "base_url": "https://openrouter.ai/api/v1",
+        "model": os.environ.get("LLM_MODEL", "minimax/minimax-m2.7"),
+    },
+    "openrouter": {
+        "base_url": "https://openrouter.ai/api/v1",
+        "model": os.environ.get("LLM_MODEL", "anthropic/claude-sonnet-4"),
+    },
+}
