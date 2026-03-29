@@ -1,11 +1,43 @@
-{% if pending_tasks %}
-<div class="space-y-2">
-  {% for task in pending_tasks %}
+{% if overdue_tasks %}
+<div class="bg-red-50 rounded-2xl border border-red-200 p-3 mb-3">
+  <p class="text-xs font-semibold text-red-600 mb-2">밀린 업무 {{ overdue_tasks.count }}건</p>
+  <div class="space-y-2">
+    {% for task in overdue_tasks %}
+    {% include "accounts/partials/dashboard/_task_card.html" %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if today_tasks %}
+<p class="text-xs font-semibold text-gray-500 mb-2">오늘</p>
+<div class="space-y-2 mb-3">
+  {% for task in today_tasks %}
   {% include "accounts/partials/dashboard/_task_card.html" %}
   {% endfor %}
 </div>
-{% else %}
+{% endif %}
+
+{% if week_tasks %}
+<p class="text-xs font-semibold text-gray-500 mb-2">이번 주</p>
+<div class="space-y-2 mb-3">
+  {% for task in week_tasks %}
+  {% include "accounts/partials/dashboard/_task_card.html" %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if undated_tasks %}
+<p class="text-xs font-semibold text-gray-500 mb-2">날짜 미지정</p>
+<div class="space-y-2 mb-3">
+  {% for task in undated_tasks %}
+  {% include "accounts/partials/dashboard/_task_card.html" %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if not overdue_tasks and not today_tasks and not week_tasks and not undated_tasks %}
 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 text-center">
-  <p class="text-sm text-gray-500">처리할 업무가 없습니다</p>
+  <p class="text-sm text-gray-500">할 일이 없습니다</p>
 </div>
 {% endif %}
