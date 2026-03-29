@@ -967,11 +967,14 @@ def task_create(request):
             fc=request.user,
             contact_id=contact_id,
             title=request.POST["title"],
+            description=request.POST.get("description", ""),
             due_date=request.POST.get("due_date") or None,
+            status=Task.Status.PENDING,
         )
         # Return updated task list
-        pending_tasks = Task.objects.filter(fc=request.user, is_completed=False).select_related("contact")[:10]
-        return render(request, "contacts/partials/task_list_items.html", {"pending_tasks": pending_tasks})
+        from accounts.views import _build_task_context
+        ctx = _build_task_context(request.user)
+        return render(request, "accounts/partials/dashboard/section_tasks_list.html", ctx)
 
     # GET: return inline form
     return render(request, "contacts/partials/task_form.html")
@@ -980,9 +983,18 @@ def task_create(request):
 @login_required
 def task_complete(request, pk):
     task = get_object_or_404(Task, pk=pk, fc=request.user)
-    task.is_completed = True
-    task.save(update_fields=["is_completed"])
-    return HttpResponse("")  # Remove the element via hx-swap="outerHTML"
+    task.status = Task.Status.DONE
+    task.save(update_fields=["status"])
+    # Show brief completion feedback then fade out
+    return HttpResponse(
+        '<div class="flex items-center gap-3 bg-green-50 rounded-2xl border border-green-200 p-4 transition-all duration-500">'
+        '<svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+        '<span class="text-sm text-green-700">완료되었습니다</span></div>'
+        '<script>setTimeout(function(){var el=document.currentScript.previousElementSibling;'
+        'el.style.opacity="0";el.style.maxHeight="0";el.style.padding="0";el.style.margin="0";el.style.overflow="hidden";'
+        'setTimeout(function(){el.remove()},300)},1000)</script>'
+    )
 
 
 @login_required
@@ -991,15 +1003,13 @@ def task_edit(request, pk):
 
     if request.method == "POST":
         task.title = request.POST["title"]
+        task.description = request.POST.get("description", "")
         task.due_date = request.POST.get("due_date") or None
-        task.save(update_fields=["title", "due_date"])
+        task.save(update_fields=["title", "description", "due_date"])
 
-        pending_tasks = Task.objects.filter(fc=request.user, is_completed=False).select_related("contact").order_by("due_date", "created_at")[:5]
-        total_task_count = Task.objects.filter(fc=request.user, is_completed=False).count()
-        return render(request, "accounts/partials/dashboard/section_tasks_list.html", {
-            "pending_tasks": pending_tasks,
-            "total_task_count": total_task_count,
-        })
+        from accounts.views import _build_task_context
+        ctx = _build_task_context(request.user)
+        return render(request, "accounts/partials/dashboard/section_tasks_list.html", ctx)
 
     return render(request, "contacts/partials/task_edit_form.html", {"task": task})
 

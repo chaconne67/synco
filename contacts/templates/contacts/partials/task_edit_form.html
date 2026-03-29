@@ -4,6 +4,8 @@
   <div class="space-y-2">
     <input type="text" name="title" value="{{ task.title }}"
            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary" required autofocus>
+    <textarea name="description" rows="2" placeholder="상세 메모 (선택)"
+              class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary resize-none">{{ task.description }}</textarea>
     <div class="flex items-center gap-2">
       <input type="date" name="due_date" value="{{ task.due_date|date:'Y-m-d' }}"
              class="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2">
