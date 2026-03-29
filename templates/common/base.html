@@ -63,7 +63,7 @@
 
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-100 font-sans text-gray-900" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body class="bg-gray-50 font-sans text-gray-900" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
   <div class="max-w-md mx-auto lg:max-w-7xl lg:flex min-h-screen lg:bg-white lg:shadow-sm lg:rounded-none lg:my-0">
 
@@ -73,7 +73,7 @@
     </nav>
 
     <!-- Main content -->
-    <main id="main-content" class="flex-1 pb-20 lg:pb-0 bg-gray-50 lg:bg-white">
+    <main id="main-content" class="flex-1 pb-20 lg:pb-0 bg-gray-50 lg:bg-white min-h-screen">
       {% block content %}{% endblock %}
     </main>
 
