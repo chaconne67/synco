@@ -1,7 +1,7 @@
 # synco MVP 개발 현황
 
-**Version:** v0.3.0
-**Date:** 2026-03-29
+**Version:** v0.4.0
+**Date:** 2026-03-30
 **Tech Stack:** Django 5.2 + HTMX + Tailwind CSS + Claude AI + Gemini Embedding + pgvector
 
 ---
@@ -87,18 +87,30 @@
 
 | 섹션 | 아이콘 | 내용 | 데이터 소스 |
 |------|--------|------|------------|
-| **오늘의 업무** | 체크보드 | ±7일 이내 할일 5건 + 더보기 + 밀린 업무 배너 | Task 모델 |
+| **할 일** | 체크보드 | 날짜 기반 분류 (밀린/오늘/이번주/미지정) + 인라인 확장 | Task 모델 |
 | **미팅 일정** | 캘린더 | 오늘 → 없으면 이번주 fallback | Meeting |
 | **AI 브리핑** | 번개 | 비서 스타일 사전 브리핑, 기회/소식/리마인드 | Brief (Claude AI) |
 | **Feel Lucky** | 별 | AI 발견 유망 고객 + 이유, dismiss 가능 | FortunateInsight |
 | **분석 현황** | 차트 | 티어 분포 바 + 관리율 + 주의 필요 + 자동 분석 진행 표시 | Contact 집계 |
 
-**v0.3.0 디자인 개선:**
-- 모든 섹션 타이틀에 primary 색상 SVG 아이콘 통일
-- AI 브리핑 카드: `bg-gray-50 border-primary/15` 강조 배경
-- Feel Lucky 카드: `bg-amber-50/50` 따뜻한 추천 톤
-- 빈 상태: 모든 섹션에 아이콘 + 안내 텍스트 통일
-- 오늘의 업무: ±7일 필터 + 밀린 업무 별도 배너
+**v0.4.0 Task UX 전면 개편:**
+- "오늘의 업무" → "할 일" 섹션 제목 변경
+- 날짜 기반 4단 분류: 밀린 업무 (빨간 경고) / 오늘 / 이번 주 / 날짜 미지정
+- 카드 클릭 → 인라인 확장 (description + 연락처 보기 + 수정/삭제)
+- 체크박스에 hover 시 체크마크 미리보기, 완료 시 녹색 피드백 애니메이션
+- waiting 상태 업무는 대시보드에서 숨김 (연락처 상세에서만 표시)
+
+**v0.4.0 UI/UX 전체 리뷰 반영:**
+- focus-visible 키보드 포커스 링 전역 적용
+- aria-label 모든 아이콘 버튼에 추가
+- 텍스트 대비 gray-400 → gray-500 (WCAG AA 4.5:1 충족)
+- 터치 타깃 44px 미달 버튼 확대 (task/interaction 수정/삭제)
+- safe-area-inset-bottom 노치 기기 대응
+- 페이지 전환 로딩 프로그레스 바
+- prefers-reduced-motion 미디어 쿼리
+- 빈 상태: 미팅/매칭 회색 영역 제거, 아이콘+CTA 통일
+- 필터 칩 높이 확대 + URL 반영 (hx-push-url)
+- 모달 role=dialog + ESC 키 닫기
 
 ### 7. 미팅 관리
 - 미팅 생성/조회/수정/취소/**삭제**
@@ -170,6 +182,7 @@ synco/
 ├── main/                    # Django 프로젝트 설정
 ├── common/                  # 공유 유틸리티
 │   ├── claude.py            # Claude CLI 호출 (call_claude, call_claude_json)
+│   ├── llm.py               # Multi-provider LLM (Claude CLI/Kimi/MiniMax/OpenRouter) ✨ v0.4.0
 │   ├── embedding.py         # Gemini API 래퍼 (get_embedding, get_embeddings_batch)
 │   └── mixins.py            # BaseModel (UUID PK + Timestamp)
 ├── accounts/                # 인증 + 대시보드
@@ -199,7 +212,7 @@ synco/
 │   │   ├── briefing.py      # generate_dashboard_briefing
 │   │   ├── excel.py         # detect_header_and_map, classify_sheets
 │   │   └── _references.py   # 레퍼런스 벡터 관리 (lazy init + 파일 캐시)
-│   ├── management/commands/ # backfill_embeddings
+│   ├── management/commands/ # backfill_embeddings, reset_tasks ✨ v0.4.0
 │   └── templates/           # 브리핑, 매칭, 리포트 모달(lazy-load), 분석 폴링
 ├── templates/common/        # 공통 템플릿
 │   ├── base.html            # 루트 레이아웃 + 모달 컨테이너 + 글로벌 로딩 핸들러
@@ -235,7 +248,10 @@ BaseModel (UUID + Timestamp)
 
 ### Task (contacts)
 - `fc` → User FK, `contact` → Contact FK (nullable)
-- `title`, `due_date`, `is_completed`
+- `title` — LLM 추출 액션 요약 (20자 이내) ✨ v0.4.0
+- `description` — 메모 원문 보존 ✨ v0.4.0
+- `due_date` — LLM 추출 날짜 ✨ v0.4.0
+- `status` — pending / waiting / done ✨ v0.4.0 (is_completed 대체)
 - `source` — manual / ai_extracted
 - `source_interactions` → Interaction M2M ✨ v0.3.0 (FK→M2M 변경)
 
@@ -289,7 +305,7 @@ BaseModel (UUID + Timestamp)
 | 엑셀 시트 분류 | `classify_sheets()` | Claude | ✅ |
 | 연락처 임베딩 | `embed_contact()`, `embed_contacts_batch()` | Gemini | ✅ v0.3.0 |
 | 감정 분류 (임베딩) | `classify_sentiment()`, `classify_sentiments_batch()` | 없음 | ✅ v0.3.0 |
-| 할일 감지 (임베딩) | `detect_task()`, `detect_tasks_batch()` | 없음 | ✅ v0.3.0 |
+| 할일 감지 (임베딩+LLM) | `detect_task()`, `detect_tasks_batch()` | 임베딩+LLM | ✅ v0.4.0 |
 | 유사 고객 검색 | `find_similar_contacts()` | 없음 | ✅ v0.3.0 |
 | 유망 고객 추천 | `find_contacts_like()` | 없음 | ✅ v0.3.0 |
 | 심층 분석 | `generate_summary()`, `generate_insights()` | Claude | ✅ v0.3.0 |
@@ -297,9 +313,11 @@ BaseModel (UUID + Timestamp)
 | 순수 Python 스코어 계산 | `calculate_relationship_score()` | 없음 | ✅ |
 | 비즈니스 매칭 | — | — | ⚠️ 모델만 |
 
-### Claude vs Gemini 역할 분리
+### LLM Provider 역할 분리 ✨ v0.4.0
 - **Gemini:** 임베딩 생성 전용 (embedding.py)
-- **Claude:** 자연어 생성 전용 (deep_analysis.py, briefing.py, excel.py)
+- **Claude CLI (기본):** 자연어 생성 (deep_analysis.py, briefing.py, excel.py, task title 추출)
+- **Kimi K2.5 / MiniMax M2.7 (옵션):** Claude 대체 fallback (common/llm.py 멀티 프로바이더)
+- 설정: `LLM_PROVIDER` 환경변수로 전환 (claude_cli / kimi / minimax / openrouter)
 
 ---
 
@@ -319,6 +337,8 @@ BaseModel (UUID + Timestamp)
 | whitenoise | Static 파일 서빙 |
 | google-genai | Gemini Embedding API ✨ v0.3.0 |
 | pgvector | PostgreSQL 벡터 검색 ✨ v0.3.0 |
+| openai | Multi-provider LLM SDK (Kimi/MiniMax/OpenRouter) ✨ v0.4.0 |
+| pytest + pytest-django | 테스트 프레임워크 ✨ v0.4.0 |
 
 ---
 
@@ -330,6 +350,7 @@ BaseModel (UUID + Timestamp)
 | CEO 대시보드 | 중간 | 프로필 완성도, 매칭 피드, 에이전트 요청 |
 | 미팅 리마인더 | 중간 | Push 알림 |
 | 성과 분석 대시보드 | 중간 | 현재 placeholder |
-| 전체 데이터 backfill | 높음 | `python manage.py backfill_embeddings` 운영 1회 실행 |
+| 전체 데이터 backfill | 높음 | `backfill_embeddings` 운영 실행 → `reset_tasks` 후 재처리 |
+| LLM 프로바이더 테스트 | 중간 | Kimi K2.5 / MiniMax M2.7 fallback 실전 테스트 |
 | CSV 임포트 | 낮음 | 현재 Excel만 지원 |
 | 과금 (크레딧/구독) | 낮음 | Phase 2 |
