@@ -26,34 +26,35 @@ def home(request):
     return _ceo_dashboard(request)
 
 
+def _build_task_context(user):
+    """Build date-grouped task context for dashboard."""
+    today = timezone.localdate()
+    week_end = today + timedelta(days=(6 - today.weekday()))  # Sunday
+
+    pending = Task.objects.filter(fc=user, status=Task.Status.PENDING).select_related("contact")
+
+    overdue_tasks = pending.filter(due_date__lt=today)
+    today_tasks = pending.filter(due_date=today)
+    week_tasks = pending.filter(due_date__gt=today, due_date__lte=week_end)
+    undated_tasks = pending.filter(due_date__isnull=True)
+    total_pending_count = pending.count()
+
+    return {
+        "overdue_tasks": overdue_tasks,
+        "today_tasks": today_tasks,
+        "week_tasks": week_tasks,
+        "undated_tasks": undated_tasks,
+        "total_pending_count": total_pending_count,
+    }
+
+
 def _fc_dashboard(request):
     today = timezone.localdate()
     now = timezone.now()
     week_end = today + timedelta(days=7)
 
-    # Section 1: 오늘의 업무
-    # 오늘 기준 전후 7일 이내 미완료 할일
-    week_ago = today - timedelta(days=7)
-    all_pending = Task.objects.filter(
-        fc=request.user,
-        is_completed=False,
-    ).select_related("contact")
-
-    # 이번 주 할일: due_date가 ±7일 이내이거나, due_date 없으면 생성일이 ±7일 이내
-    from django.db.models import Q
-    this_week_tasks = all_pending.filter(
-        Q(due_date__gte=week_ago, due_date__lte=week_end)
-        | Q(due_date__isnull=True, created_at__date__gte=week_ago)
-    )
-    total_task_count = this_week_tasks.count()
-    pending_tasks = this_week_tasks[:10]
-
-    # 밀린 업무: 일주일 이전 미완료
-    overdue_tasks = all_pending.filter(
-        Q(due_date__lt=week_ago)
-        | Q(due_date__isnull=True, created_at__date__lt=week_ago)
-    )
-    overdue_count = overdue_tasks.count()
+    # Section 1: 할 일
+    task_ctx = _build_task_context(request.user)
 
     # Section 2: 오늘 미팅 → 없으면 이번주
     todays_meetings = Meeting.objects.filter(
@@ -118,9 +119,7 @@ def _fc_dashboard(request):
 
     return render(request, "accounts/dashboard_fc.html", {
         # Section 1
-        "pending_tasks": pending_tasks,
-        "total_task_count": total_task_count,
-        "overdue_count": overdue_count,
+        **task_ctx,
         # Section 2
         "todays_meetings": todays_meetings,
         "show_week_meetings": show_week_meetings,
@@ -142,45 +141,16 @@ def _fc_dashboard(request):
 
 @login_required
 def dashboard_tasks_all(request):
-    """HTMX: return this-week pending tasks (no 5-item limit)."""
-    today = timezone.localdate()
-    week_ago = today - timedelta(days=7)
-    week_end = today + timedelta(days=7)
-
-    from django.db.models import Q
-
-    pending_tasks = Task.objects.filter(
-        fc=request.user,
-        is_completed=False,
-    ).filter(
-        Q(due_date__gte=week_ago, due_date__lte=week_end)
-        | Q(due_date__isnull=True, created_at__date__gte=week_ago)
-    ).select_related("contact")
-
-    return render(request, "accounts/partials/dashboard/section_tasks_list.html", {
-        "pending_tasks": pending_tasks,
-    })
+    """HTMX: return all pending tasks grouped by date."""
+    ctx = _build_task_context(request.user)
+    return render(request, "accounts/partials/dashboard/section_tasks_list.html", ctx)
 
 
 @login_required
 def dashboard_tasks_overdue(request):
-    """HTMX: return overdue tasks (older than 1 week)."""
-    today = timezone.localdate()
-    week_ago = today - timedelta(days=7)
-
-    from django.db.models import Q
-
-    overdue_tasks = Task.objects.filter(
-        fc=request.user,
-        is_completed=False,
-    ).filter(
-        Q(due_date__lt=week_ago)
-        | Q(due_date__isnull=True, created_at__date__lt=week_ago)
-    ).select_related("contact")
-
-    return render(request, "accounts/partials/dashboard/section_tasks_list.html", {
-        "pending_tasks": overdue_tasks,
-    })
+    """HTMX: return all pending tasks grouped by date (overdue view)."""
+    ctx = _build_task_context(request.user)
+    return render(request, "accounts/partials/dashboard/section_tasks_list.html", ctx)
 
 
 def _ceo_dashboard(request):
