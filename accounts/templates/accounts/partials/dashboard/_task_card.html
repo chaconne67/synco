@@ -1,4 +1,4 @@
-<div class="flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+<div class="group flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
   <button hx-post="{% url 'contacts:task_complete' task.pk %}" hx-target="closest div" hx-swap="outerHTML"
           aria-label="업무 완료"
           class="w-7 h-7 rounded-full border-2 border-gray-300 flex-shrink-0 hover:border-primary hover:bg-primary/10 transition"></button>
