@@ -37,3 +37,9 @@ media/
 # Node (Tailwind build)
 node_modules/
 .gstack/
+
+# Embedding reference cache
+.cache/
+
+# Agent handoff files
+.agents/
