@@ -2,10 +2,10 @@
 <div class="flex items-center px-4 pt-6 pb-4">
   <a href="{% url 'contacts:detail' contact.pk %}"
      hx-get="{% url 'contacts:detail' contact.pk %}" hx-target="#main-content" hx-push-url="true"
-     class="text-gray-500 hover:text-gray-700 mr-3">
+     class="text-gray-500 hover:text-gray-700 mr-3" aria-label="뒤로가기">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
   </a>
-  <h1 class="text-lg font-bold text-gray-900">AI &#48652;&#47532;&#54609;</h1>
+  <h1 class="text-lg font-bold text-gray-900">AI 브리핑</h1>
 </div>
 
 {% if brief %}
@@ -13,21 +13,21 @@
   <!-- Title -->
   <div>
     <h2 class="text-xl font-bold text-gray-900">
-      {% if contact.company_name %}{{ contact.company_name }} &mdash; {% endif %}{{ contact.name }}
+      {% if contact.company_name %}{{ contact.company_name }} — {% endif %}{{ contact.name }}
     </h2>
-    <p class="text-xs text-gray-500 mt-1">{{ brief.generated_at|date:"Y년 n월 j일 H:i" }} &#49373;&#49457;</p>
+    <p class="text-xs text-gray-500 mt-1">{{ brief.generated_at|date:"Y년 n월 j일 H:i" }} 생성</p>
   </div>
 
   <!-- 핵심 분석 -->
   <div class="bg-white rounded-2xl border border-gray-100 p-4">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2">&#128270; &#54645;&#49900; &#48516;&#49437;</h3>
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">핵심 분석</h3>
     <p class="text-sm text-gray-700 leading-relaxed">{{ brief.company_analysis }}</p>
   </div>
 
   <!-- 최근 동향 -->
   {% if brief.insights.trends %}
   <div class="bg-white rounded-2xl border border-gray-100 p-4">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2">&#128200; &#52572;&#44540; &#46041;&#54693;</h3>
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">최근 동향</h3>
     <p class="text-sm text-gray-700 leading-relaxed">{{ brief.insights.trends }}</p>
   </div>
   {% endif %}
@@ -35,14 +35,14 @@
   <!-- 매칭 기회 -->
   {% if brief.insights.opportunities %}
   <div class="bg-white rounded-2xl border border-gray-100 p-4">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2">&#129309; &#47588;&#52845; &#44592;&#54924;</h3>
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">매칭 기회</h3>
     <p class="text-sm text-gray-700 leading-relaxed">{{ brief.insights.opportunities }}</p>
   </div>
   {% endif %}
 
   <!-- 추천 접근 -->
   <div class="bg-white rounded-2xl border border-gray-100 p-4">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2">&#128161; &#52628;&#52380; &#51217;&#44540;</h3>
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">추천 접근</h3>
     <p class="text-sm text-gray-700 leading-relaxed">{{ brief.action_suggestion }}</p>
   </div>
 
@@ -51,22 +51,28 @@
     <button hx-post="{% url 'intelligence:brief_generate' contact.pk %}"
             hx-target="#main-content"
             hx-swap="innerHTML"
+            hx-indicator=".btn-spinner"
             class="w-full text-center bg-white border border-gray-200 text-gray-700 font-semibold py-3 px-5 rounded-xl text-sm hover:bg-gray-50 transition">
-      &#128260; &#48652;&#47532;&#54609; &#49352;&#47196;&#44256;&#52840;
+      브리핑 새로고침
     </button>
   </div>
 </div>
 
 {% else %}
 <!-- Empty state -->
-<div class="flex flex-col items-center justify-center py-16 px-4 text-center">
-  <div class="text-4xl text-gray-300 mb-4">&#129302;</div>
-  <p class="text-gray-500 text-sm mb-4">&#48652;&#47532;&#54609;&#51012; &#49373;&#49457;&#54644;&#51452;&#49464;&#50836;</p>
+<div class="flex flex-col items-center justify-center flex-1 min-h-[calc(100vh-180px)] px-4 text-center">
+  <div class="w-14 h-14 bg-primary-light rounded-full flex items-center justify-center mb-4">
+    <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+    </svg>
+  </div>
+  <p class="text-gray-500 text-sm mb-4">브리핑을 생성해주세요</p>
   <button hx-post="{% url 'intelligence:brief_generate' contact.pk %}"
           hx-target="#main-content"
           hx-swap="innerHTML"
+          hx-on::after-request="htmx.ajax('GET', '{% url 'intelligence:brief_detail' contact.pk %}', {target:'#main-content', swap:'innerHTML'})"
           class="bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm hover:bg-primary-dark transition">
-    AI &#48652;&#47532;&#54609; &#49373;&#49457;&#54616;&#44592;
+    AI 브리핑 생성하기
   </button>
 </div>
 {% endif %}

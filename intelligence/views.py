@@ -33,6 +33,14 @@ def brief_generate(request, contact_pk):
         insights={},
     )
 
+    # If called from brief_detail page (hx-target=#main-content), return full detail
+    if request.htmx and request.htmx.target == "main-content":
+        return render(request, "intelligence/partials/brief_detail_content.html", {
+            "contact": contact,
+            "brief": brief,
+        })
+
+    # If called from contact detail (#ai-brief-slot), return card
     return render(request, "intelligence/partials/brief_card.html", {
         "contact": contact,
         "brief": brief,
