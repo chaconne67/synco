@@ -1,0 +1,28 @@
+{% if similar_contacts %}
+<!-- Similar contacts section -->
+<div class="mb-4">
+  <h3 class="text-sm font-bold text-gray-900 mb-3">유사 고객</h3>
+  <div class="space-y-2">
+    {% for similar_contact, similarity in similar_contacts %}
+    <a href="{% url 'contacts:detail' similar_contact.pk %}"
+       hx-get="{% url 'contacts:detail' similar_contact.pk %}"
+       hx-target="#main-content"
+       hx-push-url="true"
+       class="block bg-white rounded-2xl border border-gray-100 p-3 active:bg-gray-50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-base flex-shrink-0">{{ similar_contact.tier_emoji }}</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold">{{ similar_contact.name }}</p>
+          <p class="text-xs text-gray-500">
+            {% if similar_contact.industry and similar_contact.industry == contact.industry %}같은 {{ similar_contact.industry }}{% elif similar_contact.industry %}{{ similar_contact.industry }}{% endif %}{% if similar_contact.region %}, {{ similar_contact.region }}{% endif %}
+          </p>
+        </div>
+        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

@@ -1,0 +1,86 @@
+<section>
+  <h3 class="text-base font-semibold mb-3">전체 고객 데이터 분석 현황</h3>
+
+  {% if total_contacts > 0 %}
+  <!-- Tier Summary -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-3">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm text-gray-500">관계 현황</span>
+      <span class="text-sm font-semibold text-primary">관리율 {{ management_rate }}%</span>
+    </div>
+
+    <!-- Tier counts -->
+    <div class="flex items-center gap-3 mb-3 text-sm">
+      {% if tier_summary.gold %}<span>⭐ {{ tier_summary.gold }}</span>{% endif %}
+      {% if tier_summary.green %}<span>🟢 {{ tier_summary.green }}</span>{% endif %}
+      {% if tier_summary.yellow %}<span>🟡 {{ tier_summary.yellow }}</span>{% endif %}
+      {% if tier_summary.red %}<span>🔴 {{ tier_summary.red }}</span>{% endif %}
+      {% if tier_summary.gray %}<span>⚪ {{ tier_summary.gray }}</span>{% endif %}
+    </div>
+
+    <!-- Progress bar -->
+    {% if total_contacts %}
+    <div class="flex h-2.5 rounded-full overflow-hidden bg-gray-100">
+      {% if tier_summary.gold %}
+      <div class="bg-yellow-400" style="width: {% widthratio tier_summary.gold total_contacts 100 %}%"></div>
+      {% endif %}
+      {% if tier_summary.green %}
+      <div class="bg-green-400" style="width: {% widthratio tier_summary.green total_contacts 100 %}%"></div>
+      {% endif %}
+      {% if tier_summary.yellow %}
+      <div class="bg-yellow-300" style="width: {% widthratio tier_summary.yellow total_contacts 100 %}%"></div>
+      {% endif %}
+      {% if tier_summary.red %}
+      <div class="bg-red-400" style="width: {% widthratio tier_summary.red total_contacts 100 %}%"></div>
+      {% endif %}
+      {% if tier_summary.gray %}
+      <div class="bg-gray-300" style="width: {% widthratio tier_summary.gray total_contacts 100 %}%"></div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Analysis status (auto, no button) -->
+  {% if analysis_in_progress %}
+  <div class="bg-primary-light rounded-2xl p-4 mb-3">
+    <p class="text-sm text-primary font-medium mb-2">추천 준비 중 · 대화 분위기 정리 중</p>
+    <div class="w-full bg-primary/10 rounded-full h-2">
+      <div class="bg-primary rounded-full h-2 transition-all" style="width: {{ analysis_progress }}%"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Attention Needed -->
+  {% if attention_contacts %}
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-3">
+    <div class="px-4 py-3 border-b border-gray-100">
+      <h4 class="text-sm font-semibold">주의 필요</h4>
+    </div>
+    <div class="divide-y divide-gray-50">
+      {% for contact in attention_contacts %}
+      <a href="/contacts/{{ contact.pk }}/"
+         hx-get="/contacts/{{ contact.pk }}/" hx-target="#main-content" hx-push-url="true"
+         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition">
+        <span class="text-sm">{{ contact.tier_emoji }}</span>
+        <div class="flex-1 min-w-0">
+          <span class="text-sm font-medium">{{ contact.name }}</span>
+          <span class="text-xs text-gray-400 ml-1">{{ contact.company_name }}</span>
+        </div>
+        <span class="text-xs text-gray-400">{{ contact.health_detail }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Performance placeholder -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 text-center mt-3">
+    <p class="text-sm text-gray-400">성과 분석 (준비 중)</p>
+  </div>
+
+  {% else %}
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 text-center">
+    <p class="text-sm text-gray-400">등록된 연락처가 없습니다</p>
+  </div>
+  {% endif %}
+</section>
