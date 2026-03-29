@@ -1,23 +1,62 @@
 import logging
+from datetime import date
 
 import numpy as np
 
 from common.embedding import get_embedding, get_embeddings_batch
+from common.llm import call_llm_json
 
 from ._references import cosine_similarity, get_task_vectors
 
 logger = logging.getLogger(__name__)
 
-# Margin threshold: max(task_scores) - not_task_score must exceed this
 TASK_MARGIN = 0.05
 
+TITLE_SYSTEM_PROMPT = (
+    "보험설계사(FC)의 고객 접점 메모에서 FC가 해야 할 다음 액션을 추출합니다. "
+    "반드시 아래 JSON 형식으로만 응답하세요."
+)
 
-def detect_task(interaction, embedding: list[float] | None = None):
-    """Single interaction → Task or None.
+TITLE_USER_TEMPLATE = """메모: {summary}
+고객: {contact_name} / {company_name}
 
-    If caller already got None from get_embedding(), do NOT call this — skip instead.
-    Sets interaction.task_checked=True after processing (regardless of Task creation).
-    """
+다음 JSON을 반환하세요:
+{{"title": "FC가 해야 할 다음 액션 한 줄 요약 (20자 이내)", "due_date": "YYYY-MM-DD 또는 null (메모에 날짜 힌트가 있을 때만)"}}"""
+
+
+def _extract_title_and_date(interaction) -> dict:
+    """Call LLM to extract action title and due date from memo."""
+    try:
+        result = call_llm_json(
+            TITLE_USER_TEMPLATE.format(
+                summary=interaction.summary[:500],
+                contact_name=interaction.contact.name if interaction.contact else "",
+                company_name=interaction.contact.company_name if interaction.contact else "",
+            ),
+            system=TITLE_SYSTEM_PROMPT,
+            timeout=30,
+        )
+        return {
+            "title": str(result.get("title", ""))[:200],
+            "due_date": result.get("due_date"),
+        }
+    except Exception:
+        logger.exception("LLM title extraction failed")
+        name = interaction.contact.name if interaction.contact else ""
+        return {"title": f"{name} 팔로업", "due_date": None}
+
+
+def _parse_due_date(date_str) -> date | None:
+    if not date_str:
+        return None
+    try:
+        return date.fromisoformat(str(date_str))
+    except (ValueError, TypeError):
+        return None
+
+
+def detect_task(interaction, embedding=None):
+    """Single interaction -> Task or None."""
     from contacts.models import Task
 
     refs = get_task_vectors()
@@ -27,44 +66,45 @@ def detect_task(interaction, embedding: list[float] | None = None):
     if embedding is None:
         embedding = get_embedding(interaction.summary)
     if embedding is None:
-        return None  # task_checked stays False → retry next time
+        return None
 
     vec = np.array(embedding)
     scores = {label: cosine_similarity(vec, ref_vec) for label, ref_vec in refs.items()}
 
     task_score = max(scores.get("task", 0), scores.get("followup", 0), scores.get("promise", 0))
+    waiting_score = scores.get("waiting", 0)
     not_task_score = scores.get("not_task", 0)
 
+    status = None
+    if waiting_score > task_score and waiting_score - not_task_score > TASK_MARGIN:
+        status = Task.Status.WAITING
+    elif task_score - not_task_score > TASK_MARGIN:
+        status = Task.Status.PENDING
+
     result = None
-    if task_score - not_task_score > TASK_MARGIN:
-        task, _ = Task.objects.get_or_create(
+    if status is not None:
+        extracted = _extract_title_and_date(interaction)
+        due_date = _parse_due_date(extracted.get("due_date"))
+
+        task = Task.objects.create(
             fc=interaction.fc,
             contact=interaction.contact,
-            title=interaction.summary[:80],
-            defaults={
-                "source": Task.Source.AI_EXTRACTED,
-                "due_date": None,
-                "is_completed": False,
-            },
+            title=extracted["title"],
+            description=interaction.summary,
+            due_date=due_date,
+            status=status,
+            source=Task.Source.AI_EXTRACTED,
         )
         task.source_interactions.add(interaction)
         result = task
 
-    # Mark as checked regardless of whether a task was created
     interaction.task_checked = True
     interaction.save(update_fields=["task_checked"])
     return result
 
 
-def detect_tasks_batch(
-    interactions: list,
-    embeddings: list[list[float]] | None = None,
-) -> list:
-    """Batch detect tasks for N interactions.
-
-    If embeddings provided, reuses them. Otherwise generates via API.
-    Only marks task_checked=True for interactions where embedding succeeded.
-    """
+def detect_tasks_batch(interactions, embeddings=None):
+    """Batch detect tasks. Calls LLM per detected task."""
     from contacts.models import Interaction, Task
 
     if not interactions:
@@ -74,7 +114,6 @@ def detect_tasks_batch(
     if refs is None:
         return []
 
-    # Get embeddings
     if embeddings is None:
         texts = [i.summary for i in interactions]
         emb_list = get_embeddings_batch(texts)
@@ -86,29 +125,37 @@ def detect_tasks_batch(
 
     for interaction, emb in zip(interactions, emb_list):
         if emb is None:
-            continue  # task_checked stays False → retry next time
+            continue
 
         vec = np.array(emb)
         scores = {label: cosine_similarity(vec, ref_vec) for label, ref_vec in refs.items()}
 
         task_score = max(scores.get("task", 0), scores.get("followup", 0), scores.get("promise", 0))
+        waiting_score = scores.get("waiting", 0)
         not_task_score = scores.get("not_task", 0)
 
-        if task_score - not_task_score > TASK_MARGIN:
-            task, _ = Task.objects.get_or_create(
+        status = None
+        if waiting_score > task_score and waiting_score - not_task_score > TASK_MARGIN:
+            status = Task.Status.WAITING
+        elif task_score - not_task_score > TASK_MARGIN:
+            status = Task.Status.PENDING
+
+        if status is not None:
+            extracted = _extract_title_and_date(interaction)
+            due_date = _parse_due_date(extracted.get("due_date"))
+
+            task = Task.objects.create(
                 fc=interaction.fc,
                 contact=interaction.contact,
-                title=interaction.summary[:80],
-                defaults={
-                    "source": Task.Source.AI_EXTRACTED,
-                    "due_date": None,
-                    "is_completed": False,
-                },
+                title=extracted["title"],
+                description=interaction.summary,
+                due_date=due_date,
+                status=status,
+                source=Task.Source.AI_EXTRACTED,
             )
             task.source_interactions.add(interaction)
             tasks.append(task)
 
-        # Mark as checked (embedding succeeded = detection logic ran)
         interaction.task_checked = True
         checked_interactions.append(interaction)
 
