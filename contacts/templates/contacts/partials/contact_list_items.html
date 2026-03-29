@@ -17,7 +17,7 @@
       </div>
       <div class="text-right">
         <!-- Desktop: tier label + tooltip sentiment -->
-        <span class="hidden lg:inline text-xs text-gray-400">{{ contact.tier_label }}</span>
+        <span class="hidden lg:inline text-xs text-gray-500">{{ contact.tier_label }}</span>
         {% with sentiment=contact.last_sentiment %}
         {% if sentiment %}
         <span class="hidden lg:inline ml-1 cursor-default" title="최근 소통: {% if sentiment == 'positive' %}긍정{% elif sentiment == 'neutral' %}보통{% else %}부정{% endif %}">
@@ -26,13 +26,13 @@
         {% endif %}
         {% endwith %}
         <!-- Mobile: tier label -->
-        <span class="lg:hidden text-xs text-gray-400">{{ contact.tier_label }}</span>
+        <span class="lg:hidden text-xs text-gray-500">{{ contact.tier_label }}</span>
       </div>
     </div>
     <!-- Mobile: sentiment text line -->
     {% with sentiment=contact.last_sentiment %}
     {% if sentiment %}
-    <p class="lg:hidden text-xs text-gray-400 mt-1.5 pl-7">
+    <p class="lg:hidden text-xs text-gray-500 mt-1.5 pl-7">
       최근 소통
       {% if sentiment == 'positive' %}😊 긍정{% elif sentiment == 'neutral' %}😐 보통{% else %}😟 부정{% endif %}
       {% if contact.last_interaction_at %} · {{ contact.last_interaction_at|date:"n/j" }}{% endif %}

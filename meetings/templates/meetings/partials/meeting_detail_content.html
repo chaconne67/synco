@@ -53,9 +53,9 @@
     <h3 class="text-sm font-semibold text-gray-900 mb-3">&#48120;&#54021; &#47700;&#47784;</h3>
     {% if meeting_memo %}
     <p class="text-sm text-gray-700 leading-relaxed">{{ meeting_memo.summary }}</p>
-    <p class="text-xs text-gray-400 mt-2">{{ meeting_memo.created_at|date:"n/j H:i" }}</p>
+    <p class="text-xs text-gray-500 mt-2">{{ meeting_memo.created_at|date:"n/j H:i" }}</p>
     {% else %}
-    <p class="text-sm text-gray-400 mb-3">&#47700;&#47784;&#47484; &#45224;&#44200;&#51452;&#49464;&#50836;</p>
+    <p class="text-sm text-gray-500 mb-3">&#47700;&#47784;&#47484; &#45224;&#44200;&#51452;&#49464;&#50836;</p>
     <a href="{% url 'contacts:interaction_create' meeting.contact.pk %}?meeting={{ meeting.pk }}"
        hx-get="{% url 'contacts:interaction_create' meeting.contact.pk %}?meeting={{ meeting.pk }}" hx-target="#main-content" hx-push-url="true"
        class="inline-block bg-primary text-white font-semibold py-2.5 px-4 rounded-xl text-sm hover:bg-primary-dark transition">
@@ -82,7 +82,7 @@
   <div class="pt-2">
     <button hx-post="{% url 'meetings:delete' meeting.pk %}"
             hx-confirm="이 미팅을 완전히 삭제하시겠습니까? 되돌릴 수 없습니다."
-            class="w-full text-center text-xs text-gray-400 hover:text-red-500 py-2 transition">
+            class="w-full text-center text-xs text-gray-500 hover:text-red-500 py-2 transition">
       삭제
     </button>
   </div>

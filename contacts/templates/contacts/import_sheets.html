@@ -9,7 +9,7 @@
   <div class="flex items-center gap-3 mb-5">
     <a href="{% url 'contacts:import' %}"
        hx-get="{% url 'contacts:import' %}" hx-target="#main-content" hx-push-url="true"
-       class="text-gray-400 hover:text-gray-600">
+       class="text-gray-500 hover:text-gray-600">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
       </svg>
@@ -49,15 +49,15 @@
             {% if sheet.is_contact %}
             <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-50 text-green-600">연락처</span>
             {% else %}
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-400">제외</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500">제외</span>
             {% endif %}
           </div>
-          <p class="text-xs text-gray-400 mt-0.5">{{ sheet.reason }}</p>
+          <p class="text-xs text-gray-500 mt-0.5">{{ sheet.reason }}</p>
           {% if sheet.headers %}
           <p class="text-[11px] text-gray-300 mt-0.5 truncate">{{ sheet.headers|join:", " }}</p>
           {% endif %}
         </div>
-        <span class="text-xs text-gray-400 flex-shrink-0">{{ sheet.rows }}건</span>
+        <span class="text-xs text-gray-500 flex-shrink-0">{{ sheet.rows }}건</span>
       </label>
       {% endfor %}
     </div>

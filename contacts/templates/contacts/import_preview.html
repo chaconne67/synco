@@ -9,7 +9,7 @@
   <div class="flex items-center gap-3 mb-5">
     <a href="/contacts/import/"
        hx-get="/contacts/import/" hx-target="#main-content" hx-push-url="true"
-       class="text-gray-400 hover:text-gray-600">
+       class="text-gray-500 hover:text-gray-600">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
       </svg>
@@ -39,7 +39,7 @@
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
       <div class="px-4 py-3 border-b border-gray-100">
         <h3 class="text-sm font-semibold">컬럼 매핑</h3>
-        <p class="text-xs text-gray-400 mt-0.5">AI 분류 결과를 확인하고 필요시 수정하세요</p>
+        <p class="text-xs text-gray-500 mt-0.5">AI 분류 결과를 확인하고 필요시 수정하세요</p>
       </div>
       <div class="divide-y divide-gray-50">
         {% for header in headers %}
@@ -53,7 +53,7 @@
             {% for sample in sample_rows|slice:":1" %}
               {% for key, val in sample.items %}
                 {% if key == header and val %}
-                <span class="block text-[11px] text-gray-400 truncate mt-0.5">예: {{ val }}</span>
+                <span class="block text-[11px] text-gray-500 truncate mt-0.5">예: {{ val }}</span>
                 {% endif %}
               {% endfor %}
             {% endfor %}
@@ -106,7 +106,7 @@
                 {% if row.industry %} · {{ row.industry }}{% endif %}
               </p>
             </div>
-            <div class="text-xs text-gray-400 flex-shrink-0">
+            <div class="text-xs text-gray-500 flex-shrink-0">
               {{ row.phone|default:"" }}
             </div>
           </div>

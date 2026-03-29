@@ -1,7 +1,7 @@
 <div class="flex items-center gap-3 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
   <div class="flex-shrink-0 text-center min-w-[48px]">
     {% if show_date %}
-    <div class="text-[10px] text-gray-400">{{ meeting.scheduled_at|date:"n/j" }}</div>
+    <div class="text-[10px] text-gray-500">{{ meeting.scheduled_at|date:"n/j" }}</div>
     {% endif %}
     <div class="text-sm font-bold text-primary">{{ meeting.scheduled_at|date:"H:i" }}</div>
   </div>

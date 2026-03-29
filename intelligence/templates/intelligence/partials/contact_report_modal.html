@@ -1,12 +1,15 @@
 <!-- Modal backdrop -->
-<div class="flex items-center justify-center min-h-screen p-4 bg-black/50" onclick="if(event.target===this){document.getElementById('modal-container').classList.add('hidden');document.getElementById('modal-container').innerHTML='';}">
+<div class="flex items-center justify-center min-h-screen p-4 bg-black/50"
+     role="dialog" aria-modal="true" aria-label="{{ contact.name }} 리포트"
+     onclick="if(event.target===this){document.getElementById('modal-container').classList.add('hidden');document.getElementById('modal-container').innerHTML='';}"
+     onkeydown="if(event.key==='Escape'){document.getElementById('modal-container').classList.add('hidden');document.getElementById('modal-container').innerHTML='';}">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
 
     <!-- Header -->
     <div class="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between rounded-t-2xl">
       <h3 class="text-base font-bold">{{ contact.name }} 리포트</h3>
       <button onclick="document.getElementById('modal-container').classList.add('hidden');document.getElementById('modal-container').innerHTML='';"
-              class="text-gray-400 hover:text-gray-600 p-1">
+              class="text-gray-500 hover:text-gray-600 p-2.5" aria-label="닫기">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -21,34 +24,34 @@
           <span class="text-lg">{{ contact.tier_emoji }}</span>
           <span class="text-sm font-semibold">{{ contact.tier_label }}</span>
           {% if contact.relationship_score %}
-          <span class="text-xs text-gray-400">({{ contact.relationship_score|floatformat:0 }}점)</span>
+          <span class="text-xs text-gray-500">({{ contact.relationship_score|floatformat:0 }}점)</span>
           {% endif %}
         </div>
         <div class="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <span class="text-gray-400">회사</span>
+            <span class="text-gray-500">회사</span>
             <p class="font-medium">{{ contact.company_name|default:"—" }}</p>
           </div>
           <div>
-            <span class="text-gray-400">업종</span>
+            <span class="text-gray-500">업종</span>
             <p class="font-medium">{{ contact.industry|default:"—" }}</p>
           </div>
           <div>
-            <span class="text-gray-400">지역</span>
+            <span class="text-gray-500">지역</span>
             <p class="font-medium">{{ contact.region|default:"—" }}</p>
           </div>
           <div>
-            <span class="text-gray-400">매출</span>
+            <span class="text-gray-500">매출</span>
             <p class="font-medium">{{ contact.revenue_range|default:"—" }}</p>
           </div>
           {% if contact.employee_count %}
           <div>
-            <span class="text-gray-400">직원수</span>
+            <span class="text-gray-500">직원수</span>
             <p class="font-medium">{{ contact.employee_count }}명</p>
           </div>
           {% endif %}
           <div>
-            <span class="text-gray-400">마지막 접촉</span>
+            <span class="text-gray-500">마지막 접촉</span>
             <p class="font-medium">{{ contact.health_detail }}</p>
           </div>
         </div>
@@ -66,7 +69,7 @@
           <div class="h-3 bg-gray-200 rounded w-3/4"></div>
           <div class="h-3 bg-gray-100 rounded w-1/2"></div>
         </div>
-        <p class="text-xs text-gray-400 mt-2">분석 중입니다...</p>
+        <p class="text-xs text-gray-500 mt-2">분석 중입니다...</p>
       </div>
       {% elif analysis %}
       {% include "intelligence/partials/report_analysis_section.html" %}
@@ -95,7 +98,7 @@
         <div class="space-y-2">
           {% for interaction in interactions|slice:":5" %}
           <div class="text-xs">
-            <span class="text-gray-400">{{ interaction.created_at|date:"n/j" }}</span>
+            <span class="text-gray-500">{{ interaction.created_at|date:"n/j" }}</span>
             <span class="{% if interaction.sentiment == 'positive' %}text-green-600{% elif interaction.sentiment == 'negative' %}text-red-500{% else %}text-gray-600{% endif %}">
               {{ interaction.summary|truncatechars:80 }}
             </span>

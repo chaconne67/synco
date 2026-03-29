@@ -68,34 +68,40 @@
     {% for chip in industries|make_list %}
     {% endfor %}
     {% endwith %}
-    <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium {% if not industry %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
+    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if not industry %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
             hx-get="{% url 'contacts:list' %}?q={{ q }}"
-            hx-target="#contact-list">
+            hx-target="#contact-list"
+            hx-push-url="{% url 'contacts:list' %}{% if q %}?q={{ q }}{% endif %}">
       전체
     </button>
-    <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium {% if industry == '제조업' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
+    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '제조업' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
             hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=제조업"
-            hx-target="#contact-list">
+            hx-target="#contact-list"
+            hx-push-url="{% url 'contacts:list' %}?industry=제조업{% if q %}&q={{ q }}{% endif %}">
       제조
     </button>
-    <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium {% if industry == '유통/물류' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
+    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '유통/물류' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
             hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=유통/물류"
-            hx-target="#contact-list">
+            hx-target="#contact-list"
+            hx-push-url="{% url 'contacts:list' %}?industry=유통/물류{% if q %}&q={{ q }}{% endif %}">
       유통
     </button>
-    <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium {% if industry == 'IT/소프트웨어' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
+    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == 'IT/소프트웨어' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
             hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=IT/소프트웨어"
-            hx-target="#contact-list">
+            hx-target="#contact-list"
+            hx-push-url="{% url 'contacts:list' %}?industry=IT/소프트웨어{% if q %}&q={{ q }}{% endif %}">
       IT
     </button>
-    <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium {% if industry == '서비스업' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
+    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '서비스업' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
             hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=서비스업"
-            hx-target="#contact-list">
+            hx-target="#contact-list"
+            hx-push-url="{% url 'contacts:list' %}?industry=서비스업{% if q %}&q={{ q }}{% endif %}">
       서비스
     </button>
-    <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium {% if industry == '금융' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
+    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '금융' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
             hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=금융"
-            hx-target="#contact-list">
+            hx-target="#contact-list"
+            hx-push-url="{% url 'contacts:list' %}?industry=금융{% if q %}&q={{ q }}{% endif %}">
       금융
     </button>
   </div>

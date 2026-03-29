@@ -55,7 +55,7 @@
 
     {% if latest_brief.action_suggestion %}
     <div class="bg-gray-800 p-4 text-white">
-      <p class="text-[10px] text-gray-400 font-semibold tracking-wider uppercase mb-1.5">다음 행동 제안</p>
+      <p class="text-[10px] text-gray-500 font-semibold tracking-wider uppercase mb-1.5">다음 행동 제안</p>
       <p class="text-sm leading-relaxed">{{ latest_brief.action_suggestion }}</p>
       <a href="/intelligence/briefs/{{ latest_brief.contact.pk }}/"
          hx-get="/intelligence/briefs/{{ latest_brief.contact.pk }}/"

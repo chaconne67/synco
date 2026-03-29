@@ -7,7 +7,7 @@
          hx-get="{% if editing %}{% url 'contacts:detail' contact.pk %}{% else %}{% url 'contacts:list' %}{% endif %}"
          hx-target="#main-content"
          hx-push-url="true"
-         class="text-gray-400 hover:text-gray-600">
+         class="text-gray-500 hover:text-gray-600 p-1" aria-label="뒤로가기">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
@@ -116,9 +116,9 @@
     </div>
 
     <!-- Submit -->
-    <div class="pt-2 pb-6">
+    <div class="pt-2 pb-24 lg:pb-6">
       <button type="submit"
-              class="w-full bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm">
+              class="w-full bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm hover:bg-primary-dark transition">
         {% if editing %}저장하기{% else %}등록하기{% endif %}
       </button>
     </div>

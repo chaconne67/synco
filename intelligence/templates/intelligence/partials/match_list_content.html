@@ -1,7 +1,7 @@
 <!-- Header -->
 <div class="px-4 pt-6 pb-2">
-  <h1 class="text-xl font-bold text-gray-900">&#47588;&#52845;</h1>
-  <p class="text-sm text-gray-500 mt-1">AI&#44032; &#48156;&#44204;&#54620; &#50672;&#44208;</p>
+  <h1 class="text-xl font-bold text-gray-900">매칭</h1>
+  <p class="text-sm text-gray-500 mt-1">AI가 발견한 연결</p>
 </div>
 
 {% if matches %}
@@ -14,7 +14,7 @@
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center text-sm font-semibold text-gray-900 min-w-0 flex-1">
         <span class="truncate">{{ match.contact_a.company_name|default:match.contact_a.name }}</span>
-        <span class="mx-2 text-primary shrink-0">&#8596;</span>
+        <span class="mx-2 text-primary shrink-0">&harr;</span>
         <span class="truncate">{{ match.contact_b.company_name|default:match.contact_b.name }}</span>
       </div>
       <span class="text-2xl font-bold text-primary ml-3 shrink-0">{{ match.score }}</span>
@@ -23,25 +23,25 @@
     <!-- Progress bars -->
     <div class="space-y-1.5 mb-3">
       <div class="flex items-center text-xs">
-        <span class="text-gray-500 w-10 shrink-0">&#50629;&#51333;</span>
+        <span class="text-gray-500 w-10 shrink-0">업종</span>
         <div class="flex-1 bg-gray-100 rounded-full h-1.5 mx-2">
           <div class="bg-primary rounded-full h-1.5" style="width: {{ match.industry_fit }}%"></div>
         </div>
-        <span class="text-gray-400 w-7 text-right">{{ match.industry_fit }}</span>
+        <span class="text-gray-500 w-7 text-right">{{ match.industry_fit }}</span>
       </div>
       <div class="flex items-center text-xs">
-        <span class="text-gray-500 w-10 shrink-0">&#51648;&#50669;</span>
+        <span class="text-gray-500 w-10 shrink-0">지역</span>
         <div class="flex-1 bg-gray-100 rounded-full h-1.5 mx-2">
           <div class="bg-primary rounded-full h-1.5" style="width: {{ match.region_proximity }}%"></div>
         </div>
-        <span class="text-gray-400 w-7 text-right">{{ match.region_proximity }}</span>
+        <span class="text-gray-500 w-7 text-right">{{ match.region_proximity }}</span>
       </div>
       <div class="flex items-center text-xs">
-        <span class="text-gray-500 w-10 shrink-0">&#44508;&#47784;</span>
+        <span class="text-gray-500 w-10 shrink-0">규모</span>
         <div class="flex-1 bg-gray-100 rounded-full h-1.5 mx-2">
           <div class="bg-primary rounded-full h-1.5" style="width: {{ match.size_balance }}%"></div>
         </div>
-        <span class="text-gray-400 w-7 text-right">{{ match.size_balance }}</span>
+        <span class="text-gray-500 w-7 text-right">{{ match.size_balance }}</span>
       </div>
     </div>
 
@@ -50,7 +50,7 @@
     <p class="text-xs text-gray-500 truncate">{{ match.synergy_description }}</p>
     {% endif %}
 
-    <div class="mt-2 text-xs font-semibold text-primary">&#51088;&#49464;&#55176; &gt;</div>
+    <div class="mt-2 text-xs font-semibold text-primary">자세히 &gt;</div>
   </a>
   {% endfor %}
 
@@ -66,8 +66,17 @@
 </div>
 {% else %}
 <!-- Empty state -->
-<div class="flex flex-col items-center justify-center py-16 px-4 text-center">
-  <div class="text-4xl text-gray-300 mb-4">&#128279;</div>
-  <p class="text-gray-500 text-sm">&#50672;&#46973;&#52376;&#44032; &#45908; &#49939;&#51060;&#47732; AI&#44032; &#50672;&#44208;&#51012; &#52286;&#49845;&#45768;&#45796;</p>
+<div class="flex flex-col items-center justify-center flex-1 min-h-[calc(100vh-180px)] px-4 text-center">
+  <div class="w-14 h-14 bg-primary-light rounded-full flex items-center justify-center mb-4">
+    <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+    </svg>
+  </div>
+  <p class="text-gray-500 text-sm mb-4">연락처가 더 쌓이면 AI가 연결을 찾습니다</p>
+  <a href="/contacts/"
+     hx-get="/contacts/" hx-target="#main-content" hx-push-url="true"
+     class="bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm hover:bg-primary-dark transition">
+    연락처 추가하기
+  </a>
 </div>
 {% endif %}
