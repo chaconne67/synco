@@ -987,8 +987,12 @@ def task_edit(request, pk):
         task.due_date = request.POST.get("due_date") or None
         task.save(update_fields=["title", "due_date"])
 
-        pending_tasks = Task.objects.filter(fc=request.user, is_completed=False).select_related("contact")[:10]
-        return render(request, "contacts/partials/task_list_items.html", {"pending_tasks": pending_tasks})
+        pending_tasks = Task.objects.filter(fc=request.user, is_completed=False).select_related("contact").order_by("due_date", "created_at")[:5]
+        total_task_count = Task.objects.filter(fc=request.user, is_completed=False).count()
+        return render(request, "accounts/partials/dashboard/section_tasks_list.html", {
+            "pending_tasks": pending_tasks,
+            "total_task_count": total_task_count,
+        })
 
     return render(request, "contacts/partials/task_edit_form.html", {"task": task})
 
