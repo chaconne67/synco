@@ -22,14 +22,22 @@ def contact_list(request):
 
     industry = request.GET.get("industry", "").strip()
     if industry:
-        contacts = contacts.filter(industry=industry)
+        contacts = contacts.filter(industry__icontains=industry)
 
     page = int(request.GET.get("page", 1))
     offset = (page - 1) * PAGE_SIZE
     page_contacts = contacts[offset : offset + PAGE_SIZE]
     has_more = contacts[offset + PAGE_SIZE : offset + PAGE_SIZE + 1].exists()
 
-    # Search/filter or infinite scroll → return list items only
+    total_count = contacts.count()
+
+    # Filter chips → return chips + count + list together
+    if request.htmx and request.htmx.target == "contact-filter-area":
+        return render(request, "contacts/partials/contact_filter_section.html", {
+            "contacts": page_contacts, "q": q, "industry": industry,
+            "page": page, "has_more": has_more, "total_count": total_count,
+        })
+    # Search or infinite scroll → return list items only
     if request.htmx and request.htmx.target == "contact-list":
         return render(request, "contacts/partials/contact_list_items.html", {
             "contacts": page_contacts, "q": q, "industry": industry,
@@ -42,7 +50,6 @@ def contact_list(request):
             "page": page, "has_more": has_more, "append": True,
         })
 
-    total_count = contacts.count()
     return render(request, "contacts/contact_list.html", {
         "contacts": page_contacts,
         "q": q,

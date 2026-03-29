@@ -62,56 +62,9 @@
            hx-include="[name='industry']">
   </div>
 
-  <!-- Filter chips -->
-  <div class="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-    {% with industries="전체,제조,유통,IT,서비스,금융" %}
-    {% for chip in industries|make_list %}
-    {% endfor %}
-    {% endwith %}
-    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if not industry %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
-            hx-get="{% url 'contacts:list' %}?q={{ q }}"
-            hx-target="#contact-list"
-            hx-push-url="{% url 'contacts:list' %}{% if q %}?q={{ q }}{% endif %}">
-      전체
-    </button>
-    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '제조업' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
-            hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=제조업"
-            hx-target="#contact-list"
-            hx-push-url="{% url 'contacts:list' %}?industry=제조업{% if q %}&q={{ q }}{% endif %}">
-      제조
-    </button>
-    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '유통/물류' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
-            hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=유통/물류"
-            hx-target="#contact-list"
-            hx-push-url="{% url 'contacts:list' %}?industry=유통/물류{% if q %}&q={{ q }}{% endif %}">
-      유통
-    </button>
-    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == 'IT/소프트웨어' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
-            hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=IT/소프트웨어"
-            hx-target="#contact-list"
-            hx-push-url="{% url 'contacts:list' %}?industry=IT/소프트웨어{% if q %}&q={{ q }}{% endif %}">
-      IT
-    </button>
-    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '서비스업' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
-            hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=서비스업"
-            hx-target="#contact-list"
-            hx-push-url="{% url 'contacts:list' %}?industry=서비스업{% if q %}&q={{ q }}{% endif %}">
-      서비스
-    </button>
-    <button class="flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-medium {% if industry == '금융' %}bg-primary text-white{% else %}bg-gray-100 text-gray-600{% endif %}"
-            hx-get="{% url 'contacts:list' %}?q={{ q }}&industry=금융"
-            hx-target="#contact-list"
-            hx-push-url="{% url 'contacts:list' %}?industry=금융{% if q %}&q={{ q }}{% endif %}">
-      금융
-    </button>
-  </div>
-
-  <!-- Total count -->
-  <p class="text-sm text-gray-500 mb-3">총 {{ total_count }}건</p>
-
-  <!-- Contact list -->
-  <div id="contact-list">
-    {% include "contacts/partials/contact_list_items.html" %}
+  <!-- Filter + Count + List (swap together for filter chips) -->
+  <div id="contact-filter-area">
+    {% include "contacts/partials/contact_filter_section.html" %}
   </div>
 
 </div>
