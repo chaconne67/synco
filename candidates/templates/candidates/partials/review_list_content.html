@@ -1,0 +1,100 @@
+<!-- Header -->
+<div class="flex items-center justify-between px-4 pt-6 pb-4">
+  <div>
+    <h1 class="text-xl font-bold text-gray-900">추출 결과 검토</h1>
+    <p class="text-sm text-gray-500 mt-1">총 {{ total }}건</p>
+  </div>
+</div>
+
+<!-- Status filter tabs -->
+<div class="px-4 pb-4">
+  <div class="flex gap-2 overflow-x-auto no-scrollbar">
+    {% for value, label in status_choices %}
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ value }}"
+      hx-target="#main-content"
+      hx-push-url="true"
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition
+        {% if status_filter == value %}
+          bg-indigo-600 text-white
+        {% else %}
+          bg-gray-100 text-gray-600 hover:bg-gray-200
+        {% endif %}">
+      {{ label }}
+    </button>
+    {% endfor %}
+  </div>
+</div>
+
+{% if candidates %}
+<div class="px-4 space-y-3 pb-6">
+  {% for candidate in candidates %}
+  <a href="{% url 'candidates:review_detail' candidate.pk %}"
+     hx-get="{% url 'candidates:review_detail' candidate.pk %}"
+     hx-target="#main-content"
+     hx-push-url="true"
+     class="block bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 transition">
+    <div class="flex items-start justify-between">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <h3 class="text-gray-900 font-semibold truncate">{{ candidate.name }}</h3>
+          {% if candidate.confidence_score is not None %}
+            {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
+            {% if candidate.confidence_score >= 0.85 %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{{ confidence_pct }}%</span>
+            {% elif candidate.confidence_score >= 0.6 %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{{ confidence_pct }}%</span>
+            {% else %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{{ confidence_pct }}%</span>
+            {% endif %}
+          {% endif %}
+        </div>
+        <div class="text-sm text-gray-500 space-y-0.5">
+          {% if candidate.current_company or candidate.current_position %}
+          <p class="truncate">
+            {% if candidate.current_company %}{{ candidate.current_company }}{% endif %}
+            {% if candidate.current_company and candidate.current_position %} · {% endif %}
+            {% if candidate.current_position %}{{ candidate.current_position }}{% endif %}
+          </p>
+          {% endif %}
+          <div class="flex items-center gap-3">
+            {% if candidate.birth_year %}
+            <span>{{ candidate.birth_year }}년생</span>
+            {% endif %}
+            {% if candidate.total_experience_years %}
+            <span>경력 {{ candidate.total_experience_years }}년</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% if candidate.primary_category %}
+      <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 whitespace-nowrap ml-2">
+        {{ candidate.primary_category.name_ko|default:candidate.primary_category.name }}
+      </span>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+
+  {% if has_more %}
+  <div class="py-4 text-center">
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&page={{ page|add:1 }}"
+      hx-target="this"
+      hx-swap="outerHTML"
+      class="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+      더 보기
+    </button>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+  <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+    <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+  </div>
+  <p class="text-gray-500 text-sm">검토할 후보자가 없습니다.</p>
+</div>
+{% endif %}
