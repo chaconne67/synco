@@ -1,0 +1,22 @@
+[
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000001", "fields": {"name": "Accounting", "name_ko": "회계", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000002", "fields": {"name": "EHS", "name_ko": "환경안전", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000003", "fields": {"name": "Engineer", "name_ko": "엔지니어", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000004", "fields": {"name": "Finance", "name_ko": "재무", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000005", "fields": {"name": "HR", "name_ko": "인사", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000006", "fields": {"name": "Law", "name_ko": "법무", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000007", "fields": {"name": "Logistics", "name_ko": "물류", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000008", "fields": {"name": "Marketing", "name_ko": "마케팅", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000009", "fields": {"name": "MD", "name_ko": "MD", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000010", "fields": {"name": "MR", "name_ko": "MR", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000011", "fields": {"name": "Plant", "name_ko": "플랜트", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000012", "fields": {"name": "PR+AD", "name_ko": "홍보광고", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000013", "fields": {"name": "Procurement", "name_ko": "구매", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000014", "fields": {"name": "Production", "name_ko": "생산", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000015", "fields": {"name": "Quality", "name_ko": "품질", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000016", "fields": {"name": "R&D", "name_ko": "연구개발", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000017", "fields": {"name": "Sales", "name_ko": "영업", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000018", "fields": {"name": "SCM", "name_ko": "SCM", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000019", "fields": {"name": "SI+IT", "name_ko": "IT", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}},
+  {"model": "candidates.category", "pk": "00000000-0000-0000-0000-000000000020", "fields": {"name": "VMD", "name_ko": "VMD", "candidate_count": 0, "created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-01T00:00:00Z"}}
+]
