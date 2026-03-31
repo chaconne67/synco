@@ -1,7 +1,10 @@
 import pytest
 
 from candidates.models import ParseExample
-from candidates.services.fewshot_store import format_fewshot_prompt, get_fewshot_examples
+from candidates.services.fewshot_store import (
+    format_fewshot_prompt,
+    get_fewshot_examples,
+)
 
 
 @pytest.mark.django_db

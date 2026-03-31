@@ -171,7 +171,9 @@ class TestExtractCandidateData:
 
 class TestBuildPromptFewshot:
     def test_build_extraction_prompt_with_fewshot(self):
-        prompt = build_extraction_prompt("이력서 텍스트", fewshot_section="## 예시\n삼성전자")
+        prompt = build_extraction_prompt(
+            "이력서 텍스트", fewshot_section="## 예시\n삼성전자"
+        )
         assert "예시" in prompt
         assert "삼성전자" in prompt
         assert "이력서 텍스트" in prompt

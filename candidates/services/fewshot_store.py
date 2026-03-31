@@ -7,9 +7,7 @@ import json
 from candidates.models import ParseExample
 
 
-def get_fewshot_examples(
-    category: str, max_count: int = 3
-) -> list[ParseExample]:
+def get_fewshot_examples(category: str, max_count: int = 3) -> list[ParseExample]:
     """Get active few-shot examples for a category, newest first."""
     return list(
         ParseExample.objects.filter(

@@ -41,7 +41,9 @@ def _extract_docx(file_path: str) -> str:
         # 2) Tables
         for table in doc.tables:
             for row in table.rows:
-                row_text = "\t".join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                row_text = "\t".join(
+                    cell.text.strip() for cell in row.cells if cell.text.strip()
+                )
                 if row_text:
                     parts.append(row_text)
 
