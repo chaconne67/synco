@@ -1,3 +1,5 @@
+import shutil
+
 import pytest
 from unittest.mock import patch
 from candidates.services.text_extraction import extract_text
@@ -51,3 +53,21 @@ class TestExtractText:
         doc.save(filepath)
         text = extract_text(str(filepath))
         assert text == ""
+
+
+class TestExtractTextLibreoffice:
+    @pytest.mark.skipif(
+        shutil.which("libreoffice") is None,
+        reason="LibreOffice not installed",
+    )
+    def test_extract_text_libreoffice_with_docx(self, tmp_path):
+        from docx import Document
+
+        from candidates.services.text_extraction import extract_text_libreoffice
+
+        doc = Document()
+        doc.add_paragraph("테스트 이력서 본문입니다")
+        path = str(tmp_path / "test.docx")
+        doc.save(path)
+        result = extract_text_libreoffice(path)
+        assert "테스트" in result
