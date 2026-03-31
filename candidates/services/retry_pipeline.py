@@ -11,6 +11,7 @@ from candidates.services.fewshot_store import (
 )
 from candidates.services.llm_extraction import extract_candidate_data
 from candidates.services.text_extraction import extract_text_libreoffice
+from candidates.services.validation import validate_extraction
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,22 @@ def run_extraction_with_retry(
             continue
 
         diagnosis = validate_with_codex(current_text, extracted, filename_meta)
+
+        # Codex CLI failed (timeout, parse error, etc.) — fallback to rule-based validation
+        if diagnosis["verdict"] == "error":
+            logger.warning(
+                "Codex CLI failed on attempt %d, falling back to rule-based validation",
+                attempt,
+            )
+            rule_result = validate_extraction(extracted, filename_meta)
+            diagnosis = {
+                "verdict": "pass"
+                if rule_result["confidence_score"] >= 0.85
+                else "fail",
+                "issues": rule_result["issues"],
+                "field_scores": rule_result["field_confidences"],
+                "overall_score": rule_result["confidence_score"],
+            }
 
         if diagnosis["verdict"] == "pass":
             return {
