@@ -295,11 +295,14 @@ class Command(BaseCommand):
             dest_path = os.path.join(tmpdir, primary["file_name"])
             download_file(service, primary["file_id"], dest_path)
 
-            # Step 2: Extract text
+            # Step 2: Extract text + preprocess
+            from candidates.services.text_extraction import preprocess_resume_text
+
             raw_text = extract_text(dest_path)
             if not raw_text or not raw_text.strip():
                 self._save_failed_resume(primary, folder_name, "Empty text extraction")
                 return False
+            raw_text = preprocess_resume_text(raw_text)
 
             # Step 3: Extract + Validate + Retry (new pipeline)
             pipeline_result = run_extraction_with_retry(
