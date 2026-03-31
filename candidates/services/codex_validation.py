@@ -57,48 +57,23 @@ def _build_codex_prompt(raw_text: str, extracted: dict, filename_meta: dict) -> 
     )
 
 
-def _call_codex_cli(prompt: str, timeout: int = 120) -> str:
-    """Call Codex CLI (exec mode) and return raw response text.
+def _call_codex_cli(prompt: str, timeout: int = 60) -> str:
+    """Call Claude Haiku via claude CLI for cross-validation.
 
-    Uses `codex exec --full-auto` with the prompt via stdin.
-    Output is captured from a temp file via -o flag.
+    Uses claude CLI (already authenticated) with haiku model for fast,
+    low-cost validation of extraction results.
     """
-    import tempfile
-
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
-        tmp_path = tmp.name
-
-    try:
-        full_prompt = CODEX_VALIDATION_PROMPT + "\n\n" + prompt
-        result = subprocess.run(
-            [
-                "codex",
-                "exec",
-                "--full-auto",
-                "--skip-git-repo-check",
-                "-o",
-                tmp_path,
-                "-",
-            ],
-            input=full_prompt,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        if result.returncode != 0:
-            raise RuntimeError(f"Codex CLI error: {result.stderr[:500]}")
-
-        import os
-
-        if os.path.exists(tmp_path):
-            with open(tmp_path) as f:
-                return f.read().strip()
-        return result.stdout.strip()
-    finally:
-        import os
-
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+    full_prompt = CODEX_VALIDATION_PROMPT + "\n\n" + prompt
+    result = subprocess.run(
+        ["claude", "--print", "--model", "haiku", "--max-turns", "1"],
+        input=full_prompt,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Claude Haiku error: {result.stderr[:500]}")
+    return result.stdout.strip()
 
 
 def _parse_codex_response(response_text: str) -> dict:
@@ -116,7 +91,7 @@ def validate_with_codex(
     raw_text: str,
     extracted: dict,
     filename_meta: dict,
-    timeout: int = 300,
+    timeout: int = 60,
 ) -> dict:
     """Cross-validate extraction results using Codex CLI.
 
