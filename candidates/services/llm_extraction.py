@@ -117,7 +117,7 @@ def extract_candidate_data(resume_text: str, max_retries: int = 3) -> dict | Non
             result = call_llm_json(
                 prompt,
                 system=EXTRACTION_SYSTEM_PROMPT,
-                timeout=60,
+                timeout=120,
                 max_tokens=4000,
             )
 

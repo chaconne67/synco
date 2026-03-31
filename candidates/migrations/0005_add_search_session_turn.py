@@ -7,45 +7,81 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0004_add_candidate_embedding'),
+        ("candidates", "0004_add_candidate_embedding"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SearchSession',
+            name="SearchSession",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('current_filters', models.JSONField(blank=True, default=dict)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='search_sessions', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("current_filters", models.JSONField(blank=True, default=dict)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="search_sessions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'search_sessions',
-                'ordering': ['-created_at'],
+                "db_table": "search_sessions",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='SearchTurn',
+            name="SearchTurn",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('turn_number', models.PositiveIntegerField()),
-                ('input_type', models.CharField(choices=[('voice', '음성'), ('text', '텍스트')], default='text', max_length=10)),
-                ('user_text', models.TextField()),
-                ('ai_response', models.TextField(blank=True)),
-                ('filters_applied', models.JSONField(blank=True, default=dict)),
-                ('result_count', models.IntegerField(default=0)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='turns', to='candidates.searchsession')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("turn_number", models.PositiveIntegerField()),
+                (
+                    "input_type",
+                    models.CharField(
+                        choices=[("voice", "음성"), ("text", "텍스트")],
+                        default="text",
+                        max_length=10,
+                    ),
+                ),
+                ("user_text", models.TextField()),
+                ("ai_response", models.TextField(blank=True)),
+                ("filters_applied", models.JSONField(blank=True, default=dict)),
+                ("result_count", models.IntegerField(default=0)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="turns",
+                        to="candidates.searchsession",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'search_turns',
-                'ordering': ['turn_number'],
+                "db_table": "search_turns",
+                "ordering": ["turn_number"],
             },
         ),
     ]

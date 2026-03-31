@@ -309,6 +309,10 @@ class Command(BaseCommand):
                 )
                 return False
 
+            # Step 3.5: Fallback name from filename if LLM returned null
+            if not extracted.get("name"):
+                extracted["name"] = parsed.get("name") or primary["file_name"]
+
             # Step 4: Validate
             validation = validate_extraction(extracted, parsed)
 
@@ -385,7 +389,7 @@ class Command(BaseCommand):
     ) -> Candidate:
         """Create a Candidate from extracted data."""
         return Candidate.objects.create(
-            name=extracted.get("name", ""),
+            name=extracted.get("name") or "",
             name_en=extracted.get("name_en") or "",
             birth_year=extracted.get("birth_year"),
             gender=extracted.get("gender") or "",
@@ -412,7 +416,7 @@ class Command(BaseCommand):
         for edu in educations:
             Education.objects.create(
                 candidate=candidate,
-                institution=edu.get("institution", ""),
+                institution=edu.get("institution") or "",
                 degree=edu.get("degree") or "",
                 major=edu.get("major") or "",
                 gpa=str(edu.get("gpa") or ""),
@@ -426,7 +430,7 @@ class Command(BaseCommand):
         for career in careers:
             Career.objects.create(
                 candidate=candidate,
-                company=career.get("company", ""),
+                company=career.get("company") or "",
                 company_en=career.get("company_en") or "",
                 position=career.get("position") or "",
                 department=career.get("department") or "",
@@ -445,7 +449,7 @@ class Command(BaseCommand):
         for cert in certifications:
             Certification.objects.create(
                 candidate=candidate,
-                name=cert.get("name", ""),
+                name=cert.get("name") or "",
                 issuer=cert.get("issuer") or "",
                 acquired_date=cert.get("acquired_date") or "",
             )
@@ -457,7 +461,7 @@ class Command(BaseCommand):
         for lang in language_skills:
             LanguageSkill.objects.create(
                 candidate=candidate,
-                language=lang.get("language", ""),
+                language=lang.get("language") or "",
                 test_name=lang.get("test_name") or "",
                 score=lang.get("score") or "",
                 level=lang.get("level") or "",

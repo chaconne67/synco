@@ -63,42 +63,48 @@ class TestGetClientCredentials:
             assert _get_client_secret() == "secret-web-xyz"
 
 
+_FAKE_TOKEN_JSON = '{"token": "tok", "client_id": "cid", "client_secret": "csec"}'
+
+
 class TestGetCredentials:
     @patch("candidates.services.drive_sync._save_token")
-    @patch("candidates.services.drive_sync.Credentials.from_authorized_user_file")
-    def test_valid_credentials_returned(self, mock_from_file, mock_save):
+    @patch("candidates.services.drive_sync.Credentials.from_authorized_user_info")
+    def test_valid_credentials_returned(self, mock_from_info, mock_save):
         mock_creds = MagicMock()
         mock_creds.valid = True
-        mock_from_file.return_value = mock_creds
+        mock_from_info.return_value = mock_creds
 
-        result = _get_credentials()
+        with patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)):
+            result = _get_credentials()
         assert result == mock_creds
         mock_save.assert_not_called()
 
     @patch("candidates.services.drive_sync._save_token")
-    @patch("candidates.services.drive_sync.Credentials.from_authorized_user_file")
-    def test_expired_credentials_refreshed(self, mock_from_file, mock_save):
+    @patch("candidates.services.drive_sync.Credentials.from_authorized_user_info")
+    def test_expired_credentials_refreshed(self, mock_from_info, mock_save):
         mock_creds = MagicMock()
         mock_creds.valid = False
         mock_creds.expired = True
         mock_creds.refresh_token = "refresh-token"
-        mock_from_file.return_value = mock_creds
+        mock_from_info.return_value = mock_creds
 
-        result = _get_credentials()
+        with patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)):
+            result = _get_credentials()
         mock_creds.refresh.assert_called_once()
         mock_save.assert_called_once_with(mock_creds)
         assert result == mock_creds
 
-    @patch("candidates.services.drive_sync.Credentials.from_authorized_user_file")
-    def test_invalid_credentials_raises(self, mock_from_file):
+    @patch("candidates.services.drive_sync.Credentials.from_authorized_user_info")
+    def test_invalid_credentials_raises(self, mock_from_info):
         mock_creds = MagicMock()
         mock_creds.valid = False
         mock_creds.expired = False
         mock_creds.refresh_token = None
-        mock_from_file.return_value = mock_creds
+        mock_from_info.return_value = mock_creds
 
-        with pytest.raises(RuntimeError, match="Invalid Google credentials"):
-            _get_credentials()
+        with patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)):
+            with pytest.raises(RuntimeError, match="Invalid Google credentials"):
+                _get_credentials()
 
 
 class TestSaveToken:
