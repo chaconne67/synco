@@ -26,12 +26,13 @@ def test_pass_on_first_attempt(mock_extract, mock_codex, mock_fewshot):
     assert mock_extract.call_count == 1
 
 
+@patch("shutil.which", return_value="/usr/bin/libreoffice")
 @patch("candidates.services.retry_pipeline.get_fewshot_examples", return_value=[])
 @patch("candidates.services.retry_pipeline.validate_with_codex")
 @patch("candidates.services.retry_pipeline.extract_candidate_data")
 @patch("candidates.services.retry_pipeline.extract_text_libreoffice")
 def test_retry_on_text_extraction_failure(
-    mock_libre, mock_extract, mock_codex, mock_fewshot
+    mock_libre, mock_extract, mock_codex, mock_fewshot, mock_which
 ):
     mock_extract.side_effect = [
         {"name": "홍길동", "careers": [{"company": "A", "start_date": ""}]},

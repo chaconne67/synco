@@ -19,6 +19,12 @@ Usage:
 
 from __future__ import annotations
 
+
+def _t(value: str | None, max_len: int = 200) -> str:
+    """Truncate string to max_len to prevent DB varchar overflow."""
+    s = value or ""
+    return s[:max_len]
+
 import os
 import tempfile
 import time
@@ -457,10 +463,10 @@ class Command(BaseCommand):
         for edu in educations:
             Education.objects.create(
                 candidate=candidate,
-                institution=edu.get("institution") or "",
-                degree=edu.get("degree") or "",
-                major=edu.get("major") or "",
-                gpa=str(edu.get("gpa") or ""),
+                institution=_t(edu.get("institution"), 200),
+                degree=_t(edu.get("degree"), 50),
+                major=_t(edu.get("major"), 200),
+                gpa=_t(str(edu.get("gpa") or ""), 20),
                 start_year=edu.get("start_year"),
                 end_year=edu.get("end_year"),
                 is_abroad=edu.get("is_abroad", False),
@@ -471,16 +477,16 @@ class Command(BaseCommand):
         for career in careers:
             Career.objects.create(
                 candidate=candidate,
-                company=career.get("company") or "",
-                company_en=career.get("company_en") or "",
-                position=career.get("position") or "",
-                department=career.get("department") or "",
-                start_date=career.get("start_date") or "",
-                end_date=career.get("end_date") or "",
+                company=_t(career.get("company"), 200),
+                company_en=_t(career.get("company_en"), 200),
+                position=_t(career.get("position"), 200),
+                department=_t(career.get("department"), 200),
+                start_date=_t(career.get("start_date"), 30),
+                end_date=_t(career.get("end_date"), 30),
                 is_current=career.get("is_current", False),
                 duties=career.get("duties") or "",
                 achievements=career.get("achievements") or "",
-                reason_left=career.get("reason_left") or "",
+                reason_left=_t(career.get("reason_left"), 300),
                 salary=career.get("salary"),
                 order=career.get("order", 0),
             )
@@ -490,9 +496,9 @@ class Command(BaseCommand):
         for cert in certifications:
             Certification.objects.create(
                 candidate=candidate,
-                name=cert.get("name") or "",
-                issuer=cert.get("issuer") or "",
-                acquired_date=cert.get("acquired_date") or "",
+                name=_t(cert.get("name"), 200),
+                issuer=_t(cert.get("issuer"), 200),
+                acquired_date=_t(cert.get("acquired_date"), 30),
             )
 
     def _create_language_skills(
@@ -502,10 +508,10 @@ class Command(BaseCommand):
         for lang in language_skills:
             LanguageSkill.objects.create(
                 candidate=candidate,
-                language=lang.get("language") or "",
-                test_name=lang.get("test_name") or "",
-                score=lang.get("score") or "",
-                level=lang.get("level") or "",
+                language=_t(lang.get("language"), 30),
+                test_name=_t(lang.get("test_name"), 50),
+                score=_t(lang.get("score"), 30),
+                level=_t(lang.get("level"), 50),
             )
 
     def _save_failed_resume(self, file_info: dict, folder_name: str, error_msg: str):

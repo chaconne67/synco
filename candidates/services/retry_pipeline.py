@@ -98,6 +98,7 @@ def run_extraction_with_retry(
         diagnosis = validate_with_codex(current_text, extracted, filename_meta)
 
         # Codex CLI failed (timeout, parse error, etc.) — fallback to rule-based validation
+        # and return immediately (no more Codex retries — they'll just timeout again)
         if diagnosis["verdict"] == "error":
             logger.warning(
                 "Codex CLI failed on attempt %d, falling back to rule-based validation",
@@ -111,6 +112,13 @@ def run_extraction_with_retry(
                 "issues": rule_result["issues"],
                 "field_scores": rule_result["field_confidences"],
                 "overall_score": rule_result["confidence_score"],
+            }
+            return {
+                "extracted": extracted,
+                "diagnosis": diagnosis,
+                "attempts": attempt,
+                "retry_action": "rule_fallback",
+                "raw_text_used": current_text,
             }
 
         if diagnosis["verdict"] == "pass":
@@ -134,12 +142,18 @@ def run_extraction_with_retry(
         root_cause = _dominant_root_cause(diagnosis.get("issues", []))
 
         if root_cause == "text_extraction" and not re_extracted:
-            logger.info("Attempt %d: re-extracting text via LibreOffice", attempt)
-            try:
-                current_text = extract_text_libreoffice(file_path)
-                re_extracted = True
-            except Exception:
-                logger.exception("LibreOffice re-extraction failed")
+            import shutil
+
+            if shutil.which("libreoffice"):
+                logger.info("Attempt %d: re-extracting text via LibreOffice", attempt)
+                try:
+                    current_text = extract_text_libreoffice(file_path)
+                    re_extracted = True
+                except Exception:
+                    logger.exception("LibreOffice re-extraction failed")
+            else:
+                logger.info("LibreOffice not installed, skipping re-extraction")
+                re_extracted = True  # prevent repeated attempts
 
         elif root_cause == "llm_parsing":
             logger.info("Attempt %d: retrying with diagnosis hints", attempt)
