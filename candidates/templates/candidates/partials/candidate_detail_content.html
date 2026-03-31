@@ -1,1 +1,100 @@
-{{ candidate.name }}
+<div class="px-4 py-4">
+  <div class="flex items-center gap-3 mb-4">
+    <a href="/candidates/"
+       hx-get="/candidates/"
+       hx-target="#main-content"
+       hx-push-url="true"
+       class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-heading text-gray-900">{{ candidate.name }}</h1>
+  </div>
+
+  <!-- Basic info -->
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h2 class="text-[13px] font-medium text-gray-400 uppercase tracking-wider mb-3">기본 정보</h2>
+    <div class="space-y-2 text-[14px]">
+      {% if candidate.birth_year %}<p><span class="text-gray-500">생년:</span> {{ candidate.birth_year }}</p>{% endif %}
+      {% if candidate.primary_category %}<p><span class="text-gray-500">카테고리:</span> {{ candidate.primary_category.name }}</p>{% endif %}
+      {% if candidate.current_company %}<p><span class="text-gray-500">현재:</span> {{ candidate.current_company }} {{ candidate.current_position }}</p>{% endif %}
+      {% if candidate.total_experience_years %}<p><span class="text-gray-500">총 경력:</span> {{ candidate.total_experience_years }}년</p>{% endif %}
+      {% if candidate.email %}<p><span class="text-gray-500">이메일:</span> {{ candidate.email }}</p>{% endif %}
+      {% if candidate.phone %}<p><span class="text-gray-500">연락처:</span> {{ candidate.phone }}</p>{% endif %}
+    </div>
+  </section>
+
+  <!-- Career timeline -->
+  {% if careers %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h2 class="text-[13px] font-medium text-gray-400 uppercase tracking-wider mb-3">경력</h2>
+    <div class="space-y-3">
+      {% for career in careers %}
+      <div class="flex gap-3">
+        <div class="flex flex-col items-center">
+          <div class="w-2.5 h-2.5 rounded-full {% if career.is_current %}bg-primary{% else %}bg-gray-300{% endif %}"></div>
+          {% if not forloop.last %}<div class="w-0.5 flex-1 bg-gray-200 mt-1"></div>{% endif %}
+        </div>
+        <div class="pb-3 flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-[14px] font-medium text-gray-900">{{ career.company }}</span>
+            {% if career.is_current %}<span class="text-[11px] text-primary font-medium">현직</span>{% endif %}
+          </div>
+          <p class="text-[13px] text-gray-500">{{ career.position }}{% if career.department %} · {{ career.department }}{% endif %}</p>
+          <p class="text-[12px] text-gray-400">{{ career.start_date }} — {{ career.end_date|default:"현재" }}</p>
+          {% if career.duties %}<p class="text-[13px] text-gray-600 mt-1">{{ career.duties|truncatewords:30 }}</p>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Education -->
+  {% if educations %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h2 class="text-[13px] font-medium text-gray-400 uppercase tracking-wider mb-3">학력</h2>
+    <div class="space-y-2">
+      {% for edu in educations %}
+      <div class="text-[14px]">
+        <span class="font-medium text-gray-900">{{ edu.institution }}</span>
+        {% if edu.degree %}<span class="text-gray-500"> · {{ edu.degree }}</span>{% endif %}
+        {% if edu.major %}<span class="text-gray-500"> · {{ edu.major }}</span>{% endif %}
+        {% if edu.end_year %}<span class="text-[12px] text-gray-400 ml-1">{{ edu.end_year }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Certifications + Language -->
+  {% if certifications or language_skills %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h2 class="text-[13px] font-medium text-gray-400 uppercase tracking-wider mb-3">자격증 · 어학</h2>
+    <div class="flex flex-wrap gap-2">
+      {% for cert in certifications %}
+      <span class="text-[12px] bg-gray-100 text-gray-700 px-2 py-1 rounded">{{ cert.name }}{% if cert.acquired_date %} ({{ cert.acquired_date }}){% endif %}</span>
+      {% endfor %}
+      {% for lang in language_skills %}
+      <span class="text-[12px] bg-primary-light text-primary px-2 py-1 rounded">{{ lang.language }}{% if lang.test_name %} {{ lang.test_name }}{% endif %}{% if lang.score %} {{ lang.score }}{% endif %}</span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Confidence score -->
+  {% if candidate.confidence_score %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h2 class="text-[13px] font-medium text-gray-400 uppercase tracking-wider mb-3">파싱 신뢰도</h2>
+    <div class="flex items-center gap-3">
+      <div class="flex-1 bg-gray-200 rounded-full h-2">
+        {% widthratio candidate.confidence_score 1 100 as pct %}
+        <div class="h-2 rounded-full {% if candidate.confidence_score >= 0.8 %}bg-green-500{% elif candidate.confidence_score >= 0.6 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+             style="width: {{ pct }}%"></div>
+      </div>
+      <span class="text-[13px] font-medium text-gray-600">{{ pct }}%</span>
+    </div>
+  </section>
+  {% endif %}
+</div>

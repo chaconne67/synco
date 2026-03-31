@@ -1,1 +1,67 @@
-{% extends "common/base.html" %}{% block content %}{% for c in candidates %}{{ c.name }}{% endfor %}{% endblock %}
+{% extends "common/base.html" %}
+
+{% block title %}후보자 검색 — synco{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+    <h1 class="text-heading text-gray-900">후보자</h1>
+  </header>
+
+  <!-- Category tabs -->
+  <div class="sticky top-[52px] z-10 bg-white border-b border-gray-100 px-4 py-2 overflow-x-auto">
+    <div class="flex gap-2 whitespace-nowrap">
+      <a href="/candidates/"
+         hx-get="/candidates/"
+         hx-target="#candidate-list"
+         hx-push-url="true"
+         class="px-3 py-1.5 rounded-full text-[13px] font-medium transition
+                {% if not active_category %}bg-primary text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        전체
+      </a>
+      {% for cat in categories %}
+      <a href="/candidates/?category={{ cat.name }}"
+         hx-get="/candidates/?category={{ cat.name }}"
+         hx-target="#candidate-list"
+         hx-push-url="true"
+         class="px-3 py-1.5 rounded-full text-[13px] font-medium transition
+                {% if active_category == cat.name %}bg-primary text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        {{ cat.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Search status bar -->
+  <div id="search-status-bar">
+    {% include "candidates/partials/search_status_bar.html" %}
+  </div>
+
+  <!-- Candidate list -->
+  <div id="candidate-list" class="flex-1 overflow-y-auto">
+    {% include "candidates/partials/candidate_list.html" %}
+  </div>
+</div>
+
+<!-- Floating chatbot button -->
+<button id="chatbot-toggle"
+        onclick="toggleChatbot()"
+        class="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 w-14 h-14 lg:w-[60px] lg:h-[60px]
+               bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark
+               flex items-center justify-center transition z-40"
+        aria-label="AI 검색 열기">
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+  </svg>
+</button>
+
+<!-- Chatbot modal -->
+{% include "candidates/partials/chatbot_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'candidates/chatbot.js' %}"></script>
+{% endblock %}
