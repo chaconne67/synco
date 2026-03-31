@@ -369,3 +369,55 @@ class CandidateEmbedding(BaseModel):
     @staticmethod
     def cosine_distance_expression(query_vector):
         return CosineDistance("embedding", query_vector)
+
+
+class ParseExample(BaseModel):
+    """Few-shot 예시 저장소. 교정된 사례를 축적하여 다음 파싱 프롬프트에 삽입."""
+
+    category = models.CharField(max_length=50, db_index=True)
+    resume_pattern = models.CharField(max_length=200)
+    input_excerpt = models.TextField(help_text="원본 텍스트 발췌 (500자 이내)")
+    correct_output = models.JSONField(help_text="교정된 추출 JSON 발췌")
+    source_candidate = models.ForeignKey(
+        "Candidate",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="parse_examples",
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "parse_examples"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"[{self.category}] {self.resume_pattern[:50]}"
+
+
+class ValidationDiagnosis(BaseModel):
+    """Codex 교차 검증 진단 결과. 재시도 이력 추적."""
+
+    candidate = models.ForeignKey(
+        "Candidate",
+        on_delete=models.CASCADE,
+        related_name="diagnoses",
+    )
+    resume = models.ForeignKey(
+        "Resume",
+        on_delete=models.CASCADE,
+        related_name="diagnoses",
+    )
+    attempt_number = models.PositiveIntegerField(default=1)
+    verdict = models.CharField(max_length=10)  # pass / fail
+    overall_score = models.FloatField()
+    issues = models.JSONField(default=list)
+    field_scores = models.JSONField(default=dict)
+    retry_action = models.CharField(max_length=30, blank=True)
+
+    class Meta:
+        db_table = "validation_diagnoses"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Attempt {self.attempt_number}: {self.verdict} ({self.overall_score})"

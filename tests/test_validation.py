@@ -1,3 +1,6 @@
+import pytest
+
+from candidates.models import ParseExample
 from candidates.services.validation import (
     compute_overall_confidence,
     validate_cross_check,
@@ -115,3 +118,16 @@ class TestValidateExtraction:
             "needs_review",
             "failed",
         )
+
+
+@pytest.mark.django_db
+def test_parse_example_create():
+    ex = ParseExample.objects.create(
+        category="Plant",
+        resume_pattern="영문+국문 혼합, 텍스트박스 헤더",
+        input_excerpt="Daehan Solution LLC / President...",
+        correct_output={"company": "대한솔루션", "start_date": "Dec. 2016"},
+    )
+    assert ex.category == "Plant"
+    assert ex.is_active is True
+    assert ex.correct_output["company"] == "대한솔루션"
