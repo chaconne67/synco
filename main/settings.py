@@ -24,6 +24,9 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS", "https://synco.kr,https://www.synco.kr"
 ).split(",")
 
+# CSRF — make token available to JS via cookie
+CSRF_COOKIE_HTTPONLY = False
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
