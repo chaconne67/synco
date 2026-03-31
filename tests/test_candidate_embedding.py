@@ -1,6 +1,12 @@
+from unittest.mock import patch
+
 import pytest
 
 from candidates.models import Candidate, CandidateEmbedding, Category
+from candidates.services.embedding import (
+    build_embedding_text,
+    generate_candidate_embedding,
+)
 
 
 @pytest.fixture
@@ -73,3 +79,33 @@ def test_pgvector_cosine_search(candidate, category):
         CandidateEmbedding.cosine_distance_expression(query_vec)
     )[:10]
     assert results[0].candidate == candidate
+
+
+@pytest.mark.django_db
+def test_build_embedding_text(candidate):
+    """Build searchable text from candidate data."""
+    text = build_embedding_text(candidate)
+    assert "홍길동" in text
+    assert "삼성전자" in text
+    assert "과장" in text
+
+
+@pytest.mark.django_db
+@patch("candidates.services.embedding.get_embedding")
+def test_generate_candidate_embedding(mock_embed, candidate):
+    """Generate and save embedding for a candidate."""
+    mock_embed.return_value = [0.5] * 3072
+    emb = generate_candidate_embedding(candidate)
+    assert emb is not None
+    assert CandidateEmbedding.objects.filter(candidate=candidate).exists()
+    mock_embed.assert_called_once()
+
+
+@pytest.mark.django_db
+@patch("candidates.services.embedding.get_embedding")
+def test_generate_embedding_skips_if_unchanged(mock_embed, candidate):
+    """Skip re-embedding if text hash unchanged."""
+    mock_embed.return_value = [0.5] * 3072
+    generate_candidate_embedding(candidate)
+    generate_candidate_embedding(candidate)  # second call
+    assert mock_embed.call_count == 1  # skipped
