@@ -1,4 +1,5 @@
 from django.db import models
+from pgvector.django import CosineDistance, VectorField
 
 from common.mixins import BaseModel
 
@@ -42,7 +43,7 @@ class Candidate(BaseModel):
     name = models.CharField(max_length=100)
     name_en = models.CharField(max_length=200, blank=True)
     birth_year = models.SmallIntegerField(null=True, blank=True)
-    gender = models.CharField(max_length=1, blank=True)
+    gender = models.CharField(max_length=10, blank=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30, blank=True)
     address = models.CharField(max_length=300, blank=True)
@@ -167,9 +168,9 @@ class Education(BaseModel):
         related_name="educations",
     )
     institution = models.CharField(max_length=100)
-    degree = models.CharField(max_length=20, blank=True)
+    degree = models.CharField(max_length=50, blank=True)
     major = models.CharField(max_length=100, blank=True)
-    gpa = models.CharField(max_length=20, blank=True)
+    gpa = models.CharField(max_length=30, blank=True)
     start_year = models.IntegerField(null=True, blank=True)
     end_year = models.IntegerField(null=True, blank=True)
     is_abroad = models.BooleanField(default=False)
@@ -194,8 +195,8 @@ class Career(BaseModel):
     company_en = models.CharField(max_length=200, blank=True)
     position = models.CharField(max_length=200, blank=True)
     department = models.CharField(max_length=200, blank=True)
-    start_date = models.CharField(max_length=20, blank=True)
-    end_date = models.CharField(max_length=20, blank=True)
+    start_date = models.CharField(max_length=30, blank=True)
+    end_date = models.CharField(max_length=30, blank=True)
     is_current = models.BooleanField(default=False)
     duties = models.TextField(blank=True)
     achievements = models.TextField(blank=True)
@@ -224,7 +225,7 @@ class Certification(BaseModel):
     )
     name = models.CharField(max_length=100)
     issuer = models.CharField(max_length=100, blank=True)
-    acquired_date = models.CharField(max_length=20, blank=True)
+    acquired_date = models.CharField(max_length=30, blank=True)
 
     class Meta:
         db_table = "certifications"
@@ -245,7 +246,7 @@ class LanguageSkill(BaseModel):
     language = models.CharField(max_length=30)
     test_name = models.CharField(max_length=50, blank=True)
     score = models.CharField(max_length=30, blank=True)
-    level = models.CharField(max_length=20, blank=True)
+    level = models.CharField(max_length=50, blank=True)
 
     class Meta:
         db_table = "language_skills"
@@ -296,3 +297,25 @@ class ExtractionLog(BaseModel):
 
     def __str__(self):
         return f"{self.get_action_display()} - {self.field_name}"
+
+
+class CandidateEmbedding(BaseModel):
+    """후보자 임베딩 벡터 (Gemini 3072-dim)."""
+
+    candidate = models.OneToOneField(
+        Candidate,
+        on_delete=models.CASCADE,
+        related_name="embedding",
+    )
+    embedding = VectorField(dimensions=3072)
+    text_hash = models.CharField(max_length=64, blank=True)
+
+    class Meta:
+        db_table = "candidate_embeddings"
+
+    def __str__(self):
+        return f"Embedding({self.candidate.name})"
+
+    @staticmethod
+    def cosine_distance_expression(query_vector):
+        return CosineDistance("embedding", query_vector)
