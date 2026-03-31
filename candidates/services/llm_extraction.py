@@ -86,31 +86,36 @@ EXTRACTION_JSON_SCHEMA = """{
 }"""
 
 
-def build_extraction_prompt(resume_text: str) -> str:
-    """Build prompt containing the JSON schema and the resume text.
-
-    Asks the LLM for JSON-only output.
-    """
-    return (
-        "아래 이력서 텍스트를 분석하여 다음 JSON 스키마에 맞게 구조화하세요.\n\n"
-        f"## 출력 JSON 스키마\n```\n{EXTRACTION_JSON_SCHEMA}\n```\n\n"
-        f"## 이력서 텍스트\n```\n{resume_text}\n```\n\n"
+def build_extraction_prompt(resume_text: str, fewshot_section: str = "") -> str:
+    """Build prompt containing the JSON schema, optional few-shot examples, and the resume text."""
+    parts = [
+        "아래 이력서 텍스트를 분석하여 다음 JSON 스키마에 맞게 구조화하세요.\n\n",
+        f"## 출력 JSON 스키마\n```\n{EXTRACTION_JSON_SCHEMA}\n```\n",
+    ]
+    if fewshot_section:
+        parts.append(fewshot_section)
+    parts.append(
+        f"\n## 이력서 텍스트\n```\n{resume_text}\n```\n\n"
         "위 스키마에 맞는 JSON만 출력하세요. 다른 텍스트는 포함하지 마세요."
     )
+    return "".join(parts)
 
 
-def extract_candidate_data(resume_text: str, max_retries: int = 3) -> dict | None:
+def extract_candidate_data(
+    resume_text: str, max_retries: int = 3, fewshot_section: str = ""
+) -> dict | None:
     """Extract structured candidate data from resume text using LLM.
 
     Args:
         resume_text: Raw text extracted from a resume file.
         max_retries: Maximum number of retry attempts on failure.
+        fewshot_section: Optional few-shot examples prompt section.
 
     Returns:
         Parsed dict with candidate data, or None if all retries fail
         or the response is invalid.
     """
-    prompt = build_extraction_prompt(resume_text)
+    prompt = build_extraction_prompt(resume_text, fewshot_section=fewshot_section)
 
     for attempt in range(max_retries):
         try:
