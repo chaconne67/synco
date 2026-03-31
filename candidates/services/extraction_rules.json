@@ -1,0 +1,18 @@
+[
+  {
+    "id": "vml_textbox_priority",
+    "trigger": "docx 파일에 VML 텍스트박스 존재",
+    "action": "텍스트박스 내용을 본문과 병합하여 추출 (이미 text_extraction.py에 구현됨)",
+    "stage": "text_extraction",
+    "source_case": "김홍안 2026-03-31",
+    "confidence": 1.0
+  },
+  {
+    "id": "libreoffice_fallback_on_missing_dates",
+    "trigger": "Codex 검증에서 경력 날짜 다수 누락 + root_cause=text_extraction",
+    "action": "LibreOffice로 재추출 후 재파싱",
+    "stage": "retry",
+    "source_case": "김홍안 2026-03-31",
+    "confidence": 1.0
+  }
+]
