@@ -299,6 +299,56 @@ class ExtractionLog(BaseModel):
         return f"{self.get_action_display()} - {self.field_name}"
 
 
+class SearchSession(BaseModel):
+    """음성/텍스트 검색 세션 (multi-turn)."""
+
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="search_sessions",
+    )
+    is_active = models.BooleanField(default=True)
+    current_filters = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = "search_sessions"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Session({self.user}, active={self.is_active})"
+
+
+class SearchTurn(BaseModel):
+    """검색 세션 내 개별 턴."""
+
+    class InputType(models.TextChoices):
+        VOICE = "voice", "음성"
+        TEXT = "text", "텍스트"
+
+    session = models.ForeignKey(
+        SearchSession,
+        on_delete=models.CASCADE,
+        related_name="turns",
+    )
+    turn_number = models.PositiveIntegerField()
+    input_type = models.CharField(
+        max_length=10,
+        choices=InputType.choices,
+        default=InputType.TEXT,
+    )
+    user_text = models.TextField()
+    ai_response = models.TextField(blank=True)
+    filters_applied = models.JSONField(default=dict, blank=True)
+    result_count = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "search_turns"
+        ordering = ["turn_number"]
+
+    def __str__(self):
+        return f"Turn {self.turn_number}: {self.user_text[:30]}"
+
+
 class CandidateEmbedding(BaseModel):
     """후보자 임베딩 벡터 (Gemini 3072-dim)."""
 
