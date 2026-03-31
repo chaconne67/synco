@@ -36,6 +36,7 @@ from candidates.models import (
     ExtractionLog,
     LanguageSkill,
     Resume,
+    ValidationDiagnosis,
 )
 from candidates.services.drive_sync import (
     CATEGORY_FOLDERS,
@@ -45,9 +46,8 @@ from candidates.services.drive_sync import (
     list_files_in_folder,
 )
 from candidates.services.filename_parser import group_by_person
-from candidates.services.llm_extraction import extract_candidate_data
+from candidates.services.retry_pipeline import run_extraction_with_retry
 from candidates.services.text_extraction import extract_text
-from candidates.services.validation import validate_extraction
 
 
 class Command(BaseCommand):
@@ -301,20 +301,46 @@ class Command(BaseCommand):
                 self._save_failed_resume(primary, folder_name, "Empty text extraction")
                 return False
 
-            # Step 3: LLM structured extraction
-            extracted = extract_candidate_data(raw_text)
+            # Step 3: Extract + Validate + Retry (new pipeline)
+            pipeline_result = run_extraction_with_retry(
+                raw_text=raw_text,
+                file_path=dest_path,
+                category=folder_name,
+                filename_meta=parsed,
+            )
+
+            extracted = pipeline_result["extracted"]
             if not extracted:
                 self._save_failed_resume(
-                    primary, folder_name, "LLM extraction returned None"
+                    primary, folder_name, "Extraction failed after retries"
                 )
                 return False
+
+            # Use potentially re-extracted text
+            raw_text = pipeline_result["raw_text_used"]
 
             # Step 3.5: Fallback name from filename if LLM returned null
             if not extracted.get("name"):
                 extracted["name"] = parsed.get("name") or primary["file_name"]
 
-            # Step 4: Validate
-            validation = validate_extraction(extracted, parsed)
+            # Step 4: Build validation result from Codex diagnosis
+            diagnosis = pipeline_result["diagnosis"]
+            field_confidences = extracted.get("field_confidences", {})
+            validation = {
+                "confidence_score": diagnosis.get("overall_score", 0.0),
+                "validation_status": (
+                    "auto_confirmed"
+                    if diagnosis["verdict"] == "pass"
+                    else "needs_review"
+                    if diagnosis.get("overall_score", 0) >= 0.6
+                    else "failed"
+                ),
+                "field_confidences": {
+                    **field_confidences,
+                    **diagnosis.get("field_scores", {}),
+                },
+                "issues": diagnosis.get("issues", []),
+            }
 
             # Step 5: Save to DB in a transaction
             with transaction.atomic():
@@ -373,6 +399,18 @@ class Command(BaseCommand):
                     new_value=str(extracted),
                     confidence=validation["confidence_score"],
                     note=f"Imported from Drive folder: {folder_name}",
+                )
+
+                # Save validation diagnosis from retry pipeline
+                ValidationDiagnosis.objects.create(
+                    candidate=candidate,
+                    resume=primary_resume,
+                    attempt_number=pipeline_result["attempts"],
+                    verdict=diagnosis["verdict"],
+                    overall_score=diagnosis.get("overall_score", 0.0),
+                    issues=diagnosis.get("issues", []),
+                    field_scores=diagnosis.get("field_scores", {}),
+                    retry_action=pipeline_result["retry_action"],
                 )
 
                 # Add category
