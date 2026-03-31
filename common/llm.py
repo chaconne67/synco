@@ -47,14 +47,16 @@ def _extract_json(text: str) -> dict | list:
     return json.loads(text)
 
 
-def call_llm(prompt: str, system: str = "", timeout: int = 30) -> str:
+def call_llm(
+    prompt: str, system: str = "", timeout: int = 30, max_tokens: int = 500
+) -> str:
     """Call LLM and return raw text response."""
     provider = _get_provider()
 
     if provider == "claude_cli":
         full_prompt = f"{system}\n\n{prompt}" if system else prompt
         result = subprocess.run(
-            ["claude", "--print"],
+            ["claude", "--print", "--model", "sonnet", "--max-turns", "1"],
             input=full_prompt,
             capture_output=True,
             text=True,
@@ -78,12 +80,14 @@ def call_llm(prompt: str, system: str = "", timeout: int = 30) -> str:
         model=model,
         messages=messages,
         temperature=0.3,
-        max_tokens=500,
+        max_tokens=max_tokens,
     )
     return response.choices[0].message.content.strip()
 
 
-def call_llm_json(prompt: str, system: str = "", timeout: int = 30) -> dict | list:
+def call_llm_json(
+    prompt: str, system: str = "", timeout: int = 30, max_tokens: int = 500
+) -> dict | list:
     """Call LLM and parse response as JSON."""
-    text = call_llm(prompt, system=system, timeout=timeout)
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
     return _extract_json(text)
