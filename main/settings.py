@@ -109,6 +109,9 @@ KAKAO_REDIRECT_URI = os.environ.get("KAKAO_REDIRECT_URI", "")
 # Gemini Embedding
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
+# OpenAI (Whisper API)
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
 
 # Password validation
 
