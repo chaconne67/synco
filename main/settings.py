@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,12 +10,16 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-rtn5-85r@b0w9q2(05xo#5$1_79w(jsjv7stx_@^$t*j9mpj9&",
-)
-
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
+
+SECRET_KEY = os.environ.get("SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-dev-only-key-not-for-production"
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY environment variable is required in production"
+        )
 
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS", "49.247.46.171,localhost,127.0.0.1,synco.kr"
@@ -39,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     # Third-party
     "django_htmx",
     "widget_tweaks",
@@ -183,3 +189,11 @@ LLM_PROVIDERS = {
         "model": os.environ.get("LLM_MODEL", "anthropic/claude-sonnet-4"),
     },
 }
+
+# Production security settings
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

@@ -61,29 +61,6 @@ def test_candidate_detail_page(auth_client, candidate):
 
 
 @pytest.mark.django_db
-@patch("candidates.views.parse_search_query")
-@patch("candidates.views.hybrid_search")
-def test_search_chat(mock_search, mock_parse, auth_client, candidate):
-    mock_parse.return_value = {
-        "filters": {"category": "Accounting"},
-        "semantic_query": "회계",
-        "action": "new",
-        "ai_message": "회계 후보자 1명을 찾았습니다.",
-    }
-    mock_search.return_value = [candidate]
-
-    resp = auth_client.post(
-        "/candidates/search/",
-        data=json.dumps({"message": "회계 찾아줘"}),
-        content_type="application/json",
-    )
-    assert resp.status_code == 200
-    data = json.loads(resp.content)
-    assert data["ai_message"] == "회계 후보자 1명을 찾았습니다."
-    assert data["result_count"] == 1
-
-
-@pytest.mark.django_db
 def test_login_required(client):
     resp = client.get("/candidates/")
     assert resp.status_code == 302

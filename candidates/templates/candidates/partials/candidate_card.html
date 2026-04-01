@@ -2,32 +2,40 @@
    hx-get="/candidates/{{ candidate.pk }}/"
    hx-target="#main-content"
    hx-push-url="true"
-   class="block bg-white rounded-lg border border-gray-200 p-4 hover:border-primary/30 hover:shadow-sm transition">
-  <div class="flex items-start justify-between">
+   class="block bg-white rounded-xl border border-gray-200 p-4 hover:border-primary/40 hover:shadow-md transition-all">
+  <div class="flex items-start justify-between gap-3">
     <div class="min-w-0 flex-1">
-      <h3 class="text-[16px] font-semibold text-gray-900 truncate">{{ candidate.name }}</h3>
-      <p class="text-[13px] text-gray-500 mt-0.5 truncate">
-        {% if candidate.current_company %}{{ candidate.current_company }}{% endif %}
-        {% if candidate.current_position %} · {{ candidate.current_position }}{% endif %}
+      <h3 class="text-base font-semibold text-gray-900 truncate">{{ candidate.name }}</h3>
+      <p class="text-sm text-gray-500 mt-0.5 truncate">
+        {% if candidate.current_company %}
+          {{ candidate.current_company }}{% if candidate.current_position %} · {{ candidate.current_position }}{% endif %}
+        {% elif candidate.current_position %}
+          {{ candidate.current_position }}
+        {% else %}
+          <span class="text-gray-500">정보 없음</span>
+        {% endif %}
       </p>
     </div>
-    <div class="flex items-center gap-2 ml-3 shrink-0">
-      {% if candidate.total_experience_years %}
-      <span class="text-[12px] font-medium text-primary bg-primary-light px-2 py-0.5 rounded-full">
-        {{ candidate.total_experience_years }}년
-      </span>
-      {% endif %}
-    </div>
+    {% if candidate.total_experience_years %}
+    <span class="text-[15px] font-semibold text-primary bg-primary-light px-2.5 py-1 rounded-full shrink-0">
+      {{ candidate.total_experience_years }}년
+    </span>
+    {% endif %}
   </div>
-  <div class="flex items-center gap-2 mt-2">
+  <div class="flex items-center gap-1.5 mt-2.5 flex-wrap">
     {% if candidate.primary_category %}
-    <span class="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+    <span class="text-[13px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
       {{ candidate.primary_category.name }}
     </span>
     {% endif %}
     {% for edu in candidate.educations.all|slice:":1" %}
-    <span class="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+    <span class="text-[13px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
       {{ edu.institution }}
+    </span>
+    {% endfor %}
+    {% for career in candidate.careers.all|slice:":2" %}
+    <span class="text-[13px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md">
+      {{ career.company }}
     </span>
     {% endfor %}
   </div>

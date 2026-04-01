@@ -1,0 +1,81 @@
+{
+  "name": "김건식",
+  "name_en": null,
+  "birth_year": 1962,
+  "gender": "male",
+  "email": "gskim62@netian.com",
+  "phone": "011-219-6658",
+  "address": "서울",
+  "current_company": "로얄TOTO",
+  "current_position": "팀장",
+  "total_experience_years": 18,
+  "core_competencies": [
+    "구매관리",
+    "자재관리",
+    "생산관리",
+    "MRP SYSTEM",
+    "원가관리",
+    "공정관리",
+    "외주관리"
+  ],
+  "summary": "LG기전, 내외반도체, 로얄TOTO에서 18년간 구매, 자재, 생산관리 업무를 수행한 전문가. MRP 시스템 개발 및 적용 경험 보유.",
+  "educations": [
+    {
+      "institution": "인하대학교",
+      "degree": "학사",
+      "major": "산업공학과",
+      "gpa": 3.03,
+      "start_year": null,
+      "end_year": 1985,
+      "is_abroad": false
+    }
+  ],
+  "careers": [
+    {
+      "company": "로얄TOTO",
+      "company_en": null,
+      "position": "팀장",
+      "department": "생산관리",
+      "start_date": "1995-05",
+      "end_date": null,
+      "is_current": true,
+      "duties": "생산관리, 공정관리, 원가관리, 외주관리",
+      "achievements": "일본 합자회사에서 생산관리 전반 업무 수행",
+      "order": 0
+    },
+    {
+      "company": "내외반도체",
+      "company_en": null,
+      "position": "과장",
+      "department": "생산관리",
+      "start_date": "1992-04",
+      "end_date": "1995-05",
+      "is_current": false,
+      "duties": "생산관리, 자재관리, 원가관리",
+      "achievements": "상장회사에서 생산관리 업무 수행",
+      "order": 1
+    },
+    {
+      "company": "LG기전",
+      "company_en": null,
+      "position": "과장",
+      "department": "자재과/구매과",
+      "start_date": "1985-01",
+      "end_date": "1992-04",
+      "is_current": false,
+      "duties": "구매, 자재, MRP SYSTEM 개발 및 현업 적용, 생산/영업 전산화",
+      "achievements": "MRP 시스템 개발 및 6년간 현업 적용, 생산-영업 전산화 작업 수행",
+      "order": 2
+    }
+  ],
+  "certifications": [],
+  "language_skills": [],
+  "field_confidences": {
+    "name": 1.0,
+    "birth_year": 1.0,
+    "careers": 0.95,
+    "educations": 0.95,
+    "certifications": 0.0,
+    "overall": 0.9
+  }
+}

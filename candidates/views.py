@@ -1,12 +1,38 @@
 import json
+import uuid
 
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, render
 
 from .models import Candidate, Category, ExtractionLog, SearchSession, SearchTurn
-from .services.search import hybrid_search, parse_search_query
+from .services.search import parse_and_search
 from .services.whisper import transcribe_audio
+
+
+def _check_rate_limit(
+    user_id: int, action: str, max_requests: int, period_seconds: int
+) -> bool:
+    """Return True if rate limit exceeded.
+
+    Note: Uses Django default cache (LocMemCache). In production with multiple
+    workers, use Redis (django-redis) for shared counters across processes.
+    """
+    key = f"ratelimit:{action}:{user_id}"
+    count = cache.get(key)
+    if count is None:
+        cache.set(key, 1, period_seconds)
+        return False
+    if count >= max_requests:
+        return True
+    # Increment without resetting TTL
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, count + 1, period_seconds)
+    return False
+
 
 REVIEW_PAGE_SIZE = 20
 
@@ -27,7 +53,10 @@ def review_list(request):
     ).select_related("primary_category")
 
     total = candidates.count()
-    page = int(request.GET.get("page", 1))
+    try:
+        page = int(request.GET.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
     offset = (page - 1) * REVIEW_PAGE_SIZE
     page_candidates = candidates[offset : offset + REVIEW_PAGE_SIZE]
     has_more = candidates[
@@ -136,7 +165,10 @@ SEARCH_PAGE_SIZE = 20
 def candidate_list(request):
     """Main search page: candidate list + category tabs + floating chatbot."""
     category_filter = request.GET.get("category")
-    page = int(request.GET.get("page", 1))
+    try:
+        page = int(request.GET.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
 
     categories = Category.objects.all()
 
@@ -145,29 +177,62 @@ def candidate_list(request):
     session = None
     filters = {}
     if session_id:
-        session = SearchSession.objects.filter(
-            pk=session_id, user=request.user, is_active=True
-        ).first()
+        try:
+            uuid.UUID(session_id)
+        except (ValueError, AttributeError):
+            session_id = None
+        if session_id:
+            session = SearchSession.objects.filter(
+                pk=session_id, user=request.user, is_active=True
+            ).first()
         if session:
             filters = dict(session.current_filters)  # copy
 
-    # If category tab clicked, override filter
+    # If category tab clicked, use simple category filter
     if category_filter:
-        filters["category"] = category_filter
-
-    # Execute search
-    if filters:
-        semantic_query = filters.pop("_semantic_query", None)
-        candidates_list = hybrid_search(
-            filters, semantic_query=semantic_query, limit=200
+        qs = (
+            Candidate.objects.select_related("primary_category")
+            .prefetch_related("educations", "careers", "categories")
+            .filter(categories__name=category_filter)
+            .distinct()
+            .order_by("-updated_at")
         )
-        total = len(candidates_list)
+        total = qs.count()
         offset = (page - 1) * SEARCH_PAGE_SIZE
-        page_candidates = candidates_list[offset : offset + SEARCH_PAGE_SIZE]
-        has_more = len(candidates_list) > offset + SEARCH_PAGE_SIZE
+        page_candidates = qs[offset : offset + SEARCH_PAGE_SIZE]
+        has_more = qs[
+            offset + SEARCH_PAGE_SIZE : offset + SEARCH_PAGE_SIZE + 1
+        ].exists()
+    elif session and filters.get("_last_sql"):
+        # Re-execute last search SQL for page refresh
+        from django.db import connection as db_conn
+
+        sql = filters["_last_sql"]
+        try:
+            with db_conn.cursor() as cursor:
+                cursor.execute(sql)
+                ids = [row[0] for row in cursor.fetchall()]
+            candidates_list = list(
+                Candidate.objects.select_related("primary_category")
+                .prefetch_related("educations", "careers", "categories")
+                .filter(id__in=ids)
+            )
+            # Preserve SQL ordering
+            id_order = {uid: i for i, uid in enumerate(ids)}
+            candidates_list.sort(key=lambda c: id_order.get(c.id, 999))
+            total = len(candidates_list)
+            offset = (page - 1) * SEARCH_PAGE_SIZE
+            page_candidates = candidates_list[offset : offset + SEARCH_PAGE_SIZE]
+            has_more = len(candidates_list) > offset + SEARCH_PAGE_SIZE
+        except Exception:
+            page_candidates = []
+            total = 0
+            has_more = False
     else:
-        qs = Candidate.objects.select_related("primary_category").order_by(
-            "-updated_at"
+        qs = (
+            Candidate.objects.select_related("primary_category")
+            .prefetch_related("educations", "careers", "categories")
+            .order_by("-updated_at")
         )
         total = qs.count()
         offset = (page - 1) * SEARCH_PAGE_SIZE
@@ -183,7 +248,18 @@ def candidate_list(request):
 
     # Template selection
     if request.htmx:
-        template = "candidates/partials/candidate_list.html"
+        if page > 1:
+            # Pagination: cards only, no wrapper div (prevents nested padding)
+            template = "candidates/partials/candidate_list_page.html"
+        elif getattr(request.htmx, "target", None) == "main-content":
+            # Back navigation from detail: full search content with header + tabs
+            template = "candidates/partials/search_content.html"
+        elif getattr(request.htmx, "target", None) == "search-area":
+            # Category tab switch: status bar + card list
+            template = "candidates/partials/search_area.html"
+        else:
+            # Default: card list only
+            template = "candidates/partials/candidate_list.html"
     else:
         template = "candidates/search.html"
 
@@ -242,9 +318,22 @@ def search_chat(request):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
 
-    body = json.loads(request.body)
+    if _check_rate_limit(request.user.pk, "search_chat", 10, 60):
+        return JsonResponse(
+            {"error": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."}, status=429
+        )
+
+    try:
+        body = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "잘못된 요청입니다."}, status=400)
+
     user_text = body.get("message", "").strip()
     session_id = body.get("session_id")
+
+    input_type = body.get("input_type", "text")
+    if input_type not in ("text", "voice"):
+        input_type = "text"
 
     if not user_text:
         return JsonResponse({"error": "메시지를 입력해주세요."}, status=400)
@@ -262,35 +351,31 @@ def search_chat(request):
         )
         session = SearchSession.objects.create(user=request.user)
 
-    # Parse query via LLM
-    parsed = parse_search_query(user_text, session.current_filters)
+    # LLM generates SQL and executes search
+    previous_sql = session.current_filters.get("_last_sql")
+    result = parse_and_search(user_text, previous_sql=previous_sql)
 
-    # Apply action
-    action = parsed.get("action", "new")
-    new_filters = parsed.get("filters", {})
+    ai_message = result["ai_message"]
+    result_count = result["result_count"]
+    sql = result.get("sql")
 
-    if action == "new":
-        filters = new_filters
-    elif action == "narrow":
-        filters = {**session.current_filters, **new_filters}
-    else:
-        filters = new_filters
+    # Too many results — guide user to narrow down (keep SQL for chaining)
+    if result_count > 50:
+        ai_message += (
+            f"\n\n검색 결과가 {result_count}명으로 너무 많습니다. "
+            "추가 조건을 말씀해주시면 현재 결과에서 바로 좁혀드리겠습니다. "
+            "예: 경력 10년 이상, 서울대 출신, 삼성 경력자 등"
+        )
 
-    # Execute search
-    semantic_query = parsed.get("semantic_query")
-    results = hybrid_search(filters, semantic_query=semantic_query)
-    result_count = len(results)
-
-    ai_message = parsed.get("ai_message", "")
-    if not ai_message:
-        ai_message = f"{result_count}명의 후보자를 찾았습니다."
+    # Store SQL for multi-turn context
+    filters = {"_last_sql": sql} if sql else {}
 
     # Save turn
     turn_number = session.turns.count() + 1
     SearchTurn.objects.create(
         session=session,
         turn_number=turn_number,
-        input_type="text",
+        input_type=input_type,
         user_text=user_text,
         ai_response=ai_message,
         filters_applied=filters,
@@ -305,8 +390,6 @@ def search_chat(request):
             "session_id": str(session.pk),
             "ai_message": ai_message,
             "result_count": result_count,
-            "filters": filters,
-            "action": action,
         }
     )
 
@@ -317,15 +400,32 @@ def voice_transcribe(request):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
 
+    if _check_rate_limit(request.user.pk, "voice_transcribe", 5, 60):
+        return JsonResponse(
+            {"error": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."}, status=429
+        )
+
     audio = request.FILES.get("audio")
     if not audio:
         return JsonResponse({"error": "오디오 파일이 없습니다."}, status=400)
 
+    if audio.size > 10 * 1024 * 1024:
+        return JsonResponse(
+            {"error": "오디오 파일이 너무 큽니다. 10MB 이하로 녹음해주세요."},
+            status=400,
+        )
+
     try:
         text = transcribe_audio(audio)
+        if not text:
+            return JsonResponse(
+                {"error": "음성이 감지되지 않았습니다. 다시 말씀해주세요."}, status=400
+            )
         return JsonResponse({"text": text})
     except RuntimeError as e:
         return JsonResponse({"error": str(e)}, status=500)
+    except Exception:
+        return JsonResponse({"error": "음성 인식 중 오류가 발생했습니다."}, status=500)
 
 
 @login_required
@@ -334,6 +434,14 @@ def chat_history(request):
     session_id = request.GET.get("session_id")
     turns = []
     if session_id:
+        try:
+            uuid.UUID(session_id)
+        except (ValueError, AttributeError):
+            return render(
+                request,
+                "candidates/partials/chat_messages.html",
+                {"turns": turns},
+            )
         session = SearchSession.objects.filter(pk=session_id, user=request.user).first()
         if session:
             turns = session.turns.order_by("turn_number")

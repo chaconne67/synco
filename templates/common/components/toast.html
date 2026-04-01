@@ -1,9 +1,15 @@
-<div class="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm shadow-lg"
-     x-data="{ show: true }"
-     x-show="show"
-     x-init="setTimeout(() => { $el.remove() }, 3000)"
-     x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0">
+<div class="toast-item bg-gray-900 text-white px-5 py-3 rounded-lg text-[15px] shadow-lg"
+     data-toast-message
+     style="opacity: 0; transition: opacity 0.2s ease;">
   {{ message }}
 </div>
+<script>
+(function() {
+  var toast = document.currentScript.previousElementSibling;
+  requestAnimationFrame(function() { toast.style.opacity = '1'; });
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    setTimeout(function() { toast.remove(); }, 200);
+  }, 3000);
+})();
+</script>

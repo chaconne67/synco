@@ -20,4 +20,6 @@ urlpatterns = [
         views.dashboard_tasks_overdue,
         name="dashboard_tasks_overdue",
     ),
+    path("terms/", views.terms, name="terms"),
+    path("privacy/", views.privacy, name="privacy"),
 ]

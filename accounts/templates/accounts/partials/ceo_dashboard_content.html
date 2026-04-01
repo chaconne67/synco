@@ -4,43 +4,45 @@
 
   <!-- Greeting -->
   <div>
-    <h1 class="text-[28px] font-bold leading-tight">
+    <h1 class="text-display font-bold leading-tight">
       {{ user.first_name }}님, 좋은 아침입니다
     </h1>
   </div>
 
-  <!-- Profile Completion -->
+  <!-- Profile Completion (하드코딩 80% — 실제 계산 로직 구현 후 복원) -->
+  <!--
   <section>
-    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+    <div class="bg-white rounded-lg border border-gray-100 p-5">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-semibold">프로필 완성도</h2>
-        <span class="text-sm font-bold text-primary">80%</span>
+        <h2 class="text-[15px] font-semibold">프로필 완성도</h2>
+        <span class="text-[15px] font-bold text-primary">80%</span>
       </div>
       <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
         <div class="h-full bg-primary rounded-full transition-all" style="width: 80%"></div>
       </div>
-      <p class="text-xs text-gray-500 mt-2">프로필을 완성하시면 더 정확한 매칭을 받으실 수 있습니다.</p>
+      <p class="text-sm text-gray-500 mt-2">프로필을 완성하시면 더 정확한 매칭을 받으실 수 있습니다.</p>
     </div>
   </section>
+  -->
 
   <!-- New Matches -->
   <section>
     <h2 class="text-base font-semibold mb-3">새로운 매칭</h2>
 
-    <div class="bg-white rounded-2xl border border-gray-100 p-6 text-center">
-      <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-primary-light flex items-center justify-center">
+    <div class="bg-white rounded-lg border border-gray-100 p-6 text-center">
+      <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-primary-light flex items-center justify-center">
         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
         </svg>
       </div>
-      <p class="text-sm text-gray-500 leading-relaxed">
+      <p class="text-[15px] text-gray-500 leading-relaxed">
         프로필을 완성하시면<br>맞춤 매칭을 찾아 알려드리겠습니다
       </p>
       <a href="/accounts/settings/"
          hx-get="/accounts/settings/"
          hx-target="#main-content"
          hx-push-url="true"
-         class="inline-block mt-4 px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition">
+         class="inline-block mt-4 px-5 py-2 bg-primary text-white text-[15px] font-semibold rounded-lg hover:bg-primary-dark transition">
         프로필 완성하기
       </a>
     </div>

@@ -1,0 +1,120 @@
+{
+  "name": "김재홍",
+  "name_en": "KIM, Jaehong",
+  "birth_year": 1979,
+  "gender": "male",
+  "email": "jhkim79@gmail.com",
+  "phone": "+82-10-2916-1432",
+  "address": null,
+  "current_company": "Self-employed",
+  "current_position": "Brand Consultant",
+  "total_experience_years": 14,
+  "core_competencies": [
+    "Brand Strategy",
+    "Brand/Product Management",
+    "P&L Management",
+    "Marketing Research",
+    "eCommerce",
+    "Retail",
+    "Consumer Insight",
+    "Go-to-Market Strategy",
+    "Digital Marketing",
+    "Team Leadership"
+  ],
+  "summary": "14년 경력의 마케팅, 이커머스, 리테일 전문가. 소비자/시장 인사이트 기반 GTM 전략 수립 및 실행에 강점을 보유하고 있으며, 브랜드 전략, P&L 관리, 제품 개발 전문성 보유.",
+  "educations": [
+    {
+      "institution": "중앙대학교",
+      "degree": "학사",
+      "major": "교통공학",
+      "gpa": null,
+      "start_year": 1998,
+      "end_year": 2005,
+      "is_abroad": false
+    }
+  ],
+  "careers": [
+    {
+      "company": "Self-employed",
+      "company_en": "Self-employed",
+      "position": "Brand Consultant",
+      "department": null,
+      "start_date": "2020-11",
+      "end_date": null,
+      "is_current": true,
+      "duties": "Brand consulting for Singapore cosmetic start-up",
+      "achievements": null,
+      "order": 0
+    },
+    {
+      "company": "쥴랩스코리아",
+      "company_en": "JUUL Labs Korea",
+      "position": "Head of Marketing",
+      "department": "Marketing",
+      "start_date": "2019-08",
+      "end_date": "2020-10",
+      "is_current": false,
+      "duties": "Develop and implement commercial strategy focused on raising consumer awareness, driving trial, and creating loyalty. Plan and execute commercial programs in retail and digital environments. Manage key account relationships. People Management: MKT (2 managers) + Sales (2 sales managers + 20 sales reps)",
+      "achievements": "200B KRW business responsibility with full P&L. Initiated trade discussions to re-negotiate investments and reset business fundamentals for Y2020. Led Testimonial MKT campaign and Kakao moment targeting mobile AD platform development to maximize ROI",
+      "order": 1
+    },
+    {
+      "company": "쿠팡",
+      "company_en": "COUPANG",
+      "position": "Sr. Manager",
+      "department": "Beauty Category",
+      "start_date": "2018-05",
+      "end_date": "2019-08",
+      "is_current": false,
+      "duties": "Managing entire product line life cycle from inception to launch for beauty categories (Make-up, Fragrances, Nail care). Own brand/product vision, strategy, roadmap and KPIs. Manage partnerships with Luxury/Premium brands for 'Luxury Pavilion'. People Management: 7 Merchandisers",
+      "achievements": "300B KRW business responsibility. Built 'Brand shop' business model with high tier beauty brands to establish credibility as no.1 online beauty shopping destination",
+      "order": 2
+    },
+    {
+      "company": "퓨마코리아",
+      "company_en": "PUMA Korea",
+      "position": "Footwear & Accessories Merchandising Manager",
+      "department": "Merchandising",
+      "start_date": "2012-11",
+      "end_date": "2018-05",
+      "is_current": false,
+      "duties": "In charge of PUMA FTW/ACC for all Business Units (Lifestyle, Team sports, Running, W's). B2B, B2C, DIGITAL channel product planning & execution. Plan and improve official online store. People management: 4 subordinates (3 FTW Merchandisers, 1 ACC Merchandiser)",
+      "achievements": "120B KRW business responsibility. Exponential growth of Lifestyle and Women's categories. Successfully developed and launched BTS (Korean Boy band) collaboration campaign with success in Korea and other Asian markets. Developed Q2 seasonal FTW with big commercial hit",
+      "order": 3
+    },
+    {
+      "company": "스와로브스키코리아",
+      "company_en": "Swarovski Korea",
+      "position": "Marketing Manager",
+      "department": "Marketing",
+      "start_date": "2012-04",
+      "end_date": "2012-11",
+      "is_current": false,
+      "duties": "Overall Marketing Activities for Elements Business Unit. Market Research & Analysis, Strategy building, New Launch, Trade show, Forecast, profitability enhancement. People management: 1 subordinate",
+      "achievements": "Increased sales opportunities through active brand collaboration with fashion brands. Strategic alignment with Region on FY12 key initiatives & campaign",
+      "order": 4
+    },
+    {
+      "company": "로레알코리아",
+      "company_en": "L'Oreal Korea",
+      "position": "Sr. Product Manager",
+      "department": "Kerastase",
+      "start_date": "2006-12",
+      "end_date": "2012-02",
+      "is_current": false,
+      "duties": "Annual planning, budgeting, A&P management, new product launch, Digital/CRM, Monthly promotion, Product education. B2B/B2C strategies for salon owner & end-consumer. Developed and managed one subordinate",
+      "achievements": "3 consecutive years of double-digit growth with above 15% profit through aggressive marketing and distribution cleanup. Successfully launched all innovative products with locally relevant marketing tactics. Maintained healthy 500 doors distribution",
+      "order": 5
+    }
+  ],
+  "certifications": [],
+  "language_skills": [],
+  "field_confidences": {
+    "name": 1.0,
+    "birth_year": 1.0,
+    "careers": 0.95,
+    "educations": 0.95,
+    "certifications": 0.3,
+    "overall": 0.9
+  }
+}

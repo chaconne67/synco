@@ -1,0 +1,12 @@
+=== 5세션 병렬 임포트 시작: Wed Apr  1 02:54:32 KST 2026 ===
+로그 디렉토리: /home/work/synco/logs/import
+세션1 PID: 2709682 (Accounting, EHS, Engineer, Finance)
+세션2 PID: 2709683 (HR, Law, Logistics, Marketing)
+세션3 PID: 2709685 (MD, MR, Plant, PR+AD)
+세션4 PID: 2709686 (Procurement, Production, Quality, R&D)
+세션5 PID: 2709687 (Sales, SCM, SI+IT, VMD)
+
+=== 전체 PID: 2709682 2709683 2709685 2709686 2709687 ===
+모니터링: tail -f /home/work/synco/logs/import/session*_20260401_025432.log
+진행확인: grep -c 'OK:' /home/work/synco/logs/import/session*_20260401_025432.log
+중지: kill 2709682 2709683 2709685 2709686 2709687

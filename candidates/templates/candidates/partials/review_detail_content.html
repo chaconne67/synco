@@ -1,10 +1,7 @@
 <!-- Header -->
 <div class="flex items-center px-4 pt-6 pb-4">
-  <a href="{% url 'candidates:review_list' %}"
-     hx-get="{% url 'candidates:review_list' %}"
-     hx-target="#main-content"
-     hx-push-url="true"
-     class="text-gray-500 hover:text-gray-700 mr-3">
+  <a href="javascript:void(0)" onclick="history.back()"
+     class="text-gray-500 hover:text-gray-700 mr-3 cursor-pointer">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
     </svg>
@@ -14,11 +11,11 @@
     {% if candidate.confidence_score is not None %}
       {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
       {% if candidate.confidence_score >= 0.85 %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{{ confidence_pct }}%</span>
+        <span class="text-sm px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{{ confidence_pct }}%</span>
       {% elif candidate.confidence_score >= 0.6 %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{{ confidence_pct }}%</span>
+        <span class="text-sm px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{{ confidence_pct }}%</span>
       {% else %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{{ confidence_pct }}%</span>
+        <span class="text-sm px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{{ confidence_pct }}%</span>
       {% endif %}
     {% endif %}
   </div>
@@ -34,7 +31,7 @@
       <!-- Basic info -->
       <div class="bg-white rounded-xl border border-gray-200 p-4">
         <h2 class="text-subheading text-gray-900 mb-3">기본 정보</h2>
-        <dl class="space-y-2 text-sm">
+        <dl class="space-y-2 text-[15px]">
           <div class="flex">
             <dt class="text-gray-500 w-24 shrink-0">이름</dt>
             <dd class="text-gray-900">{{ candidate.name }}{% if candidate.name_en %} ({{ candidate.name_en }}){% endif %}</dd>
@@ -91,7 +88,7 @@
           <div class="flex">
             <dt class="text-gray-500 w-24 shrink-0">카테고리</dt>
             <dd>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+              <span class="text-sm px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
                 {{ candidate.primary_category.name_ko|default:candidate.primary_category.name }}
               </span>
             </dd>
@@ -115,21 +112,21 @@
           <div class="relative pl-4 border-l-2 {% if career.is_current %}border-indigo-400{% else %}border-gray-200{% endif %}">
             <div class="flex items-start justify-between">
               <div>
-                <p class="text-sm font-semibold text-gray-900">{{ career.company }}{% if career.company_en %} ({{ career.company_en }}){% endif %}</p>
-                <p class="text-sm text-gray-700">{{ career.position }}{% if career.department %} / {{ career.department }}{% endif %}</p>
+                <p class="text-[15px] font-semibold text-gray-900">{{ career.company }}{% if career.company_en %} ({{ career.company_en }}){% endif %}</p>
+                <p class="text-[15px] text-gray-700">{{ career.position }}{% if career.department %} / {{ career.department }}{% endif %}</p>
               </div>
               {% if career.is_current %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">현재</span>
+              <span class="text-sm px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">현재</span>
               {% endif %}
             </div>
             {% if career.start_date or career.end_date %}
-            <p class="text-xs text-gray-500 mt-1">
+            <p class="text-sm text-gray-500 mt-1">
               {{ career.start_date }}{% if career.start_date and career.end_date %} ~ {% endif %}{{ career.end_date }}
               {% if career.is_current and career.start_date and not career.end_date %} ~ 현재{% endif %}
             </p>
             {% endif %}
             {% if career.duties %}
-            <p class="text-xs text-gray-600 mt-1 leading-relaxed">{{ career.duties|truncatewords:30 }}</p>
+            <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{ career.duties|truncatewords:30 }}</p>
             {% endif %}
           </div>
           {% endfor %}
@@ -144,20 +141,20 @@
         <div class="space-y-3">
           {% for edu in educations %}
           <div>
-            <p class="text-sm font-semibold text-gray-900">{{ edu.institution }}</p>
-            <p class="text-sm text-gray-700">
+            <p class="text-[15px] font-semibold text-gray-900">{{ edu.institution }}</p>
+            <p class="text-[15px] text-gray-700">
               {% if edu.degree %}{{ edu.degree }}{% endif %}
               {% if edu.major %} {{ edu.major }}{% endif %}
             </p>
             {% if edu.start_year or edu.end_year %}
-            <p class="text-xs text-gray-500 mt-0.5">
+            <p class="text-sm text-gray-500 mt-0.5">
               {% if edu.start_year %}{{ edu.start_year }}{% endif %}
               {% if edu.start_year and edu.end_year %} ~ {% endif %}
               {% if edu.end_year %}{{ edu.end_year }}{% endif %}
             </p>
             {% endif %}
             {% if edu.is_abroad %}
-            <span class="text-xs text-blue-600">해외</span>
+            <span class="text-sm text-blue-600">해외</span>
             {% endif %}
           </div>
           {% endfor %}
@@ -172,16 +169,16 @@
 
         {% if certifications %}
         <div class="mb-3">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">자격증</h3>
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">자격증</h3>
           <div class="space-y-1.5">
             {% for cert in certifications %}
-            <div class="text-sm">
+            <div class="text-[15px]">
               <span class="text-gray-900">{{ cert.name }}</span>
               {% if cert.issuer %}
               <span class="text-gray-500"> · {{ cert.issuer }}</span>
               {% endif %}
               {% if cert.acquired_date %}
-              <span class="text-gray-400 text-xs ml-1">{{ cert.acquired_date }}</span>
+              <span class="text-gray-400 text-sm ml-1">{{ cert.acquired_date }}</span>
               {% endif %}
             </div>
             {% endfor %}
@@ -191,10 +188,10 @@
 
         {% if language_skills %}
         <div>
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">어학</h3>
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">어학</h3>
           <div class="space-y-1.5">
             {% for lang in language_skills %}
-            <div class="text-sm">
+            <div class="text-[15px]">
               <span class="text-gray-900">{{ lang.language }}</span>
               {% if lang.test_name and lang.score %}
               <span class="text-gray-500"> · {{ lang.test_name }} {{ lang.score }}</span>
@@ -216,11 +213,11 @@
       <div class="bg-white rounded-xl border border-gray-200 p-4">
         <h2 class="text-subheading text-gray-900 mb-3">원문 텍스트</h2>
         {% if candidate.raw_text %}
-        <pre class="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap break-words max-h-[600px] overflow-y-auto bg-gray-50 rounded-lg p-3">{{ candidate.raw_text }}</pre>
+        <pre class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words max-h-[600px] overflow-y-auto bg-gray-50 rounded-lg p-3">{{ candidate.raw_text }}</pre>
         {% elif primary_resume and primary_resume.raw_text %}
-        <pre class="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap break-words max-h-[600px] overflow-y-auto bg-gray-50 rounded-lg p-3">{{ primary_resume.raw_text }}</pre>
+        <pre class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words max-h-[600px] overflow-y-auto bg-gray-50 rounded-lg p-3">{{ primary_resume.raw_text }}</pre>
         {% else %}
-        <p class="text-sm text-gray-500">원문 텍스트가 없습니다.</p>
+        <p class="text-[15px] text-gray-500">원문 텍스트가 없습니다.</p>
         {% endif %}
       </div>
 
@@ -230,7 +227,7 @@
         <h2 class="text-subheading text-gray-900 mb-3">추출 이력</h2>
         <div class="space-y-2">
           {% for log in logs %}
-          <div class="text-xs border-b border-gray-50 pb-2 last:border-0 last:pb-0">
+          <div class="text-sm border-b border-gray-50 pb-2 last:border-0 last:pb-0">
             <div class="flex items-center justify-between">
               <span class="font-medium text-gray-700">{{ log.get_action_display }}</span>
               <span class="text-gray-400">{{ log.created_at|date:"n/j H:i" }}</span>
@@ -253,41 +250,41 @@
     <button
       hx-post="{% url 'candidates:review_confirm' candidate.pk %}"
       hx-confirm="이 후보자 정보를 확인하시겠습니까?"
-      class="flex-1 text-center bg-indigo-600 text-white font-semibold py-3 px-5 rounded-lg text-sm hover:bg-indigo-700 transition">
+      class="flex-1 text-center bg-indigo-600 text-white font-semibold py-3 px-5 rounded-lg text-[15px] hover:bg-indigo-700 transition">
       확인
     </button>
     <button
       id="reject-toggle-btn"
       type="button"
       onclick="document.getElementById('reject-form').classList.toggle('hidden'); this.classList.toggle('hidden');"
-      class="flex-1 text-center bg-white border border-red-300 text-red-600 font-semibold py-3 px-5 rounded-lg text-sm hover:bg-red-50 transition">
+      class="flex-1 text-center bg-white border border-red-300 text-red-600 font-semibold py-3 px-5 rounded-lg text-[15px] hover:bg-red-50 transition">
       거부
     </button>
   </div>
 
   <!-- Reject form (hidden by default) -->
   <div id="reject-form" class="hidden mt-4 bg-white rounded-xl border border-red-200 p-4">
-    <label for="reject-reason" class="block text-sm font-medium text-gray-700 mb-2">거부 사유</label>
+    <label for="reject-reason" class="block text-[15px] font-medium text-gray-700 mb-2">거부 사유</label>
     <textarea
       id="reject-reason"
       name="reason"
       rows="3"
       form="reject-submit-form"
-      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-300 focus:border-red-300 transition"
+      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-red-300 focus:border-red-300 transition"
       placeholder="거부 사유를 입력해주세요..."></textarea>
     <div class="flex gap-2 mt-3">
       <form id="reject-submit-form"
             hx-post="{% url 'candidates:review_reject' candidate.pk %}"
             hx-confirm="이 후보자를 거부하시겠습니까?"
             class="flex-1">
-        <button type="submit" class="w-full bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg text-sm hover:bg-red-700 transition">
+        <button type="submit" class="w-full bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg text-[15px] hover:bg-red-700 transition">
           거부 확정
         </button>
       </form>
       <button
         type="button"
         onclick="document.getElementById('reject-form').classList.add('hidden'); document.getElementById('reject-toggle-btn').classList.remove('hidden');"
-        class="bg-white border border-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg text-sm hover:bg-gray-50 transition">
+        class="bg-white border border-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-lg text-[15px] hover:bg-gray-50 transition">
         취소
       </button>
     </div>

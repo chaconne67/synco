@@ -1,6 +1,6 @@
 <div hx-get="/intelligence/analysis/status/{{ job.pk }}/"
      hx-trigger="every 3s" hx-swap="outerHTML">
-  <div class="flex items-center gap-2 text-sm text-gray-500">
+  <div class="flex items-center gap-2 text-[15px] text-gray-500">
     <span class="btn-spinner"></span>
     {{ job.processed_contacts }}/{{ job.total_contacts }} 분석 중...
   </div>

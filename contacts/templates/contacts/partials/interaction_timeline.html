@@ -5,28 +5,28 @@
   {% for date_group in date_list %}
   <!-- Date separator -->
   <div class="flex items-center gap-3 py-2">
-    <span class="text-xs font-medium text-gray-500">{{ date_group.grouper|date:"n월 j일" }}</span>
+    <span class="text-sm font-medium text-gray-500">{{ date_group.grouper|date:"n월 j일" }}</span>
     <div class="flex-1 h-px bg-gray-100"></div>
   </div>
 
   {% for interaction in date_group.list %}
-  <div class="bg-white rounded-2xl border border-gray-100 p-4">
+  <div class="bg-white rounded-lg border border-gray-100 p-4">
     <div class="flex items-start gap-3">
       <!-- Type icon -->
       <span class="text-base flex-shrink-0 mt-0.5">
         {% if interaction.type == 'call' %}&#128222;{% elif interaction.type == 'meeting' %}&#129309;{% elif interaction.type == 'message' %}&#128172;{% else %}&#128203;{% endif %}
       </span>
       <div class="flex-1 min-w-0">
-        <p class="text-sm text-gray-800">{{ interaction.summary }}</p>
+        <p class="text-[15px] text-gray-800">{{ interaction.summary }}</p>
         <div class="flex items-center gap-2 mt-1.5">
           {% if interaction.sentiment == 'positive' %}
-          <span class="text-xs">&#128522; 긍정</span>
+          <span class="text-sm">&#128522; 긍정</span>
           {% elif interaction.sentiment == 'negative' %}
-          <span class="text-xs">&#128542; 부정</span>
+          <span class="text-sm">&#128542; 부정</span>
           {% elif interaction.sentiment == 'neutral' %}
-          <span class="text-xs">&#128528; 보통</span>
+          <span class="text-sm">&#128528; 보통</span>
           {% endif %}
-          <span class="text-xs text-gray-500">{{ interaction.created_at|date:"H:i" }}</span>
+          <span class="text-sm text-gray-500">{{ interaction.created_at|date:"H:i" }}</span>
         </div>
       </div>
       <!-- Edit/Delete actions (visible on hover) -->
@@ -69,6 +69,6 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
     </svg>
   </div>
-  <p class="text-sm text-gray-500">아직 접점 기록이 없습니다</p>
+  <p class="text-[15px] text-gray-500">아직 접점 기록이 없습니다</p>
 </div>
 {% endif %}

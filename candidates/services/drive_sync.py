@@ -75,7 +75,19 @@ def _get_credentials() -> Credentials:
 
     Raises RuntimeError if credentials are invalid and cannot be refreshed.
     """
-    creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
+    with open(TOKEN_PATH) as f:
+        token_data = json.load(f)
+
+    # Token file may lack client_id/client_secret (e.g., manually created).
+    # Inject from client_secret.json if missing.
+    if "client_id" not in token_data or "client_secret" not in token_data:
+        token_data["client_id"] = _get_client_id()
+        token_data["client_secret"] = _get_client_secret()
+        # Persist so future loads don't need this fixup
+        with open(TOKEN_PATH, "w") as f:
+            json.dump(token_data, f)
+
+    creds = Credentials.from_authorized_user_info(token_data, SCOPES)
 
     if creds.valid:
         return creds
@@ -161,20 +173,27 @@ def list_files_in_folder(service, folder_id: str, page_size: int = 1000) -> list
     return all_files
 
 
-def download_file(service, file_id: str, dest_path: str) -> str:
+def download_file(service, file_id: str, dest_path: str, max_retries: int = 3) -> str:
     """Download a file from Drive to *dest_path* using MediaIoBaseDownload.
 
-    Returns the destination path.
+    Retries on transient SSL/network errors. Returns the destination path.
     """
-    request = service.files().get_media(fileId=file_id)
+    import time
 
-    with open(dest_path, "wb") as f:
-        downloader = MediaIoBaseDownload(f, request)
-        done = False
-        while not done:
-            _status, done = downloader.next_chunk()
-
-    return dest_path
+    for attempt in range(max_retries):
+        try:
+            request = service.files().get_media(fileId=file_id)
+            with open(dest_path, "wb") as f:
+                downloader = MediaIoBaseDownload(f, request)
+                done = False
+                while not done:
+                    _status, done = downloader.next_chunk()
+            return dest_path
+        except Exception:
+            if attempt < max_retries - 1:
+                time.sleep(2**attempt)
+                continue
+            raise
 
 
 def list_root_folders(service) -> list[dict]:

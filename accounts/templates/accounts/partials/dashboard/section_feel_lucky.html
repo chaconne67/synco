@@ -9,7 +9,7 @@
 
   <div class="space-y-2">
     {% for insight in fortunate_insights %}
-    <div class="bg-amber-50/50 rounded-2xl border border-amber-200/50 shadow-sm p-4" id="insight-{{ insight.pk }}">
+    <div class="bg-amber-50/50 rounded-lg border border-amber-200/50 shadow-sm p-4" id="insight-{{ insight.pk }}">
       <div class="flex items-start gap-3">
         <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-lg flex-shrink-0">
           {% if insight.signal_type == 'personal_event' %}🎉
@@ -20,12 +20,12 @@
         <div class="flex-1 min-w-0">
           <a href="/contacts/{{ insight.contact.pk }}/"
              hx-get="/contacts/{{ insight.contact.pk }}/" hx-target="#main-content" hx-push-url="true"
-             class="text-sm font-semibold hover:text-primary">{{ insight.contact.name }} ({{ insight.contact.company_name }})</a>
-          <p class="text-xs text-gray-600 mt-1 leading-relaxed">{{ insight.reason }}</p>
+             class="text-[15px] font-semibold hover:text-primary">{{ insight.contact.name }} ({{ insight.contact.company_name }})</a>
+          <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{ insight.reason }}</p>
         </div>
         <button hx-post="/intelligence/insights/{{ insight.pk }}/dismiss/"
                 hx-target="#insight-{{ insight.pk }}" hx-swap="outerHTML"
-                class="text-gray-300 hover:text-gray-500 flex-shrink-0 p-1">
+                class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-300 hover:text-gray-500 flex-shrink-0 p-1">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>

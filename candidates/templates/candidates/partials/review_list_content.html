@@ -1,8 +1,8 @@
 <!-- Header -->
 <div class="flex items-center justify-between px-4 pt-6 pb-4">
   <div>
-    <h1 class="text-xl font-bold text-gray-900">추출 결과 검토</h1>
-    <p class="text-sm text-gray-500 mt-1">총 {{ total }}건</p>
+    <h1 class="text-heading font-bold text-gray-900">추출 결과 검토</h1>
+    <p class="text-[15px] text-gray-500 mt-1">총 {{ total }}건</p>
   </div>
 </div>
 
@@ -14,7 +14,7 @@
       hx-get="{% url 'candidates:review_list' %}?status={{ value }}"
       hx-target="#main-content"
       hx-push-url="true"
-      class="whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-[15px] font-medium transition
         {% if status_filter == value %}
           bg-indigo-600 text-white
         {% else %}
@@ -41,15 +41,15 @@
           {% if candidate.confidence_score is not None %}
             {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
             {% if candidate.confidence_score >= 0.85 %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{{ confidence_pct }}%</span>
+              <span class="text-sm px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{{ confidence_pct }}%</span>
             {% elif candidate.confidence_score >= 0.6 %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{{ confidence_pct }}%</span>
+              <span class="text-sm px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">{{ confidence_pct }}%</span>
             {% else %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{{ confidence_pct }}%</span>
+              <span class="text-sm px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">{{ confidence_pct }}%</span>
             {% endif %}
           {% endif %}
         </div>
-        <div class="text-sm text-gray-500 space-y-0.5">
+        <div class="text-[15px] text-gray-500 space-y-0.5">
           {% if candidate.current_company or candidate.current_position %}
           <p class="truncate">
             {% if candidate.current_company %}{{ candidate.current_company }}{% endif %}
@@ -68,7 +68,7 @@
         </div>
       </div>
       {% if candidate.primary_category %}
-      <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 whitespace-nowrap ml-2">
+      <span class="text-sm px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 whitespace-nowrap ml-2">
         {{ candidate.primary_category.name_ko|default:candidate.primary_category.name }}
       </span>
       {% endif %}
@@ -82,7 +82,7 @@
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&page={{ page|add:1 }}"
       hx-target="this"
       hx-swap="outerHTML"
-      class="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+      class="text-[15px] text-indigo-600 hover:text-indigo-800 font-medium transition">
       더 보기
     </button>
   </div>
@@ -95,6 +95,6 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
   </div>
-  <p class="text-gray-500 text-sm">검토할 후보자가 없습니다.</p>
+  <p class="text-gray-500 text-[15px]">검토할 후보자가 없습니다.</p>
 </div>
 {% endif %}

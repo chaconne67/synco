@@ -259,3 +259,23 @@ def settings_page(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
+
+
+def terms(request):
+    """서비스 이용약관 페이지."""
+    template = (
+        "accounts/partials/terms_content.html"
+        if getattr(request, "htmx", None)
+        else "accounts/terms.html"
+    )
+    return render(request, template)
+
+
+def privacy(request):
+    """개인정보처리방침 페이지."""
+    template = (
+        "accounts/partials/privacy_content.html"
+        if getattr(request, "htmx", None)
+        else "accounts/privacy.html"
+    )
+    return render(request, template)

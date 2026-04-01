@@ -7,13 +7,13 @@
 
   <!-- Header -->
   <div class="flex items-center justify-between mb-5">
-    <h1 class="text-xl font-bold">연락처</h1>
+    <h1 class="text-heading font-bold">연락처</h1>
     <div class="flex items-center gap-2">
       <a href="{% url 'contacts:import' %}"
          hx-get="{% url 'contacts:import' %}"
          hx-target="#main-content"
          hx-push-url="true"
-         class="border border-primary text-primary font-semibold py-2 px-3 rounded-xl text-sm flex items-center gap-1">
+         class="border border-primary text-primary font-semibold py-2 px-3 rounded-lg text-[15px] flex items-center gap-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
         </svg>
@@ -23,7 +23,7 @@
          hx-get="{% url 'contacts:create' %}"
          hx-target="#main-content"
          hx-push-url="true"
-         class="bg-primary text-white font-semibold py-2 px-3 rounded-xl text-sm flex items-center gap-1">
+         class="bg-primary text-white font-semibold py-2 px-3 rounded-lg text-[15px] flex items-center gap-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -31,18 +31,18 @@
       </a>
       {% if debug %}
       <div class="relative">
-        <button class="border border-gray-200 text-gray-700 font-semibold py-2 px-3 rounded-xl text-sm"
+        <button class="border border-gray-200 text-gray-700 font-semibold py-2 px-3 rounded-lg text-[15px]"
                 onclick="this.nextElementSibling.classList.toggle('hidden')">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
           </svg>
         </button>
-        <div class="hidden absolute right-0 mt-2 w-40 bg-white rounded-xl border border-gray-100 shadow-lg z-10 py-1">
+        <div class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-100 shadow-lg z-10 py-1">
           <a href="{% url 'contacts:delete_all' %}"
              hx-get="{% url 'contacts:delete_all' %}"
              hx-target="#main-content"
              hx-push-url="true"
-             class="block px-4 py-2 text-sm text-red-500 hover:bg-red-50">전체 삭제</a>
+             class="block px-4 py-2 text-[15px] text-red-500 hover:bg-red-50">전체 삭제</a>
         </div>
       </div>
       {% endif %}
@@ -55,7 +55,7 @@
            name="q"
            value="{{ q }}"
            placeholder="이름 또는 회사명으로 검색"
-           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-[15px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
            hx-get="{% url 'contacts:list' %}"
            hx-trigger="keyup changed delay:300ms"
            hx-target="#contact-list"

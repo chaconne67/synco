@@ -1,0 +1,123 @@
+{
+  "name": "김기성",
+  "name_en": "Kim, Ki-Seong",
+  "birth_year": 1975,
+  "gender": "male",
+  "email": null,
+  "phone": null,
+  "address": "Pungnap-Dong, Songpa-Gu, Seoul, Korea",
+  "current_company": null,
+  "current_position": null,
+  "total_experience_years": 13,
+  "core_competencies": [
+    "법무",
+    "소송 대리",
+    "계약 검토",
+    "채권 관리",
+    "리스크 관리",
+    "법률 자문",
+    "협상"
+  ],
+  "summary": "법무 전문가로 13년간 DIAGEO KOREA, KT Music, Freechal 등에서 소송 대리, 계약 관리, 채권 회수, 법률 자문 업무를 수행. 기업 법무 및 리스크 관리 전문성 보유.",
+  "educations": [
+    {
+      "institution": "경희대학교",
+      "degree": "학사",
+      "major": "법학",
+      "gpa": null,
+      "start_year": 1996,
+      "end_year": 2000,
+      "is_abroad": false
+    }
+  ],
+  "careers": [
+    {
+      "company": "DIAGEO KOREA",
+      "company_en": "DIAGEO KOREA",
+      "position": "Legal Specialist",
+      "department": "Finance",
+      "start_date": "2009-10",
+      "end_date": "2013-12",
+      "is_current": false,
+      "duties": "법적 조치 및 소송 대리, 계약 검토, 행동 강령 및 회사 정책 관리, 상각 제안, 고객 신용 한도 관리, 담보 관리, 영업 현장 법률 교육, 법적 리스크 관리",
+      "achievements": "계약 협상 및 문서화를 통한 법적 리스크 관리, 직원 교육 및 기업 관계 지원",
+      "order": 0
+    },
+    {
+      "company": "KT Music Company",
+      "company_en": "KT Music Company",
+      "position": "Legal Team Manager",
+      "department": "Legal Team",
+      "start_date": "2006-02",
+      "end_date": "2009-10",
+      "is_current": false,
+      "duties": "채권 회수 및 취득 관리, 유통업체 채무 불이행에 대한 법적 조치, 부실 채권 회수를 위한 영업 부서 법률 지원, 파산 징후 예측, 담보 관리, 사업 절차 전반에 대한 법률 지원, 유통 계약 종료 등 계약 문제 관리",
+      "achievements": "사내 법률 자문 제공, 법원 대리 및 법적 협상 수행",
+      "order": 1
+    },
+    {
+      "company": "Freechal Company",
+      "company_en": "Freechal Company",
+      "position": "Manager",
+      "department": "Legal Department",
+      "start_date": "2005-05",
+      "end_date": "2006-01",
+      "is_current": false,
+      "duties": "기업 법률 서비스 제공, 외부 협력 담당, 법원 대리 및 법적 협상, 부실 채권에 대한 법적 조치 주도",
+      "achievements": null,
+      "order": 2
+    },
+    {
+      "company": "First Fire Insurance Co., Ltd.",
+      "company_en": "First Fire Insurance Co., Ltd.",
+      "position": "Employee",
+      "department": "Compensation Team",
+      "start_date": "2004-07",
+      "end_date": "2005-05",
+      "is_current": false,
+      "duties": "교통사고 조사, 보험금 지급 담당, 법률 자문 제공, 손해배상 관련 법적 조치 수행",
+      "achievements": "필요 시 법원에서 회사 대리",
+      "order": 3
+    },
+    {
+      "company": "해병대",
+      "company_en": "The Marine Corps",
+      "position": "헌병",
+      "department": null,
+      "start_date": "2001-03",
+      "end_date": "2004-06",
+      "is_current": false,
+      "duties": "해군 본부 법적 문제 담당, 법률 자문 제공, 민원 해결, 기관 내 형사법 집행",
+      "achievements": null,
+      "order": 4
+    },
+    {
+      "company": "청일법률사무소",
+      "company_en": "Chungilaw Law Firm",
+      "position": null,
+      "department": null,
+      "start_date": "2000-03",
+      "end_date": "2001-03",
+      "is_current": false,
+      "duties": "법원 소송 수행, 소송 검토, 소송 사건 및 문서 처리, 준비 서면, 답변서 및 고소장 작성",
+      "achievements": null,
+      "order": 5
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Business Legal Specialist",
+      "issuer": null,
+      "acquired_date": "2009-01"
+    }
+  ],
+  "language_skills": [],
+  "field_confidences": {
+    "name": 1.0,
+    "birth_year": 1.0,
+    "careers": 0.95,
+    "educations": 0.95,
+    "certifications": 0.85,
+    "overall": 0.95
+  }
+}

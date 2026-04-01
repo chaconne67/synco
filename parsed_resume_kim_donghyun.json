@@ -1,0 +1,98 @@
+{
+  "name": "김동현",
+  "name_en": "Kim, Dong-Hyun",
+  "birth_year": null,
+  "gender": "male",
+  "email": "vinifera79@hotmail.com",
+  "phone": "017-355-8631",
+  "address": "701-1408 Samikgreen APT, Kangdong-Gu, Myungil-Dong, Seoul, Korea",
+  "current_company": null,
+  "current_position": null,
+  "total_experience_years": 4,
+  "core_competencies": [
+    "Supply Chain Management",
+    "Demand Planning",
+    "VMI (Vendor Managed Inventory)",
+    "Logistics Operation",
+    "ERP (Oracle E-Business Suite)",
+    "Supply Chain Consulting",
+    "Data Analysis",
+    "Business Communication"
+  ],
+  "summary": "Supply Chain 전문가로 물류 운영 및 다양한 공급망 환경에서의 실무 경험 보유. CPIM 자격증 소지 및 우수한 영어 커뮤니케이션 능력 보유.",
+  "educations": [
+    {
+      "institution": "서강대학교",
+      "degree": "학사",
+      "major": "경영학",
+      "gpa": null,
+      "start_year": null,
+      "end_year": 2005,
+      "is_abroad": false
+    }
+  ],
+  "careers": [
+    {
+      "company": "Amway Korea",
+      "company_en": "Amway Korea",
+      "position": "Demand Planner",
+      "department": "SCM Division, Distribution Center Planning team",
+      "start_date": "2008-01",
+      "end_date": "2008-12",
+      "is_current": false,
+      "duties": "수요 관리(일일 수요 검토, 개인 및 스킨케어 제품 처리, 제품별 유통 계획 수립, 유통 주문 생성 및 릴리스), VMI 관리(벤더 및 물류 서비스 제공업체 전반 관리, KPI 모니터링을 통한 서비스 수준 유지, VMI 월간 보고서 생성), 팀 지원(다양한 보고서 생성), ERP 슈퍼유저 지정(Oracle E-Business Suite)",
+      "achievements": "VMI 운영 전반 관리, SCM 부서 ERP 슈퍼유저 지정",
+      "order": 0
+    },
+    {
+      "company": "Maersk Korea",
+      "company_en": "Maersk Korea",
+      "position": "Junior Consultant",
+      "department": "SCD (Supply Chain Development) team",
+      "start_date": "2005-05",
+      "end_date": "2007-12",
+      "is_current": false,
+      "duties": "컨설팅 프로젝트 지원(고객 데이터 수집, 기본 분석, 공급망 매핑, 다양한 시뮬레이션 수행), 영업 활동(Maersk Logistics 제품 홍보), MISE 프로그램 참여(A.P. Moller Group 커리어 가속화 프로그램)",
+      "achievements": "MCM, Marks & Spencer, Tesco, GE, Humex 등 프로젝트 참여, MISE 프로그램 수료(글로벌 합격률 0.5%)",
+      "order": 1
+    }
+  ],
+  "certifications": [
+    {
+      "name": "CPIM (Certified in Production and Inventory Management)",
+      "issuer": "APICS",
+      "acquired_date": null
+    },
+    {
+      "name": "Certificate of Hanjin Logistics School",
+      "issuer": "한진",
+      "acquired_date": null
+    },
+    {
+      "name": "Certificate of International Trade Specialist",
+      "issuer": null,
+      "acquired_date": null
+    },
+    {
+      "name": "Certificate of Trade English – 1st degree",
+      "issuer": null,
+      "acquired_date": null
+    }
+  ],
+  "language_skills": [
+    {
+      "language": "영어",
+      "test_name": "TOEIC",
+      "score": "970",
+      "level": null
+    }
+  ],
+  "field_confidences": {
+    "name": 1.0,
+    "birth_year": 0.0,
+    "careers": 0.95,
+    "educations": 0.9,
+    "certifications": 0.85,
+    "overall": 0.85
+  }
+}

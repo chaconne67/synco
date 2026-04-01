@@ -89,7 +89,7 @@
 | # | 항목 | 현재 상태 | 심각도 | 위치 |
 |---|------|----------|--------|------|
 | 6.1 | Card = `rounded-2xl` | 일관 적용 — **OK** | PASS | 전체 |
-| 6.2 | Button = `rounded-xl` | 일관 적용 — **OK** | PASS | 전체 |
+| 6.2 | Button = `rounded-lg` | 일관 적용 — **OK** | PASS | 전체 |
 | 6.3 | Input = `rounded-lg` | 일관 적용 — **OK** | PASS | `contact_form.html` |
 | 6.4 | Badge/Chip = `rounded-full` | 필터 칩에 일관 적용 — **OK** | PASS | `contact_list.html` |
 | 6.5 | Task 완료 버튼 | `rounded-full` — 적절 | PASS | `_task_card.html:3` |
@@ -278,7 +278,7 @@
 | 13.2 | 활성 탭 하이라이트 | 현재 페이지에 맞는 탭 활성화 — **OK** | PASS |
 | 13.3 | 페이지 타이틀 위치/스타일 | 모든 페이지 `text-xl font-bold` px-4 pt-6 — 일관 | PASS |
 | 13.4 | 카드 스타일 통일 | `rounded-2xl border border-gray-200 shadow-sm` — 전체 일관 | PASS |
-| 13.5 | CTA 버튼 스타일 | `bg-primary text-white rounded-xl` — 전체 일관 | PASS |
+| 13.5 | CTA 버튼 스타일 | `bg-primary text-white rounded-lg` — 전체 일관 | PASS |
 | 13.6 | 빈 상태 패턴 | 연락처(아이콘), 미팅(이모지), 매칭(아이콘) — **약간 비일관** | **LOW** |
 
 ---
@@ -365,7 +365,7 @@ fontSize: {
 | M11 | 에러 메시지 표시 검증 | validation 에러 UX 확인 | `contact_form.html` |
 | M12 | 로그인 이용약관 대비 부족 | gray-500으로 변경 | `login.html` |
 | M13 | 모달 시맨틱/접근성 | `role="dialog"` + ESC 닫기 추가 | `contact_report_modal.html` |
-| M14 | 미팅 FAB rounded-xl | FAB는 `rounded-full`이 표준 | `meeting_list_content.html:7` |
+| M14 | 미팅 FAB rounded-lg | FAB는 `rounded-full`이 표준 | `meeting_list_content.html:7` |
 
 ### LOW (개선 권장)
 

@@ -17,7 +17,10 @@ def meeting_list(request):
         status=Meeting.Status.SCHEDULED,
     ).select_related("contact")
 
-    page = int(request.GET.get("page", 1))
+    try:
+        page = int(request.GET.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
     offset = (page - 1) * MEETING_PAGE_SIZE
     page_meetings = meetings[offset : offset + MEETING_PAGE_SIZE]
     has_more = meetings[
@@ -43,15 +46,20 @@ def meeting_list(request):
 @login_required
 def meeting_create(request):
     if request.method == "POST":
-        contact = get_object_or_404(
-            Contact, pk=request.POST["contact_id"], fc=request.user
-        )
+        contact_id = request.POST.get("contact_id", "")
+        scheduled_at = request.POST.get("scheduled_at", "")
+        scheduled_end_at = request.POST.get("scheduled_end_at", "")
+
+        if not contact_id or not scheduled_at or not scheduled_end_at:
+            return HttpResponse("필수 항목을 모두 입력해주세요.", status=422)
+
+        contact = get_object_or_404(Contact, pk=contact_id, fc=request.user)
         meeting = Meeting.objects.create(
             fc=request.user,
             contact=contact,
             title=request.POST.get("title", f"{contact.name}님 미팅"),
-            scheduled_at=request.POST["scheduled_at"],
-            scheduled_end_at=request.POST["scheduled_end_at"],
+            scheduled_at=scheduled_at,
+            scheduled_end_at=scheduled_end_at,
             location=request.POST.get("location", ""),
         )
         if request.htmx:
@@ -111,9 +119,15 @@ def meeting_edit(request, pk):
     meeting = get_object_or_404(Meeting, pk=pk, fc=request.user)
 
     if request.method == "POST":
+        scheduled_at = request.POST.get("scheduled_at", "")
+        scheduled_end_at = request.POST.get("scheduled_end_at", "")
+
+        if not scheduled_at or not scheduled_end_at:
+            return HttpResponse("필수 항목을 모두 입력해주세요.", status=422)
+
         meeting.title = request.POST.get("title", meeting.title)
-        meeting.scheduled_at = request.POST["scheduled_at"]
-        meeting.scheduled_end_at = request.POST["scheduled_end_at"]
+        meeting.scheduled_at = scheduled_at
+        meeting.scheduled_end_at = scheduled_end_at
         meeting.location = request.POST.get("location", "")
         meeting.save()
 

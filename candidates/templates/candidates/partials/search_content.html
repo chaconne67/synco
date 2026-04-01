@@ -1,0 +1,96 @@
+{% load static %}
+<style>
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .tab-scroll-container { position: relative; }
+  .tab-scroll-fade-left,
+  .tab-scroll-fade-right { position: absolute; top: 0; bottom: 0; width: 40px; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 0.2s; }
+  .tab-scroll-fade-left { left: 0; background: linear-gradient(to right, white 30%, transparent); }
+  .tab-scroll-fade-right { right: 0; background: linear-gradient(to left, white 30%, transparent); }
+  .tab-scroll-fade-left.visible,
+  .tab-scroll-fade-right.visible { opacity: 1; }
+  .tab-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: white; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 3; color: #6B7280; }
+  .tab-scroll-arrow:hover { background: #F9FAFB; color: #374151; }
+  .tab-scroll-arrow.visible { display: flex; }
+  .tab-scroll-arrow-left { left: 4px; }
+  .tab-scroll-arrow-right { right: 4px; }
+  @media (max-width: 1023px) { .tab-scroll-arrow { display: none !important; } }
+</style>
+
+<div class="flex flex-col min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="sticky top-0 z-20 bg-white border-b border-gray-200">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" hx-get="/" hx-target="#main-content" hx-push-url="true" class="text-heading text-gray-900 hover:text-primary transition">synco</a>
+      <span class="text-sm text-gray-500">후보자 검색</span>
+    </div>
+  </header>
+
+  <!-- Category tabs -->
+  <div class="sticky top-[52px] z-10 bg-white border-b border-gray-100">
+    <div class="max-w-4xl mx-auto relative tab-scroll-container">
+      <div class="tab-scroll-fade-left" id="tab-fade-left"></div>
+      <div class="tab-scroll-fade-right visible" id="tab-fade-right"></div>
+      <button class="tab-scroll-arrow tab-scroll-arrow-left" id="tab-arrow-left" onclick="document.getElementById('tab-scroller').scrollBy({left:-150,behavior:'smooth'})" aria-label="이전 카테고리">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button class="tab-scroll-arrow tab-scroll-arrow-right visible" id="tab-arrow-right" onclick="document.getElementById('tab-scroller').scrollBy({left:150,behavior:'smooth'})" aria-label="다음 카테고리">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <div id="tab-scroller" class="px-4 py-2.5 overflow-x-auto hide-scrollbar">
+        <div class="flex gap-2 whitespace-nowrap pr-6">
+          <a href="/candidates/"
+             hx-get="/candidates/"
+             hx-target="#search-area"
+             hx-push-url="true"
+             class="flex-shrink-0 inline-block px-3 py-2.5 rounded-full text-sm font-medium transition
+                    {% if not active_category %}bg-primary text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+            전체
+          </a>
+          {% for cat in categories %}
+          <a href="/candidates/?category={{ cat.name }}"
+             hx-get="/candidates/?category={{ cat.name }}"
+             hx-target="#search-area"
+             hx-push-url="true"
+             class="flex-shrink-0 inline-block px-3 py-2.5 rounded-full text-sm font-medium transition
+                    {% if active_category == cat.name %}bg-primary text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+            {{ cat.name }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search area -->
+  <div id="search-area" class="flex-1">
+    <div id="search-status-bar" class="max-w-4xl mx-auto w-full">
+      {% include "candidates/partials/search_status_bar.html" %}
+    </div>
+    <div id="candidate-list" class="max-w-4xl mx-auto w-full">
+      {% include "candidates/partials/candidate_list.html" %}
+    </div>
+  </div>
+</div>
+
+<!-- chatbot fab is in base.html globally -->
+<script>
+(function() {
+  var scroller = document.getElementById('tab-scroller');
+  var fadeL = document.getElementById('tab-fade-left');
+  var fadeR = document.getElementById('tab-fade-right');
+  var arrowL = document.getElementById('tab-arrow-left');
+  var arrowR = document.getElementById('tab-arrow-right');
+  if (!scroller) return;
+  function update() {
+    var sl = scroller.scrollLeft;
+    var atEnd = sl + scroller.clientWidth >= scroller.scrollWidth - 4;
+    fadeL.classList.toggle('visible', sl > 4);
+    fadeR.classList.toggle('visible', !atEnd);
+    arrowL.classList.toggle('visible', sl > 4);
+    arrowR.classList.toggle('visible', !atEnd);
+  }
+  scroller.addEventListener('scroll', update, {passive: true});
+  update();
+})();
+</script>

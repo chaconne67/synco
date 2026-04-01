@@ -4,23 +4,23 @@
 
   <!-- Header -->
   <div class="flex items-center justify-between">
-    <h1 class="text-xl font-bold text-primary">synco</h1>
+    <h1 class="text-heading font-bold text-primary">synco</h1>
     <a href="/accounts/settings/"
        hx-get="/accounts/settings/" hx-target="#main-content" hx-push-url="true"
-       class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+       class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-[15px] font-semibold">
       {{ user.first_name|make_list|first }}
     </a>
   </div>
 
   <!-- Greeting -->
   <div>
-    <h2 class="text-[22px] font-bold leading-tight">
+    <h2 class="text-heading font-bold leading-tight">
       {{ user.first_name }}님, 좋은 아침이에요.
     </h2>
     {% if todays_meetings %}
-    <p class="text-sm text-gray-500 mt-1">오늘 {{ todays_meetings|length }}건의 미팅이 있습니다.</p>
+    <p class="text-[15px] text-gray-500 mt-1">오늘 {{ todays_meetings|length }}건의 미팅이 있습니다.</p>
     {% elif pending_tasks %}
-    <p class="text-sm text-gray-500 mt-1">처리할 업무가 {{ pending_tasks|length }}건 있습니다.</p>
+    <p class="text-[15px] text-gray-500 mt-1">처리할 업무가 {{ pending_tasks|length }}건 있습니다.</p>
     {% endif %}
   </div>
 

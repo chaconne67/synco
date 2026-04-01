@@ -2,6 +2,11 @@
 
 AI CRM & 비즈니스 매칭 플랫폼. FC(보험설계사)가 CEO 인맥을 관리하고, AI 브리핑으로 영업 기회를 발견하는 서비스.
 
+## 개발 환경
+
+- **Claude Code:** VSCode Extension으로 실행 (CLI 버전 아님)
+- **에이전트 팀 운영 가능:** Agent 도구로 병렬 서브에이전트 디스패치 지원. 점검/수정/리뷰 등 독립 작업을 FE/BE/QA 에이전트로 분리 실행하고 오케스트레이터가 결과를 검토하는 팀 워크플로우 사용.
+
 ## Tech Stack
 
 - **Backend:** Django 5.2 (Python 3.10+) + PostgreSQL
@@ -16,8 +21,8 @@ AI CRM & 비즈니스 매칭 플랫폼. FC(보험설계사)가 CEO 인맥을 관
 ## Commands
 
 ```bash
-# 개발 서버
-uv run python manage.py runserver 0.0.0.0:8000
+# 개발 서버 (Django + Tailwind watch 동시 실행)
+./dev.sh
 
 # DB 마이그레이션
 uv run python manage.py makemigrations
@@ -30,6 +35,10 @@ uv run pytest -v
 uv run ruff check .
 uv run ruff format .
 ```
+
+## 수정 후 검증 필수
+
+사용자가 수정을 지시했을 경우 반드시 **실제로 테스트를 실행하여 결과를 확인한 후** 사용자에게 보고한다. 특히 UI/UX 수정의 경우 **브라우저 도구(`/browse`)를 활용하여 실제로 클릭, 네비게이션, 스크롤 등을 수행하고 스크린샷을 캡처하여** 수정 내용이 의도대로 반영되었는지 시각적으로 확인한 후 보고한다. 코드 변경만으로 "완료"라고 보고하지 않는다.
 
 ## 개발 체크리스트
 

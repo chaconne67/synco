@@ -1,14 +1,14 @@
 {% if is_done %}
 <!-- Analysis complete — no more polling (hx-trigger removed) -->
-<div class="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-  <p class="text-sm font-semibold text-gray-700 mb-3">이번 임포트 요약이 준비되었습니다</p>
+<div class="bg-white rounded-lg border border-gray-100 p-4 mb-6">
+  <p class="text-[15px] font-semibold text-gray-700 mb-3">이번 임포트 요약이 준비되었습니다</p>
 
   {% if batch.error_message %}
-  <p class="text-xs text-amber-600 mb-2">일부 분석이 완료되지 않았습니다</p>
+  <p class="text-sm text-amber-600 mb-2">일부 분석이 완료되지 않았습니다</p>
   {% endif %}
 
   {% if sentiment_counts %}
-  <div class="flex items-center gap-4 text-sm mb-2">
+  <div class="flex items-center gap-4 text-[15px] mb-2">
     {% if sentiment_counts.positive %}<span>😊 긍정 {{ sentiment_counts.positive }}건</span>{% endif %}
     {% if sentiment_counts.neutral %}<span>😐 보통 {{ sentiment_counts.neutral }}건</span>{% endif %}
     {% if sentiment_counts.negative %}<span>😟 부정 {{ sentiment_counts.negative }}건</span>{% endif %}
@@ -16,7 +16,7 @@
   {% endif %}
 
   {% if tasks_detected %}
-  <p class="text-sm text-gray-600">할 일 {{ tasks_detected }}건 감지됨</p>
+  <p class="text-[15px] text-gray-600">할 일 {{ tasks_detected }}건 감지됨</p>
   {% endif %}
 </div>
 {% else %}
@@ -24,9 +24,9 @@
 <div hx-get="{% url 'intelligence:import_analysis_status' batch.pk %}"
      hx-trigger="every 3s"
      hx-swap="outerHTML">
-  <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-    <p class="text-sm font-semibold text-gray-700 mb-3">추가 분석 진행 중</p>
-    <div class="space-y-2 text-sm text-gray-500">
+  <div class="bg-white rounded-lg border border-gray-100 p-4 mb-6">
+    <p class="text-[15px] font-semibold text-gray-700 mb-3">추가 분석 진행 중</p>
+    <div class="space-y-2 text-[15px] text-gray-500">
       <div class="flex items-center gap-2">
         {% if batch.embedding_done %}
         <span class="text-green-500">&#10003;</span>

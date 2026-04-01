@@ -18,7 +18,7 @@
   </div>
 
   <!-- AI Analysis Result -->
-  <div class="bg-primary-light rounded-2xl p-4 mb-5">
+  <div class="bg-primary-light rounded-lg p-4 mb-5">
     <div class="flex items-start gap-3">
       <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
         <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,16 +26,16 @@
         </svg>
       </div>
       <div>
-        <h3 class="text-sm font-semibold text-primary">AI가 {{ total_sheets }}개 시트를 분석했습니다</h3>
-        <p class="text-xs text-primary/70 mt-0.5">{{ filename }} · 연락처 시트 {{ contact_sheets|length }}개 ({{ total_contact_rows }}건)</p>
+        <h3 class="text-[15px] font-semibold text-primary">AI가 {{ total_sheets }}개 시트를 분석했습니다</h3>
+        <p class="text-sm text-primary/70 mt-0.5">{{ filename }} · 연락처 시트 {{ contact_sheets|length }}개 ({{ total_contact_rows }}건)</p>
       </div>
     </div>
   </div>
 
   <!-- Sheet List -->
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
+  <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-5">
     <div class="px-4 py-3 border-b border-gray-100">
-      <h3 class="text-sm font-semibold">시트 목록</h3>
+      <h3 class="text-[15px] font-semibold">시트 목록</h3>
     </div>
     <div class="divide-y divide-gray-50">
       {% for sheet in sheet_results %}
@@ -45,19 +45,19 @@
                class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20">
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-gray-800">{{ sheet.name }}</span>
+            <span class="text-[15px] font-medium text-gray-800">{{ sheet.name }}</span>
             {% if sheet.is_contact %}
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-50 text-green-600">연락처</span>
+            <span class="px-1.5 py-0.5 rounded text-[12px] font-semibold bg-green-50 text-green-600">연락처</span>
             {% else %}
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500">제외</span>
+            <span class="px-1.5 py-0.5 rounded text-[12px] font-semibold bg-gray-100 text-gray-500">제외</span>
             {% endif %}
           </div>
-          <p class="text-xs text-gray-500 mt-0.5">{{ sheet.reason }}</p>
+          <p class="text-sm text-gray-500 mt-0.5">{{ sheet.reason }}</p>
           {% if sheet.headers %}
-          <p class="text-[11px] text-gray-300 mt-0.5 truncate">{{ sheet.headers|join:", " }}</p>
+          <p class="text-[13px] text-gray-300 mt-0.5 truncate">{{ sheet.headers|join:", " }}</p>
           {% endif %}
         </div>
-        <span class="text-xs text-gray-500 flex-shrink-0">{{ sheet.rows }}건</span>
+        <span class="text-sm text-gray-500 flex-shrink-0">{{ sheet.rows }}건</span>
       </label>
       {% endfor %}
     </div>
@@ -71,7 +71,7 @@
       {% csrf_token %}
       <input type="hidden" name="action" value="merge">
       <button type="submit"
-              class="w-full bg-primary text-white font-semibold py-3 rounded-xl text-sm hover:bg-primary-dark transition">
+              class="w-full bg-primary text-white font-semibold py-3 rounded-lg text-[15px] hover:bg-primary-dark transition">
         연락처 시트 합쳐서 처리 ({{ total_contact_rows }}건)
       </button>
     </form>
@@ -83,7 +83,7 @@
       <input type="hidden" name="action" value="select">
       <div id="select-sheets-hidden"></div>
       <button type="submit"
-              class="w-full border border-gray-200 text-gray-700 font-semibold py-3 rounded-xl text-sm hover:bg-gray-50 transition">
+              class="w-full border border-gray-200 text-gray-700 font-semibold py-3 rounded-lg text-[15px] hover:bg-gray-50 transition">
         선택한 시트만 처리
       </button>
     </form>

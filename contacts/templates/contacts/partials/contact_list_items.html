@@ -4,20 +4,20 @@
      hx-get="{% url 'contacts:detail' contact.pk %}"
      hx-target="#main-content"
      hx-push-url="true"
-     class="block bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-3 active:bg-gray-50 transition">
+     class="block bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-3 active:bg-gray-50 transition">
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-2.5">
         <span class="text-base flex-shrink-0">{{ contact.tier_emoji }}</span>
         <div>
-          <p class="font-semibold text-sm">{{ contact.name }}</p>
-          <p class="text-xs text-gray-500 mt-0.5">
+          <p class="font-semibold text-[15px]">{{ contact.name }}</p>
+          <p class="text-sm text-gray-500 mt-0.5">
             {% if contact.company_name %}{{ contact.company_name }}{% endif %}{% if contact.company_name and contact.industry %} · {% endif %}{% if contact.industry %}{{ contact.industry }}{% endif %}
           </p>
         </div>
       </div>
       <div class="text-right">
         <!-- Desktop: tier label + tooltip sentiment -->
-        <span class="hidden lg:inline text-xs text-gray-500">{{ contact.tier_label }}</span>
+        <span class="hidden lg:inline text-sm text-gray-500">{{ contact.tier_label }}</span>
         {% with sentiment=contact.last_sentiment %}
         {% if sentiment %}
         <span class="hidden lg:inline ml-1 cursor-default" title="최근 소통: {% if sentiment == 'positive' %}긍정{% elif sentiment == 'neutral' %}보통{% else %}부정{% endif %}">
@@ -26,13 +26,13 @@
         {% endif %}
         {% endwith %}
         <!-- Mobile: tier label -->
-        <span class="lg:hidden text-xs text-gray-500">{{ contact.tier_label }}</span>
+        <span class="lg:hidden text-sm text-gray-500">{{ contact.tier_label }}</span>
       </div>
     </div>
     <!-- Mobile: sentiment text line -->
     {% with sentiment=contact.last_sentiment %}
     {% if sentiment %}
-    <p class="lg:hidden text-xs text-gray-500 mt-1.5 pl-7">
+    <p class="lg:hidden text-sm text-gray-500 mt-1.5 pl-7">
       최근 소통
       {% if sentiment == 'positive' %}😊 긍정{% elif sentiment == 'neutral' %}😐 보통{% else %}😟 부정{% endif %}
       {% if contact.last_interaction_at %} · {{ contact.last_interaction_at|date:"n/j" }}{% endif %}
@@ -59,12 +59,12 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
     </svg>
   </div>
-  <p class="text-sm text-gray-400">아직 등록된 연락처가 없습니다</p>
+  <p class="text-[15px] text-gray-500">아직 등록된 연락처가 없습니다</p>
   <a href="{% url 'contacts:create' %}"
      hx-get="{% url 'contacts:create' %}"
      hx-target="#main-content"
      hx-push-url="true"
-     class="mt-4 bg-primary text-white font-semibold py-3 px-5 rounded-xl text-sm">
+     class="mt-4 bg-primary text-white font-semibold py-3 px-5 rounded-lg text-[15px]">
     연락처 추가하기
   </a>
 </div>

@@ -1,0 +1,138 @@
+{
+  "name": "강문석",
+  "name_en": null,
+  "birth_year": 1968,
+  "gender": "male",
+  "email": "kms8645@mek-ics.com",
+  "phone": "011-9536-9002",
+  "address": "강원 춘천시 후평동 595 극동아파트 101-1202",
+  "current_company": "㈜MEK",
+  "current_position": "품질보증부서장",
+  "total_experience_years": 11,
+  "core_competencies": [
+    "품질시스템 인증",
+    "ISO9001",
+    "EN46001",
+    "GMP",
+    "CE MARKING",
+    "FDA 규격",
+    "6 Sigma MBB",
+    "품질관리",
+    "의료기기 규격 인증",
+    "QSR",
+    "품질문제 분석"
+  ],
+  "summary": "의료기기 분야에서 11년간 국내외 제품규격, 품질시스템 구축 및 인증, 품질문제 관리 업무를 수행. 현재 ㈜MEK 품질보증부서장으로 재직 중이며 6 Sigma MBB 자격 보유.",
+  "educations": [
+    {
+      "institution": "경희대학교",
+      "degree": "석사",
+      "major": "유전공학과 분자미생물학",
+      "gpa": null,
+      "start_year": 1991,
+      "end_year": 1993,
+      "is_abroad": false
+    },
+    {
+      "institution": "경희대학교",
+      "degree": "학사",
+      "major": "유전공학과",
+      "gpa": null,
+      "start_year": 1987,
+      "end_year": 1991,
+      "is_abroad": false
+    },
+    {
+      "institution": "현대고등학교",
+      "degree": null,
+      "major": null,
+      "gpa": null,
+      "start_year": 1984,
+      "end_year": 1987,
+      "is_abroad": false
+    }
+  ],
+  "careers": [
+    {
+      "company": "㈜MEK",
+      "company_en": "MEK",
+      "position": "품질보증부서장",
+      "department": "품질보증부",
+      "start_date": "2002-03",
+      "end_date": null,
+      "is_current": true,
+      "duties": "규격, 품질시스템, 품질문제 관리, 해외 OEM 제품 품질문제 F/U, 6시그마 MBB, 서비스 등 품질관련 전반 업무",
+      "achievements": "국내외 해외규격 및 품질시스템 인증, 품질문제 분석 및 추진관리",
+      "order": 0
+    },
+    {
+      "company": "㈜메디슨",
+      "company_en": "Medison",
+      "position": "품질관리부장",
+      "department": "품질관리부",
+      "start_date": "1998-04",
+      "end_date": "2002-03",
+      "is_current": false,
+      "duties": "국내/외 품질문제 관리",
+      "achievements": "품질관리부장 역임",
+      "order": 1
+    },
+    {
+      "company": "㈜메디슨",
+      "company_en": "Medison",
+      "position": "국장(MBB)",
+      "department": "6 Sigma 사무국",
+      "start_date": "1999-12",
+      "end_date": "2002-03",
+      "is_current": false,
+      "duties": "6 Sigma 사무국 운영, BB/MBB 교육, 프로젝트 지도",
+      "achievements": "6 Sigma MBB 자격 취득 및 사무국 운영",
+      "order": 2
+    },
+    {
+      "company": "㈜메디슨",
+      "company_en": "Medison",
+      "position": null,
+      "department": "기획조정실 품질기획팀",
+      "start_date": "1995-11",
+      "end_date": "1998-04",
+      "is_current": false,
+      "duties": "국내/외 품질시스템 인증/구축/관리/감사",
+      "achievements": "ISO9001, EN46001, GMP, CE MARKING 등 품질시스템 인증 획득",
+      "order": 3
+    },
+    {
+      "company": "㈜메디슨",
+      "company_en": "Medison",
+      "position": null,
+      "department": "연구소 규격실",
+      "start_date": "1992-11",
+      "end_date": "1995-11",
+      "is_current": false,
+      "duties": "국내/외 제품규격 업무",
+      "achievements": "병역특례로 취업, 제품규격 업무 수행",
+      "order": 4
+    }
+  ],
+  "certifications": [
+    {
+      "name": "6 Sigma MBB (Master Black Belt)",
+      "issuer": null,
+      "acquired_date": null
+    },
+    {
+      "name": "MDD 심사자 과정",
+      "issuer": "TUV Product Service",
+      "acquired_date": null
+    }
+  ],
+  "language_skills": [],
+  "field_confidences": {
+    "name": 1.0,
+    "birth_year": 1.0,
+    "careers": 0.95,
+    "educations": 0.95,
+    "certifications": 0.85,
+    "overall": 0.93
+  }
+}

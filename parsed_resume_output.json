@@ -1,0 +1,83 @@
+{
+  "name": "김원일",
+  "name_en": "KIM WONIL",
+  "birth_year": 1975,
+  "gender": "male",
+  "email": "kwi5361@naver.com",
+  "phone": "017-658-9295",
+  "address": "경기 안산시 상록구 사동 1197-7번지 401호",
+  "current_company": null,
+  "current_position": null,
+  "total_experience_years": 7,
+  "core_competencies": [
+    "스테인리스강 생산공정관리",
+    "생산기술",
+    "설비관리",
+    "품질개선",
+    "공정관리",
+    "비용절감"
+  ],
+  "summary": "스테인리스강 생산공정관리 및 생산기술 분야에서 7년 6개월의 경력을 보유한 공정관리 전문가. 대한전선(현 대한ST)에서 설비관리, 생산기술, 공정관리 업무를 수행하며 신규제품개발, 설비개선, 품질향상 및 제조비용 절감에 기여.",
+  "educations": [
+    {
+      "institution": "전북대학교",
+      "degree": "학사",
+      "major": "고분자공학",
+      "gpa": 3.71,
+      "start_year": 1994,
+      "end_year": 2001,
+      "is_abroad": false
+    },
+    {
+      "institution": "우석고등학교",
+      "degree": null,
+      "major": null,
+      "gpa": null,
+      "start_year": 1991,
+      "end_year": 1994,
+      "is_abroad": false
+    }
+  ],
+  "careers": [
+    {
+      "company": "대한전선(현 대한ST(주))",
+      "company_en": "POSCOAST",
+      "position": "대리(주임연구원)",
+      "department": "생산팀",
+      "start_date": "2001-06",
+      "end_date": "2008-12",
+      "is_current": false,
+      "duties": "스테인리스강 생산공정관리, 생산기술, 설비관리. CAP라인(열처리), SKP(조질압연), SL(슬리팅), CTL(전단라인) 담당. 생산직 인원관리, 안전사고방지, 생산량 증대, 품질향상 업무 수행.",
+      "achievements": "신규제품개발, 설비개선, 품질개선 활동 수행. 부자재 비용절감 및 제조비용 절감. 일본 해외출장 2회 참여하여 글로벌 경쟁력 강화.",
+      "order": 0
+    }
+  ],
+  "certifications": [
+    {
+      "name": "전기기사",
+      "issuer": "산업인력공단",
+      "acquired_date": "2000-05"
+    },
+    {
+      "name": "자동차운전면허",
+      "issuer": "경기지방경찰청",
+      "acquired_date": "2008-09"
+    }
+  ],
+  "language_skills": [
+    {
+      "language": "영어",
+      "test_name": "TOEIC",
+      "score": "660",
+      "level": "중급"
+    }
+  ],
+  "field_confidences": {
+    "name": 1.0,
+    "birth_year": 1.0,
+    "careers": 0.95,
+    "educations": 0.95,
+    "certifications": 0.9,
+    "overall": 0.95
+  }
+}

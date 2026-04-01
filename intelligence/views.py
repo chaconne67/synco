@@ -72,7 +72,10 @@ def match_list(request):
         "contact_a", "contact_b"
     )
 
-    page = int(request.GET.get("page", 1))
+    try:
+        page = int(request.GET.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
     offset = (page - 1) * MATCH_PAGE_SIZE
     page_matches = matches[offset : offset + MATCH_PAGE_SIZE]
     has_more = matches[offset + MATCH_PAGE_SIZE : offset + MATCH_PAGE_SIZE + 1].exists()

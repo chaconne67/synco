@@ -1,0 +1,7 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}synco - 개인정보처리방침{% endblock %}
+
+{% block content %}
+  {% include "accounts/partials/privacy_content.html" %}
+{% endblock %}

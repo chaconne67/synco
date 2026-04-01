@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db import models as db_models
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -24,7 +24,10 @@ def contact_list(request):
     if industry:
         contacts = contacts.filter(industry__icontains=industry)
 
-    page = int(request.GET.get("page", 1))
+    try:
+        page = int(request.GET.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
     offset = (page - 1) * PAGE_SIZE
     page_contacts = contacts[offset : offset + PAGE_SIZE]
     has_more = contacts[offset + PAGE_SIZE : offset + PAGE_SIZE + 1].exists()
@@ -90,9 +93,19 @@ def contact_list(request):
 @login_required
 def contact_create(request):
     if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        if not name:
+            if request.htmx:
+                return HttpResponseBadRequest("이름은 필수 항목입니다.")
+            return render(
+                request,
+                "contacts/contact_form.html",
+                {"editing": False, "error": "이름은 필수 항목입니다."},
+            )
+
         contact = Contact.objects.create(
             fc=request.user,
-            name=request.POST["name"],
+            name=name,
             phone=request.POST.get("phone", ""),
             company_name=request.POST.get("company_name", ""),
             industry=request.POST.get("industry", ""),
@@ -104,7 +117,9 @@ def contact_create(request):
         if request.htmx:
             return HttpResponse(
                 status=204,
-                headers={"HX-Redirect": f"/contacts/{contact.pk}/"},
+                headers={
+                    "HX-Redirect": f"/contacts/{contact.pk}/?toast=연락처가+등록되었습니다",
+                },
             )
         return redirect("contacts:detail", pk=contact.pk)
 
@@ -123,7 +138,10 @@ INTERACTION_PAGE_SIZE = 15
 def contact_detail(request, pk):
     contact = get_object_or_404(Contact, pk=pk, fc=request.user)
 
-    page = int(request.GET.get("ipage", 1))
+    try:
+        page = int(request.GET.get("ipage", 1))
+    except (ValueError, TypeError):
+        page = 1
     offset = (page - 1) * INTERACTION_PAGE_SIZE
     interactions = contact.interactions.all()[offset : offset + INTERACTION_PAGE_SIZE]
     has_more_interactions = contact.interactions.all()[
@@ -145,6 +163,8 @@ def contact_detail(request, pk):
             },
         )
 
+    toast_message = request.GET.get("toast", "")
+
     template = (
         "contacts/partials/contact_detail_content.html"
         if request.htmx
@@ -159,6 +179,7 @@ def contact_detail(request, pk):
             "latest_brief": latest_brief,
             "ipage": 1,
             "has_more_interactions": has_more_interactions,
+            "toast_message": toast_message,
         },
     )
 
@@ -168,7 +189,20 @@ def contact_edit(request, pk):
     contact = get_object_or_404(Contact, pk=pk, fc=request.user)
 
     if request.method == "POST":
-        contact.name = request.POST["name"]
+        name = request.POST.get("name", "").strip()
+        if not name:
+            if request.htmx:
+                return HttpResponseBadRequest("이름은 필수 항목입니다.")
+            return render(
+                request,
+                "contacts/contact_form.html",
+                {
+                    "editing": True,
+                    "contact": contact,
+                    "error": "이름은 필수 항목입니다.",
+                },
+            )
+        contact.name = name
         contact.phone = request.POST.get("phone", "")
         contact.company_name = request.POST.get("company_name", "")
         contact.industry = request.POST.get("industry", "")
@@ -181,7 +215,9 @@ def contact_edit(request, pk):
         if request.htmx:
             return HttpResponse(
                 status=204,
-                headers={"HX-Redirect": f"/contacts/{contact.pk}/"},
+                headers={
+                    "HX-Redirect": f"/contacts/{contact.pk}/?toast=연락처가+수정되었습니다",
+                },
             )
         return redirect("contacts:detail", pk=contact.pk)
 
@@ -1158,7 +1194,7 @@ def task_complete(request, pk):
     task.save(update_fields=["status"])
     # Show brief completion feedback then fade out
     return HttpResponse(
-        '<div class="flex items-center gap-3 bg-green-50 rounded-2xl border border-green-200 p-4 transition-all duration-500">'
+        '<div class="flex items-center gap-3 bg-green-50 rounded-lg border border-green-200 p-4 transition-all duration-500">'
         '<svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
         '<span class="text-sm text-green-700">완료되었습니다</span></div>'

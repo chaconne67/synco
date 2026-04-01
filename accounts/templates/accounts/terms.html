@@ -1,0 +1,7 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}synco - 이용약관{% endblock %}
+
+{% block content %}
+  {% include "accounts/partials/terms_content.html" %}
+{% endblock %}

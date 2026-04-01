@@ -6,48 +6,89 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0005_add_search_session_turn'),
+        ("candidates", "0005_add_search_session_turn"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ParseExample',
+            name="ParseExample",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('category', models.CharField(db_index=True, max_length=50)),
-                ('resume_pattern', models.CharField(max_length=200)),
-                ('input_excerpt', models.TextField(help_text='원본 텍스트 발췌 (500자 이내)')),
-                ('correct_output', models.JSONField(help_text='교정된 추출 JSON 발췌')),
-                ('is_active', models.BooleanField(default=True)),
-                ('source_candidate', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='parse_examples', to='candidates.candidate')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("category", models.CharField(db_index=True, max_length=50)),
+                ("resume_pattern", models.CharField(max_length=200)),
+                (
+                    "input_excerpt",
+                    models.TextField(help_text="원본 텍스트 발췌 (500자 이내)"),
+                ),
+                ("correct_output", models.JSONField(help_text="교정된 추출 JSON 발췌")),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "source_candidate",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="parse_examples",
+                        to="candidates.candidate",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'parse_examples',
-                'ordering': ['-created_at'],
+                "db_table": "parse_examples",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ValidationDiagnosis',
+            name="ValidationDiagnosis",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('attempt_number', models.PositiveIntegerField(default=1)),
-                ('verdict', models.CharField(max_length=10)),
-                ('overall_score', models.FloatField()),
-                ('issues', models.JSONField(default=list)),
-                ('field_scores', models.JSONField(default=dict)),
-                ('retry_action', models.CharField(blank=True, max_length=30)),
-                ('candidate', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='diagnoses', to='candidates.candidate')),
-                ('resume', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='diagnoses', to='candidates.resume')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("attempt_number", models.PositiveIntegerField(default=1)),
+                ("verdict", models.CharField(max_length=10)),
+                ("overall_score", models.FloatField()),
+                ("issues", models.JSONField(default=list)),
+                ("field_scores", models.JSONField(default=dict)),
+                ("retry_action", models.CharField(blank=True, max_length=30)),
+                (
+                    "candidate",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="diagnoses",
+                        to="candidates.candidate",
+                    ),
+                ),
+                (
+                    "resume",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="diagnoses",
+                        to="candidates.resume",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'validation_diagnoses',
-                'ordering': ['-created_at'],
+                "db_table": "validation_diagnoses",
+                "ordering": ["-created_at"],
             },
         ),
     ]

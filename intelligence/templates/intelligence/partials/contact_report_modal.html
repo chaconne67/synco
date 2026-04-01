@@ -3,7 +3,7 @@
      role="dialog" aria-modal="true" aria-label="{{ contact.name }} 리포트"
      onclick="if(event.target===this){document.getElementById('modal-container').classList.add('hidden');document.getElementById('modal-container').innerHTML='';}"
      onkeydown="if(event.key==='Escape'){document.getElementById('modal-container').classList.add('hidden');document.getElementById('modal-container').innerHTML='';}">
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
 
     <!-- Header -->
     <div class="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between rounded-t-2xl">
@@ -22,12 +22,12 @@
       <div>
         <div class="flex items-center gap-2 mb-2">
           <span class="text-lg">{{ contact.tier_emoji }}</span>
-          <span class="text-sm font-semibold">{{ contact.tier_label }}</span>
+          <span class="text-[15px] font-semibold">{{ contact.tier_label }}</span>
           {% if contact.relationship_score %}
-          <span class="text-xs text-gray-500">({{ contact.relationship_score|floatformat:0 }}점)</span>
+          <span class="text-sm text-gray-500">({{ contact.relationship_score|floatformat:0 }}점)</span>
           {% endif %}
         </div>
-        <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="grid grid-cols-2 gap-2 text-[15px]">
           <div>
             <span class="text-gray-500">회사</span>
             <p class="font-medium">{{ contact.company_name|default:"—" }}</p>
@@ -63,13 +63,13 @@
            hx-get="{% url 'intelligence:contact_report_analysis' contact.pk %}"
            hx-trigger="load"
            hx-swap="outerHTML">
-        <h4 class="text-sm font-semibold mb-2">AI 분석</h4>
+        <h4 class="text-[15px] font-semibold mb-2">AI 분석</h4>
         <div class="animate-pulse space-y-2">
           <div class="h-3 bg-gray-200 rounded w-full"></div>
           <div class="h-3 bg-gray-200 rounded w-3/4"></div>
           <div class="h-3 bg-gray-100 rounded w-1/2"></div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">분석 중입니다...</p>
+        <p class="text-sm text-gray-500 mt-2">분석 중입니다...</p>
       </div>
       {% elif analysis %}
       {% include "intelligence/partials/report_analysis_section.html" %}
@@ -78,26 +78,26 @@
       <!-- Brief -->
       {% if brief %}
       <div class="border-t border-gray-100 pt-4">
-        <h4 class="text-sm font-semibold mb-2">기업 브리핑</h4>
-        <p class="text-sm text-gray-600 leading-relaxed">{{ brief.company_analysis }}</p>
+        <h4 class="text-[15px] font-semibold mb-2">기업 브리핑</h4>
+        <p class="text-[15px] text-gray-600 leading-relaxed">{{ brief.company_analysis }}</p>
       </div>
       {% endif %}
 
       <!-- Memo -->
       {% if contact.memo %}
       <div class="border-t border-gray-100 pt-4">
-        <h4 class="text-sm font-semibold mb-2">메모</h4>
-        <p class="text-sm text-gray-600 leading-relaxed">{{ contact.memo }}</p>
+        <h4 class="text-[15px] font-semibold mb-2">메모</h4>
+        <p class="text-[15px] text-gray-600 leading-relaxed">{{ contact.memo }}</p>
       </div>
       {% endif %}
 
       <!-- Recent Interactions -->
       {% if interactions %}
       <div class="border-t border-gray-100 pt-4">
-        <h4 class="text-sm font-semibold mb-2">최근 접점</h4>
+        <h4 class="text-[15px] font-semibold mb-2">최근 접점</h4>
         <div class="space-y-2">
           {% for interaction in interactions|slice:":5" %}
-          <div class="text-xs">
+          <div class="text-sm">
             <span class="text-gray-500">{{ interaction.created_at|date:"n/j" }}</span>
             <span class="{% if interaction.sentiment == 'positive' %}text-green-600{% elif interaction.sentiment == 'negative' %}text-red-500{% else %}text-gray-600{% endif %}">
               {{ interaction.summary|truncatechars:80 }}
