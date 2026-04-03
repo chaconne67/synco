@@ -5,6 +5,7 @@ from .models import (
     Career,
     Category,
     Certification,
+    DiscrepancyReport,
     Education,
     ExtractionLog,
     LanguageSkill,
@@ -94,3 +95,15 @@ class ExtractionLogAdmin(admin.ModelAdmin):
     ]
     list_filter = ["action"]
     search_fields = ["candidate__name", "field_name"]
+
+
+@admin.register(DiscrepancyReport)
+class DiscrepancyReportAdmin(admin.ModelAdmin):
+    list_display = [
+        "candidate",
+        "report_type",
+        "integrity_score",
+        "created_at",
+    ]
+    list_filter = ["report_type"]
+    search_fields = ["candidate__name", "summary"]

@@ -9806,3 +9806,194 @@ Traceback (most recent call last):
     obj, end = self.scan_once(s, idx)
 json.decoder.JSONDecodeError: Expecting ',' delimiter: line 42 column 31 (char 1524)
 Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 104, in validate_with_codex
+    result = _parse_codex_response(response)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 87, in _parse_codex_response
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Invalid control character at: line 7 column 106 (char 213)
+Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 103, in validate_with_codex
+    response = _call_codex_cli(prompt, timeout=timeout)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 67, in _call_codex_cli
+    result = subprocess.run(
+  File "/usr/lib/python3.10/subprocess.py", line 505, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 1154, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 2022, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/usr/lib/python3.10/subprocess.py", line 1198, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['claude', '--print', '--model', 'haiku', '--max-turns', '1']' timed out after 60 seconds
+Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 104, in validate_with_codex
+    result = _parse_codex_response(response)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 87, in _parse_codex_response
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 34 column 31 (char 1277)
+Codex CLI failed on attempt 3, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 103, in validate_with_codex
+    response = _call_codex_cli(prompt, timeout=timeout)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 67, in _call_codex_cli
+    result = subprocess.run(
+  File "/usr/lib/python3.10/subprocess.py", line 505, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 1154, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 2022, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/usr/lib/python3.10/subprocess.py", line 1198, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['claude', '--print', '--model', 'haiku', '--max-turns', '1']' timed out after 60 seconds
+Codex CLI failed on attempt 3, falling back to rule-based validation
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 93, in call_llm_json
+    return _extract_json(text)
+  File "/home/work/synco/common/llm.py", line 47, in _extract_json
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 93, in call_llm_json
+    return _extract_json(text)
+  File "/home/work/synco/common/llm.py", line 47, in _extract_json
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 93, in call_llm_json
+    return _extract_json(text)
+  File "/home/work/synco/common/llm.py", line 47, in _extract_json
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+LLM extraction returned None on attempt 1
+
+=== Resume Import  ===
+Folders: 1, Limit: unlimited, Workers: 1
+Google Drive connected.
+
+--- PR+AD ---
+  Files: 99, Groups: 76
+  Skipping 10 already-imported groups
+  SKIP: 곽세롬.85.블루웨일.데크.중대.doc (extraction failed)
+  SKIP: 경백철.81.Dentsu.Bandai.한양대.doc (extraction failed)
+  SKIP: 강태경-59 Hanglass.doc (extraction failed)
+  SKIP: 고위.70.비류홀딩스.중앙방송.써브웨이.아트젠.네오사운드.미국대.doc (extraction failed)
+  SKIP: 강현아-PR, MKT(Concord Capital, Oricom), 73.doc (extraction failed)
+  SKIP: 강유진.76.대홍기획.Welcomm.SeoulD'Arcy.FutureComm.이대.doc (extraction failed)
+  SKIP: 광고홍보석사-김진수.doc (extraction failed)
+  SKIP: 강정수-71 연대신방 kaist 테크노 mba lg전자 해외마케팅.doc (extraction failed)
+  SKIP: 권오억-63 서울대 펩시 홍보대행 LG카드.doc (extraction failed)
+  SKIP: 광고일본박사66-오려경.doc (extraction failed)
+  SKIP: 권서인.74.조이맥스.조이멘트.한양대.doc (extraction failed)
+  SKIP: 공선욱-65 IT사업기획.doc (extraction failed)
+  SKIP: 강함수-71.doc (extraction failed)
+  SKIP: 강민아.80.SynergyHillKnowlton.CommPlus.ANA.동덕여대.doc (extraction failed)
+  SKIP: 강민아(EJ)-80 동덕여대 시너지힐앤놀튼.doc (extraction failed)
+  SKIP: 고은희.76.Alias.GreenMediaAd.PlazaHotel.동덕여대.R.doc (extraction failed)
+  SKIP: 강승구.64.보령제약.다이너스티.대웅제약.영진약품.신도리코.극동건설.경희대.doc (extraction failed)
+  SKIP: 강호일(JS)-74,고려대,해외MBA,로제화장품.doc (extraction failed)
+  OK: 강슬기.87.Arc.Ogilvyone.경희대.docx
+  OK: 구정은.79.Adidas.플립.애다트.디노.글로리.공주대.doc
+  OK: 구희성.72.Nike.AccessComm.이대.doc
+  OK: 권영실-71 연대컴공 한솔 csn 마케팅 erp.doc
+  OK: 고광성.87.포항스틸러스.홈플러스.K&SHotel.외대.doc
+  OK: 강상혁(EJ)-74,워싱턴대MBA,광고기획.doc
+  OK: 강수경.88.Pfizer.코나아이.천랩.Frost&Sullivan.퍼듀대.docx
+  OK: 고성훈-71 고대경제 ae mkt 전략기획 ebiz 마케팅 컨설턴트 현 .doc
+  OK: 강유선-74 Native PR.doc
+  OK: 강민영.85.BizOn.인디다큐.NFX.Daum.성신여대.doc
+  OK: 고현정.73.Wiz.Xrosstech.Wits.Cardinal.외대.doc
+  OK: 강효정(JS)-80,부산대,캘리포니아휘트니스.doc
+  OK: 고성실.83.엔프레쉬.한정림어학원.Tektronix.과기대.doc
+  OK: 곽상희.74.GSK.청년의사신문.산학기술연구원.인제대.docx
+  OK: 강은영.89.Kohler.계명대.R.doc
+  OK: 고정민.70.BoehringerIngelheimVetmedica.Bayer.StateStreet.NWBank.Sofitel.덕성여대.doc
+  OK: 강준구-72 DB마케팅.doc
+  OK: 강민지.88.CJE&M.AAA.미국대.docx
+  OK: 강민경.84.De'LonghiKenwood.E&Y.부산외대.docx
+  OK: 강지영.Richemont.JaegerLeCourtere시계.doc
+  OK: 강현진.74.Wella.L'Oreal.Synergy.KPMG.AnneKlein.이대.R.doc
+  OK: 고은진.79.명보.Kosney.L'Oreal.동덕여대.doc
+  OK: 강혜수(JS)-71,이화여대,CMP Medica.doc
+  OK: 곽재우.66.헤럴드동아TV.파소나기닷컴.여성채널GTV.문화방송.계명대.doc
+  OK: 강명희.64.플래닛82미디어본부.레이디경향.우먼센스.광고기획및 홍보.서울예전.doc
+  OK: 광고74-손금선.doc
+  OK: 구인영(JS)-73 해외대학,연대대학원,Communication Work.doc
+  OK: 강희진.74.KITA.Ioconvex.Convention진행.건국대.doc
+  OK: 강경모.69.이노션.Hachette.제일기획.DiamondBatesSaatchi.죠지아대.doc
+  OK: 권수경.NUC.doc
+  OK: 강수윤.76.네이처리퍼블릭.MBCAdcom.KBSMedia.삼성생명.북경대.doc
+  OK: 광고69-최헌.doc
+  OK: 권세영.82.Hotel.Resort.Spa.외국대.doc
+  OK: 광고온라인71-안승준.doc
+  OK: 강현진-73,이대,웰라,로레알.doc
+  OK: 강소영-72 일리노이즈대MBA,VISA인터내셔널.doc
+  OK: 구경현.85.JamesJeans.Akris.숙대.doc
+  OK: 강현진.80.픽스다인.위사.쓰리랩.아이피데코.애드샵.금강공업.강남대.doc
+  OK: 권영희.76.Amway.노블레스애드.동덕여대.doc
+  OK: 강지은.81.Edelman.FutureComm.Hoffman.연세대.doc
+  OK: 고남선.72.대한A&C.하쿠호도제일.금강오길비.이노션.코마코.신화.단국대.doc
+  OK: 고화미.87.PROne.서울여대.doc
+  OK: 강진민.75.LG전자.SKNetworks.연세대.카대.doc
+  OK: 70안병호광고대행.doc
+  OK: 광고온라인71-안승준자기소개서.doc
+  OK: 00 다국적 기업 홍보 담당자 리스트.docx
+  OK: 78이주희여이대신방.doc
+  OK: 76임푸르메여경원대오크우드코엑스홍보.doc
+
+=== Import Summary ===
+Time: 8966.3s
+Folders processed: 1
+Files found: 99
+Groups found: 76
+Skipped (existing): 10
+Processed: 66
+Succeeded: 48
+Failed: 18
+

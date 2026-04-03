@@ -21,9 +21,27 @@ class IdentityMatch:
     match_reason: str  # "email" or "phone"
 
 
+@dataclass
+class CandidateComparisonContext:
+    """Shared comparison context for matching and cross-version checks."""
+
+    candidate: Candidate
+    compared_resume: Resume | None
+    match_reason: str
+    previous_data: dict
+
+
 def _normalize_phone(phone: str) -> str:
-    """Strip all non-digit characters for comparison."""
-    return re.sub(r"\D", "", phone)
+    """Normalize Korean phone numbers for comparison."""
+    digits = re.sub(r"\D", "", phone)
+    if digits.startswith("0082"):
+        digits = digits[2:]
+    if digits.startswith("82"):
+        local_digits = digits[2:]
+        if local_digits and not local_digits.startswith("0"):
+            return f"0{local_digits}"
+        return local_digits
+    return digits
 
 
 def identify_candidate(extracted: dict) -> IdentityMatch | None:
@@ -65,8 +83,30 @@ def identify_candidate(extracted: dict) -> IdentityMatch | None:
     return None
 
 
+def build_candidate_comparison_context(
+    extracted: dict,
+) -> CandidateComparisonContext | None:
+    """Build a single source of truth for comparison and persistence."""
+    identity = identify_candidate(extracted)
+    if not identity:
+        return None
+
+    return CandidateComparisonContext(
+        candidate=identity.candidate,
+        compared_resume=identity.compared_resume,
+        match_reason=identity.match_reason,
+        previous_data=_build_candidate_snapshot(identity.candidate),
+    )
+
+
 def _latest_parsed_resume(candidate: Candidate) -> Resume | None:
     """Return the most recent parsed resume for cross-version comparison."""
+    if (
+        candidate.current_resume
+        and candidate.current_resume.processing_status == Resume.ProcessingStatus.PARSED
+    ):
+        return candidate.current_resume
+
     return (
         candidate.resumes.filter(
             processing_status=Resume.ProcessingStatus.PARSED,
@@ -74,3 +114,28 @@ def _latest_parsed_resume(candidate: Candidate) -> Resume | None:
         .order_by("-version")
         .first()
     )
+
+
+def _build_candidate_snapshot(candidate: Candidate) -> dict:
+    """Serialize the candidate's current profile for cross-version checks."""
+    return {
+        "careers": [
+            {
+                "company": c.company,
+                "start_date": c.start_date,
+                "end_date": c.end_date,
+                "position": c.position,
+            }
+            for c in candidate.careers.all()
+        ],
+        "educations": [
+            {
+                "institution": e.institution,
+                "degree": e.degree,
+                "major": e.major,
+                "start_year": e.start_year,
+                "end_year": e.end_year,
+            }
+            for e in candidate.educations.all()
+        ],
+    }

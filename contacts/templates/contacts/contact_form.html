@@ -1,7 +1,0 @@
-{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
-
-{% block title %}{% if editing %}연락처 편집{% else %}연락처 추가{% endif %} - synco{% endblock %}
-
-{% block content %}
-{% include "contacts/partials/contact_form_content.html" %}
-{% endblock %}

@@ -3,11 +3,19 @@ import uuid
 
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
+from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, render
 
-from .models import Candidate, Category, ExtractionLog, SearchSession, SearchTurn
-from .services.search import parse_and_search
+from .models import (
+    Candidate,
+    Category,
+    DiscrepancyReport,
+    ExtractionLog,
+    SearchSession,
+    SearchTurn,
+)
+from .services.search import build_search_queryset, has_active_filters, parse_and_search
 from .services.whisper import transcribe_audio
 
 
@@ -44,13 +52,26 @@ STATUS_CHOICES = [
 ]
 
 
+def _self_consistency_prefetch() -> Prefetch:
+    return Prefetch(
+        "discrepancy_reports",
+        queryset=DiscrepancyReport.objects.filter(
+            report_type=DiscrepancyReport.ReportType.SELF_CONSISTENCY
+        ).order_by("-created_at"),
+        to_attr="prefetched_self_consistency_reports",
+    )
+
+
 @login_required
 def review_list(request):
     status_filter = request.GET.get("status", "needs_review")
 
     candidates = Candidate.objects.filter(
         validation_status=status_filter,
-    ).select_related("primary_category")
+    ).select_related("primary_category").prefetch_related(
+        "careers",
+        _self_consistency_prefetch(),
+    )
 
     total = candidates.count()
     try:
@@ -84,9 +105,15 @@ def review_list(request):
 
 @login_required
 def review_detail(request, pk):
-    candidate = get_object_or_404(Candidate, pk=pk)
+    candidate = get_object_or_404(
+        Candidate.objects.select_related("primary_category", "current_resume").prefetch_related(
+            "careers",
+            _self_consistency_prefetch(),
+        ),
+        pk=pk,
+    )
 
-    primary_resume = candidate.resumes.filter(is_primary=True).first()
+    primary_resume = candidate.current_resume or candidate.resumes.filter(is_primary=True).first()
     careers = candidate.careers.all()
     educations = candidate.educations.all()
     certifications = candidate.certifications.all()
@@ -118,12 +145,16 @@ def review_confirm(request, pk):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
 
-    candidate = get_object_or_404(Candidate, pk=pk)
+    candidate = get_object_or_404(
+        Candidate.objects.select_related("current_resume"),
+        pk=pk,
+    )
     candidate.validation_status = Candidate.ValidationStatus.CONFIRMED
     candidate.save(update_fields=["validation_status", "updated_at"])
 
     ExtractionLog.objects.create(
         candidate=candidate,
+        resume=candidate.current_resume,
         action=ExtractionLog.Action.HUMAN_CONFIRM,
         note="사람이 검토 확인",
     )
@@ -139,13 +170,17 @@ def review_reject(request, pk):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
 
-    candidate = get_object_or_404(Candidate, pk=pk)
+    candidate = get_object_or_404(
+        Candidate.objects.select_related("current_resume"),
+        pk=pk,
+    )
     candidate.validation_status = Candidate.ValidationStatus.FAILED
     candidate.save(update_fields=["validation_status", "updated_at"])
 
     reason = request.POST.get("reason", "")
     ExtractionLog.objects.create(
         candidate=candidate,
+        resume=candidate.current_resume,
         action=ExtractionLog.Action.HUMAN_REJECT,
         note=reason,
     )
@@ -192,7 +227,12 @@ def candidate_list(request):
     if category_filter:
         qs = (
             Candidate.objects.select_related("primary_category")
-            .prefetch_related("educations", "careers", "categories")
+            .prefetch_related(
+                "educations",
+                "careers",
+                "categories",
+                _self_consistency_prefetch(),
+            )
             .filter(categories__name=category_filter)
             .distinct()
             .order_by("-updated_at")
@@ -203,35 +243,23 @@ def candidate_list(request):
         has_more = qs[
             offset + SEARCH_PAGE_SIZE : offset + SEARCH_PAGE_SIZE + 1
         ].exists()
-    elif session and filters.get("_last_sql"):
-        # Re-execute last search SQL for page refresh
-        from django.db import connection as db_conn
-
-        sql = filters["_last_sql"]
-        try:
-            with db_conn.cursor() as cursor:
-                cursor.execute(sql)
-                ids = [row[0] for row in cursor.fetchall()]
-            candidates_list = list(
-                Candidate.objects.select_related("primary_category")
-                .prefetch_related("educations", "careers", "categories")
-                .filter(id__in=ids)
-            )
-            # Preserve SQL ordering
-            id_order = {uid: i for i, uid in enumerate(ids)}
-            candidates_list.sort(key=lambda c: id_order.get(c.id, 999))
-            total = len(candidates_list)
-            offset = (page - 1) * SEARCH_PAGE_SIZE
-            page_candidates = candidates_list[offset : offset + SEARCH_PAGE_SIZE]
-            has_more = len(candidates_list) > offset + SEARCH_PAGE_SIZE
-        except Exception:
-            page_candidates = []
-            total = 0
-            has_more = False
+    elif session and has_active_filters(filters):
+        qs = build_search_queryset(filters)
+        total = qs.count()
+        offset = (page - 1) * SEARCH_PAGE_SIZE
+        page_candidates = qs[offset : offset + SEARCH_PAGE_SIZE]
+        has_more = qs[
+            offset + SEARCH_PAGE_SIZE : offset + SEARCH_PAGE_SIZE + 1
+        ].exists()
     else:
         qs = (
             Candidate.objects.select_related("primary_category")
-            .prefetch_related("educations", "careers", "categories")
+            .prefetch_related(
+                "educations",
+                "careers",
+                "categories",
+                _self_consistency_prefetch(),
+            )
             .order_by("-updated_at")
         )
         total = qs.count()
@@ -284,14 +312,45 @@ def candidate_list(request):
 def candidate_detail(request, pk):
     """Candidate detail page."""
     candidate = get_object_or_404(
-        Candidate.objects.select_related("primary_category"),
+        Candidate.objects.select_related("primary_category", "current_resume").prefetch_related(
+            "careers",
+            _self_consistency_prefetch(),
+        ),
         pk=pk,
     )
     careers = candidate.careers.all()
     educations = candidate.educations.all()
     certifications = candidate.certifications.all()
     language_skills = candidate.language_skills.all()
-    primary_resume = candidate.resumes.filter(is_primary=True).first()
+    primary_resume = candidate.current_resume or candidate.resumes.filter(is_primary=True).first()
+
+    # Field confidence map for color-coded display
+    fc = candidate.field_confidences or {}
+    # Find hallucinated fields from validation diagnosis
+    from .models import ValidationDiagnosis
+
+    hallucinated_fields = set()
+    diag_qs = ValidationDiagnosis.objects.filter(candidate=candidate)
+    if primary_resume:
+        diag_qs = diag_qs.filter(resume=primary_resume)
+    diag = diag_qs.first()
+    if diag and diag.issues:
+        for issue in diag.issues:
+            if issue.get("type") == "hallucinated":
+                hallucinated_fields.add(issue.get("field", ""))
+
+    # New model fields context
+    extra_context = {
+        "salary_detail": candidate.salary_detail or {},
+        "military_service": candidate.military_service or {},
+        "awards_data": candidate.awards or [],
+        "self_introduction": candidate.self_introduction or "",
+        "family_info": candidate.family_info or {},
+        "overseas_experience": candidate.overseas_experience or [],
+        "trainings_data": candidate.trainings or [],
+        "patents_data": candidate.patents or [],
+        "projects_data": candidate.projects or [],
+    }
 
     template = (
         "candidates/partials/candidate_detail_content.html"
@@ -308,6 +367,9 @@ def candidate_detail(request, pk):
             "certifications": certifications,
             "language_skills": language_skills,
             "primary_resume": primary_resume,
+            "fc": fc,
+            "hallucinated_fields": hallucinated_fields,
+            **extra_context,
         },
     )
 
@@ -351,24 +413,23 @@ def search_chat(request):
         )
         session = SearchSession.objects.create(user=request.user)
 
-    # LLM generates SQL and executes search
-    previous_sql = session.current_filters.get("_last_sql")
-    result = parse_and_search(user_text, previous_sql=previous_sql)
+    # LLM generates structured filters and executes ORM search
+    previous_filters = (
+        session.current_filters if has_active_filters(session.current_filters) else None
+    )
+    result = parse_and_search(user_text, previous_filters=previous_filters)
 
     ai_message = result["ai_message"]
     result_count = result["result_count"]
-    sql = result.get("sql")
+    filters = result.get("filters") or {}
 
-    # Too many results — guide user to narrow down (keep SQL for chaining)
+    # Too many results — guide user to narrow down with the current filter context
     if result_count > 50:
         ai_message += (
             f"\n\n검색 결과가 {result_count}명으로 너무 많습니다. "
             "추가 조건을 말씀해주시면 현재 결과에서 바로 좁혀드리겠습니다. "
             "예: 경력 10년 이상, 서울대 출신, 삼성 경력자 등"
         )
-
-    # Store SQL for multi-turn context
-    filters = {"_last_sql": sql} if sql else {}
 
     # Save turn
     turn_number = session.turns.count() + 1

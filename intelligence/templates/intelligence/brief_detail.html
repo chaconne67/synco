@@ -1,7 +1,0 @@
-{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
-
-{% block title %}AI 브리핑 - {{ contact.name }} - synco{% endblock %}
-
-{% block content %}
-{% include "intelligence/partials/brief_detail_content.html" %}
-{% endblock %}

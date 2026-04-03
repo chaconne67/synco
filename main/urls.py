@@ -7,7 +7,4 @@ urlpatterns = [
     path("", lambda r: redirect("/candidates/"), name="root"),
     path("", include("accounts.urls")),
     path("candidates/", include("candidates.urls")),
-    path("contacts/", include("contacts.urls")),
-    path("meetings/", include("meetings.urls")),
-    path("intelligence/", include("intelligence.urls")),
 ]

@@ -1,6 +1,5 @@
 import pytest
 
-from candidates.models import ParseExample
 from candidates.services.validation import (
     compute_overall_confidence,
     validate_cross_check,
@@ -46,6 +45,22 @@ class TestRuleValidation:
         }
         issues = validate_rules(data)
         assert not any("date_order" in i["field"] for i in issues)
+
+    def test_career_date_order_uses_inferred_end_date(self):
+        data = {
+            "name": "강솔찬",
+            "careers": [{"start_date": "2020.01", "end_date_inferred": "2019.12"}],
+        }
+        issues = validate_rules(data)
+        assert any(i["field"] == "careers[0].date_order" for i in issues)
+
+    def test_invalid_date_confidence(self):
+        data = {
+            "name": "강솔찬",
+            "careers": [{"start_date": "2020.01", "date_confidence": 1.5}],
+        }
+        issues = validate_rules(data)
+        assert any(i["field"] == "careers[0].date_confidence" for i in issues)
 
 
 class TestCrossCheck:
@@ -119,15 +134,3 @@ class TestValidateExtraction:
             "failed",
         )
 
-
-@pytest.mark.django_db
-def test_parse_example_create():
-    ex = ParseExample.objects.create(
-        category="Plant",
-        resume_pattern="영문+국문 혼합, 텍스트박스 헤더",
-        input_excerpt="Daehan Solution LLC / President...",
-        correct_output={"company": "대한솔루션", "start_date": "Dec. 2016"},
-    )
-    assert ex.category == "Plant"
-    assert ex.is_active is True
-    assert ex.correct_output["company"] == "대한솔루션"

@@ -87,6 +87,21 @@ class TestSaveUpdateExisting:
         assert c2.current_resume != old_resume
         assert c2.current_resume.version == 2
 
+    def test_only_latest_resume_remains_primary(self, category):
+        from candidates.services.integrity.save import save_pipeline_result
+        c1 = save_pipeline_result(
+            pipeline_result=_make_pipeline_result(), raw_text="v1",
+            category=category, primary_file=_make_primary_file("drive_001"),
+        )
+        save_pipeline_result(
+            pipeline_result=_make_pipeline_result(), raw_text="v2",
+            category=category, primary_file=_make_primary_file("drive_002"),
+        )
+
+        primary_resumes = Resume.objects.filter(candidate=c1, is_primary=True)
+        assert primary_resumes.count() == 1
+        assert primary_resumes.first().drive_file_id == "drive_002"
+
     def test_careers_rebuilt_on_update(self, category):
         from candidates.services.integrity.save import save_pipeline_result
         c1 = save_pipeline_result(

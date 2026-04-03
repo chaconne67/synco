@@ -1,26 +1,12 @@
 {% load static %}
 <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 lg:hidden z-40" id="bottom-nav" aria-label="메인 네비게이션">
   <div class="max-w-md mx-auto flex justify-around py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-    <a href="/"
-       hx-get="/" hx-target="#main-content" hx-push-url="true"
-       data-nav="home"
+    <a href="/candidates/"
+       hx-get="/candidates/" hx-target="#main-content" hx-push-url="true"
+       data-nav="candidates"
        class="nav-tab flex flex-col items-center py-1 px-3 min-w-[64px] text-gray-500">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      <span class="text-[12px] mt-0.5">홈</span>
-    </a>
-    <a href="/contacts/"
-       hx-get="/contacts/" hx-target="#main-content" hx-push-url="true"
-       data-nav="contacts"
-       class="nav-tab flex flex-col items-center py-1 px-3 min-w-[64px] text-gray-500">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="text-[12px] mt-0.5">연락처</span>
-    </a>
-    <a href="/intelligence/matches/"
-       hx-get="/intelligence/matches/" hx-target="#main-content" hx-push-url="true"
-       data-nav="intelligence"
-       class="nav-tab flex flex-col items-center py-1 px-3 min-w-[64px] text-gray-500">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-      <span class="text-[12px] mt-0.5">매칭</span>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <span class="text-[12px] mt-0.5">후보자</span>
     </a>
     <a href="/accounts/settings/"
        hx-get="/accounts/settings/" hx-target="#main-content" hx-push-url="true"
@@ -37,9 +23,7 @@ function updateNav() {
   var path = window.location.pathname;
   document.querySelectorAll('.nav-tab').forEach(function(tab) {
     var key = tab.dataset.nav;
-    var active = (key === 'home' && path === '/') ||
-                 (key === 'contacts' && path.startsWith('/contacts')) ||
-                 (key === 'intelligence' && path.startsWith('/intelligence')) ||
+    var active = (key === 'candidates' && (path === '/' || path.startsWith('/candidates'))) ||
                  (key === 'settings' && path.includes('/settings'));
     tab.className = tab.className.replace(/text-primary font-semibold|text-gray-500/g, '');
     tab.classList.add(active ? 'text-primary' : 'text-gray-500');

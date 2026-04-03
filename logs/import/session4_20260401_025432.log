@@ -10171,3 +10171,500 @@ Traceback (most recent call last):
   File "/usr/lib/python3.10/subprocess.py", line 1198, in _check_timeout
     raise TimeoutExpired(
 subprocess.TimeoutExpired: Command '['claude', '--print', '--model', 'sonnet', '--max-turns', '1']' timed out after 120 seconds
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 103, in validate_with_codex
+    response = _call_codex_cli(prompt, timeout=timeout)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 67, in _call_codex_cli
+    result = subprocess.run(
+  File "/usr/lib/python3.10/subprocess.py", line 505, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 1154, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 2022, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/usr/lib/python3.10/subprocess.py", line 1198, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['claude', '--print', '--model', 'haiku', '--max-turns', '1']' timed out after 60 seconds
+Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 104, in validate_with_codex
+    result = _parse_codex_response(response)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 87, in _parse_codex_response
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 58 column 31 (char 2213)
+Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 104, in validate_with_codex
+    result = _parse_codex_response(response)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 87, in _parse_codex_response
+    return json.loads(text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Invalid control character at: line 71 column 152 (char 3176)
+Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 103, in validate_with_codex
+    response = _call_codex_cli(prompt, timeout=timeout)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 67, in _call_codex_cli
+    result = subprocess.run(
+  File "/usr/lib/python3.10/subprocess.py", line 505, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 1154, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+  File "/usr/lib/python3.10/subprocess.py", line 2022, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/usr/lib/python3.10/subprocess.py", line 1198, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['claude', '--print', '--model', 'haiku', '--max-turns', '1']' timed out after 60 seconds
+Codex CLI failed on attempt 1, falling back to rule-based validation
+Codex validation failed
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/codex_validation.py", line 103, in validate_with_codex
+    response = _call_codex_cli(prompt, timeout=timeout)
+  File "/home/work/synco/candidates/services/codex_validation.py", line 75, in _call_codex_cli
+    raise RuntimeError(f"Claude Haiku error: {result.stderr[:500]}")
+RuntimeError: Claude Haiku error: 
+Codex CLI failed on attempt 3, falling back to rule-based validation
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 1
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 2
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 3
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 4
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 1
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 2
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 3
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 4
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 1
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 2
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 3
+LLM extraction failed (attempt 1/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 2/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction failed (attempt 3/3)
+Traceback (most recent call last):
+  File "/home/work/synco/candidates/services/llm_extraction.py", line 122, in extract_candidate_data
+    result = call_llm_json(
+  File "/home/work/synco/common/llm.py", line 92, in call_llm_json
+    text = call_llm(prompt, system=system, timeout=timeout, max_tokens=max_tokens)
+  File "/home/work/synco/common/llm.py", line 66, in call_llm
+    raise RuntimeError(f"Claude CLI error: {result.stderr}")
+RuntimeError: Claude CLI error: 
+LLM extraction returned None on attempt 4
+
+=== Resume Import  ===
+Folders: 1, Limit: unlimited, Workers: 1
+Google Drive connected.
+
+--- R&D ---
+  Files: 98, Groups: 83
+  Skipping 9 already-imported groups
+  OK: 김창식.73.장안.Honeywell.SDI.태일.KIST.동대.doc
+  OK: 김성욱.72.Umicore.JohnsonMatthey.세라믹기술원.대학.Enplon.대림전.doc
+  OK: 김성기.72.NeoBattery.한화솔루션.Momentive.Dow.LG이노텍.삼성정밀화학.인하대.doc
+  OK: 강대업.63.휴온스.하이로닉.녹원.세신정밀.바텍.델파이.유펄스.대우.연대.doc
+  OK: 김수형.72.삼성.Apple.WD.Seagate.서울대.doc
+  OK: 김연웅.71.신흥.대학연구소.경성대.R.doc
+  OK: 김진태.70.BHST.TRobotics.마이크로팩.두산메카텍.APTC.테크윈.산기대.doc
+  OK: 김석태.67.숨비.LIG넥스원.삼성테크윈.국방과학연구소.삼성.인하대.doc
+  OK: 노승환.66.고일.빅라이트.에이테크.알파큐브.삼영.경북대.docx
+  OK: 문용운.69.삼성.서강대.E.docx
+  OK: 김지훈.89.서울대의과대학.지능형바이오메~구센터.서울대생체계측연구센터.서울대.doc
+  OK: 김민영.88.계명대동산의료원.경희대.doc
+  OK: 류강.67.스카이엔젤바이오.코리아코스팩.GENOSS.비공개..한양대.doc
+  OK: 김재구.70.대영연마.삼화화학공업.일신웰스.SK이노베이션.LG화학.충남대.doc
+  OK: 국준원.83.한국생산기술연구원.한스바이오메드.고려대.doc
+  OK: 김동훈.89.늘솔자원개발.인하공전.doc
+  OK: 김지연.84.경기환경과학(연).울산발전(연).금강물환경(연).경북대.doc
+  OK: 김현수.81.조광요턴.부경대.docx
+  OK: 김주환.86.LSNikko동제련.홍익대.R1.doc
+  OK: 김태훈.71.SaintGobain.주성.서강대.R.doc
+  OK: 문승욱.74.학교.병원.서경대.docx
+  OK: 김시은.86.시험연.치과협.상명대.doc
+  OK: 남성훈.74.킴벌리클라크.성균관대.docx
+  OK: 김윤정.86.LGChem.연세대.doc
+  OK: 김용환.73.화승엑스윌.SJ.고려기술.보금.부경대.docx
+  OK: 김희연.84.Quest Diagnostics.순천향대.R&D.docx
+  OK: 김봉호.86.세스코.일진D.한양대연구실.경북대.doc
+  OK: 김정학.73.KimberlyClark.코리아나.한양대.doc
+  OK: 김설아.89.SK bioland.전북대.농업R&D.docx
+  OK: 김일호.89.Easy swine farm.부산대.농업R&D.doc
+  OK: 김태환.88.강원대.E.docx
+  OK: 김성헌.72.Sabic.제일모직.계명대.doc
+  OK: 강희석.86.정우.한국종기.김포대.docx
+  OK: 고미경.72.팜클.동인바이오텍.식품개발연구원.인제대.doc
+  OK: 김종훈.81.유니드.원광대.doc
+  OK: 남지태.84.가스공사.선보.에너지기연.해양대.doc
+  OK: 김형일-61,한양대,대우상용차 개발,품질관리.doc
+  OK: 김진성.55.이룸산업.타렉스.하우톤.Kolon.해사.경희대.doc
+  OK: 김은주.78.LG화학.연료전지.부산대.doc
+  OK: 김관태-63,한양대,대우중공업,자동차,Connector.doc
+  OK: 김정부.79.화승르까프.DSVina.학산.경남정보대.doc
+  OK: 김효수-68,서울대원,한라중공업,중장비 개발,디젤영업관리.doc
+  OK: 김용일-66,부산대,삼성자동차,외국계업체 근무,기계.doc
+  OK: 김주형-73,서울대석사,서울시스템,공장자동화.doc
+  OK: 김성민.63.SKT.Intel.ECRM.미시민권자.MIT.docx
+  OK: 김효선.65.Pfizer.Indegene.Battelle.Pharvis.한일양행.서울여대.R.doc
+  OK: 김영환-66,델파이,중앙대.doc
+  OK: 강형덕.76.대외경제정책연구원.농협경제연구소.한국사학진흥재단.해양수#372DD3.doc
+  OK: 권병록-한양대,현대자동차,해외영업.doc
+  OK: 김종순_-66,서울대,효성중공업.doc
+  OK: 김병철-64,서울대원,대우전자,기계.doc
+  OK: 고남훈.72.Hironic.QMC.STI.참ENG.OTS.동국대.doc
+  OK: 강석호.63.퓨트로닉.GBO.영광.다우정밀.위아.광진.Behr.KSR.현대.서울대.doc
+  OK: 강신단-한양대,대우,LG CNS.doc
+  OK: 김정호-61,고대,옥시.doc
+  OK: 강성중-66,한양대,대우자동차,필립스.개발.doc
+  OK: 김성민.ITRI.Orthotron.SK.Intel.ECRM.MIT.docx
+  OK: 김원삼.80.덕산하이메탈.원자력연구원.인제대분리분석실.인제대.doc
+  OK: 김광섭-65,서울대,생코뱅.doc
+  OK: 김예원.82.하이넷포쉬에.기술교육대.doc
+  OK: 김세희.85.노인지협동조합.신경내분비학연구실.미국대.doc
+  OK: 김진.73.Wacker.노루페인트.경도화학.동국대.doc
+  OK: 김도훈.66.IKScience.KRD.신한과학.경성대.docx
+  OK: 고승재-65,인하대,엔지니어링,PMP.doc
+  OK: 김부식-RESUME.doc
+  OK: 강인정.79.엠브릿지.휴대폰.모바일.강남대.doc
+  OK: 김호영.79.JohnsonDiversey.금호석유화학.성대.doc
+  OK: 권주연.79.Amway.한국식품연구원.인허가등록.덕성여대.doc
+  OK: 공기훈.82.BIT범우연구소.단국대.doc
+  OK: 김재환-64,동국대,다우코닝(construction).doc
+  OK: 강율이.76.전통의학연구소.한국기술산업.서린바이오사이언스.건국대.doc
+  SKIP: 강민수(73,인하대,산업안전기술).doc (extraction failed)
+  SKIP: 김서경-65,한양대,효성 펌프영업.doc (extraction failed)
+  SKIP: 김성호박사(auto).doc (extraction failed)
+
+=== Import Summary ===
+Time: 9311.6s
+Folders processed: 1
+Files found: 98
+Groups found: 83
+Skipped (existing): 9
+Processed: 74
+Succeeded: 71
+Failed: 3
+

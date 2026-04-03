@@ -3,9 +3,9 @@ services:
     image: pgvector/pgvector:pg16
     restart: always
     environment:
-      POSTGRES_DB: synco
-      POSTGRES_USER: synco
-      POSTGRES_PASSWORD: bwv100$$
+      POSTGRES_DB: ${POSTGRES_DB:-synco}
+      POSTGRES_USER: ${POSTGRES_USER:-synco}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -17,29 +17,25 @@ services:
       retries: 5
 
   web:
-    # 배포 전용. 개발 시에는 사용하지 않음 (호스트에서 Django 직접 실행).
-    # 사용 시: docker compose --profile deploy up web
+    # 컨테이너 이미지로만 실행하는 배포 검증용 웹 서비스.
+    # 사용 전: docker compose run --rm web python manage.py migrate
     profiles: ["deploy"]
     build: .
     restart: unless-stopped
     ports:
-      - "8080:8000"  # 호스트 8080 → 컨테이너 8000. 개발 서버(8000)와 겹치지 않음.
+      - "8080:8000"
     depends_on:
       db:
         condition: service_healthy
     env_file: .env
     environment:
-      DATABASE_URL: postgresql://synco:bwv100$$@db:5432/synco
-    volumes:
-      # 개발 시 코드 변경 즉시 반영
-      - .:/app
-      - /app/.venv
-      # claude CLI 인증 + 설정
-      - ~/.claude:/root/.claude
-      - ~/.claude.json:/root/.claude.json
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py runserver 0.0.0.0:8000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-synco}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-synco}
+    command: gunicorn main.wsgi:application --bind 0.0.0.0:8000
+    healthcheck:
+      test: ["CMD-SHELL", "python manage.py check --deploy --fail-level WARNING"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   pgdata:

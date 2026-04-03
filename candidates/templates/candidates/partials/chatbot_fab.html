@@ -4,7 +4,7 @@
   <div id="fab-tooltip"
        class="hidden absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap bg-gray-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-lg animate-bounce"
        style="animation-duration:2s;animation-iteration-count:3">
-    음성으로 검색해보세요
+    AI로 검색해보세요
     <div class="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 transform rotate-45 -translate-y-1"></div>
   </div>
   <button onclick="toggleChatbot()"
@@ -12,11 +12,11 @@
                  bg-primary text-white rounded-full shadow-xl hover:bg-primary-dark
                  flex items-center justify-center transition-all
                  hover:scale-105 active:scale-95"
-          aria-label="음성 검색">
-    <i class="fa-solid fa-microphone" style="font-size:24px"></i>
+          aria-label="AI 검색">
+    <i class="fa-solid fa-magnifying-glass" style="font-size:24px"></i>
   </button>
 </div>
 
 {% include "candidates/partials/chatbot_modal.html" %}
 
-<script src="{% static 'candidates/chatbot.js' %}?v=20260401c"></script>
+<script src="{% static 'candidates/chatbot.js' %}?v=20260404a"></script>

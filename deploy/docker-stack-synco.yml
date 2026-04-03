@@ -1,0 +1,56 @@
+services:
+  nginx:
+    image: __NGINX_IMAGE__
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/cert:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    environment:
+      TZ: Asia/Seoul
+    networks:
+      - net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == moa-svr
+      restart_policy:
+        condition: on-failure
+      update_config:
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        order: stop-first
+
+  synco_app:
+    image: __APP_IMAGE__
+    env_file: /home/docker/synco/.env.prod
+    volumes:
+      - /home/docker/synco/.secrets:/app/.secrets:ro
+      - /home/docker/synco/.claude:/root/.claude:ro
+      - /home/docker/synco/.claude.json:/root/.claude.json:ro
+      - /home/docker/synco/runtime/logs:/app/logs
+    environment:
+      TZ: Asia/Seoul
+    networks:
+      - net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == moa-svr
+      restart_policy:
+        condition: on-failure
+      update_config:
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        order: stop-first
+
+networks:
+  net:
+    driver: overlay

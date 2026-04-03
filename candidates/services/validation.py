@@ -1,4 +1,4 @@
-"""3-layer validation for resume extraction: LLM confidence + rule-based + cross-check."""
+"""Rule-based validation for resume extraction: data rules + filename cross-check."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ def _date_to_number(date_str: str) -> float | None:
     """
     if not date_str or not isinstance(date_str, str):
         return None
-    parts = date_str.strip().split(".")
+    parts = date_str.strip().replace("-", ".").split(".")
     if len(parts) == 2:
         try:
             year = int(parts[0])
@@ -66,18 +66,39 @@ def validate_rules(data: dict) -> list[dict]:
     careers = data.get("careers", [])
     for idx, career in enumerate(careers):
         start = _date_to_number(career.get("start_date", ""))
-        end = _date_to_number(career.get("end_date", ""))
+        end = _date_to_number(career.get("end_date", "")) or _date_to_number(
+            career.get("end_date_inferred", "")
+        )
         if start is not None and end is not None and start > end:
+            end_label = career.get("end_date") or career.get("end_date_inferred")
             issues.append(
                 {
                     "field": f"careers[{idx}].date_order",
                     "severity": "warning",
                     "message": (
                         f"Career #{idx + 1} start_date ({career['start_date']}) "
-                        f"is after end_date ({career['end_date']})"
+                        f"is after end_date ({end_label})"
                     ),
                 }
             )
+
+        date_confidence = career.get("date_confidence")
+        if date_confidence is not None:
+            try:
+                confidence_value = float(date_confidence)
+            except (TypeError, ValueError):
+                confidence_value = None
+            if confidence_value is None or not (0.0 <= confidence_value <= 1.0):
+                issues.append(
+                    {
+                        "field": f"careers[{idx}].date_confidence",
+                        "severity": "warning",
+                        "message": (
+                            f"Career #{idx + 1} date_confidence ({date_confidence}) "
+                            "is outside valid range (0.0-1.0)"
+                        ),
+                    }
+                )
 
     return issues
 

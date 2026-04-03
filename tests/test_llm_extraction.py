@@ -36,6 +36,9 @@ VALID_LLM_RESPONSE = {
     "current_company": "삼성전자",
     "current_position": "수석연구원",
     "total_experience_years": 11,
+    "resume_reference_date": "2025-12",
+    "resume_reference_date_source": "document_text",
+    "resume_reference_date_evidence": "2025.12 기준",
     "core_competencies": ["반도체", "전자공학"],
     "summary": "삼성전자 반도체사업부 수석연구원으로 재직 중인 11년차 엔지니어",
     "educations": [
@@ -107,7 +110,20 @@ class TestBuildPrompt:
         prompt = build_extraction_prompt(SAMPLE_RESUME)
         assert "birth_year" in prompt
         assert "careers" in prompt
+        assert "resume_reference_date" in prompt
+        assert "duration_text" in prompt
+        assert "end_date_inferred" in prompt
+        assert "date_evidence" in prompt
+        assert "date_confidence" in prompt
         assert "confidence" in prompt.lower() or "confidences" in prompt.lower()
+
+    def test_includes_file_reference_date_metadata(self):
+        prompt = build_extraction_prompt(
+            SAMPLE_RESUME,
+            file_reference_date="2026-01-15T09:30:00",
+        )
+        assert "Drive modifiedTime" in prompt
+        assert "2026-01-15T09:30:00" in prompt
 
     def test_system_prompt_exists(self):
         """System prompt is a substantial string."""
@@ -126,6 +142,7 @@ class TestExtractCandidateData:
         assert result["name"] == "홍길동"
         assert len(result["careers"]) == 2
         assert result["careers"][0]["is_current"] is True
+        assert result["resume_reference_date"] == "2025-12"
         assert result["field_confidences"]["overall"] == 0.9
         mock_llm.assert_called_once()
 
@@ -167,18 +184,3 @@ class TestExtractCandidateData:
         result = extract_candidate_data(SAMPLE_RESUME)
 
         assert result is None
-
-
-class TestBuildPromptFewshot:
-    def test_build_extraction_prompt_with_fewshot(self):
-        prompt = build_extraction_prompt(
-            "이력서 텍스트", fewshot_section="## 예시\n삼성전자"
-        )
-        assert "예시" in prompt
-        assert "삼성전자" in prompt
-        assert "이력서 텍스트" in prompt
-
-    def test_build_extraction_prompt_without_fewshot(self):
-        prompt = build_extraction_prompt("이력서 텍스트")
-        assert "예시" not in prompt
-        assert "이력서 텍스트" in prompt

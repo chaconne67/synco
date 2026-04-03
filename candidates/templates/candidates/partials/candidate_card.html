@@ -1,3 +1,4 @@
+{% load candidate_extras %}
 <a href="/candidates/{{ candidate.pk }}/"
    hx-get="/candidates/{{ candidate.pk }}/"
    hx-target="#main-content"
@@ -16,9 +17,9 @@
         {% endif %}
       </p>
     </div>
-    {% if candidate.total_experience_years %}
+    {% if candidate.total_experience_display %}
     <span class="text-[15px] font-semibold text-primary bg-primary-light px-2.5 py-1 rounded-full shrink-0">
-      {{ candidate.total_experience_years }}년
+      {{ candidate.total_experience_display }}
     </span>
     {% endif %}
   </div>
@@ -39,4 +40,20 @@
     </span>
     {% endfor %}
   </div>
+  {% if candidate.has_review_notices %}
+  <div class="mt-2.5 flex items-center gap-1.5 flex-wrap">
+    {% if candidate.review_notice_red_count %}
+    <span class="text-[12px] font-medium text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">중요 {{ candidate.review_notice_red_count }}건</span>
+    {% endif %}
+    {% if candidate.review_notice_yellow_count %}
+    <span class="text-[12px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">주의 {{ candidate.review_notice_yellow_count }}건</span>
+    {% endif %}
+    {% if candidate.review_notice_blue_count %}
+    <span class="text-[12px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">참고 {{ candidate.review_notice_blue_count }}건</span>
+    {% endif %}
+  </div>
+  {% if candidate.review_notice_card_summary %}
+  <p class="text-[13px] text-gray-500 mt-1.5 leading-relaxed">{{ candidate.review_notice_card_summary }}</p>
+  {% endif %}
+  {% endif %}
 </a>

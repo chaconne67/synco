@@ -17,8 +17,8 @@ from googleapiclient.http import MediaIoBaseDownload
 
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
-TOKEN_PATH = Path(settings.BASE_DIR) / "assets" / "google_token.json"
-CLIENT_SECRET_PATH = Path(settings.BASE_DIR) / "assets" / "client_secret.json"
+TOKEN_PATH = Path(settings.GOOGLE_TOKEN_PATH)
+CLIENT_SECRET_PATH = Path(settings.GOOGLE_CLIENT_SECRET_PATH)
 
 CATEGORY_FOLDERS: list[str] = [
     "Accounting",

@@ -39,6 +39,7 @@ def save_pipeline_result(
     primary_file: dict,
     other_files: list[dict] | None = None,
     existing_ids: set | None = None,
+    comparison_context=None,
 ) -> Candidate | None:
     """Save integrity pipeline result to DB.
 
@@ -75,16 +76,16 @@ def save_pipeline_result(
     other_files = other_files or []
     existing_ids = existing_ids or set()
 
-    from candidates.services.candidate_identity import identify_candidate
+    from candidates.services.candidate_identity import build_candidate_comparison_context
 
-    identity = identify_candidate(extracted)
-    matched_candidate = identity.candidate if identity else None
-    compared_resume = identity.compared_resume if identity else None
+    comparison_context = comparison_context or build_candidate_comparison_context(extracted)
+    matched_candidate = comparison_context.candidate if comparison_context else None
+    compared_resume = comparison_context.compared_resume if comparison_context else None
 
     if matched_candidate:
         logger.info(
             "Matched existing candidate %s via %s",
-            matched_candidate.id, identity.match_reason,
+            matched_candidate.id, comparison_context.match_reason,
         )
 
     with transaction.atomic():
@@ -98,6 +99,7 @@ def save_pipeline_result(
             )
 
         _rebuild_sub_records(candidate, extracted)
+        candidate.resumes.update(is_primary=False)
 
         max_version = candidate.resumes.aggregate(
             max_v=models.Max("version"),

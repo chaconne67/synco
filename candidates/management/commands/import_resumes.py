@@ -19,31 +19,14 @@ Usage:
 
 from __future__ import annotations
 
-
-def _t(value: str | None, max_len: int = 200) -> str:
-    """Truncate string to max_len to prevent DB varchar overflow."""
-    s = value or ""
-    return s[:max_len]
-
 import os
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 
-from candidates.models import (
-    Candidate,
-    Career,
-    Category,
-    Certification,
-    Education,
-    ExtractionLog,
-    LanguageSkill,
-    Resume,
-    ValidationDiagnosis,
-)
+from candidates.models import Category, Resume
 from candidates.services.drive_sync import (
     CATEGORY_FOLDERS,
     download_file,
@@ -94,6 +77,11 @@ class Command(BaseCommand):
             default="root",
             help="Parent folder ID on Drive (default: root)",
         )
+        parser.add_argument(
+            "--integrity",
+            action="store_true",
+            help="Use new integrity pipeline (Step 1→1.5→2→3) instead of legacy extraction",
+        )
 
     def handle(self, *args, **options):
         folder = options.get("folder")
@@ -102,6 +90,7 @@ class Command(BaseCommand):
         dry_run = options.get("dry_run")
         workers = options.get("workers")
         parent_folder_id = options.get("parent_folder_id")
+        self.use_integrity = options.get("integrity", False)
 
         # Determine which folders to process
         if process_all:
@@ -310,12 +299,14 @@ class Command(BaseCommand):
                 return False
             raw_text = preprocess_resume_text(raw_text)
 
-            # Step 3: Extract + Validate + Retry (new pipeline)
+            # Step 3: Extract + Validate + Retry
             pipeline_result = run_extraction_with_retry(
                 raw_text=raw_text,
                 file_path=dest_path,
                 category=folder_name,
                 filename_meta=parsed,
+                file_reference_date=primary.get("modified_time"),
+                use_integrity_pipeline=getattr(self, "use_integrity", False),
             )
 
             extracted = pipeline_result["extracted"]
@@ -328,203 +319,53 @@ class Command(BaseCommand):
             # Use potentially re-extracted text
             raw_text = pipeline_result["raw_text_used"]
 
-            # Step 3.5: Fallback name from filename if LLM returned null
+            # Fallback name from filename if LLM returned null
             if not extracted.get("name"):
                 extracted["name"] = parsed.get("name") or primary["file_name"]
 
-            # Step 4: Build validation result from Codex diagnosis
-            diagnosis = pipeline_result["diagnosis"]
-            field_confidences = extracted.get("field_confidences", {})
-            validation = {
-                "confidence_score": diagnosis.get("overall_score", 0.0),
-                "validation_status": (
-                    "auto_confirmed"
-                    if diagnosis["verdict"] == "pass"
-                    else "needs_review"
-                    if diagnosis.get("overall_score", 0) >= 0.6
-                    else "failed"
-                ),
-                "field_confidences": {
-                    **field_confidences,
-                    **diagnosis.get("field_scores", {}),
-                },
-                "issues": diagnosis.get("issues", []),
-            }
-
-            # Step 5: Save to DB in a transaction
-            with transaction.atomic():
-                candidate = self._create_candidate(
-                    extracted=extracted,
-                    raw_text=raw_text,
-                    validation=validation,
-                    category=category,
+            comparison_context = None
+            if extracted:
+                from candidates.services.candidate_identity import (
+                    build_candidate_comparison_context,
                 )
 
-                # Create child records
-                self._create_educations(candidate, extracted.get("educations", []))
-                self._create_careers(candidate, extracted.get("careers", []))
-                self._create_certifications(
-                    candidate, extracted.get("certifications", [])
-                )
-                self._create_language_skills(
-                    candidate, extracted.get("language_skills", [])
-                )
+                comparison_context = build_candidate_comparison_context(extracted)
+                if (
+                    getattr(self, "use_integrity", False)
+                    and comparison_context
+                    and comparison_context.previous_data
+                ):
+                    from candidates.services.retry_pipeline import (
+                        apply_cross_version_comparison,
+                    )
 
-                # Create primary resume
-                primary_resume = Resume.objects.create(
-                    candidate=candidate,
-                    file_name=primary["file_name"],
-                    drive_file_id=primary["file_id"],
-                    drive_folder=folder_name,
-                    mime_type=primary.get("mime_type", ""),
-                    file_size=primary.get("file_size"),
-                    raw_text=raw_text,
-                    is_primary=True,
-                    version=1,
-                    processing_status=Resume.ProcessingStatus.PARSED,
-                )
+                    pipeline_result = apply_cross_version_comparison(
+                        pipeline_result,
+                        comparison_context.previous_data,
+                    )
 
-                # Create resumes for other versions
-                for idx, other in enumerate(others):
-                    if other["file_id"] not in existing_ids:
-                        Resume.objects.create(
-                            candidate=candidate,
-                            file_name=other["file_name"],
-                            drive_file_id=other["file_id"],
-                            drive_folder=folder_name,
-                            mime_type=other.get("mime_type", ""),
-                            file_size=other.get("file_size"),
-                            is_primary=False,
-                            version=idx + 2,
-                            processing_status=Resume.ProcessingStatus.PENDING,
-                        )
+            # Step 4: Save to DB
+            from candidates.services.integrity.save import save_pipeline_result
 
-                # Create extraction log
-                ExtractionLog.objects.create(
-                    candidate=candidate,
-                    resume=primary_resume,
-                    action=ExtractionLog.Action.AUTO_EXTRACT,
-                    field_name="full_extraction",
-                    new_value=str(extracted),
-                    confidence=validation["confidence_score"],
-                    note=f"Imported from Drive folder: {folder_name}",
-                )
+            candidate = save_pipeline_result(
+                pipeline_result=pipeline_result,
+                raw_text=raw_text,
+                category=category,
+                primary_file=primary,
+                other_files=others,
+                existing_ids=existing_ids,
+                comparison_context=comparison_context,
+            )
 
-                # Save validation diagnosis from retry pipeline
-                ValidationDiagnosis.objects.create(
-                    candidate=candidate,
-                    resume=primary_resume,
-                    attempt_number=pipeline_result["attempts"],
-                    verdict=diagnosis["verdict"],
-                    overall_score=diagnosis.get("overall_score", 0.0),
-                    issues=diagnosis.get("issues", []),
-                    field_scores=diagnosis.get("field_scores", {}),
-                    retry_action=pipeline_result["retry_action"],
-                )
-
-                # Add category
-                candidate.categories.add(category)
+            if not candidate:
+                return False
 
         return True
 
-    def _create_candidate(
-        self,
-        extracted: dict,
-        raw_text: str,
-        validation: dict,
-        category: Category,
-    ) -> Candidate:
-        """Create a Candidate from extracted data."""
-        return Candidate.objects.create(
-            name=extracted.get("name") or "",
-            name_en=extracted.get("name_en") or "",
-            birth_year=extracted.get("birth_year"),
-            gender=extracted.get("gender") or "",
-            email=extracted.get("email") or "",
-            phone=extracted.get("phone") or "",
-            address=extracted.get("address") or "",
-            current_company=extracted.get("current_company") or "",
-            current_position=extracted.get("current_position") or "",
-            total_experience_years=extracted.get("total_experience_years"),
-            core_competencies=extracted.get("core_competencies", []),
-            summary=extracted.get("summary") or "",
-            status=Candidate.Status.ACTIVE,
-            source=Candidate.Source.DRIVE_IMPORT,
-            raw_text=raw_text,
-            validation_status=validation["validation_status"],
-            raw_extracted_json=extracted,
-            confidence_score=validation["confidence_score"],
-            field_confidences=validation.get("field_confidences", {}),
-            primary_category=category,
-        )
-
-    def _create_educations(self, candidate: Candidate, educations: list[dict]):
-        """Create Education records from extracted data."""
-        for edu in educations:
-            Education.objects.create(
-                candidate=candidate,
-                institution=_t(edu.get("institution"), 200),
-                degree=_t(edu.get("degree"), 50),
-                major=_t(edu.get("major"), 200),
-                gpa=_t(str(edu.get("gpa") or ""), 20),
-                start_year=edu.get("start_year"),
-                end_year=edu.get("end_year"),
-                is_abroad=edu.get("is_abroad", False),
-            )
-
-    def _create_careers(self, candidate: Candidate, careers: list[dict]):
-        """Create Career records from extracted data."""
-        for career in careers:
-            Career.objects.create(
-                candidate=candidate,
-                company=_t(career.get("company"), 200),
-                company_en=_t(career.get("company_en"), 200),
-                position=_t(career.get("position"), 200),
-                department=_t(career.get("department"), 200),
-                start_date=_t(career.get("start_date"), 30),
-                end_date=_t(career.get("end_date"), 30),
-                is_current=career.get("is_current", False),
-                duties=career.get("duties") or "",
-                achievements=career.get("achievements") or "",
-                reason_left=_t(career.get("reason_left"), 300),
-                salary=career.get("salary"),
-                order=career.get("order", 0),
-            )
-
-    def _create_certifications(self, candidate: Candidate, certifications: list[dict]):
-        """Create Certification records from extracted data."""
-        for cert in certifications:
-            Certification.objects.create(
-                candidate=candidate,
-                name=_t(cert.get("name"), 200),
-                issuer=_t(cert.get("issuer"), 200),
-                acquired_date=_t(cert.get("acquired_date"), 30),
-            )
-
-    def _create_language_skills(
-        self, candidate: Candidate, language_skills: list[dict]
-    ):
-        """Create LanguageSkill records from extracted data."""
-        for lang in language_skills:
-            LanguageSkill.objects.create(
-                candidate=candidate,
-                language=_t(lang.get("language"), 30),
-                test_name=_t(lang.get("test_name"), 50),
-                score=_t(lang.get("score"), 30),
-                level=_t(lang.get("level"), 50),
-            )
-
     def _save_failed_resume(self, file_info: dict, folder_name: str, error_msg: str):
         """Save a resume record with FAILED status for tracking."""
-        Resume.objects.create(
-            file_name=file_info["file_name"],
-            drive_file_id=file_info["file_id"],
-            drive_folder=folder_name,
-            mime_type=file_info.get("mime_type", ""),
-            file_size=file_info.get("file_size"),
-            processing_status=Resume.ProcessingStatus.FAILED,
-            error_message=error_msg,
-        )
+        from candidates.services.integrity.save import _save_failed_resume
+        _save_failed_resume(file_info, folder_name, error_msg)
 
     def _dry_run_report(self, groups: list[dict], folder_name: str):
         """Print a dry-run report of files that would be processed."""

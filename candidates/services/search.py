@@ -1,122 +1,115 @@
-"""Search engine: natural language → LLM-generated SQL."""
+"""Search engine: natural language -> LLM-generated structured filters -> ORM."""
 
 from __future__ import annotations
 
+import json
 import logging
-import re
+from collections import Counter
 
-from django.db import connection
+from django.db.models import Prefetch, Q, QuerySet
 
 from common.llm import call_llm
 
 logger = logging.getLogger(__name__)
 
-# ────────────────────────────────────────────
-# DB schema for LLM context
-# ────────────────────────────────────────────
+FILTER_SPEC_TEMPLATE = {
+    "category": None,
+    "name_keywords": [],
+    "company_keywords": [],
+    "school_keywords": [],
+    "major_keywords": [],
+    "certification_keywords": [],
+    "language_keywords": [],
+    "position_keywords": [],
+    "keyword": None,
+    "gender": None,
+    "min_experience_years": None,
+    "max_experience_years": None,
+    "birth_year_from": None,
+    "birth_year_to": None,
+    "is_abroad_education": None,
+}
 
-DB_SCHEMA = """
--- 후보자 기본 정보
-CREATE TABLE candidates (
-    id UUID PRIMARY KEY,
-    name VARCHAR,              -- 이름
-    name_en VARCHAR,           -- 영문 이름
-    birth_year SMALLINT,       -- 출생연도 (예: 1985)
-    gender VARCHAR,            -- 성별 (남/여)
-    email VARCHAR,
-    phone VARCHAR,
-    address VARCHAR,           -- 주소
-    total_experience_years SMALLINT,  -- 총 경력 연수
-    current_company VARCHAR,   -- 현재 회사
-    current_position VARCHAR,  -- 현재 직급/직책
-    current_salary INTEGER,    -- 현재 연봉 (만원)
-    desired_salary INTEGER,    -- 희망 연봉 (만원)
-    summary TEXT,              -- 후보자 요약
-    status VARCHAR,            -- 상태
-    primary_category_id UUID REFERENCES categories(id)
-);
+FILTER_SCHEMA_TEMPLATE = """
+후보자 검색 필터 스키마:
+{{
+  "category": "string | null",
+  "name_keywords": ["string"],
+  "company_keywords": ["string"],
+  "school_keywords": ["string"],
+  "major_keywords": ["string"],
+  "certification_keywords": ["string"],
+  "language_keywords": ["string"],
+  "position_keywords": ["string"],
+  "keyword": "string | null",
+  "gender": "string | null",
+  "min_experience_years": "integer | null",
+  "max_experience_years": "integer | null",
+  "birth_year_from": "integer | null",
+  "birth_year_to": "integer | null",
+  "is_abroad_education": "boolean | null"
+}}
 
--- 경력 사항 (1:N)
-CREATE TABLE careers (
-    id UUID PRIMARY KEY,
-    candidate_id UUID REFERENCES candidates(id),
-    company VARCHAR,           -- 회사명
-    company_en VARCHAR,        -- 영문 회사명
-    position VARCHAR,          -- 직급/직책
-    department VARCHAR,        -- 부서
-    start_date VARCHAR,        -- 시작일
-    end_date VARCHAR,          -- 종료일
-    is_current BOOLEAN,        -- 현재 재직 여부
-    duties TEXT,               -- 담당 업무
-    achievements TEXT          -- 성과
-);
-
--- 학력 (1:N)
-CREATE TABLE educations (
-    id UUID PRIMARY KEY,
-    candidate_id UUID REFERENCES candidates(id),
-    institution VARCHAR,       -- 학교명
-    degree VARCHAR,            -- 학위 (학사/석사/박사)
-    major VARCHAR,             -- 전공
-    start_year INTEGER,
-    end_year INTEGER,
-    is_abroad BOOLEAN          -- 해외 학교 여부
-);
-
--- 자격증 (1:N)
-CREATE TABLE certifications (
-    id UUID PRIMARY KEY,
-    candidate_id UUID REFERENCES candidates(id),
-    name VARCHAR,              -- 자격증명
-    issuer VARCHAR             -- 발급 기관
-);
-
--- 어학 (1:N)
-CREATE TABLE language_skills (
-    id UUID PRIMARY KEY,
-    candidate_id UUID REFERENCES candidates(id),
-    language VARCHAR,          -- 언어
-    test_name VARCHAR,         -- 시험명 (TOEIC, JLPT 등)
-    score VARCHAR,             -- 점수
-    level VARCHAR              -- 수준
-);
-
--- 카테고리 (직무 분류)
-CREATE TABLE categories (
-    id UUID PRIMARY KEY,
-    name VARCHAR               -- Accounting, HR, Sales, Engineer 등
-);
-
--- 후보자-카테고리 매핑 (M:N)
-CREATE TABLE candidates_categories (
-    candidate_id UUID REFERENCES candidates(id),
-    category_id UUID REFERENCES categories(id)
-);
+실제 값 참고:
+- category: {category_values}
+- gender: {gender_values}
+- degree 상위값: {degree_values}
+- position 상위값: {position_values}
+- language 상위값: {language_values}
 """
 
-# ────────────────────────────────────────────
-# System prompt
-# ────────────────────────────────────────────
 
-SEARCH_SYSTEM_PROMPT = f"""당신은 헤드헌팅 후보자 검색 SQL 생성기입니다.
+def _top_values(values, limit: int = 8) -> str:
+    counts = Counter(v for v in values if v)
+    return ", ".join(f"'{val}'" for val, _ in counts.most_common(limit))
+
+
+def _build_filter_schema() -> str:
+    from candidates.models import Candidate, Career, Category, Education, LanguageSkill
+
+    return FILTER_SCHEMA_TEMPLATE.format(
+        category_values=", ".join(
+            c.name for c in Category.objects.all().order_by("name")
+        ),
+        gender_values=_top_values(Candidate.objects.values_list("gender", flat=True)),
+        degree_values=_top_values(Education.objects.values_list("degree", flat=True)),
+        position_values=_top_values(Career.objects.values_list("position", flat=True)),
+        language_values=_top_values(
+            LanguageSkill.objects.values_list("language", flat=True)
+        ),
+    )
+
+
+_filter_schema_cache: str | None = None
+
+
+def _get_filter_schema() -> str:
+    global _filter_schema_cache
+    if _filter_schema_cache is None:
+        _filter_schema_cache = _build_filter_schema()
+    return _filter_schema_cache
+
+
+_SEARCH_SYSTEM_PROMPT_TEMPLATE = """당신은 헤드헌팅 후보자 검색 필터 생성기입니다.
 
 ## 역할
 1. 사용자의 자연어 요청이 헤드헌팅 업무(후보자 검색, 인재 추천, 채용 관련)인지 판단합니다.
-2. 헤드헌팅 업무이면 PostgreSQL SELECT 쿼리를 생성합니다.
+2. 헤드헌팅 업무이면 아래 필터 스키마에 맞는 JSON을 생성합니다.
 3. 헤드헌팅 업무가 아니면 거절합니다.
+4. 이전 필터가 주어지면, 새 요청을 반영한 최종 필터 상태를 완성해서 반환합니다.
 
 ## 헤드헌팅 관련 업무 예시
-- 후보자 검색/추천 (경력, 학력, 회사, 직무, 나이, 성별, 지역 등)
-- 인재풀 조회, 필터링, 정렬
-- 후보자 비교, 통계 (몇 명인지, 평균 경력 등)
+- 후보자 검색/추천 (경력, 학력, 회사, 직무, 나이, 성별 등)
+- 현재 결과 좁히기 ("거기서 삼성 출신만", "10년 이상만")
+- 인재풀 조회, 필터링
 
 ## 헤드헌팅 업무가 아닌 예시
 - 일반 대화, 인사, 잡담
 - 날씨, 뉴스, 일정
 - 프로그래밍, 번역 등 다른 업무
 
-## DB 스키마
-{DB_SCHEMA}
+## 필터 스키마
+{filter_schema}
 
 ## 출력 형식 (JSON만 출력)
 
@@ -124,85 +117,279 @@ SEARCH_SYSTEM_PROMPT = f"""당신은 헤드헌팅 후보자 검색 SQL 생성기
 ```json
 {{
   "is_valid": true,
-  "sql": "SELECT ... FROM candidates ...",
-  "ai_message": "검색 결과를 안내하는 한국어 존대말 메시지"
+  "filters": {{
+    "category": null,
+    "name_keywords": [],
+    "company_keywords": [],
+    "school_keywords": [],
+    "major_keywords": [],
+    "certification_keywords": [],
+    "language_keywords": [],
+    "position_keywords": [],
+    "keyword": null,
+    "gender": null,
+    "min_experience_years": null,
+    "max_experience_years": null,
+    "birth_year_from": null,
+    "birth_year_to": null,
+    "is_abroad_education": null
+  }},
+  "ai_message": "..."
 }}
 ```
 
 헤드헌팅 관련이 아닌 경우:
 ```json
-{{
-  "is_valid": false,
-  "sql": null,
-  "ai_message": "죄송합니다. 저는 후보자 검색 전용 AI입니다. 후보자 경력, 학력, 직무 등에 대해 질문해주세요."
-}}
+{{"is_valid": false, "filters": null, "ai_message": "죄송합니다. 저는 후보자 검색 전용 AI입니다."}}
 ```
 
-## SQL 규칙
-1. SELECT만 허용. INSERT/UPDATE/DELETE/DROP/ALTER 절대 금지.
-2. 결과에 반드시 candidates.id, candidates.name을 포함하세요.
-3. JOIN으로 careers, educations 등 연결 가능합니다.
-4. 회사명 매칭 시 ILIKE '%키워드%'는 오탐이 발생할 수 있습니다 (예: '%SK%'가 'Nu Skin'도 매칭). 시작 매칭(LIKE 'SK%')을 우선 사용하고, 필요 시 오탐 제외 조건을 추가하세요.
-5. LIMIT은 사용자가 명시한 경우에만 넣으세요. 기본 LIMIT은 넣지 마세요.
-6. 음성 입력이므로 필러 단어(음, 어, 그, 있잖아요)는 무시하세요.
-7. 올해는 2026년입니다. "나이 50" → birth_year <= 1976.
-8. DISTINCT를 적절히 사용하세요 (JOIN 시 중복 방지).
-9. ai_message에 검색 조건을 간결하게 요약하세요. DB에 없는 정보(대학교 소재지, 업종 분류 등)를 추정해서 검색한 경우 "DB에 소재지 정보가 없어 학교명으로 추정했습니다" 같이 한계를 명시하세요.
-10. 이전 SQL이 주어지면, 대화 맥락에서 이전 결과를 좁히는 건지 새 검색인지 자연스럽게 판단하세요."""
+## 규칙
+1. JSON 외 다른 텍스트를 출력하지 마세요.
+2. 사용자가 새 검색을 명확히 시작하면 이전 필터를 버리고 새 최종 필터를 반환하세요.
+3. 사용자가 "거기서", "그중", "추가로", "좁혀서"처럼 말하면 이전 필터를 유지한 채 조건을 더하세요.
+4. 문자열 배열은 중복 없이 간결한 키워드만 넣으세요.
+5. 사용자가 말하지 않은 정보를 추정해서 필터에 넣지 마세요.
+6. 올해는 2026년입니다. "나이 50"은 출생연도 범위로 바꾸세요.
+7. 학교 소재지, 업종 분류처럼 DB에 없는 정보는 필터로 만들지 말고 ai_message에 한계를 짧게 설명하세요.
+8. 숫자가 고유명사의 일부일 수 있습니다. "1급소방안전관리자", "3PL Team", "新HSK 6급" 같은 표현은 하나의 키워드로 유지하세요.
+9. 빈 필터는 null 또는 빈 배열로 유지하세요.
+10. ai_message에는 최종 검색 조건을 한국어로 짧게 요약하세요."""
+
+_search_prompt_cache: str | None = None
 
 
-# ────────────────────────────────────────────
-# SQL safety check
-# ────────────────────────────────────────────
-
-_FORBIDDEN_PATTERNS = re.compile(
-    r"\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|EXEC)\b",
-    re.IGNORECASE,
-)
-
-
-def _is_safe_sql(sql: str) -> bool:
-    """Only allow SELECT queries."""
-    if not sql or not sql.strip().upper().startswith("SELECT"):
-        return False
-    if _FORBIDDEN_PATTERNS.search(sql):
-        return False
-    if ";" in sql.replace(sql.strip(), ""):  # trailing semicolons only
-        pass
-    return True
+def _get_search_prompt() -> str:
+    global _search_prompt_cache
+    if _search_prompt_cache is None:
+        _search_prompt_cache = _SEARCH_SYSTEM_PROMPT_TEMPLATE.format(
+            filter_schema=_get_filter_schema()
+        )
+    return _search_prompt_cache
 
 
-# ────────────────────────────────────────────
-# Main search function
-# ────────────────────────────────────────────
+def _extract_json(text: str) -> dict:
+    text = text.strip()
+    if "```" in text:
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+        text = text.strip()
+    return json.loads(text)
 
 
-def parse_and_search(user_text: str, previous_sql: str | None = None) -> dict:
-    """Natural language → LLM SQL → execute → results.
+def _clean_text_list(value) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    result: list[str] = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        cleaned = item.strip()
+        if cleaned and cleaned not in result:
+            result.append(cleaned)
+    return result
 
-    Returns:
-        {
-            "candidates": [{"id": ..., "name": ..., ...}, ...],
-            "sql": "SELECT ...",
-            "ai_message": "...",
-            "is_valid": True/False,
-            "result_count": int,
-        }
-    """
-    prompt_parts = []
-    if previous_sql:
-        prompt_parts.append(f"이전 검색 SQL:\n{previous_sql}")
-    prompt_parts.append(f"사용자 요청: {user_text}")
+
+def _clean_int(value) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _clean_bool(value) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    return None
+
+
+def normalize_filter_spec(filters: dict | None) -> dict:
+    normalized = dict(FILTER_SPEC_TEMPLATE)
+    if not isinstance(filters, dict):
+        return normalized
+
+    normalized["category"] = (
+        filters.get("category").strip()
+        if isinstance(filters.get("category"), str) and filters.get("category").strip()
+        else None
+    )
+    normalized["keyword"] = (
+        filters.get("keyword").strip()
+        if isinstance(filters.get("keyword"), str) and filters.get("keyword").strip()
+        else None
+    )
+    normalized["gender"] = (
+        filters.get("gender").strip()
+        if isinstance(filters.get("gender"), str) and filters.get("gender").strip()
+        else None
+    )
+    normalized["name_keywords"] = _clean_text_list(filters.get("name_keywords"))
+    normalized["company_keywords"] = _clean_text_list(filters.get("company_keywords"))
+    normalized["school_keywords"] = _clean_text_list(filters.get("school_keywords"))
+    normalized["major_keywords"] = _clean_text_list(filters.get("major_keywords"))
+    normalized["certification_keywords"] = _clean_text_list(
+        filters.get("certification_keywords")
+    )
+    normalized["language_keywords"] = _clean_text_list(
+        filters.get("language_keywords")
+    )
+    normalized["position_keywords"] = _clean_text_list(
+        filters.get("position_keywords")
+    )
+    normalized["min_experience_years"] = _clean_int(
+        filters.get("min_experience_years")
+    )
+    normalized["max_experience_years"] = _clean_int(
+        filters.get("max_experience_years")
+    )
+    normalized["birth_year_from"] = _clean_int(filters.get("birth_year_from"))
+    normalized["birth_year_to"] = _clean_int(filters.get("birth_year_to"))
+    normalized["is_abroad_education"] = _clean_bool(
+        filters.get("is_abroad_education")
+    )
+    return normalized
+
+
+def has_active_filters(filters: dict | None) -> bool:
+    normalized = normalize_filter_spec(filters)
+    for key, value in normalized.items():
+        if isinstance(value, list):
+            if value:
+                return True
+            continue
+        if value is not None:
+            return True
+    return False
+
+
+def _apply_keyword_filters(qs: QuerySet, field_groups: list[tuple[str, ...]], keywords: list[str]) -> QuerySet:
+    for keyword in keywords:
+        group_query = Q()
+        for group in field_groups:
+            field_query = Q()
+            for field in group:
+                field_query |= Q(**{f"{field}__icontains": keyword})
+            group_query |= field_query
+        qs = qs.filter(group_query)
+    return qs
+
+
+def build_search_queryset(filters: dict | None) -> QuerySet:
+    from candidates.models import Candidate, DiscrepancyReport
+
+    normalized = normalize_filter_spec(filters)
+    qs = Candidate.objects.select_related("primary_category").prefetch_related(
+        "educations",
+        "careers",
+        "categories",
+        "certifications",
+        "language_skills",
+        Prefetch(
+            "discrepancy_reports",
+            queryset=DiscrepancyReport.objects.filter(
+                report_type=DiscrepancyReport.ReportType.SELF_CONSISTENCY
+            ).order_by("-created_at"),
+            to_attr="prefetched_self_consistency_reports",
+        ),
+    )
+
+    if normalized["category"]:
+        qs = qs.filter(categories__name__iexact=normalized["category"])
+
+    if normalized["gender"]:
+        qs = qs.filter(gender__iexact=normalized["gender"])
+
+    if normalized["min_experience_years"] is not None:
+        qs = qs.filter(total_experience_years__gte=normalized["min_experience_years"])
+
+    if normalized["max_experience_years"] is not None:
+        qs = qs.filter(total_experience_years__lte=normalized["max_experience_years"])
+
+    if normalized["birth_year_from"] is not None:
+        qs = qs.filter(birth_year__gte=normalized["birth_year_from"])
+
+    if normalized["birth_year_to"] is not None:
+        qs = qs.filter(birth_year__lte=normalized["birth_year_to"])
+
+    if normalized["is_abroad_education"] is not None:
+        qs = qs.filter(educations__is_abroad=normalized["is_abroad_education"])
+
+    qs = _apply_keyword_filters(
+        qs,
+        [("name", "name_en")],
+        normalized["name_keywords"],
+    )
+    qs = _apply_keyword_filters(
+        qs,
+        [("current_company",), ("careers__company", "careers__company_en")],
+        normalized["company_keywords"],
+    )
+    qs = _apply_keyword_filters(
+        qs,
+        [("educations__institution",)],
+        normalized["school_keywords"],
+    )
+    qs = _apply_keyword_filters(
+        qs,
+        [("educations__major",)],
+        normalized["major_keywords"],
+    )
+    qs = _apply_keyword_filters(
+        qs,
+        [("certifications__name", "certifications__issuer")],
+        normalized["certification_keywords"],
+    )
+    qs = _apply_keyword_filters(
+        qs,
+        [("language_skills__language", "language_skills__test_name", "language_skills__level")],
+        normalized["language_keywords"],
+    )
+    qs = _apply_keyword_filters(
+        qs,
+        [("current_position",), ("careers__position", "careers__department")],
+        normalized["position_keywords"],
+    )
+
+    if normalized["keyword"]:
+        kw = normalized["keyword"]
+        qs = qs.filter(
+            Q(name__icontains=kw)
+            | Q(name_en__icontains=kw)
+            | Q(current_company__icontains=kw)
+            | Q(current_position__icontains=kw)
+            | Q(summary__icontains=kw)
+            | Q(careers__company__icontains=kw)
+            | Q(careers__position__icontains=kw)
+            | Q(careers__duties__icontains=kw)
+            | Q(careers__achievements__icontains=kw)
+            | Q(educations__institution__icontains=kw)
+            | Q(educations__major__icontains=kw)
+            | Q(certifications__name__icontains=kw)
+        )
+
+    return qs.distinct().order_by("-updated_at")
+
+
+def parse_and_search(user_text: str, previous_filters: dict | None = None) -> dict:
+    """Natural language -> LLM filters -> ORM results."""
+    normalized_previous = normalize_filter_spec(previous_filters)
+    prompt_parts = [
+        "이전 필터(JSON):",
+        json.dumps(normalized_previous, ensure_ascii=False),
+        f"사용자 요청: {user_text}",
+    ]
     prompt = "\n".join(prompt_parts)
 
     try:
-        raw = call_llm(prompt, system=SEARCH_SYSTEM_PROMPT, timeout=30, max_tokens=800)
+        raw = call_llm(prompt, system=_get_search_prompt(), timeout=60, max_tokens=900)
         parsed = _extract_json(raw)
     except Exception:
-        logger.exception("LLM SQL generation failed")
+        logger.exception("LLM filter generation failed")
         return {
             "candidates": [],
-            "sql": None,
+            "filters": normalized_previous,
             "ai_message": "검색 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
             "is_valid": True,
             "result_count": 0,
@@ -211,7 +398,7 @@ def parse_and_search(user_text: str, previous_sql: str | None = None) -> dict:
     if not parsed.get("is_valid"):
         return {
             "candidates": [],
-            "sql": None,
+            "filters": normalized_previous,
             "ai_message": parsed.get(
                 "ai_message",
                 "죄송합니다. 저는 후보자 검색 전용 AI입니다.",
@@ -220,73 +407,15 @@ def parse_and_search(user_text: str, previous_sql: str | None = None) -> dict:
             "result_count": 0,
         }
 
-    sql = (parsed.get("sql") or "").strip().rstrip(";")
-    if not _is_safe_sql(sql):
-        logger.warning("Unsafe SQL rejected: %s", sql)
-        return {
-            "candidates": [],
-            "sql": None,
-            "ai_message": "검색 조건을 이해하지 못했습니다. 다시 말씀해주세요.",
-            "is_valid": True,
-            "result_count": 0,
-        }
-
-    # Execute with one retry on SQL error
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(sql)
-            columns = [col.name for col in cursor.description]
-            rows = cursor.fetchall()
-    except Exception as exc:
-        logger.warning("SQL failed, retrying with error context: %s", exc)
-        # Give LLM the error and ask to fix
-        retry_prompt = (
-            f"이전 SQL 실행 시 오류 발생:\nSQL: {sql}\n오류: {exc}\n\n"
-            f"오류를 수정하여 올바른 SQL을 다시 생성하세요.\n원래 요청: {user_text}"
-        )
-        try:
-            raw2 = call_llm(retry_prompt, system=SEARCH_SYSTEM_PROMPT, timeout=30, max_tokens=800)
-            parsed2 = _extract_json(raw2)
-            sql2 = (parsed2.get("sql") or "").strip().rstrip(";")
-            if _is_safe_sql(sql2):
-                sql = sql2
-                with connection.cursor() as cursor:
-                    cursor.execute(sql)
-                    columns = [col.name for col in cursor.description]
-                    rows = cursor.fetchall()
-                ai_message = parsed2.get("ai_message", parsed.get("ai_message", ""))
-            else:
-                raise RuntimeError("Retry SQL also unsafe")
-        except Exception:
-            logger.exception("SQL retry also failed: %s", sql)
-            return {
-                "candidates": [],
-                "sql": sql,
-                "ai_message": "검색 실행 중 오류가 발생했습니다. 조건을 바꿔서 다시 시도해주세요.",
-                "is_valid": True,
-                "result_count": 0,
-            }
-
-    results = [dict(zip(columns, row)) for row in rows]
-    ai_message = parsed.get("ai_message", f"{len(results)}명을 찾았습니다.")
+    filters = normalize_filter_spec(parsed.get("filters"))
+    qs = build_search_queryset(filters)
+    results = list(qs.values("id", "name")[:100])
+    ai_message = parsed.get("ai_message", f"{qs.count()}명을 찾았습니다.")
 
     return {
         "candidates": results,
-        "sql": sql,
+        "filters": filters,
         "ai_message": ai_message,
         "is_valid": True,
-        "result_count": len(results),
+        "result_count": qs.count(),
     }
-
-
-def _extract_json(text: str) -> dict:
-    """Extract JSON from LLM response."""
-    import json
-
-    text = text.strip()
-    if "```" in text:
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
-        text = text.strip()
-    return json.loads(text)

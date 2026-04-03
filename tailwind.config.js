@@ -3,10 +3,7 @@ module.exports = {
   content: [
     './templates/**/*.html',
     './accounts/templates/**/*.html',
-    './contacts/templates/**/*.html',
     './candidates/templates/**/*.html',
-    './meetings/templates/**/*.html',
-    './intelligence/templates/**/*.html',
     './candidates/static/**/*.js',
   ],
   theme: {
@@ -19,6 +16,15 @@ module.exports = {
         'heading': ['24px', { lineHeight: '1.3', fontWeight: '700' }],
         'subheading': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
         'micro': ['12px', { lineHeight: '1.4', fontWeight: '400', letterSpacing: '0.05em' }],
+      },
+      keyframes: {
+        'pulse-hint': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.2' },
+        },
+      },
+      animation: {
+        'pulse-hint': 'pulse-hint 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       colors: {
         primary: {

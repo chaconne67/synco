@@ -10,3 +10,4 @@
 모니터링: tail -f /home/work/synco/logs/import/session*_20260401_025432.log
 진행확인: grep -c 'OK:' /home/work/synco/logs/import/session*_20260401_025432.log
 중지: kill 2709682 2709683 2709685 2709686 2709687
+=== 전체 완료: Wed Apr  1 12:39:40 KST 2026 ===

@@ -1,168 +1,249 @@
-# synco — AI 개인비서 & 비즈니스 매칭 플랫폼
+# synco
 
-**Version:** v5 (통합 앱 + AI 개인비서 코어)
-**Date:** 2026-03-26 (세션 6)
+AI 기반 후보자 검색과 이력서 추출 파이프라인을 중심으로 한 Django 프로젝트입니다.
 
----
+현재 코드베이스의 활성 범위는 `accounts`와 `candidates` 앱이며, 카카오 로그인, 후보자 목록/상세/검수 UI, 자연어/음성 검색, Google Drive 이력서 import, Gemini 기반 구조화 추출, 임베딩 생성까지 포함합니다.
 
-## 한 줄 요약
+## 현재 상태
 
-**데이터에 맥락이 없는 것이 문제다.** AI 개인비서가 인맥과 일정을 알아서 관리하고, 데이터의 many-to-many 관계에서 숨겨진 연결을 발견한다. 놀고 있던 유휴 자산의 가치가 증폭된다. synco는 하나의 앱으로 이 전환을 만드는 플랫폼이다.
+- 활성 앱: `accounts`, `candidates`
+- 제거됨: `contacts`, `meetings`, `intelligence`
+- 테스트 상태: `uv run pytest -q --create-db` 기준 `124 passed`
 
----
+## 주요 기능
 
-## 이야기 구조
+- 카카오 OAuth 로그인
+- 후보자 목록/상세/검수 화면
+- HTMX 기반 자연어 검색 UI
+- Whisper 기반 음성 검색 입력
+- Google Drive 이력서 수집
+- Gemini 기반 이력서 구조화 추출
+- 규칙 기반 검증 및 검수 상태 관리
+- 후보자 임베딩 생성
 
-### 1. 문제 — 데이터에 맥락이 없다
-GA가 매년 수천만 원 들여 사는 기업정보를 FC가 받아서 하는 일: "아, 제조업이네. 전화해보자. 사장님 보험 하나 보시죠." **끝.** 28만 FC의 CEO 연락처, GA의 기업정보, CEO의 사업 자원 — 전부 있긴 한데 아무도 제대로 못 쓰고 있다.
+## 기술 스택
 
-### 2. 해결책 — 하나의 앱, AI 개인비서가 기본
-**앱은 하나다.** FC든 CEO든 같은 앱을 쓴다. 가입 시 역할만 선택하면 역할에 맞는 화면을 본다. 하나의 DB에서 many-to-many 관계로 연결된다.
+- Python 3.13
+- Django 5
+- HTMX
+- Tailwind CSS
+- `uv` 기반 Python 환경 관리
+- PostgreSQL/pgvector 또는 SQLite
+- Gemini, OpenAI Whisper, Claude CLI/OpenAI-compatible LLM
 
-**첫 번째 효용은 AI 개인비서다.** 비즈니스 매칭이 아니다.
-- ① AI 개인비서로 인맥·일정을 자동 관리 (FC·CEO 동일 — 원천 가치)
-- ② 쓰다 보면 AI가 데이터에 맥락을 붙이고 (브리핑)
-- ③ many-to-many 관계에서 연결을 발견하고 (매칭)
-- ④ FC가 대면으로 성사시키고
-- ⑤ 가치가 만들어진 순간에 과금한다
+## 빠른 시작
 
-> 기본 기능이 좋아야 다음이 있다. AI 개인비서가 만족스럽지 않으면 매칭까지 도달하지 못한다.
+### 1. 준비물
 
-### 3. 시대적 배경 — 왜 지금인가
-- AI가 기업정보를 읽고 브리핑을 생성할 수 있는 수준에 도달 (2023년 이전 불가능)
-- AI 격차는 지수적 — 대부분은 AI를 구경만 하고 있다. 무료 CRM이 체험의 입구
-- 리멤버 2026.3 매칭 런칭 — 시장이 열리고 있다. 같은 방향, 다른 무기(FC 신뢰 채널)
-- GA협회 2035 "금융판매전문회사" 로드맵과 정렬
+- Python 3.13+
+- `uv`
+- Node.js / npm
+- 선택: PostgreSQL + pgvector
 
-### 4. 확장 전망
-기업정보는 첫 번째 대상일 뿐. 활성화된 CEO DB 위에 무한 파생: 딜 중개 수수료 → B2B 광고 → 금융상품 대면 유통(Layer 3)
+### 2. 의존성 설치
 
-### 5. 지금 해야 할 일
-증명할 것 하나: "AI가 맥락을 붙인 기업정보에 CEO가 돈을 내는가?" → 30일 컨시어지 MVP로 검증
+```bash
+uv sync --extra dev
+npm install
+```
 
----
+### 3. 환경변수 설정
 
-## Key Numbers
+```bash
+cp .env.example .env
+```
 
-### Market
-- GA FC 288,446명 (FSS 2024말), 법인영업 중심 ~10만명 [Data]
-- CEO SAM: 구독 300-900억 + 딜 중개 수수료 500-2,000억 = **800-2,900억원** [Estimate]
-- CEO 비즈니스 매칭 벤치마크: BNI 연 약 135~405만원, 리멤버 684억 매출(2024) [Data]
+기본적으로 `DATABASE_URL`이 없으면 SQLite(`db.sqlite3`)를 사용합니다.
+단, 이 fallback은 `DEBUG=true` 개발 환경에서만 허용되며 운영에서는 `DATABASE_URL`이 필수입니다.
 
-### Competitive Advantage (9/10)
-- **CEO 직통 DB**: 돈으로 복제 불가. GA에겐 유휴 자산 → synco가 수익화
-- **AI 기업정보 가공**: 숫자 나열 → 맥락 있는 인사이트 전환 = 즉시 가치
-- **FC 대면 채널**: AI가 발굴, 사람이 성사 — 콜드 매칭(리멤버)과 근본적 차별화
-- **무료 CRM**: AI 체험의 입구 — 격차가 지수적으로 벌어지는 시대에 체험시키는 것 자체가 가치
-- GA협회 2035 "금융판매전문회사" 로드맵과 전략 정렬
+### 4. DB 마이그레이션
 
-### Business Model — 3-Layer
-- **Layer 1** (진입): FC 무료 AI CRM + CEO 무료 CRM → 데이터 확보
-- **Layer 2** (과금): CEO 구독/크레딧 + 딜 중개 수수료 3-10% + B2B 광고
-- **Layer 3** (확장): 금융상품 대면 유통 (로보어드바이저, 투자자문 등)
-- **BEP: 유료 CEO 17명** — 부트스트랩 가능
-- Year 1 매출 예상: ~1.6억 (Base)
+```bash
+uv run python manage.py migrate
+```
 
-### Scorecard: 8.0/10 — Conditional Go (진행 영역 진입)
+### 5. 개발 서버 실행
 
-| 항목 | 점수 | 변동 |
-|------|------|------|
-| Problem Severity | 7 | |
-| Market Size | 8 | |
-| Competitive Advantage | **9** | |
-| Feasibility | 7 | |
-| **Business Model** | **8** | **↑1** (FC 유료화+GA 파트너십+DB 가공) |
-| Founder-Market Fit | **9** | |
-| Timing | **8** | |
+Tailwind watcher와 Django 서버를 함께 띄우려면:
 
----
+```bash
+./dev.sh
+```
 
-## Strategic Positioning
+직접 따로 실행하려면:
 
-- **핵심 문제:** "데이터에 맥락이 없다" — 가치 없다고 여겨진 데이터를 AI가 가치 있게 바꾼다
-- **핵심 차별화:** AI가 발굴하고 사람(FC)이 성사시키는 하이브리드 모델
-- **포지셔닝:** "AI가 당신의 데이터에 맥락을 붙여 숨겨진 사업 기회를 발굴합니다"
-- **회피:** "보험", "CRM", "인슈어테크" 키워드 — CEO에게 보험 이미지 배제
+```bash
+npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch
+uv run python manage.py runserver 0.0.0.0:8000
+```
 
----
+## 테스트
 
-## Top 3 Risks & Mitigation
+반드시 `uv` 환경에서 실행하세요.
 
-| # | 리스크 | 영향 | 완화 전략 |
-|---|--------|------|----------|
-| 1 | **CEO WTP 부재** — 매칭 정보에 돈을 안 낸다 | Critical | Exp 1 인터뷰 + Exp 4 컨시어지 MVP 실제 결제 검증 |
-| 2 | **GA 파트너십 실패** — GA가 파트너십에 관심 없음 | High (🟡) | GA 지분/수익 쉐어 제안, DB 가공 가치 입증, 공동창업자 2개 GA 보유 |
-| 3 | **PIPA 2026** — 과징금 매출 10%, 2026.9 시행 | Critical | 법률 자문 200-500만원, CEO 직접 가입 구조로 위험 최소화 |
+```bash
+uv run pytest -q
+```
 
----
+`pytest -q`를 시스템 파이썬으로 바로 실행하면 Django/pytest-django 미설정 상태로 실패할 수 있습니다.
 
-## Confidence Dashboard
+## 주요 환경변수
 
-| 영역 | 신뢰도 | 근거 |
-|------|--------|------|
-| FC 네트워크 존재 | **High** | GA FC 288,446명, 법인영업 관행 확인 [Data] |
-| CEO 직통 DB 자산 | **High** | 공동창업자 3-4천명 DB 보유, 창업자 직접 확인 [Data] |
-| 경쟁 환경 | **High** | 리멤버/BNI/매치드 매출·가격 확인 [Data] |
-| AI 도입 갭 | **High** | GA 카톡 메모 수준, CEO DB 관리 안 됨 — 창업자 직접 관찰 [Data] |
-| CEO WTP | **Low→Medium** | 벤치마크 강화 (리멤버 30만, BNI 120-360만), 직접 데이터 미확보 [Assumption] |
-| FC 전환 행동 | **Low** | 수익 쉐어링 동기 추정, 실제 행동 미관찰 [Assumption] |
-| 재무 전망 | **Medium** | BEP 17명으로 낮아 실현 가능성 있음 [Estimate] |
+### 공통
 
----
+- `DEBUG`
+- `SECRET_KEY`
+- `DATABASE_URL`
+- `ALLOWED_HOSTS`
+- `CSRF_TRUSTED_ORIGINS`
+- `SECURE_SSL_REDIRECT`
 
-## Anti-Patterns Detected
+### 카카오 로그인
 
-- ~~"FC가 CEO를 데려온다" 단일 의존~~ → **해소됨.** DB 소유 주체는 GA(법인). GA 파트너십(지분/수익 쉐어)으로 FC+CEO 접근 동시 해결. 공동창업자 2개 GA 계약 보유.
-- **Price-Before-Value 위험** — CEO가 서비스를 경험하기 전에 가격 확정 금지. 컨시어지 MVP에서 가치 경험 후 검증.
-- **"무료면 다 쓴다" 환상** — AI CRM에 관심은 있지만 "돈 주고 사는 건 다른 문제." 무료 진입 → 유료 전환의 각 단계마다 별도 검증 필요.
+- `KAKAO_CLIENT_ID`
+- `KAKAO_CLIENT_SECRET`
+- `KAKAO_REDIRECT_URI`
 
----
+### Gemini
 
-## Generated Documents
+- `GEMINI_API_KEY`
 
-### 00-intake/
-- [brief.md](00-intake/brief.md) — 프로젝트 개요 (스토리텔링 구조: 문제→해결→시대→전망→할일)
-- [brainstorm.md](00-intake/brainstorm.md) — 아이디어 7개 변형 탐색
+용도:
 
-### 01-discovery/
-- [market-analysis.md](01-discovery/market-analysis.md) — 시장 규모·성장·규제 (CEO 기반 SAM)
-- [competitor-landscape.md](01-discovery/competitor-landscape.md) — 경쟁자 분석 (CEO 관점 대안 포함)
-- [target-audience.md](01-discovery/target-audience.md) — FC(Supply) + CEO(Demand) 페르소나
-- [industry-trends.md](01-discovery/industry-trends.md) — 산업 트렌드 (AI 도입 갭, 플랫폼 진입 벤치마크)
-- [confidence-dashboard.md](01-discovery/confidence-dashboard.md) — 데이터 품질 요약 (창업자 관찰 데이터 포함)
-- [raw/](01-discovery/raw/) — 법인영업 실태, CEO WTP, 부분유료화 벤치마크
+- 이력서 구조화 추출
+- 임베딩 생성
 
-### 02-strategy/
-- [lean-canvas.md](02-strategy/lean-canvas.md) — 린 캔버스 (BEP 17명)
-- [value-proposition.md](02-strategy/value-proposition.md) — 가치 제안 (무료 CRM 진입 훅 포함)
-- [business-model.md](02-strategy/business-model.md) — 비즈니스 모델 (딜 중개 에스크로 설계 포함)
-- [positioning.md](02-strategy/positioning.md) — 포지셔닝 (9개 차별화 요소)
-- [go-to-market.md](02-strategy/go-to-market.md) — GTM 전략
+### OpenAI
 
-### 03-brand/
-- [mission-vision-values.md](03-brand/mission-vision-values.md) — 미션·비전·가치
-- [tone-of-voice.md](03-brand/tone-of-voice.md) — 톤 앤 보이스
-- [brand-personality.md](03-brand/brand-personality.md) — 브랜드 퍼스낼리티
+- `OPENAI_API_KEY`
 
-### 04-product/
-- [mvp-definition.md](04-product/mvp-definition.md) — MVP 정의 (4개 핵심 가설)
-- [feature-prioritization.md](04-product/feature-prioritization.md) — 기능 우선순위
-- [user-journey.md](04-product/user-journey.md) — 사용자 여정
+용도:
 
-### 05-financial/
-- [revenue-model.md](05-financial/revenue-model.md) — 수익 모델
-- [cost-structure.md](05-financial/cost-structure.md) — 비용 구조
-- [projections.md](05-financial/projections.md) — 재무 전망 3 시나리오
+- 음성 전사 (`gpt-4o-transcribe`)
 
-### 06-validation/
-- [validation-playbook.md](06-validation/validation-playbook.md) — 검증 실험 7개 (비용순, ~40만원/10주)
-- [risk-analysis.md](06-validation/risk-analysis.md) — 리스크 매트릭스 (R1-R10)
-- [assumptions-tracker.md](06-validation/assumptions-tracker.md) — 가정 추적기 (Critical 10개 + Supporting 7개)
-- [experiment-design.md](06-validation/experiment-design.md) — Top 3 실험 상세 설계
-- [kill-criteria.md](06-validation/kill-criteria.md) — 중단/피봇 기준 7개
-- [scorecard.md](06-validation/scorecard.md) — 아이디어 스코어카드 (7.9/10)
+### 범용 LLM
 
-### Other
-- [PROGRESS.md](PROGRESS.md) — 프로젝트 진행 추적
-- [research-config.md](research-config.md) — 리서치 에이전트 설정
-- [action-plan-30-days.md](action-plan-30-days.md) — 30일 액션 플랜
+- `LLM_PROVIDER`
+- `LLM_API_KEY`
+- `LLM_MODEL`
+
+기본값은 `claude_cli`이며, 이 경우 로컬에 `claude` CLI 인증이 되어 있어야 합니다.
+배포 스크립트는 `~/.claude`, `~/.claude.json`을 `/home/docker/synco` 아래로 동기화해 동일한 provider 구성을 유지합니다.
+
+## 주요 명령
+
+### 이력서 import
+
+```bash
+uv run python manage.py import_resumes --folder Accounting
+uv run python manage.py import_resumes --all
+uv run python manage.py import_resumes --all --dry-run
+```
+
+### 후보자 임베딩 생성
+
+```bash
+uv run python manage.py generate_embeddings
+```
+
+### 기존 후보자 상세 필드 백필
+
+```bash
+uv run python manage.py backfill_candidate_details
+```
+
+## Google Drive 연동
+
+이력서 import는 Google Drive OAuth 정보를 사용합니다.
+
+기본 경로는 환경변수로 설정할 수 있으며, 예시 기본값은 아래와 같습니다.
+
+- `.secrets/client_secret.json`
+- `.secrets/google_token.json`
+
+관련 환경변수:
+
+- `GOOGLE_CLIENT_SECRET_PATH`
+- `GOOGLE_TOKEN_PATH`
+
+이 파일들은 민감 정보이므로 저장소에 커밋하지 않도록 주의해야 합니다.
+현재 `.gitignore`에는 `.secrets/`와 기존 `assets/...` 경로 모두 제외 규칙을 추가해 둔 상태입니다.
+
+## 디렉토리 개요
+
+```text
+accounts/      카카오 로그인, 사용자 설정
+candidates/    후보자 모델, 검색 UI, 추출 파이프라인, 관리 명령
+common/        공통 LLM/임베딩 유틸
+main/          Django settings, URL, WSGI/ASGI
+templates/     공통 템플릿
+static/        Tailwind 입력/출력 및 정적 파일
+docs/          계획, 리서치, inspection 문서
+tests/         pytest 테스트
+```
+
+## 현재 아키텍처 메모
+
+- 실제 런타임 기준 핵심 도메인은 `candidates`입니다.
+- 자연어 검색은 현재 LLM이 생성한 구조화 필터를 ORM으로 적용하는 구조입니다.
+- 검색 계층은 더 이상 DB 방언에 직접 의존하지 않지만, 필터 해석 품질은 LLM 응답에 영향을 받습니다.
+- 확장 전에는 검색 안전성, DB 정합성, secret 관리 정리가 권장됩니다.
+
+자세한 점검 내용:
+
+- [전체 프로젝트 점검 보고서](docs/inspection/2026-04-03-project-overview-inspection.md)
+- [데이터 추출 파이프라인 점검 보고서](docs/inspection/2026-04-02-extraction-pipeline-inspection.md)
+- [상용화 점검 보고서](docs/inspection/2026-03-31-production-readiness-inspection.md)
+
+## Docker
+
+PostgreSQL 컨테이너와 배포 검증용 웹 컨테이너 구성이 포함되어 있습니다.
+
+DB만 띄우려면:
+
+```bash
+docker compose up db
+```
+
+웹 컨테이너까지 포함하려면 먼저 `.env`에 `POSTGRES_PASSWORD`, `SECRET_KEY`, `DATABASE_URL` 등을 채운 뒤:
+
+```bash
+docker compose run --rm web python manage.py migrate
+docker compose --profile deploy up --build
+```
+
+주의:
+
+- 현재 `web` 서비스는 `gunicorn`으로 실행됩니다.
+- `web`은 소스 디렉터리를 마운트하지 않는 불변 이미지 기준으로 실행됩니다.
+- `docker-compose.yml`에는 더 이상 실 비밀번호를 넣지 않습니다. `.env`로만 주입하세요.
+
+## 배포
+
+개발 서버의 현재 상태를 그대로 운영 배포 워크스페이스(`/home/docker`)에 동기화하고, 이미지 빌드, DB 마이그레이션, Swarm 업데이트까지 한 번에 실행하려면:
+
+```bash
+./deploy.sh
+```
+
+동작 순서:
+
+- 현재 레포를 `/home/docker/synco/src`로 rsync
+- 배포용 nginx/stack 템플릿 동기화
+- `.secrets`, `~/.claude`, `~/.claude.json` 런타임 파일 동기화
+- DB 백업
+- 앱/nginx 이미지 빌드
+- 릴리스 이미지로 `check --deploy`, `migrate`
+- `docker stack deploy`로 Synco 스택 갱신
+
+검증만 하려면:
+
+```bash
+./deploy.sh --dry-run
+```
+
+## 참고
+
+- 스타일 빌드는 Tailwind CLI를 사용합니다.
+- 정적 파일 결과물은 `static/css/output.css`에 생성됩니다.
+- 루트의 `main.py`는 앱 진입점이 아니라 예시 파일 수준이므로, 실제 실행은 `manage.py` 기준으로 보면 됩니다.

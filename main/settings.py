@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -11,6 +12,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
+RUNNING_TESTS = "pytest" in sys.modules or any(arg in {"pytest", "test"} for arg in sys.argv)
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 if not SECRET_KEY:
@@ -50,9 +52,6 @@ INSTALLED_APPS = [
     "widget_tweaks",
     # Local
     "accounts",
-    "contacts",
-    "meetings",
-    "intelligence",
     "candidates",
 ]
 
@@ -91,12 +90,25 @@ WSGI_APPLICATION = "main.wsgi.application"
 
 # Database
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default="sqlite:///db.sqlite3",
-        conn_max_age=600,
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+        )
+    }
+elif DEBUG:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            "sqlite:///db.sqlite3",
+            conn_max_age=600,
+        )
+    }
+else:
+    raise ImproperlyConfigured(
+        "DATABASE_URL environment variable is required in production"
     )
-}
 
 
 # Auth
@@ -120,6 +132,15 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # OpenAI (Whisper API)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+# Google Drive OAuth files
+GOOGLE_TOKEN_PATH = os.environ.get(
+    "GOOGLE_TOKEN_PATH", str(BASE_DIR / ".secrets" / "google_token.json")
+)
+GOOGLE_CLIENT_SECRET_PATH = os.environ.get(
+    "GOOGLE_CLIENT_SECRET_PATH",
+    str(BASE_DIR / ".secrets" / "client_secret.json"),
+)
 
 
 # Password validation
@@ -192,6 +213,13 @@ LLM_PROVIDERS = {
 
 # Production security settings
 if not DEBUG:
+    SECURE_SSL_REDIRECT = (
+        os.environ.get(
+            "SECURE_SSL_REDIRECT",
+            "false" if RUNNING_TESTS else "true",
+        ).lower()
+        in ("true", "1", "yes")
+    )
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000

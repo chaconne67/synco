@@ -22,6 +22,8 @@
 </div>
 
 <div class="px-4 pb-8">
+  {% include "candidates/partials/_review_notice_section.html" with candidate=candidate %}
+
   <!-- Two-column layout on desktop -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
@@ -78,10 +80,17 @@
             <dd class="text-gray-900">{{ candidate.current_position }}</dd>
           </div>
           {% endif %}
-          {% if candidate.total_experience_years %}
+          {% if candidate.total_experience_display %}
           <div class="flex">
             <dt class="text-gray-500 w-24 shrink-0">총 경력</dt>
-            <dd class="text-gray-900">{{ candidate.total_experience_years }}년</dd>
+            <dd class="text-gray-900">
+              {{ candidate.total_experience_display }}
+              {% if candidate.computed_total_experience_display %}
+              <span class="text-[11px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-full ml-1">
+                {% if candidate.effective_resume_reference_source %}현재 기준 합산{% else %}경력 합산{% endif %}
+              </span>
+              {% endif %}
+            </dd>
           </div>
           {% endif %}
           {% if candidate.primary_category %}
@@ -112,17 +121,19 @@
           <div class="relative pl-4 border-l-2 {% if career.is_current %}border-indigo-400{% else %}border-gray-200{% endif %}">
             <div class="flex items-start justify-between">
               <div>
-                <p class="text-[15px] font-semibold text-gray-900">{{ career.company }}{% if career.company_en %} ({{ career.company_en }}){% endif %}</p>
+                <p class="text-[15px] font-semibold text-gray-900">
+                  {{ career.company }}{% if career.company_en %} ({{ career.company_en }}){% endif %}
+                  {% if career.uses_duration_inference %}<span class="inline-flex text-[11px] text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-full font-medium align-middle ml-1">기간 정보로 보정</span>{% endif %}
+                </p>
                 <p class="text-[15px] text-gray-700">{{ career.position }}{% if career.department %} / {{ career.department }}{% endif %}</p>
               </div>
               {% if career.is_current %}
               <span class="text-sm px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">현재</span>
               {% endif %}
             </div>
-            {% if career.start_date or career.end_date %}
-            <p class="text-sm text-gray-500 mt-1">
-              {{ career.start_date }}{% if career.start_date and career.end_date %} ~ {% endif %}{{ career.end_date }}
-              {% if career.is_current and career.start_date and not career.end_date %} ~ 현재{% endif %}
+            {% if career.start_date_display or career.end_date_display %}
+            <p class="text-sm text-gray-500 mt-1 whitespace-nowrap">
+              {{ career.start_date_display }}{% if career.start_date_display and career.end_date_display %} ~ {% endif %}{{ career.end_date_display }}
             </p>
             {% endif %}
             {% if career.duties %}

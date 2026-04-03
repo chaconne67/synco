@@ -1,7 +1,0 @@
-{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
-
-{% block title %}전체 일정 - synco{% endblock %}
-
-{% block content %}
-{% include "meetings/partials/meeting_list_content.html" %}
-{% endblock %}

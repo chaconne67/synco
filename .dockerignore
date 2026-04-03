@@ -3,7 +3,14 @@ __pycache__
 *.pyc
 .git
 .env
+.env.*
+.pytest_cache
+.ruff_cache
+.gstack-audit
+node_modules
+.secrets
 db.sqlite3
 staticfiles/
+logs/
 docs/
 *.md

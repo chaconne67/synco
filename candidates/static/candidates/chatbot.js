@@ -9,6 +9,7 @@
   var audioChunks = [];
   var isRecording = false;
   var isSearching = false;
+  var searchPerformedSinceOpen = false;
   var recordingMimeType = "audio/webm";
   var MAX_RECORDING_SECONDS = 60;
   var MAX_BLOB_SIZE = 10 * 1024 * 1024;
@@ -41,7 +42,12 @@
         toggle.classList.remove("hidden");
       }, 300);
       modal.dataset.open = "false";
-      refreshCandidateList();
+      stopMinimizeBlink();
+      if (searchPerformedSinceOpen && sessionId && window.location.pathname !== "/candidates/") {
+        window.location.href = "/candidates/?session_id=" + sessionId;
+      } else if (searchPerformedSinceOpen && window.location.pathname === "/candidates/") {
+        refreshCandidateList();
+      }
     } else {
       /* Open: slide up with animation */
       modal.classList.remove("hidden");
@@ -54,10 +60,9 @@
       overlay.classList.add("opacity-100");
       toggle.classList.add("hidden");
       modal.dataset.open = "true";
+      searchPerformedSinceOpen = false;
       if (sessionId) loadChatHistory(sessionId);
       scrollChat();
-      /* Auto-start recording */
-      startRecording();
     }
   };
 
@@ -258,23 +263,26 @@
         if (data.error) { appendAIMessage(data.error); return; }
         sessionId = data.session_id;
         sessionStorage.setItem("synco_session_id", sessionId);
+        searchPerformedSinceOpen = true;
 
         /* AI 응답 + 결과 안내 */
         var msg = data.ai_message || "";
         if (data.result_count > 0) {
           msg += "\n\n" + data.result_count + "명을 찾았습니다. 대화창을 닫으면 결과를 확인할 수 있어요.";
+          appendAIMessage(msg);
+          blinkMinimizeBtn();
         } else if (data.result_count === 0) {
           msg += "\n\n조건에 맞는 후보자가 없습니다. 조건을 바꿔서 다시 말씀해주세요.";
+          appendAIMessage(msg);
+        } else {
+          appendAIMessage(msg);
         }
-        appendAIMessage(msg);
 
-        /* Navigate to candidate list if not already there */
-        if (window.location.pathname !== "/candidates/") {
-          window.location.href = "/candidates/?session_id=" + sessionId;
-          return;
+        /* 실제 조회가 성공한 경우에만 결과 상태를 화면에 반영 */
+        if (window.location.pathname === "/candidates/") {
+          updateStatusBar(text, data.result_count);
+          refreshCandidateList();
         }
-        updateStatusBar(text, data.result_count);
-        refreshCandidateList();
       })
       .catch(function (err) {
         isSearching = false;
@@ -324,19 +332,21 @@
       var bars = document.querySelectorAll(".waveform-bar");
       var barCount = bars.length;
 
+      var half = Math.ceil(barCount / 2);
+
       function update() {
         if (!isRecording) return;
         analyserNode.getByteFrequencyData(dataArray);
 
-        for (var i = 0; i < barCount; i++) {
-          /* Spread frequency bins across bars, emphasize voice range */
-          var idx = Math.floor((i / barCount) * (dataArray.length * 0.6));
+        /* Build symmetric waveform: center is tallest, edges are shortest */
+        for (var i = 0; i < half; i++) {
+          var idx = Math.floor((i / half) * (dataArray.length * 0.6));
           var val = dataArray[idx] / 255;
-          /* Add some randomness for liveliness */
           val = Math.min(1, val + Math.random() * 0.05);
-          /* Height: min 4px, max 36px inside the 56px container */
-          var h = Math.max(4, Math.round(val * 36));
-          bars[i].style.height = h + "px";
+          var h = Math.max(4, Math.round(val * 32));
+          /* Mirror: i from left, mirror from right */
+          bars[half - 1 - i].style.height = h + "px";
+          if (half - 1 + i < barCount) bars[half - 1 + i].style.height = h + "px";
         }
         vizRaf = requestAnimationFrame(update);
       }
@@ -419,7 +429,7 @@
     div.className = "flex gap-2";
     div.innerHTML =
       '<div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2">' +
-      '<p class="text-[15px] text-gray-400">생각 중' +
+      '<p class="text-[15px] text-gray-400">검색 중' +
       '<span class="inline-flex ml-1"><span class="animate-bounce" style="animation-delay:0ms">.</span>' +
       '<span class="animate-bounce" style="animation-delay:150ms">.</span>' +
       '<span class="animate-bounce" style="animation-delay:300ms">.</span></span></p></div>';
@@ -520,6 +530,7 @@
     }
   })();
 
+
   /* ────────────────────────────────────────────
      Utilities
      ──────────────────────────────────────────── */
@@ -550,6 +561,25 @@
 
   function show(id) { var el = document.getElementById(id); if (el) el.classList.remove("hidden"); }
   function hide(id) { var el = document.getElementById(id); if (el) el.classList.add("hidden"); }
+
+  function blinkMinimizeBtn() {
+    var btn = document.getElementById("minimize-btn");
+    if (!btn) return;
+    /* voice-idle가 hidden이면 표시 전환 */
+    show("voice-idle");
+    hide("voice-recording");
+    hide("voice-processing");
+    hide("text-input-area");
+    btn.classList.remove("text-gray-400");
+    btn.classList.add("text-red-500", "animate-pulse-hint");
+  }
+
+  function stopMinimizeBlink() {
+    var btn = document.getElementById("minimize-btn");
+    if (!btn) return;
+    btn.classList.remove("text-red-500", "animate-pulse-hint");
+    btn.classList.add("text-gray-400");
+  }
 
   function showToast(msg) {
     if (typeof window.showToast === "function") {

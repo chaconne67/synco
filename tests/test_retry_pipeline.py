@@ -1,18 +1,20 @@
 from unittest.mock import patch
 
-from candidates.services.retry_pipeline import run_extraction_with_retry
+from candidates.services.retry_pipeline import (
+    apply_cross_version_comparison,
+    run_extraction_with_retry,
+)
 
 
-@patch("candidates.services.retry_pipeline.get_fewshot_examples", return_value=[])
-@patch("candidates.services.retry_pipeline.validate_with_codex")
+@patch("candidates.services.retry_pipeline.validate_extraction")
 @patch("candidates.services.retry_pipeline.extract_candidate_data")
-def test_pass_on_first_attempt(mock_extract, mock_codex, mock_fewshot):
+def test_pass_on_first_attempt(mock_extract, mock_validate):
     mock_extract.return_value = {"name": "홍길동", "careers": []}
-    mock_codex.return_value = {
-        "verdict": "pass",
+    mock_validate.return_value = {
+        "confidence_score": 0.95,
+        "validation_status": "auto_confirmed",
+        "field_confidences": {"name": 1.0},
         "issues": [],
-        "field_scores": {"name": 1.0},
-        "overall_score": 0.95,
     }
     result = run_extraction_with_retry(
         raw_text="홍길동 이력서",
@@ -23,130 +25,92 @@ def test_pass_on_first_attempt(mock_extract, mock_codex, mock_fewshot):
     assert result["extracted"]["name"] == "홍길동"
     assert result["diagnosis"]["verdict"] == "pass"
     assert result["attempts"] == 1
-    assert mock_extract.call_count == 1
+    assert result["retry_action"] == "none"
 
 
-@patch("shutil.which", return_value="/usr/bin/libreoffice")
-@patch("candidates.services.retry_pipeline.get_fewshot_examples", return_value=[])
-@patch("candidates.services.retry_pipeline.validate_with_codex")
+@patch("candidates.services.retry_pipeline.validate_extraction")
 @patch("candidates.services.retry_pipeline.extract_candidate_data")
-@patch("candidates.services.retry_pipeline.extract_text_libreoffice")
-def test_retry_on_text_extraction_failure(
-    mock_libre, mock_extract, mock_codex, mock_fewshot, mock_which
-):
-    mock_extract.side_effect = [
-        {"name": "홍길동", "careers": [{"company": "A", "start_date": ""}]},
-        {"name": "홍길동", "careers": [{"company": "A", "start_date": "2020-01"}]},
-    ]
-    mock_codex.side_effect = [
-        {
-            "verdict": "fail",
-            "issues": [
-                {
-                    "field": "careers[0].start_date",
-                    "root_cause": "text_extraction",
-                    "severity": "critical",
-                    "type": "missing",
-                    "evidence": "...",
-                    "suggested_value": "2020-01",
-                }
-            ],
-            "field_scores": {},
-            "overall_score": 0.5,
-        },
-        {"verdict": "pass", "issues": [], "field_scores": {}, "overall_score": 0.92},
-    ]
-    mock_libre.return_value = "홍길동 재추출 텍스트 2020-01"
-    result = run_extraction_with_retry(
-        raw_text="홍길동 원본",
-        file_path="/tmp/test.docx",
-        category="HR",
-        filename_meta={},
-    )
-    assert result["diagnosis"]["verdict"] == "pass"
-    assert result["attempts"] == 2
-    assert mock_libre.call_count == 1
-
-
-@patch("candidates.services.retry_pipeline.get_fewshot_examples", return_value=[])
-@patch("candidates.services.retry_pipeline.validate_with_codex")
-@patch("candidates.services.retry_pipeline.extract_candidate_data")
-def test_retry_on_llm_parsing_failure(mock_extract, mock_codex, mock_fewshot):
-    mock_extract.side_effect = [
-        {"name": "홍길동", "careers": [{"company": "", "start_date": ""}]},
-        {
-            "name": "홍길동",
-            "careers": [{"company": "삼성전자", "start_date": "2020-01"}],
-        },
-    ]
-    mock_codex.side_effect = [
-        {
-            "verdict": "fail",
-            "issues": [
-                {
-                    "field": "careers[0].company",
-                    "root_cause": "llm_parsing",
-                    "severity": "critical",
-                    "type": "missing",
-                    "evidence": "원본에 삼성전자 있음",
-                    "suggested_value": "삼성전자",
-                }
-            ],
-            "field_scores": {},
-            "overall_score": 0.4,
-        },
-        {"verdict": "pass", "issues": [], "field_scores": {}, "overall_score": 0.90},
-    ]
-    result = run_extraction_with_retry(
-        raw_text="삼성전자 홍길동",
-        file_path="/tmp/test.docx",
-        category="HR",
-        filename_meta={},
-    )
-    assert result["diagnosis"]["verdict"] == "pass"
-    assert result["attempts"] == 2
-
-
-@patch("candidates.services.retry_pipeline.get_fewshot_examples", return_value=[])
-@patch("candidates.services.retry_pipeline.validate_with_codex")
-@patch("candidates.services.retry_pipeline.extract_candidate_data")
-def test_max_retries_exhausted(mock_extract, mock_codex, mock_fewshot):
+def test_fail_triggers_human_review(mock_extract, mock_validate):
     mock_extract.return_value = {"name": "홍길동", "careers": []}
-    mock_codex.return_value = {
-        "verdict": "fail",
+    mock_validate.return_value = {
+        "confidence_score": 0.5,
+        "validation_status": "failed",
+        "field_confidences": {"name": 1.0, "careers": 0.3},
         "issues": [
-            {
-                "field": "careers",
-                "root_cause": "ambiguous_source",
-                "severity": "critical",
-                "type": "missing",
-                "evidence": "...",
-                "suggested_value": "",
-            }
+            {"field": "careers", "severity": "error", "message": "No careers found"}
         ],
-        "field_scores": {},
-        "overall_score": 0.3,
     }
     result = run_extraction_with_retry(
-        raw_text="홍길동", file_path="/tmp/test.docx", category="HR", filename_meta={}
+        raw_text="홍길동",
+        file_path="/tmp/test.docx",
+        category="HR",
+        filename_meta={},
     )
     assert result["diagnosis"]["verdict"] == "fail"
     assert result["retry_action"] == "human_review"
-    assert result["attempts"] <= 4
+    assert result["attempts"] == 1
 
 
-@patch("candidates.services.retry_pipeline.get_fewshot_examples", return_value=[])
-@patch("candidates.services.retry_pipeline.validate_with_codex")
 @patch("candidates.services.retry_pipeline.extract_candidate_data")
-def test_run_extraction_with_retry_returns_raw_text_used(
-    mock_extract, mock_codex, mock_fewshot
-):
+def test_extraction_returns_none(mock_extract):
+    mock_extract.return_value = None
+    result = run_extraction_with_retry(
+        raw_text="garbage",
+        file_path="/tmp/test.docx",
+        category="HR",
+        filename_meta={},
+    )
+    assert result["extracted"] is None
+    assert result["diagnosis"]["verdict"] == "fail"
+    assert result["retry_action"] == "human_review"
+
+
+@patch("candidates.services.retry_pipeline.validate_extraction")
+@patch("candidates.services.retry_pipeline.extract_candidate_data")
+def test_returns_raw_text_used(mock_extract, mock_validate):
     mock_extract.return_value = {"name": "테스트"}
-    mock_codex.return_value = {
-        "verdict": "pass",
+    mock_validate.return_value = {
+        "confidence_score": 0.95,
+        "validation_status": "auto_confirmed",
+        "field_confidences": {},
         "issues": [],
-        "field_scores": {},
-        "overall_score": 0.95,
     }
     result = run_extraction_with_retry("원본텍스트", "/tmp/t.docx", "HR", {})
     assert result["raw_text_used"] == "원본텍스트"
+
+
+def test_apply_cross_version_comparison_updates_flags_and_score():
+    pipeline_result = {
+        "extracted": {
+            "careers": [
+                {"company": "A사", "start_date": "2020-01", "end_date": "2022-06"},
+            ],
+            "educations": [],
+            "field_confidences": {},
+        },
+        "diagnosis": {
+            "verdict": "pass",
+            "issues": [],
+            "field_scores": {},
+            "overall_score": 1.0,
+        },
+        "attempts": 1,
+        "retry_action": "none",
+        "raw_text_used": "원본텍스트",
+        "integrity_flags": [],
+    }
+
+    updated = apply_cross_version_comparison(
+        pipeline_result,
+        previous_data={
+            "careers": [
+                {"company": "A사", "start_date": "2020-01", "end_date": "2022-06"},
+                {"company": "B사", "start_date": "2018-01", "end_date": "2019-12"},
+            ],
+            "educations": [],
+        },
+    )
+
+    assert len(updated["integrity_flags"]) == 1
+    assert updated["integrity_flags"][0]["type"] == "CAREER_DELETED"
+    assert updated["diagnosis"]["overall_score"] < 1.0

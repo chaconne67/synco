@@ -2,26 +2,12 @@
   <h1 class="text-heading font-bold text-primary">synco</h1>
 </div>
 <nav class="space-y-1 flex-1" id="sidebar-nav" aria-label="사이드바 네비게이션">
-  <a href="/"
-     hx-get="/" hx-target="#main-content" hx-push-url="true"
-     data-nav="home"
+  <a href="/candidates/"
+     hx-get="/candidates/" hx-target="#main-content" hx-push-url="true"
+     data-nav="candidates"
      class="sidebar-tab flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] text-gray-500 hover:bg-gray-50">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-    홈
-  </a>
-  <a href="/contacts/"
-     hx-get="/contacts/" hx-target="#main-content" hx-push-url="true"
-     data-nav="contacts"
-     class="sidebar-tab flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] text-gray-500 hover:bg-gray-50">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-    연락처
-  </a>
-  <a href="/intelligence/matches/"
-     hx-get="/intelligence/matches/" hx-target="#main-content" hx-push-url="true"
-     data-nav="intelligence"
-     class="sidebar-tab flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] text-gray-500 hover:bg-gray-50">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-    매칭
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    후보자
   </a>
   <a href="/accounts/settings/"
      hx-get="/accounts/settings/" hx-target="#main-content" hx-push-url="true"
@@ -36,9 +22,7 @@ function updateSidebar() {
   var path = window.location.pathname;
   document.querySelectorAll('.sidebar-tab').forEach(function(tab) {
     var key = tab.dataset.nav;
-    var active = (key === 'home' && path === '/') ||
-                 (key === 'contacts' && path.startsWith('/contacts')) ||
-                 (key === 'intelligence' && path.startsWith('/intelligence')) ||
+    var active = (key === 'candidates' && (path === '/' || path.startsWith('/candidates'))) ||
                  (key === 'settings' && path.includes('/settings'));
     tab.className = 'sidebar-tab flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] ' +
       (active ? 'bg-primary-light text-primary font-semibold' : 'text-gray-500 hover:bg-gray-50');

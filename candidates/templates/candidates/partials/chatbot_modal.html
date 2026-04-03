@@ -54,7 +54,7 @@
   <div class="border-t border-gray-100 px-4 pt-4" style="padding-bottom: max(24px, env(safe-area-inset-bottom))">
     <!-- Idle state: minimize | mic | keyboard — Font Awesome icons -->
     <div id="voice-idle" class="flex items-center justify-between gap-6">
-      <button onclick="toggleChatbot()"
+      <button id="minimize-btn" onclick="toggleChatbot()"
               class="w-14 h-14 flex items-center justify-center text-gray-400 hover:text-gray-600 transition"
               aria-label="최소화">
         <i class="fa-regular fa-square-minus" style="font-size:24px"></i>
@@ -72,34 +72,25 @@
       </button>
     </div>
 
-    <!-- Recording state: round waveform bar + done button -->
-    <div id="voice-recording" class="hidden flex flex-col items-center gap-3">
-      <!-- Round waveform bar -->
-      <div class="w-full max-w-[320px] h-14 bg-gray-100 rounded-full flex items-center px-4 gap-[2px] relative overflow-hidden" id="waveform-container">
-        <!-- Red recording dot -->
-        <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse shrink-0 mr-2"></span>
-        <!-- Waveform bars (40 bars fill the rounded container) -->
+    <!-- Recording state: waveform + done button in one row -->
+    <div id="voice-recording" class="hidden flex items-center gap-2">
+      <!-- Symmetric waveform -->
+      <div class="flex-1 h-12 bg-gray-100 rounded-full flex items-center px-3 gap-[2px] overflow-hidden" id="waveform-container">
+        <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shrink-0 mr-1.5"></span>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <!-- Timer at right end -->
-        <span id="rec-timer" class="text-xs font-mono text-red-500 shrink-0 ml-2 min-w-[36px] text-right">00:00</span>
+        <span id="rec-timer" class="text-[11px] font-mono text-red-500 shrink-0 ml-1.5 min-w-[32px] text-right">00:00</span>
       </div>
-      <p class="text-sm text-gray-500">듣고 있습니다. 말씀이 끝나면 아래 버튼을 눌러주세요.</p>
-      <!-- Done button -->
+      <!-- Stop button -->
       <button id="rec-done-btn"
               onclick="toggleRecording()"
-              class="w-full max-w-[320px] py-3 bg-red-500 text-white rounded-full font-semibold text-base
-                     hover:bg-red-600 active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-        완료
+              class="shrink-0 self-center text-red-500 hover:text-red-600 active:scale-95 transition-all"
+              aria-label="녹음 정지">
+        <i class="fa-solid fa-circle-stop" style="font-size:40px"></i>
       </button>
     </div>
 
