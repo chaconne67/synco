@@ -308,6 +308,7 @@ class Candidate(BaseModel):
                 fields=["total_experience_years"],
                 name="idx_candidate_exp_years",
             ),
+            models.Index(fields=["email"], name="idx_candidate_email"),
             models.Index(
                 fields=["validation_status"],
                 name="idx_candidate_valid_status",

@@ -42,19 +42,11 @@ def save_pipeline_result(
 ) -> Candidate | None:
     """Save integrity pipeline result to DB.
 
-    Creates Candidate, Career, Education, Certification, LanguageSkill,
-    Resume, ExtractionLog, ValidationDiagnosis, and DiscrepancyReport records.
-
-    Args:
-        pipeline_result: Output from run_extraction_with_retry().
-        raw_text: Preprocessed resume text.
-        category: Category to assign.
-        primary_file: Drive file info dict (file_name, file_id, mime_type, etc).
-        other_files: Additional resume versions for the same person.
-        existing_ids: Set of already-imported Drive file IDs (for dedup).
-
-    Returns:
-        Created Candidate, or None on failure.
+    Storage policy:
+    - Candidate = person (reused if email/phone matches existing)
+    - Resume = version (always created new)
+    - On update: sub-records (Career, Education, etc.) are rebuilt from latest extraction
+    - current_resume tracks which Resume the current profile is based on
     """
     extracted = pipeline_result.get("extracted")
     if not extracted:
@@ -89,6 +81,12 @@ def save_pipeline_result(
     matched_candidate = identity.candidate if identity else None
     compared_resume = identity.compared_resume if identity else None
 
+    if matched_candidate:
+        logger.info(
+            "Matched existing candidate %s via %s",
+            matched_candidate.id, identity.match_reason,
+        )
+
     with transaction.atomic():
         if matched_candidate:
             candidate = _update_candidate(
@@ -120,7 +118,7 @@ def save_pipeline_result(
         )
 
         candidate.current_resume = primary_resume
-        candidate.save(update_fields=["current_resume", "updated_at"])
+        candidate.save()
 
         for idx, other in enumerate(other_files):
             if other["file_id"] not in existing_ids:
@@ -345,7 +343,7 @@ def _update_candidate(
         extracted.get("projects") or []
     ) or candidate.projects
 
-    candidate.save()
+    # Don't save here — caller sets current_resume then saves once
     return candidate
 
 
