@@ -157,11 +157,15 @@ def validate_cross_check(filename_parsed: dict, extracted: dict) -> list[dict]:
 import re
 
 
-def compute_field_confidences(extracted: dict, filename_parsed: dict) -> dict:
-    """Compute per-field quality scores from extraction result.
+def compute_field_confidences(
+    extracted: dict, filename_parsed: dict
+) -> tuple[dict, dict]:
+    """Compute per-field quality scores and category scores from extraction result.
 
-    Each score reflects actual data quality, not just presence.
-    The overall confidence_score is the weighted average of these scores.
+    Returns (field_scores, category_scores).
+
+    field_scores: individual field keys for discrepancy.py compatibility
+    category_scores: 4 category scores for UI display and overall confidence
     """
     fc = {}
 
@@ -228,18 +232,39 @@ def compute_field_confidences(extracted: dict, filename_parsed: dict) -> dict:
     else:
         fc["educations"] = 1.0
 
-    return fc
+    # Category scores (4 categories for UI display)
+    category_scores = {}
+
+    # 인적사항: name, email, phone
+    personal_items = [fc["name"], fc["email"], fc["phone"]]
+    category_scores["인적사항"] = sum(personal_items) / len(personal_items)
+
+    # 학력: educations
+    category_scores["학력"] = fc["educations"]
+
+    # 경력: careers
+    category_scores["경력"] = fc["careers"]
+
+    # 능력: skills + (certifications or language_skills)
+    skills_val = extracted.get("skills") or []
+    skills_score = 1.0 if skills_val else 0.0
+    certs = extracted.get("certifications") or []
+    langs = extracted.get("language_skills") or []
+    cert_lang_score = 1.0 if (certs or langs) else 0.0
+    category_scores["능력"] = (skills_score + cert_lang_score) / 2
+
+    return fc, category_scores
 
 
 def compute_overall_confidence(
-    field_confidences: dict, issues: list[dict]
+    category_scores: dict, issues: list[dict]
 ) -> tuple[float, str]:
-    """Compute overall confidence score from field scores and issue penalties.
+    """Compute overall confidence score from category scores and issue penalties.
 
-    Base = weighted average of field_confidences.
+    Base = average of category_scores.
     Penalty: -0.05 per error, -0.02 per warning.
     """
-    values = [v for v in field_confidences.values() if isinstance(v, (int, float))]
+    values = [v for v in category_scores.values() if isinstance(v, (int, float))]
     base = sum(values) / len(values) if values else 0.0
 
     score = base
@@ -276,13 +301,13 @@ def validate_extraction(extracted: dict, filename_parsed: dict) -> dict:
     cross_issues = validate_cross_check(filename_parsed, extracted)
     all_issues = rule_issues + cross_issues
 
-    field_confidences = compute_field_confidences(extracted, filename_parsed)
+    field_scores, category_scores = compute_field_confidences(extracted, filename_parsed)
 
-    score, status = compute_overall_confidence(field_confidences, all_issues)
+    score, status = compute_overall_confidence(category_scores, all_issues)
 
     return {
         "confidence_score": score,
         "validation_status": status,
-        "field_confidences": field_confidences,
+        "field_confidences": field_scores,
         "issues": all_issues,
     }

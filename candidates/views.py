@@ -340,8 +340,9 @@ def candidate_detail(request, pk):
         "careers": [{"start_date": c.start_date} for c in careers],
         "educations": [{"institution": e.institution} for e in educations],
     }
-    fc = compute_field_confidences(extracted_snapshot, {})
-    live_score, _ = compute_overall_confidence(fc, [])
+    field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
+    fc = field_scores
+    live_score, _ = compute_overall_confidence(category_scores, [])
 
     # Find hallucinated fields from validation diagnosis
     from .models import ValidationDiagnosis
@@ -385,6 +386,7 @@ def candidate_detail(request, pk):
             "language_skills": language_skills,
             "primary_resume": primary_resume,
             "fc": fc,
+            "category_scores": category_scores,
             "live_score": live_score,
             "hallucinated_fields": hallucinated_fields,
             **extra_context,

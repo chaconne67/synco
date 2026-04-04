@@ -80,12 +80,12 @@ def _run_integrity_pipeline(
 
     # Compute field-quality-based confidences (integrity pipeline doesn't get them from LLM)
     from data_extraction.services.validation import compute_field_confidences
-    field_confidences = compute_field_confidences(result, {})
-    result["field_confidences"] = field_confidences
+    field_scores, category_scores = compute_field_confidences(result, {})
+    result["field_confidences"] = field_scores
 
     return {
         "extracted": result,
-        "diagnosis": _build_integrity_diagnosis(flags, field_confidences),
+        "diagnosis": _build_integrity_diagnosis(flags, field_scores),
         "attempts": 1 + retries,
         "retry_action": (
             "human_review"
