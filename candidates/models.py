@@ -288,6 +288,29 @@ class Candidate(BaseModel):
         help_text="[{name, institution, date, duration}]",
     )
 
+    # 4대 카테고리 기술 스택 + etc 필드
+    skills = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='["Python", "Oracle", "SAP", ...]',
+    )
+    personal_etc = models.JSONField(
+        default=list, blank=True,
+        help_text='[{type, description}]',
+    )
+    education_etc = models.JSONField(
+        default=list, blank=True,
+        help_text='[{type, title, institution, date, description}]',
+    )
+    career_etc = models.JSONField(
+        default=list, blank=True,
+        help_text='[{type, name, company, role, start_date, end_date, technologies[], description}]',
+    )
+    skills_etc = models.JSONField(
+        default=list, blank=True,
+        help_text='[{type, title, description, date}]',
+    )
+
     # AI extraction metadata
     raw_text = models.TextField(blank=True)
     validation_status = models.CharField(
