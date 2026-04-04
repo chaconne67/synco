@@ -222,8 +222,12 @@ def normalize_education_group(
 
 
 def normalize_skills(raw_data: dict) -> dict:
-    """Code-based skills normalization. No LLM."""
+    """Code-based skills normalization. No LLM.
+
+    Skills (proper nouns) are passed through without modification.
+    """
     return {
         "certifications": raw_data.get("certifications", []),
         "language_skills": raw_data.get("language_skills", []),
+        "skills": raw_data.get("skills", []),
     }

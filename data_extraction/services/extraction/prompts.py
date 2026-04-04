@@ -32,7 +32,27 @@ EXTRACTION_SYSTEM_PROMPT = (
     "8. 경력 기간이 '2004/06 ~', '(1년 7개월)'처럼 불완전하게 적혀 있으면, "
     "duration_text, end_date_inferred, date_evidence, date_confidence에 근거와 추정값을 함께 반환하세요.\n"
     "9. end_date_inferred는 start_date와 duration_text 등 문서 안 근거로 합리적으로 계산 가능한 경우에만 채우세요.\n"
-    "10. JSON만 출력하세요. 설명이나 마크다운은 포함하지 마세요."
+    "10. JSON만 출력하세요. 설명이나 마크다운은 포함하지 마세요.\n\n"
+    "### skills vs core_competencies 구분\n\n"
+    "skills에는 이력서 전체에서 언급된 특정 기술·도구·시스템의 고유명사를 추출하세요.\n"
+    "이 데이터는 후보자 검색 시 기술 키워드 매칭에 사용됩니다.\n"
+    "구체적 명칭이 대상이고, 일반적 역량 서술(\"의사소통 능력\", \"리더십\")은 core_competencies에 넣으세요.\n\n"
+    "구분 원칙: 그 단어로 검색했을 때 해당 기술을 가진 사람만 나와야 하면 skills, "
+    "다수의 사람에게 해당하는 일반적 역량이면 core_competencies.\n\n"
+    "### skills 표기 정규화\n\n"
+    "- 영문 공식 명칭을 우선 사용하세요: \"파이썬\" → \"Python\", \"오라클\" → \"Oracle\"\n"
+    "- 공식 표기를 따르세요: \"MSSQL\" → \"MS SQL Server\", \"C++\" (O), \"씨플플\" (X)\n"
+    "- 약어가 널리 쓰이면 약어를 사용하세요: \"SAP\", \"PMP\", \"ISO 9001\"\n"
+    "- 한글만 존재하는 고유명사는 한글 그대로\n\n"
+    "### etc[] 필드 사용 원칙\n\n"
+    "이력서의 모든 정보는 4개 카테고리 중 하나에 반드시 속합니다:\n"
+    "- 인적사항: 이 사람이 누구인지에 관한 정보 → personal_etc\n"
+    "- 학력: 무엇을 배웠는지에 관한 정보 → education_etc\n"
+    "- 경력: 어떤 일을 했는지에 관한 정보 → career_etc\n"
+    "- 능력: 무엇을 할 수 있는지에 관한 정보 → skills_etc\n\n"
+    "각 카테고리에서 핵심 필드에 맞지 않지만 해당 카테고리에 속하는 정보는 etc[]에 넣으세요.\n"
+    "원본에 있는 정보는 반드시 어딘가에 포함되어야 합니다. 누락보다 중복이 낫습니다.\n"
+    "etc[] 항목에는 반드시 type을 넣어 무엇인지 식별할 수 있게 하세요."
 )
 
 EXTRACTION_JSON_SCHEMA = """{
@@ -96,6 +116,11 @@ EXTRACTION_JSON_SCHEMA = """{
       "level": "string | null (등급)"
     }
   ],
+  "skills": ["string (기술·도구·시스템·방법론 등 고유명사 키워드, 영문 공식명 우선)"],
+  "personal_etc": [{"type": "string", "description": "string"}],
+  "education_etc": [{"type": "string", "title": "string", "institution": "string", "date": "string", "description": "string"}],
+  "career_etc": [{"type": "string", "name": "string", "company": "string", "role": "string", "start_date": "string", "end_date": "string", "technologies": ["string"], "description": "string"}],
+  "skills_etc": [{"type": "string", "title": "string", "description": "string", "date": "string"}],
   "field_confidences": {
     "name": "float 0.0-1.0",
     "birth_year": "float 0.0-1.0",
@@ -183,6 +208,33 @@ STEP1_SYSTEM_PROMPT = """\
 데이터가 누락되면 복구가 불가능하지만, 노이즈는 정규화 단계에서 필터링됩니다.
 확신이 없더라도 추출하세요. 빠뜨리는 것보다 노이즈가 낫습니다.
 
+### skills vs core_competencies 구분
+
+skills에는 이력서 전체에서 언급된 특정 기술·도구·시스템의 고유명사를 추출하세요.
+이 데이터는 후보자 검색 시 기술 키워드 매칭에 사용됩니다.
+구체적 명칭이 대상이고, 일반적 역량 서술("의사소통 능력", "리더십")은 core_competencies에 넣으세요.
+
+구분 원칙: 그 단어로 검색했을 때 해당 기술을 가진 사람만 나와야 하면 skills, 다수의 사람에게 해당하는 일반적 역량이면 core_competencies.
+
+### skills 표기 정규화
+
+- 영문 공식 명칭을 우선 사용하세요: "파이썬" → "Python", "오라클" → "Oracle"
+- 공식 표기를 따르세요: "MSSQL" → "MS SQL Server", "C++" (O), "씨플플" (X)
+- 약어가 널리 쓰이면 약어를 사용하세요: "SAP", "PMP", "ISO 9001"
+- 한글만 존재하는 고유명사는 한글 그대로
+
+### etc[] 필드 사용 원칙
+
+이력서의 모든 정보는 4개 카테고리 중 하나에 반드시 속합니다:
+- 인적사항: 이 사람이 누구인지에 관한 정보 → personal_etc
+- 학력: 무엇을 배웠는지에 관한 정보 → education_etc
+- 경력: 어떤 일을 했는지에 관한 정보 → career_etc
+- 능력: 무엇을 할 수 있는지에 관한 정보 → skills_etc
+
+각 카테고리에서 핵심 필드에 맞지 않지만 해당 카테고리에 속하는 정보는 etc[]에 넣으세요.
+원본에 있는 정보는 반드시 어딘가에 포함되어야 합니다. 누락보다 중복이 낫습니다.
+etc[] 항목에는 반드시 type을 넣어 무엇인지 식별할 수 있게 하세요.
+
 ## 추출 규칙
 1. 이력서에 나오는 순서대로 가져오세요.
 2. 이름은 한국어를 우선하되, 영문명도 별도로 가져오세요.
@@ -234,7 +286,12 @@ STEP1_SCHEMA = """{
   ],
   "language_skills": [
     {"language": "string", "test_name": "string | null", "score": "string | null"}
-  ]
+  ],
+  "skills": ["string (기술·도구·시스템·방법론 등 고유명사 키워드, 영문 공식명 우선)"],
+  "personal_etc": [{"type": "string", "description": "string"}],
+  "education_etc": [{"type": "string", "title": "string", "institution": "string", "date": "string", "description": "string"}],
+  "career_etc": [{"type": "string", "name": "string", "company": "string", "role": "string", "start_date": "string", "end_date": "string", "technologies": ["string"], "description": "string"}],
+  "skills_etc": [{"type": "string", "title": "string", "description": "string", "date": "string"}]
 }"""
 
 

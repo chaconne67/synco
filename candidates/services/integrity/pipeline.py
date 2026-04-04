@@ -154,6 +154,11 @@ def run_integrity_pipeline(
         "educations": normalized_educations,
         "certifications": skills.get("certifications", []),
         "language_skills": skills.get("language_skills", []),
+        "skills": raw_data.get("skills", []),
+        "personal_etc": raw_data.get("personal_etc", []),
+        "education_etc": raw_data.get("education_etc", []),
+        "career_etc": raw_data.get("career_etc", []),
+        "skills_etc": raw_data.get("skills_etc", []),
         "integrity_flags": all_flags,
         "field_confidences": {},
         "pipeline_meta": {
