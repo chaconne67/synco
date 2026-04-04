@@ -62,15 +62,10 @@ def _call_gemini(system: str, prompt: str, max_tokens: int = 6000) -> dict | Non
                 system_instruction=system,
                 max_output_tokens=max_tokens,
                 temperature=0.2,
+                response_mime_type="application/json",
             ),
         )
-        raw = response.text.strip()
-        if "```" in raw:
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-            raw = raw.strip()
-        result = json.loads(raw)
+        result = json.loads(response.text)
         if not isinstance(result, dict):
             return None
         return result

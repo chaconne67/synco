@@ -62,19 +62,11 @@ def extract_candidate_data(
                     system_instruction=GEMINI_SYSTEM_PROMPT,
                     max_output_tokens=4000,
                     temperature=0.3,
+                    response_mime_type="application/json",
                 ),
             )
 
-            text = response.text.strip()
-
-            # Extract JSON from markdown block if present
-            if "```" in text:
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-                text = text.strip()
-
-            result = json.loads(text)
+            result = json.loads(response.text)
 
             if not isinstance(result, dict) or "name" not in result:
                 logger.warning(

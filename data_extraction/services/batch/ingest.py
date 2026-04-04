@@ -198,18 +198,21 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
 
 
 def _load_extracted_json(response_text: str) -> dict | None:
-    text = response_text.strip()
-    if not text:
+    raw = response_text.strip()
+    if not raw:
         return None
-    if "```" in text:
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
-        text = text.strip()
     try:
-        result = json.loads(text)
+        data = json.loads(raw)
     except json.JSONDecodeError:
-        return None
-    if not isinstance(result, dict):
-        return None
-    return result
+        # Fallback for pre-structured-output batch results
+        if "```" in raw:
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+            try:
+                data = json.loads(raw.strip())
+            except json.JSONDecodeError:
+                return None
+        else:
+            return None
+    return data if isinstance(data, dict) else None
