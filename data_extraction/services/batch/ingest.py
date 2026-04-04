@@ -220,4 +220,7 @@ def _load_extracted_json(response_text: str) -> dict | None:
                     return None
             else:
                 return None
+    # Gemini sometimes wraps response in a list: [{...}]
+    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+        data = data[0]
     return data if isinstance(data, dict) else None

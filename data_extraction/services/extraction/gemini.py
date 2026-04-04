@@ -72,6 +72,10 @@ def extract_candidate_data(
                 decoder = json.JSONDecoder()
                 result, _ = decoder.raw_decode(response.text.strip())
 
+            # Gemini sometimes wraps response in a list: [{...}]
+            if isinstance(result, list) and len(result) == 1 and isinstance(result[0], dict):
+                result = result[0]
+
             if not isinstance(result, dict) or "name" not in result:
                 logger.warning(
                     "Gemini returned invalid structure (attempt %d/%d): missing 'name' key",
