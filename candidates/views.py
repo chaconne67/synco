@@ -141,7 +141,7 @@ def review_detail(request, pk):
     }
     field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
     fc = field_scores
-    live_score, _ = compute_overall_confidence(category_scores, [])
+    live_score, _ = compute_overall_confidence(category_scores, [], field_scores)
 
     # New model fields context (same as candidate_detail)
     extra_context = {
@@ -385,7 +385,7 @@ def candidate_detail(request, pk):
     }
     field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
     fc = field_scores
-    live_score, _ = compute_overall_confidence(category_scores, [])
+    live_score, _ = compute_overall_confidence(category_scores, [], field_scores)
 
     # Find hallucinated fields from validation diagnosis
     from .models import ValidationDiagnosis

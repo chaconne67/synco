@@ -131,7 +131,7 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
 
     rule_result = validate_extraction(extracted, item.filename_meta or {})
     diagnosis = {
-        "verdict": "pass" if rule_result["confidence_score"] >= 0.85 else "fail",
+        "verdict": "pass" if rule_result["validation_status"] == "auto_confirmed" else "fail",
         "issues": rule_result["issues"],
         "field_scores": rule_result["field_confidences"],
         "overall_score": rule_result["confidence_score"],

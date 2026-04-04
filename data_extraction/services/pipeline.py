@@ -145,7 +145,7 @@ def _run_legacy_pipeline(
 
     rule_result = validate_extraction(extracted, filename_meta)
     diagnosis = {
-        "verdict": "pass" if rule_result["confidence_score"] >= 0.85 else "fail",
+        "verdict": "pass" if rule_result["validation_status"] == "auto_confirmed" else "fail",
         "issues": rule_result["issues"],
         "field_scores": rule_result["field_confidences"],
         "overall_score": rule_result["confidence_score"],
@@ -203,12 +203,24 @@ def apply_cross_version_comparison(
 
 
 def _build_integrity_diagnosis(flags: list[dict], field_scores: dict) -> dict:
+    from data_extraction.services.validation import compute_overall_confidence
+
     red_count = sum(1 for f in flags if f.get("severity") == "RED")
     yellow_count = sum(1 for f in flags if f.get("severity") == "YELLOW")
     score = max(0.0, 1.0 - (red_count * 0.25) - (yellow_count * 0.1))
 
+    # Apply critical field gates via compute_overall_confidence
+    _, gated_status = compute_overall_confidence({"_": score}, [], field_scores)
+
+    if gated_status == "failed":
+        verdict = "fail"
+    elif red_count:
+        verdict = "fail"
+    else:
+        verdict = "pass"
+
     return {
-        "verdict": "fail" if red_count else "pass",
+        "verdict": verdict,
         "issues": [
             {"severity": f["severity"], "message": f["detail"]}
             for f in flags

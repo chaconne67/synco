@@ -257,12 +257,18 @@ def compute_field_confidences(
 
 
 def compute_overall_confidence(
-    category_scores: dict, issues: list[dict]
+    category_scores: dict,
+    issues: list[dict],
+    field_scores: dict | None = None,
 ) -> tuple[float, str]:
     """Compute overall confidence score from category scores and issue penalties.
 
     Base = average of category_scores.
     Penalty: -0.05 per error, -0.02 per warning.
+
+    Critical field gates (applied before status thresholds):
+    - name missing (0.0) → always "failed"
+    - both email and phone missing → cap at "needs_review"
     """
     values = [v for v in category_scores.values() if isinstance(v, (int, float))]
     base = sum(values) / len(values) if values else 0.0
@@ -275,6 +281,14 @@ def compute_overall_confidence(
             score -= 0.02
 
     score = max(0.0, min(1.0, round(score, 3)))
+
+    # Critical field gates (override average-based status)
+    if field_scores:
+        if field_scores.get("name", 0) == 0.0:
+            return score, "failed"
+        if field_scores.get("email", 0) == 0.0 and field_scores.get("phone", 0) == 0.0:
+            if score >= 0.85:
+                return score, "needs_review"
 
     if score >= 0.85:
         status = "auto_confirmed"
@@ -303,7 +317,7 @@ def validate_extraction(extracted: dict, filename_parsed: dict) -> dict:
 
     field_scores, category_scores = compute_field_confidences(extracted, filename_parsed)
 
-    score, status = compute_overall_confidence(category_scores, all_issues)
+    score, status = compute_overall_confidence(category_scores, all_issues, field_scores)
 
     return {
         "confidence_score": score,

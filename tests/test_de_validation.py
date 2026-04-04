@@ -136,3 +136,55 @@ class TestValidateExtraction:
             "needs_review",
             "failed",
         )
+
+
+class TestCriticalFieldGate:
+    def test_name_missing_forces_failed(self):
+        field_scores = {"name": 0.0, "email": 1.0, "phone": 1.0, "careers": 1.0, "educations": 1.0}
+        category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 0.5}
+        score, status = compute_overall_confidence(category_scores, [], field_scores)
+        assert status == "failed"
+
+    def test_no_email_no_phone_blocks_auto_confirmed(self):
+        field_scores = {"name": 1.0, "email": 0.0, "phone": 0.0, "careers": 1.0, "educations": 1.0}
+        category_scores = {"인적사항": 0.33, "학력": 1.0, "경력": 1.0, "능력": 1.0}
+        score, status = compute_overall_confidence(category_scores, [], field_scores)
+        assert status != "auto_confirmed"
+
+    def test_email_present_allows_auto_confirmed(self):
+        field_scores = {"name": 1.0, "email": 1.0, "phone": 0.0, "careers": 1.0, "educations": 1.0}
+        category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 1.0}
+        score, status = compute_overall_confidence(category_scores, [], field_scores)
+        assert status == "auto_confirmed"
+
+    def test_phone_present_allows_auto_confirmed(self):
+        field_scores = {"name": 1.0, "email": 0.0, "phone": 1.0, "careers": 1.0, "educations": 1.0}
+        category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 1.0}
+        score, status = compute_overall_confidence(category_scores, [], field_scores)
+        assert status == "auto_confirmed"
+
+    def test_no_field_scores_no_gate(self):
+        """Without field_scores, gates do not apply (backward compat)."""
+        category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 1.0}
+        score, status = compute_overall_confidence(category_scores, [])
+        assert status == "auto_confirmed"
+
+    def test_validate_extraction_applies_gates(self):
+        """validate_extraction passes field_scores through to compute_overall_confidence."""
+        extracted = {
+            "name": "",
+            "birth_year": 1985,
+            "email": "test@example.com",
+            "phone": "010-1234-5678",
+            "address": "서울",
+            "current_company": "삼성",
+            "current_position": "과장",
+            "summary": "요약",
+            "careers": [{"start_date": "2020.01"}],
+            "educations": [{"institution": "서울대"}],
+            "skills": ["Python"],
+            "certifications": [],
+            "language_skills": [],
+        }
+        result = validate_extraction(extracted, {})
+        assert result["validation_status"] == "failed"
