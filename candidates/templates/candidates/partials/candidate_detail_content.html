@@ -51,7 +51,7 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 1. 인적사항                                             #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">인적사항</h2>
+  <h2 class="text-sm font-medium text-gray-500 tracking-wider mb-3 mt-6"><i class="fa-solid fa-user text-gray-400 mr-1.5"></i>인적사항</h2>
 
   <!-- Basic info -->
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
@@ -187,7 +187,7 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 2. 학력                                                 #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">학력</h2>
+  <h2 class="text-sm font-medium text-gray-500 tracking-wider mb-3 mt-6"><i class="fa-solid fa-graduation-cap text-gray-400 mr-1.5"></i>학력</h2>
 
   <!-- Education -->
   {% if educations %}
@@ -260,7 +260,7 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 3. 경력                                                 #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">경력</h2>
+  <h2 class="text-sm font-medium text-gray-500 tracking-wider mb-3 mt-6"><i class="fa-solid fa-briefcase text-gray-400 mr-1.5"></i>경력</h2>
 
   <!-- Career timeline -->
   {% if careers %}
@@ -382,7 +382,7 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 4. 능력                                                 #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">능력</h2>
+  <h2 class="text-sm font-medium text-gray-500 tracking-wider mb-3 mt-6"><i class="fa-solid fa-star text-gray-400 mr-1.5"></i>능력</h2>
 
   <!-- Skills tag cloud -->
   {% if candidate.skills %}
@@ -493,16 +493,18 @@
 
   <!-- Skills etc -->
   {% if candidate.skills_etc %}
-  <details class="mt-3 mb-3">
-    <summary class="py-2 text-[13px] text-gray-500 cursor-pointer hover:text-gray-700 transition select-none">능력 기타</summary>
-    <div class="mt-2 space-y-2">
-      {% for item in candidate.skills_etc %}
-      <div class="text-[13px] text-gray-600">
-        <span class="font-medium text-gray-500">{{ item.type }}:</span> {{ item.description }}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <details>
+      <summary class="py-1 text-[13px] text-gray-500 cursor-pointer hover:text-gray-700 transition select-none">능력 기타</summary>
+      <div class="mt-2 space-y-2">
+        {% for item in candidate.skills_etc %}
+        <div class="text-[13px] text-gray-600">
+          <span class="font-medium text-gray-500">{{ item.type }}:</span> {{ item.description }}
+        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-  </details>
+    </details>
+  </section>
   {% endif %}
 
   {# ═══════════════════════════════════════════════════════ #}
