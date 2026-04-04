@@ -43,6 +43,25 @@ def run_extraction_with_retry(
             "integrity_flags": list,  # only with integrity pipeline
         }
     """
+    from data_extraction.services.text import classify_text_quality
+
+    quality = classify_text_quality(raw_text)
+    if quality != "ok":
+        return {
+            "extracted": None,
+            "diagnosis": {
+                "verdict": "fail",
+                "issues": [{"field": "raw_text", "severity": "error",
+                            "message": f"Text quality: {quality}"}],
+                "field_scores": {},
+                "overall_score": 0.0,
+            },
+            "attempts": 0,
+            "retry_action": "none",
+            "raw_text_used": raw_text,
+            "integrity_flags": [],
+        }
+
     if use_integrity_pipeline:
         return _run_integrity_pipeline(raw_text, previous_data=previous_data)
 

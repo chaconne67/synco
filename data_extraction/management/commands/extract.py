@@ -419,10 +419,14 @@ class Command(BaseCommand):
 
             # Step 2: Extract text + preprocess
             raw_text = extract_text(dest_path)
-            if not raw_text or not raw_text.strip():
-                self._save_failed_resume(primary, folder_name, "Empty text extraction")
-                return False
             raw_text = preprocess_resume_text(raw_text)
+
+            from data_extraction.services.text import classify_text_quality
+
+            quality = classify_text_quality(raw_text)
+            if quality != "ok":
+                self._save_failed_resume(primary, folder_name, f"Text quality: {quality}")
+                return False
 
             # Step 3: Extract + Validate + Retry
             pipeline_result = run_extraction_with_retry(

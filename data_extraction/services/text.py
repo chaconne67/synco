@@ -200,6 +200,28 @@ def _has_substantive_text(text: str) -> bool:
     return bool(re.search(r"[0-9A-Za-z\uac00-\ud7a3]", text))
 
 
+def classify_text_quality(text: str) -> str:
+    """Classify extracted text quality before LLM extraction.
+
+    Returns: 'ok', 'too_short', 'garbled', 'empty'
+    """
+    if not text or not text.strip():
+        return "empty"
+
+    stripped = text.strip()
+
+    # Check ratio of meaningful characters (Korean, Latin, digits)
+    alnum_chars = sum(1 for c in stripped if c.isalnum() or '\uac00' <= c <= '\ud7a3')
+    if len(stripped) > 0 and alnum_chars / len(stripped) < 0.3:
+        return "garbled"
+
+    # Minimum length for a resume (resumes are typically 500+ chars)
+    if len(stripped) < 100:
+        return "too_short"
+
+    return "ok"
+
+
 def extract_text_libreoffice(file_path: str) -> str:
     """Public wrapper for LibreOffice-based text extraction.
 
