@@ -53,7 +53,16 @@ EXTRACTION_SYSTEM_PROMPT = (
     "각 카테고리에서 핵심 필드에 맞지 않지만 해당 카테고리에 속하는 정보는 etc[]에 넣으세요.\n"
     "원본에 있는 정보는 반드시 어딘가에 포함되어야 합니다. 누락보다 중복이 낫습니다.\n"
     "etc[] 항목에는 반드시 type을 넣어 무엇인지 식별할 수 있게 하세요.\n"
-    "etc[] 항목의 type과 description은 한국어로 작성하세요. 원문이 영어인 경우 한국어로 번역하세요."
+    "\n"
+    "## 언어 규칙\n"
+    "이력서가 영문으로만 작성된 경우, 추출 결과는 한국어로 번역하세요.\n"
+    "단, 다음은 원문 그대로 유지하세요:\n"
+    "- skills: 영문 공식명 유지 (Python, SAP, Oracle 등)\n"
+    "- 자격증 이름: 원문 유지 (CPA, PMP 등)\n"
+    "- 회사명, 학교명: 원문 유지\n"
+    "- 이메일, 전화번호, 주소, name_en: 원문 유지\n"
+    "번역 대상: summary, duties, achievements, core_competencies, etc[] 항목,\n"
+    "position (직책), department (부서)는 가능하면 한국어로 번역하세요."
 )
 
 EXTRACTION_JSON_SCHEMA = """{

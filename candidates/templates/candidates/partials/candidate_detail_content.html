@@ -11,19 +11,18 @@
       </svg>
     </a>
     <div class="flex-1">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
         <h1 class="text-heading text-gray-900">{{ candidate.name }}</h1>
         {% if primary_resume and primary_resume.drive_file_id %}
         <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view"
            target="_blank" rel="noopener"
-           class="text-[12px] text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition inline-flex items-center gap-1">
-          <i class="fa-solid fa-file-lines"></i>원본
+           class="text-[12px] text-gray-500 bg-gray-100 hover:bg-gray-200 hover:text-blue-500 px-2 py-1 rounded transition inline-flex items-center gap-1">
+          <i class="fa-regular fa-clipboard"></i>
+          <span>이력서 원본 보기</span>
         </a>
         {% endif %}
       </div>
-      {% if candidate.name_en %}
-      <p class="text-sm text-gray-500">{{ candidate.name_en }}</p>
-      {% endif %}
+
     </div>
   </div>
 
@@ -49,7 +48,10 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 1. 인적사항                                             #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="space-x-2 text-base font-semibold text-gray-700 mb-3 mt-8 pb-2 border-b border-gray-200"><i class="fa-solid fa-user text-gray-400 mr-2"></i><span class="ml-2">인적사항</span></h2>
+  <h2 class="space-x-2 text-base font-semibold text-gray-700 mb-3 mt-8 pb-2 border-b border-gray-200 gap-2">
+    <i class="fa-solid fa-user text-gray-400"></i>
+    <span class="ml-2">인적사항</span>
+</h2>
 
   <!-- Basic info -->
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
