@@ -66,7 +66,11 @@ def extract_candidate_data(
                 ),
             )
 
-            result = json.loads(response.text)
+            try:
+                result = json.loads(response.text)
+            except json.JSONDecodeError:
+                decoder = json.JSONDecoder()
+                result, _ = decoder.raw_decode(response.text.strip())
 
             if not isinstance(result, dict) or "name" not in result:
                 logger.warning(

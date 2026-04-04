@@ -204,15 +204,20 @@ def _load_extracted_json(response_text: str) -> dict | None:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        # Fallback for pre-structured-output batch results
-        if "```" in raw:
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-            try:
-                data = json.loads(raw.strip())
-            except json.JSONDecodeError:
+        # Try parsing first JSON object (Gemini sometimes appends extra data)
+        try:
+            decoder = json.JSONDecoder()
+            data, _ = decoder.raw_decode(raw)
+        except (json.JSONDecodeError, ValueError):
+            # Fallback for pre-structured-output fenced code block results
+            if "```" in raw:
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+                try:
+                    data = json.loads(raw.strip())
+                except json.JSONDecodeError:
+                    return None
+            else:
                 return None
-        else:
-            return None
     return data if isinstance(data, dict) else None

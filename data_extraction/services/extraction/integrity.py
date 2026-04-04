@@ -65,7 +65,13 @@ def _call_gemini(system: str, prompt: str, max_tokens: int = 6000) -> dict | Non
                 response_mime_type="application/json",
             ),
         )
-        result = json.loads(response.text)
+        text = response.text
+        try:
+            result = json.loads(text)
+        except json.JSONDecodeError:
+            # Gemini sometimes appends extra data after JSON; parse first object
+            decoder = json.JSONDecoder()
+            result, _ = decoder.raw_decode(text.strip())
         if not isinstance(result, dict):
             return None
         return result
