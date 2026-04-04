@@ -190,8 +190,9 @@ class Candidate(BaseModel):
     birth_year = models.SmallIntegerField(null=True, blank=True)
     gender = models.CharField(max_length=10, blank=True)
     email = models.EmailField(blank=True)
-    phone = models.CharField(max_length=30, blank=True)
-    address = models.CharField(max_length=300, blank=True)
+    phone = models.CharField(max_length=255, blank=True)
+    phone_normalized = models.CharField(max_length=20, blank=True, db_index=True)
+    address = models.CharField(max_length=500, blank=True)
 
     # Current representative resume
     current_resume = models.ForeignKey(
@@ -218,15 +219,15 @@ class Candidate(BaseModel):
 
     # Professional info
     total_experience_years = models.SmallIntegerField(null=True, blank=True)
-    resume_reference_date = models.CharField(max_length=30, blank=True)
+    resume_reference_date = models.CharField(max_length=255, blank=True)
     resume_reference_date_source = models.CharField(
         max_length=30,
         choices=ResumeReferenceDateSource.choices,
         blank=True,
     )
-    resume_reference_date_evidence = models.CharField(max_length=200, blank=True)
-    current_company = models.CharField(max_length=200, blank=True)
-    current_position = models.CharField(max_length=200, blank=True)
+    resume_reference_date_evidence = models.TextField(blank=True)
+    current_company = models.CharField(max_length=255, blank=True)
+    current_position = models.CharField(max_length=255, blank=True)
     current_salary = models.IntegerField(null=True, blank=True, help_text="만원")
     desired_salary = models.IntegerField(null=True, blank=True, help_text="만원")
     core_competencies = models.JSONField(default=list, blank=True)
@@ -322,6 +323,19 @@ class Candidate(BaseModel):
         if self.current_position:
             parts.append(self.current_position)
         return " / ".join(parts)
+
+    def save(self, *args, **kwargs):
+        from candidates.services.candidate_identity import normalize_phone_for_matching
+
+        self.phone_normalized = normalize_phone_for_matching(self.phone)
+
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and (
+            "phone" in update_fields or "phone_normalized" in update_fields
+        ):
+            kwargs["update_fields"] = set(update_fields) | {"phone_normalized"}
+
+        return super().save(*args, **kwargs)
 
     def _build_experience_metrics(
         self,
@@ -562,29 +576,10 @@ class Candidate(BaseModel):
 
     @property
     def experience_notice_tone(self) -> str:
-        if self.has_experience_discrepancy:
-            return "warning"
         return ""
 
     @property
     def experience_notice_text(self) -> str:
-        if self.has_experience_discrepancy:
-            if self.effective_resume_reference_date_display and self.reference_total_experience_display:
-                short_date = _format_reference_date_short(
-                    self.effective_resume_reference_date_display
-                )
-                inferred = self.effective_resume_reference_source == self.ResumeReferenceDateSource.INFERRED
-                date_label = f"{short_date}, 추정" if inferred else short_date
-                return (
-                    f"총 경력 기간 - 이력서 작성 시점({date_label}) 기준: "
-                    f"{self.reference_total_experience_display} / 현재 시점 기준: "
-                    f"{self.total_experience_display}. 차이가 커서 확인이 필요합니다."
-                )
-            return (
-                f"총 경력 기간 - 이력서 기재: {self.extracted_total_experience_display} / "
-                f"현재 시점 기준: {self.total_experience_display}. "
-                "차이가 커서 확인이 필요합니다."
-            )
         return ""
 
     @property
@@ -606,23 +601,6 @@ class Candidate(BaseModel):
     @property
     def experience_review_notice_items(self) -> list[dict]:
         items: list[dict] = []
-
-        if self.experience_notice_text:
-            severity = "YELLOW" if self.experience_notice_tone == "warning" else "BLUE"
-            summary = (
-                "경력 기간 불일치 확인 필요"
-                if severity == "YELLOW"
-                else "이력서 작성 시점 기준 경력 기간 차이"
-            )
-            items.append(
-                {
-                    "severity": severity,
-                    "label": _severity_label(severity),
-                    "detail": self.experience_notice_text,
-                    "summary": summary,
-                    "type": "EXPERIENCE_REFERENCE_NOTICE",
-                }
-            )
 
         if self.capped_future_career_count:
             severity = "YELLOW" if self.capped_future_career_count >= 2 else "BLUE"
@@ -780,8 +758,8 @@ class Resume(BaseModel):
     class ProcessingStatus(models.TextChoices):
         PENDING = "pending", "대기"
         DOWNLOADED = "downloaded", "다운로드 완료"
-        EXTRACTED = "extracted", "텍스트 추출"
-        PARSED = "parsed", "파싱 완료"
+        TEXT_ONLY = "text_only", "텍스트만 저장"
+        STRUCTURED = "structured", "구조화 완료"
         FAILED = "failed", "실패"
 
     candidate = models.ForeignKey(
@@ -822,10 +800,10 @@ class Education(BaseModel):
         on_delete=models.CASCADE,
         related_name="educations",
     )
-    institution = models.CharField(max_length=100)
-    degree = models.CharField(max_length=50, blank=True)
-    major = models.CharField(max_length=100, blank=True)
-    gpa = models.CharField(max_length=30, blank=True)
+    institution = models.CharField(max_length=255)
+    degree = models.CharField(max_length=100, blank=True)
+    major = models.CharField(max_length=255, blank=True)
+    gpa = models.CharField(max_length=100, blank=True)
     start_year = models.IntegerField(null=True, blank=True)
     end_year = models.IntegerField(null=True, blank=True)
     is_abroad = models.BooleanField(default=False)
@@ -846,15 +824,15 @@ class Career(BaseModel):
         on_delete=models.CASCADE,
         related_name="careers",
     )
-    company = models.CharField(max_length=200)
-    company_en = models.CharField(max_length=200, blank=True)
-    position = models.CharField(max_length=200, blank=True)
-    department = models.CharField(max_length=200, blank=True)
-    start_date = models.CharField(max_length=30, blank=True)
-    end_date = models.CharField(max_length=30, blank=True)
-    duration_text = models.CharField(max_length=50, blank=True)
-    end_date_inferred = models.CharField(max_length=30, blank=True)
-    date_evidence = models.CharField(max_length=500, blank=True)
+    company = models.CharField(max_length=255)
+    company_en = models.CharField(max_length=255, blank=True)
+    position = models.CharField(max_length=255, blank=True)
+    department = models.CharField(max_length=255, blank=True)
+    start_date = models.CharField(max_length=255, blank=True)
+    end_date = models.CharField(max_length=255, blank=True)
+    duration_text = models.CharField(max_length=255, blank=True)
+    end_date_inferred = models.CharField(max_length=255, blank=True)
+    date_evidence = models.TextField(blank=True)
     date_confidence = models.FloatField(null=True, blank=True)
     is_current = models.BooleanField(default=False)
     duties = models.TextField(blank=True)
@@ -863,7 +841,7 @@ class Career(BaseModel):
         help_text="AI가 직책/부서/경력 수준을 바탕으로 추정한 수행 가능 역량",
     )
     achievements = models.TextField(blank=True)
-    reason_left = models.CharField(max_length=300, blank=True)
+    reason_left = models.CharField(max_length=500, blank=True)
     salary = models.IntegerField(null=True, blank=True, help_text="만원")
     order = models.PositiveIntegerField(default=0)
 
@@ -1043,9 +1021,9 @@ class Certification(BaseModel):
         on_delete=models.CASCADE,
         related_name="certifications",
     )
-    name = models.CharField(max_length=100)
-    issuer = models.CharField(max_length=100, blank=True)
-    acquired_date = models.CharField(max_length=30, blank=True)
+    name = models.CharField(max_length=255)
+    issuer = models.CharField(max_length=255, blank=True)
+    acquired_date = models.CharField(max_length=255, blank=True)
 
     class Meta:
         db_table = "certifications"
@@ -1063,10 +1041,10 @@ class LanguageSkill(BaseModel):
         on_delete=models.CASCADE,
         related_name="language_skills",
     )
-    language = models.CharField(max_length=30)
-    test_name = models.CharField(max_length=50, blank=True)
-    score = models.CharField(max_length=30, blank=True)
-    level = models.CharField(max_length=50, blank=True)
+    language = models.CharField(max_length=100)
+    test_name = models.CharField(max_length=100, blank=True)
+    score = models.CharField(max_length=255, blank=True)
+    level = models.CharField(max_length=255, blank=True)
 
     class Meta:
         db_table = "language_skills"

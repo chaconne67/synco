@@ -154,40 +154,103 @@ def validate_cross_check(filename_parsed: dict, extracted: dict) -> list[dict]:
     return issues
 
 
+import re
+
+
+def compute_field_confidences(extracted: dict, filename_parsed: dict) -> dict:
+    """Compute per-field quality scores from extraction result.
+
+    Each score reflects actual data quality, not just presence.
+    The overall confidence_score is the weighted average of these scores.
+    """
+    fc = {}
+
+    # name: present + filename match
+    name = (extracted.get("name") or "").strip()
+    if not name:
+        fc["name"] = 0.0
+    else:
+        parsed_name = (filename_parsed.get("name") or "").strip()
+        fc["name"] = 1.0 if (not parsed_name or parsed_name == name) else 0.7
+
+    # birth_year: present + valid range
+    birth_year = extracted.get("birth_year")
+    if birth_year is None:
+        fc["birth_year"] = 0.0
+    elif 1940 <= birth_year <= 2005:
+        parsed_year = filename_parsed.get("birth_year")
+        fc["birth_year"] = 1.0 if (parsed_year is None or parsed_year == birth_year) else 0.7
+    else:
+        fc["birth_year"] = 0.3
+
+    # email: valid format
+    email = (extracted.get("email") or "").strip()
+    if not email:
+        fc["email"] = 0.0
+    elif re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        fc["email"] = 1.0
+    else:
+        fc["email"] = 0.5
+
+    # phone: normalized successfully
+    phone = (extracted.get("phone") or "").strip()
+    if not phone:
+        fc["phone"] = 0.0
+    else:
+        digits = re.sub(r"\D", "", phone)
+        fc["phone"] = 1.0 if len(digits) >= 10 else 0.7
+
+    # address
+    fc["address"] = 1.0 if (extracted.get("address") or "").strip() else 0.0
+
+    # current_company
+    fc["current_company"] = 1.0 if (extracted.get("current_company") or "").strip() else 0.0
+
+    # current_position
+    fc["current_position"] = 1.0 if (extracted.get("current_position") or "").strip() else 0.0
+
+    # summary
+    fc["summary"] = 1.0 if (extracted.get("summary") or "").strip() else 0.0
+
+    # careers: present + dates quality
+    careers = extracted.get("careers") or []
+    if not careers:
+        fc["careers"] = 0.0
+    else:
+        dated = sum(1 for c in careers if c.get("start_date"))
+        ratio = dated / len(careers)
+        fc["careers"] = round(0.5 + 0.5 * ratio, 2)
+
+    # educations
+    educations = extracted.get("educations") or []
+    if not educations:
+        fc["educations"] = 0.0
+    else:
+        fc["educations"] = 1.0
+
+    return fc
+
+
 def compute_overall_confidence(
     field_confidences: dict, issues: list[dict]
 ) -> tuple[float, str]:
-    """Compute overall confidence score and validation status.
+    """Compute overall confidence score from field scores and issue penalties.
 
-    Base score = field_confidences["overall"] or average of values.
-    Penalty: -0.15 per error, -0.05 per warning.
-    Thresholds:
-        >= 0.85 -> "auto_confirmed"
-        0.6-0.85 -> "needs_review"
-        < 0.6 -> "failed"
-
-    Returns (rounded_score, status).
+    Base = weighted average of field_confidences.
+    Penalty: -0.05 per error, -0.02 per warning.
     """
-    # Base score
-    if "overall" in field_confidences:
-        base = field_confidences["overall"]
-    else:
-        values = [v for v in field_confidences.values() if isinstance(v, (int, float))]
-        base = sum(values) / len(values) if values else 0.0
+    values = [v for v in field_confidences.values() if isinstance(v, (int, float))]
+    base = sum(values) / len(values) if values else 0.0
 
-    # Apply penalties
     score = base
     for issue in issues:
         if issue.get("severity") == "error":
-            score -= 0.15
-        elif issue.get("severity") == "warning":
             score -= 0.05
+        elif issue.get("severity") == "warning":
+            score -= 0.02
 
-    # Clamp to [0, 1]
-    score = max(0.0, min(1.0, score))
-    score = round(score, 3)
+    score = max(0.0, min(1.0, round(score, 3)))
 
-    # Determine status
     if score >= 0.85:
         status = "auto_confirmed"
     elif score >= 0.6:
@@ -199,9 +262,7 @@ def compute_overall_confidence(
 
 
 def validate_extraction(extracted: dict, filename_parsed: dict) -> dict:
-    """Run full 3-layer validation on an extraction result.
-
-    Combines rule-based validation, cross-check, and confidence scoring.
+    """Run full validation: field quality scoring + rule checks + confidence.
 
     Returns:
         {
@@ -211,15 +272,12 @@ def validate_extraction(extracted: dict, filename_parsed: dict) -> dict:
             "issues": list[dict],
         }
     """
-    # Gather all issues
     rule_issues = validate_rules(extracted)
     cross_issues = validate_cross_check(filename_parsed, extracted)
     all_issues = rule_issues + cross_issues
 
-    # Get field confidences from extracted data
-    field_confidences = extracted.get("field_confidences", {})
+    field_confidences = compute_field_confidences(extracted, filename_parsed)
 
-    # Compute overall confidence
     score, status = compute_overall_confidence(field_confidences, all_issues)
 
     return {

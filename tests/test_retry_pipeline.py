@@ -79,6 +79,30 @@ def test_returns_raw_text_used(mock_extract, mock_validate):
     assert result["raw_text_used"] == "원본텍스트"
 
 
+@patch("candidates.services.retry_pipeline.validate_extraction")
+@patch("candidates.services.retry_pipeline.extract_candidate_data")
+def test_applies_regex_filters_before_validation(mock_extract, mock_validate):
+    mock_extract.return_value = {
+        "name": "테스트",
+        "phone": "+966-5078-50224 / +82-10-9034-5062",
+        "resume_reference_date": "2025년 12월 기준",
+        "careers": [],
+        "certifications": [],
+        "language_skills": [],
+    }
+    mock_validate.return_value = {
+        "confidence_score": 0.95,
+        "validation_status": "auto_confirmed",
+        "field_confidences": {},
+        "issues": [],
+    }
+
+    result = run_extraction_with_retry("원본텍스트", "/tmp/t.docx", "HR", {})
+
+    assert result["extracted"]["phone"] == "+82-10-9034-5062"
+    assert result["extracted"]["resume_reference_date"] == "2025-12"
+
+
 def test_apply_cross_version_comparison_updates_flags_and_score():
     pipeline_result = {
         "extracted": {

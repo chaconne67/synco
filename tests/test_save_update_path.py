@@ -45,6 +45,57 @@ class TestSaveNewCandidate:
         assert result.current_resume is not None
         assert result.current_resume.version == 1
 
+    def test_sanitizes_multiple_phone_values_before_save(self, category):
+        from candidates.services.integrity.save import save_pipeline_result
+
+        result = _make_pipeline_result(
+            phone="+966-5078-50224 / +82-10-9034-5062",
+        )
+
+        candidate = save_pipeline_result(
+            pipeline_result=result,
+            raw_text="이력서 텍스트",
+            category=category,
+            primary_file=_make_primary_file(),
+        )
+
+        assert candidate.phone == "+82-10-9034-5062"
+        assert candidate.phone_normalized == "01090345062"
+
+    def test_truncates_overlong_resume_reference_date_before_save(self, category):
+        from candidates.services.integrity.save import save_pipeline_result
+
+        result = _make_pipeline_result()
+        result["extracted"]["resume_reference_date"] = "2025-12-31 기준 최신 업데이트 문서 버전"
+
+        candidate = save_pipeline_result(
+            pipeline_result=result,
+            raw_text="이력서 텍스트",
+            category=category,
+            primary_file=_make_primary_file(),
+        )
+
+        assert len(candidate.resume_reference_date) <= 255
+
+    def test_saves_text_only_resume_when_extraction_missing_but_raw_text_exists(self, category):
+        from candidates.services.integrity.save import save_pipeline_result
+
+        pipeline_result = _make_pipeline_result()
+        pipeline_result["extracted"] = None
+
+        result = save_pipeline_result(
+            pipeline_result=pipeline_result,
+            raw_text="자기소개서 형식의 원문 텍스트",
+            category=category,
+            primary_file=_make_primary_file("drive_text_only"),
+        )
+
+        assert result is None
+        resume = Resume.objects.get(drive_file_id="drive_text_only")
+        assert resume.processing_status == Resume.ProcessingStatus.TEXT_ONLY
+        assert resume.raw_text == "자기소개서 형식의 원문 텍스트"
+        assert "stored raw text only" in resume.error_message
+
 
 class TestSaveUpdateExisting:
     def test_reuses_candidate_on_match(self, category):

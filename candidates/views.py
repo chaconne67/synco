@@ -324,8 +324,25 @@ def candidate_detail(request, pk):
     language_skills = candidate.language_skills.all()
     primary_resume = candidate.current_resume or candidate.resumes.filter(is_primary=True).first()
 
-    # Field confidence map for color-coded display
-    fc = candidate.field_confidences or {}
+    # Compute field confidences in real-time from current candidate data
+    from candidates.services.validation import compute_field_confidences, compute_overall_confidence
+
+    extracted_snapshot = {
+        "name": candidate.name,
+        "birth_year": candidate.birth_year,
+        "email": candidate.email,
+        "phone": candidate.phone,
+        "address": candidate.address,
+        "current_company": candidate.current_company,
+        "current_position": candidate.current_position,
+        "total_experience_years": candidate.total_experience_years,
+        "summary": candidate.summary,
+        "careers": [{"start_date": c.start_date} for c in careers],
+        "educations": [{"institution": e.institution} for e in educations],
+    }
+    fc = compute_field_confidences(extracted_snapshot, {})
+    live_score, _ = compute_overall_confidence(fc, [])
+
     # Find hallucinated fields from validation diagnosis
     from .models import ValidationDiagnosis
 
@@ -368,6 +385,7 @@ def candidate_detail(request, pk):
             "language_skills": language_skills,
             "primary_resume": primary_resume,
             "fc": fc,
+            "live_score": live_score,
             "hallucinated_fields": hallucinated_fields,
             **extra_context,
         },

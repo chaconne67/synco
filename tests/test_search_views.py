@@ -100,7 +100,7 @@ def test_candidate_detail_uses_current_resume_diagnosis(auth_client, category):
         drive_folder="Accounting",
         is_primary=True,
         version=1,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
     )
     current_resume = Resume.objects.create(
         candidate=candidate,
@@ -109,7 +109,7 @@ def test_candidate_detail_uses_current_resume_diagnosis(auth_client, category):
         drive_folder="Accounting",
         is_primary=False,
         version=2,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
     )
     candidate.current_resume = current_resume
     candidate.save(update_fields=["current_resume", "updated_at"])
@@ -217,7 +217,7 @@ def test_review_detail_uses_current_resume_raw_text(auth_client, category):
         drive_folder="Accounting",
         is_primary=True,
         version=1,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
         raw_text="이전 원문",
     )
     current_resume = Resume.objects.create(
@@ -227,7 +227,7 @@ def test_review_detail_uses_current_resume_raw_text(auth_client, category):
         drive_folder="Accounting",
         is_primary=False,
         version=2,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
         raw_text="현재 원문",
     )
     candidate.current_resume = current_resume
@@ -255,7 +255,7 @@ def test_review_confirm_logs_current_resume(auth_client, category):
         drive_folder="Accounting",
         is_primary=True,
         version=1,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
     )
     candidate.current_resume = current_resume
     candidate.save(update_fields=["current_resume", "updated_at"])
@@ -283,7 +283,7 @@ def test_review_reject_logs_current_resume(auth_client, category):
         drive_folder="Accounting",
         is_primary=True,
         version=1,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
     )
     candidate.current_resume = current_resume
     candidate.save(update_fields=["current_resume", "updated_at"])

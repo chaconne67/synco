@@ -39,6 +39,24 @@ class TestExtractText:
         assert "강솔찬" in text
         mock_libre.assert_called_once()
 
+    @patch("candidates.services.text_extraction._extract_doc_libreoffice")
+    @patch("candidates.services.text_extraction._extract_doc_antiword")
+    def test_doc_fallback_to_libreoffice_when_antiword_returns_blankish(
+        self,
+        mock_antiword,
+        mock_libre,
+        tmp_path,
+    ):
+        mock_antiword.return_value = "\ufeff\n\n\n"
+        mock_libre.return_value = "고영호 이력서"
+        filepath = tmp_path / "test.doc"
+        filepath.write_bytes(b"fake doc content")
+
+        text = extract_text(str(filepath))
+
+        assert text == "고영호 이력서"
+        mock_libre.assert_called_once()
+
     def test_unsupported_extension(self, tmp_path):
         filepath = tmp_path / "test.hwp"
         filepath.write_bytes(b"fake")

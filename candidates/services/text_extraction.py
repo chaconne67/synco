@@ -68,10 +68,18 @@ def _extract_docx(file_path: str) -> str:
 
 def _extract_doc(file_path: str) -> str:
     """Extract text from a .doc file. Tries antiword first, falls back to LibreOffice."""
+    text = ""
     try:
-        return _extract_doc_antiword(file_path)
+        text = _extract_doc_antiword(file_path)
+        if _has_substantive_text(text):
+            return text
     except Exception:
+        pass
+
+    try:
         return _extract_doc_libreoffice(file_path)
+    except Exception:
+        return text
 
 
 def _extract_doc_antiword(file_path: str) -> str:
@@ -184,6 +192,12 @@ def preprocess_resume_text(text: str) -> str:
     final = [l for l in final if not any(n in l.lower() for n in noise)]
 
     return "\n".join(final)
+
+
+def _has_substantive_text(text: str) -> bool:
+    if not text:
+        return False
+    return bool(re.search(r"[0-9A-Za-z\uac00-\ud7a3]", text))
 
 
 def extract_text_libreoffice(file_path: str) -> str:

@@ -60,7 +60,7 @@ class CandidateAdmin(admin.ModelAdmin):
         "primary_category",
     ]
     list_filter = ["status", "validation_status", "source"]
-    search_fields = ["name", "name_en", "current_company", "email", "phone"]
+    search_fields = ["name", "name_en", "current_company", "email", "phone", "phone_normalized"]
     inlines = [
         ResumeInline,
         CareerInline,

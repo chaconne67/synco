@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 
+from candidates.services.extraction_filters import apply_regex_field_filters
 from candidates.services.gemini_extraction import extract_candidate_data
 from candidates.services.validation import validate_extraction
 
 logger = logging.getLogger(__name__)
-
 
 def run_extraction_with_retry(
     raw_text: str,
@@ -78,12 +78,14 @@ def _run_integrity_pipeline(
     retries = result.get("pipeline_meta", {}).get("retries", 0)
     flags = result.get("integrity_flags", [])
 
+    # Compute field-quality-based confidences (integrity pipeline doesn't get them from LLM)
+    from candidates.services.validation import compute_field_confidences
+    field_confidences = compute_field_confidences(result, {})
+    result["field_confidences"] = field_confidences
+
     return {
         "extracted": result,
-        "diagnosis": _build_integrity_diagnosis(
-            flags,
-            result.get("field_confidences", {}),
-        ),
+        "diagnosis": _build_integrity_diagnosis(flags, field_confidences),
         "attempts": 1 + retries,
         "retry_action": (
             "human_review"
@@ -105,6 +107,7 @@ def _run_legacy_pipeline(
         raw_text,
         file_reference_date=file_reference_date,
     )
+    extracted = apply_regex_field_filters(extracted)
     if not extracted:
         logger.warning("LLM extraction returned None")
         return {

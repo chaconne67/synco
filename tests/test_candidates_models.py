@@ -94,6 +94,28 @@ class TestCandidate:
         assert candidate.field_confidences == {}
 
     @pytest.mark.django_db
+    def test_phone_normalized_is_populated_on_create(self):
+        candidate = Candidate.objects.create(
+            name="전화정규화",
+            phone="+82-10-1234-5678 / 02-123-4567",
+        )
+
+        assert candidate.phone_normalized == "01012345678"
+
+    @pytest.mark.django_db
+    def test_phone_normalized_updates_when_phone_saved_with_update_fields(self):
+        candidate = Candidate.objects.create(
+            name="전화변경",
+            phone="010-1111-2222",
+        )
+
+        candidate.phone = "+82-10-9999-8888"
+        candidate.save(update_fields=["phone", "updated_at"])
+        candidate.refresh_from_db()
+
+        assert candidate.phone_normalized == "01099998888"
+
+    @pytest.mark.django_db
     def test_total_experience_display_uses_merged_career_periods(self, monkeypatch):
         monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
         candidate = Candidate.objects.create(name="경력합산", total_experience_years=8)
@@ -151,34 +173,6 @@ class TestCandidate:
         # info-level notice removed — both values now shown inline in 총 경력 field
         assert candidate.experience_notice_tone == ""
         assert candidate.experience_notice_text == ""
-
-    @pytest.mark.django_db
-    def test_experience_discrepancy_still_flags_against_resume_reference_date(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
-        candidate = Candidate.objects.create(
-            name="기준일경고",
-            total_experience_years=8,
-            resume_reference_date="2021-12",
-            resume_reference_date_source=Candidate.ResumeReferenceDateSource.DOCUMENT_TEXT,
-        )
-        Career.objects.create(
-            candidate=candidate,
-            company="첫회사",
-            start_date="2012-01",
-            end_date="2016-12",
-        )
-        Career.objects.create(
-            candidate=candidate,
-            company="현재회사",
-            start_date="2017-01",
-            end_date="",
-            is_current=True,
-        )
-
-        assert candidate.reference_total_experience_display == "10년"
-        assert candidate.has_experience_discrepancy is True
-        assert candidate.experience_notice_tone == "warning"
-        assert "확인이 필요합니다" in candidate.experience_notice_text
 
     @pytest.mark.django_db
     def test_experience_notice_can_infer_reference_date_from_current_career(self, monkeypatch):

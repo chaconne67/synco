@@ -106,10 +106,13 @@ class TestOverallConfidence:
         assert score < 0.6
 
     def test_issues_lower_confidence(self):
-        issues = [{"field": "name", "severity": "error", "message": "missing"}]
-        score, status = compute_overall_confidence({"overall": 0.92}, issues)
-        # 0.92 - 0.15 = 0.77 → needs_review
-        assert score < 0.92
+        issues = [
+            {"field": "name", "severity": "error", "message": "missing"},
+            {"field": "birth_year", "severity": "error", "message": "invalid"},
+        ]
+        score, status = compute_overall_confidence({"name": 0.92}, issues)
+        # 0.92 - 0.05 - 0.05 = 0.82 → needs_review
+        assert score < 0.85
         assert status == "needs_review"
 
 

@@ -207,3 +207,72 @@ def list_root_folders(service) -> list[dict]:
         service.files().list(q=query, fields="files(id, name)", pageSize=100).execute()
     )
     return response.get("files", [])
+
+
+# ---------------------------------------------------------------------------
+# Parallel discovery
+# ---------------------------------------------------------------------------
+
+
+def discover_folders(service, parent_id: str) -> list[dict]:
+    """List all subfolders under *parent_id* in a single API call.
+
+    Returns list of dicts with keys: id, name.
+    """
+    query = (
+        f"'{parent_id}' in parents"
+        " and mimeType = 'application/vnd.google-apps.folder'"
+        " and trashed = false"
+    )
+    all_folders: list[dict] = []
+    page_token: str | None = None
+
+    while True:
+        response = (
+            service.files()
+            .list(
+                q=query,
+                fields="nextPageToken, files(id, name)",
+                pageSize=100,
+                pageToken=page_token,
+            )
+            .execute()
+        )
+        all_folders.extend(response.get("files", []))
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            break
+
+    return sorted(all_folders, key=lambda f: f["name"])
+
+
+def list_all_files_parallel(
+    folders: list[dict],
+    workers: int = 10,
+) -> dict[str, list[dict]]:
+    """List .doc/.docx files in all folders in parallel.
+
+    Each worker creates its own Drive service (googleapiclient is not thread-safe).
+
+    Args:
+        folders: list of dicts with 'id' and 'name' keys.
+        workers: ThreadPoolExecutor max_workers.
+
+    Returns:
+        dict mapping folder_name → list of file dicts.
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _list_one(folder: dict) -> tuple[str, list[dict]]:
+        svc = get_drive_service()
+        files = list_files_in_folder(svc, folder["id"])
+        return folder["name"], files
+
+    result: dict[str, list[dict]] = {}
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(_list_one, f): f for f in folders}
+        for future in as_completed(futures):
+            folder_name, files = future.result()
+            result[folder_name] = files
+
+    return result

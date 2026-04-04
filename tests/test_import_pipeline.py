@@ -14,7 +14,7 @@ class TestPipelineIdempotency:
             file_name="강솔찬.85.현대.doc",
             drive_file_id="existing_id",
             drive_folder="Accounting",
-            processing_status=Resume.ProcessingStatus.PARSED,
+            processing_status=Resume.ProcessingStatus.STRUCTURED,
         )
         assert Resume.objects.filter(drive_file_id="existing_id").exists()
 

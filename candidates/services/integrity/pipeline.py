@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
+from candidates.services.extraction_filters import apply_regex_field_filters
 from candidates.services.integrity.step1_extract import extract_raw_data
 from candidates.services.integrity.step2_normalize import (
     normalize_career_group,
@@ -135,7 +136,7 @@ def run_integrity_pipeline(
         all_flags.extend(cv_flags)
 
     # ── Assemble result ──
-    return {
+    return apply_regex_field_filters({
         "name": raw_data.get("name"),
         "name_en": raw_data.get("name_en"),
         "birth_year": raw_data.get("birth_year"),
@@ -159,4 +160,4 @@ def run_integrity_pipeline(
             "step1_items": len(careers_raw) + len(educations_raw),
             "retries": retries,
         },
-    }
+    })

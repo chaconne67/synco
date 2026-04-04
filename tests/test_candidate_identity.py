@@ -23,7 +23,7 @@ def existing_candidate(db, category):
         drive_folder="HR",
         is_primary=True,
         version=1,
-        processing_status=Resume.ProcessingStatus.PARSED,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
     )
     return c
 
@@ -88,6 +88,18 @@ class TestIdentifyByPhone:
         assert result.candidate == existing_candidate
         assert result.match_reason == "phone"
 
+    def test_match_by_phone_prefers_primary_number_from_multiple_values(self, existing_candidate):
+        from candidates.services.candidate_identity import identify_candidate
+
+        extracted = {
+            "phone": "+966-5078-50224 / +82-10-1234-5678",
+            "name": "김철수",
+        }
+        result = identify_candidate(extracted)
+        assert result is not None
+        assert result.candidate == existing_candidate
+        assert result.match_reason == "phone"
+
 
 class TestIdentifyNoAutoMergeByName:
     def test_same_name_different_person_no_merge(self, existing_candidate):
@@ -135,7 +147,7 @@ class TestComparisonContext:
             drive_folder="HR",
             is_primary=True,
             version=2,
-            processing_status=Resume.ProcessingStatus.PARSED,
+            processing_status=Resume.ProcessingStatus.STRUCTURED,
         )
         candidate.current_resume = current_resume
         candidate.save(update_fields=["current_resume", "updated_at"])

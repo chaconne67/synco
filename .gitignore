@@ -46,3 +46,5 @@ node_modules/
 
 # Agent handoff files
 .agents/
+.batch_extract/
+.data_extraction/
