@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from django.db import models, transaction
 
@@ -32,6 +33,24 @@ def _t(value: str | None, max_len: int = 200) -> str:
     return s[:max_len]
 
 
+def _sanitize_phone(value: str | None) -> str:
+    from candidates.services.candidate_identity import select_primary_phone
+
+    return _t(select_primary_phone(value or ""), 255)
+
+
+
+def _sanitize_reference_date(value: str | None) -> str:
+    text = (value or "").strip()
+    if not text:
+        return ""
+
+    if re.fullmatch(r"\d{4}(?:[-./]\d{1,2}(?:[-./]\d{1,2})?)?", text):
+        return text[:255]
+
+    return _t(text, 255)
+
+
 def save_pipeline_result(
     pipeline_result: dict,
     raw_text: str,
@@ -51,7 +70,15 @@ def save_pipeline_result(
     """
     extracted = pipeline_result.get("extracted")
     if not extracted:
-        _save_failed_resume(primary_file, category.name, "Extraction failed")
+        if raw_text and raw_text.strip():
+            _save_text_only_resume(
+                primary_file,
+                category.name,
+                raw_text=raw_text,
+                error_msg="Structured extraction unavailable; stored raw text only",
+            )
+        else:
+            _save_failed_resume(primary_file, category.name, "Extraction failed")
         return None
 
     diagnosis = pipeline_result["diagnosis"]
@@ -76,19 +103,18 @@ def save_pipeline_result(
     other_files = other_files or []
     existing_ids = existing_ids or set()
 
-    from candidates.services.candidate_identity import build_candidate_comparison_context
-
-    comparison_context = comparison_context or build_candidate_comparison_context(extracted)
-    matched_candidate = comparison_context.candidate if comparison_context else None
-    compared_resume = comparison_context.compared_resume if comparison_context else None
-
-    if matched_candidate:
-        logger.info(
-            "Matched existing candidate %s via %s",
-            matched_candidate.id, comparison_context.match_reason,
-        )
-
     with transaction.atomic():
+        from candidates.services.candidate_identity import build_candidate_comparison_context
+
+        comparison_context = comparison_context or build_candidate_comparison_context(extracted)
+        matched_candidate = comparison_context.candidate if comparison_context else None
+        compared_resume = comparison_context.compared_resume if comparison_context else None
+
+        if matched_candidate:
+            logger.info(
+                "Matched existing candidate %s via %s",
+                matched_candidate.id, comparison_context.match_reason,
+            )
         if matched_candidate:
             candidate = _update_candidate(
                 matched_candidate, extracted, raw_text, validation, category, primary_file,
@@ -116,7 +142,7 @@ def save_pipeline_result(
             raw_text=raw_text,
             is_primary=True,
             version=next_version,
-            processing_status=Resume.ProcessingStatus.PARSED,
+            processing_status=Resume.ProcessingStatus.STRUCTURED,
         )
 
         candidate.current_resume = primary_resume
@@ -240,6 +266,25 @@ def _save_failed_resume(file_info: dict, folder_name: str, error_msg: str):
     )
 
 
+def _save_text_only_resume(
+    file_info: dict,
+    folder_name: str,
+    *,
+    raw_text: str,
+    error_msg: str,
+):
+    Resume.objects.create(
+        file_name=file_info["file_name"],
+        drive_file_id=file_info["file_id"],
+        drive_folder=folder_name,
+        mime_type=file_info.get("mime_type", ""),
+        file_size=file_info.get("file_size"),
+        raw_text=raw_text,
+        processing_status=Resume.ProcessingStatus.TEXT_ONLY,
+        error_message=error_msg,
+    )
+
+
 def _update_candidate(
     candidate: Candidate,
     extracted: dict,
@@ -273,19 +318,24 @@ def _update_candidate(
         resume_reference_source = "file_modified_time"
         resume_reference_evidence = "Drive modifiedTime fallback"
 
+    sanitized_phone = _sanitize_phone(extracted.get("phone"))
+    sanitized_reference_date = _sanitize_reference_date(resume_reference_date)
+
     candidate.name = extracted.get("name") or candidate.name
     candidate.name_en = extracted.get("name_en") or candidate.name_en
     candidate.birth_year = extracted.get("birth_year") or candidate.birth_year
     candidate.gender = extracted.get("gender") or candidate.gender
     candidate.email = extracted.get("email") or candidate.email
-    candidate.phone = extracted.get("phone") or candidate.phone
+    candidate.phone = sanitized_phone or candidate.phone
     candidate.address = extracted.get("address") or candidate.address
     candidate.current_company = extracted.get("current_company") or candidate.current_company
     candidate.current_position = extracted.get("current_position") or candidate.current_position
     candidate.total_experience_years = (
         extracted.get("total_experience_years") or candidate.total_experience_years
     )
-    candidate.resume_reference_date = resume_reference_date or candidate.resume_reference_date
+    candidate.resume_reference_date = (
+        sanitized_reference_date or candidate.resume_reference_date
+    )
     candidate.resume_reference_date_source = (
         resume_reference_source or candidate.resume_reference_date_source
     )
@@ -393,18 +443,21 @@ def _create_candidate(
         resume_reference_source = "file_modified_time"
         resume_reference_evidence = "Drive modifiedTime fallback"
 
+    sanitized_phone = _sanitize_phone(extracted.get("phone"))
+    sanitized_reference_date = _sanitize_reference_date(resume_reference_date)
+
     return Candidate.objects.create(
         name=extracted.get("name") or "",
         name_en=extracted.get("name_en") or "",
         birth_year=extracted.get("birth_year"),
         gender=extracted.get("gender") or "",
         email=extracted.get("email") or "",
-        phone=extracted.get("phone") or "",
+        phone=sanitized_phone,
         address=extracted.get("address") or "",
         current_company=extracted.get("current_company") or "",
         current_position=extracted.get("current_position") or "",
         total_experience_years=extracted.get("total_experience_years"),
-        resume_reference_date=resume_reference_date,
+        resume_reference_date=sanitized_reference_date,
         resume_reference_date_source=resume_reference_source,
         resume_reference_date_evidence=resume_reference_evidence,
         core_competencies=extracted.get("core_competencies", []),
@@ -464,10 +517,10 @@ def _create_educations(candidate: Candidate, educations: list[dict]):
     for edu in educations:
         Education.objects.create(
             candidate=candidate,
-            institution=_t(edu.get("institution"), 100),
-            degree=_t(edu.get("degree"), 50),
-            major=_t(edu.get("major"), 100),
-            gpa=_t(str(edu.get("gpa") or ""), 20),
+            institution=_t(edu.get("institution"), 255),
+            degree=_t(edu.get("degree"), 100),
+            major=_t(edu.get("major"), 255),
+            gpa=_t(str(edu.get("gpa") or ""), 100),
             start_year=edu.get("start_year"),
             end_year=edu.get("end_year"),
             is_abroad=edu.get("is_abroad", False),
@@ -478,21 +531,21 @@ def _create_careers(candidate: Candidate, careers: list[dict]):
     for career in careers:
         Career.objects.create(
             candidate=candidate,
-            company=_t(career.get("company"), 200),
-            company_en=_t(career.get("company_en"), 200),
-            position=_t(career.get("position"), 200),
-            department=_t(career.get("department"), 200),
-            start_date=_t(career.get("start_date"), 30),
-            end_date=_t(career.get("end_date"), 30),
-            duration_text=_t(career.get("duration_text"), 50),
-            end_date_inferred=_t(career.get("end_date_inferred"), 30),
-            date_evidence=_t(career.get("date_evidence"), 500),
+            company=_t(career.get("company"), 255),
+            company_en=_t(career.get("company_en"), 255),
+            position=_t(career.get("position"), 255),
+            department=_t(career.get("department"), 255),
+            start_date=_t(career.get("start_date"), 255),
+            end_date=_t(career.get("end_date"), 255),
+            duration_text=_t(career.get("duration_text"), 255),
+            end_date_inferred=_t(career.get("end_date_inferred"), 255),
+            date_evidence=career.get("date_evidence") or "",
             date_confidence=career.get("date_confidence"),
             is_current=career.get("is_current", False),
             duties=career.get("duties") or "",
             inferred_capabilities=career.get("inferred_capabilities") or "",
             achievements=career.get("achievements") or "",
-            reason_left=_t(career.get("reason_left"), 300),
+            reason_left=_t(career.get("reason_left"), 500),
             salary=career.get("salary"),
             order=career.get("order", 0),
         )
@@ -502,9 +555,9 @@ def _create_certifications(candidate: Candidate, certifications: list[dict]):
     for cert in certifications:
         Certification.objects.create(
             candidate=candidate,
-            name=_t(cert.get("name"), 100),
-            issuer=_t(cert.get("issuer"), 100),
-            acquired_date=_t(cert.get("acquired_date"), 30),
+            name=_t(cert.get("name"), 255),
+            issuer=_t(cert.get("issuer"), 255),
+            acquired_date=_t(cert.get("acquired_date"), 255),
         )
 
 
@@ -512,8 +565,8 @@ def _create_language_skills(candidate: Candidate, language_skills: list[dict]):
     for lang in language_skills:
         LanguageSkill.objects.create(
             candidate=candidate,
-            language=_t(lang.get("language"), 30),
-            test_name=_t(lang.get("test_name"), 50),
-            score=_t(lang.get("score"), 30),
-            level=_t(lang.get("level"), 50),
+            language=_t(lang.get("language"), 100),
+            test_name=_t(lang.get("test_name"), 100),
+            score=_t(lang.get("score"), 255),
+            level=_t(lang.get("level"), 255),
         )

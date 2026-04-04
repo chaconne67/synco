@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-ARTIFACT_ROOT = Path(__file__).resolve().parents[2] / ".data_extraction"
+ARTIFACT_ROOT = Path(__file__).resolve().parents[3] / ".data_extraction"
 
 
 def ensure_job_dirs(job_id: str) -> Path:

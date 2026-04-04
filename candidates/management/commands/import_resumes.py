@@ -1,25 +1,26 @@
 """Import resumes from Google Drive, extract text, parse via LLM, and save to DB.
 
 Usage:
-    # Process a single category folder
-    uv run python manage.py import_resumes --folder Accounting
+    # Google Drive URL or folder ID (auto-discovers subfolders)
+    uv run python manage.py import_resumes --drive https://drive.google.com/drive/folders/1gPM...
 
-    # Process all 20 category folders
-    uv run python manage.py import_resumes --all
+    # Folder ID directly
+    uv run python manage.py import_resumes --drive 1gPMDc7DZf_sirUx2QYzxRUAekLU0R7hy
 
-    # Dry run (list files without processing)
-    uv run python manage.py import_resumes --all --dry-run
+    # Process a single subfolder
+    uv run python manage.py import_resumes --drive <URL_OR_ID> --folder HR
 
-    # Limit files per folder
-    uv run python manage.py import_resumes --folder HR --limit 5
+    # Dry run
+    uv run python manage.py import_resumes --drive <URL_OR_ID> --dry-run
 
     # Control parallelism
-    uv run python manage.py import_resumes --all --workers 3
+    uv run python manage.py import_resumes --drive <URL_OR_ID> --workers 3
 """
 
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -28,11 +29,10 @@ from django.core.management.base import BaseCommand, CommandError
 
 from candidates.models import Category, Resume
 from candidates.services.drive_sync import (
-    CATEGORY_FOLDERS,
+    discover_folders,
     download_file,
-    find_category_folder,
     get_drive_service,
-    list_files_in_folder,
+    list_all_files_parallel,
 )
 from candidates.services.filename_parser import group_by_person
 from candidates.services.retry_pipeline import run_extraction_with_retry
@@ -42,17 +42,19 @@ from candidates.services.text_extraction import extract_text
 class Command(BaseCommand):
     help = "Import resumes from Google Drive: download, extract text, LLM parse, save to DB"
 
+    _DRIVE_FOLDER_RE = re.compile(r"(?:https?://[^/]+/drive/folders/)?([a-zA-Z0-9_-]+)")
+
     def add_arguments(self, parser):
-        group = parser.add_mutually_exclusive_group(required=True)
-        group.add_argument(
+        parser.add_argument(
+            "--drive",
+            type=str,
+            required=True,
+            help="Google Drive folder URL or ID (subfolders are auto-discovered)",
+        )
+        parser.add_argument(
             "--folder",
             type=str,
-            help="Specific category folder name (e.g., 'Accounting')",
-        )
-        group.add_argument(
-            "--all",
-            action="store_true",
-            help="Process all 20 category folders",
+            help="Process only this subfolder name (e.g., 'HR')",
         )
         parser.add_argument(
             "--limit",
@@ -69,104 +71,133 @@ class Command(BaseCommand):
             "--workers",
             type=int,
             default=5,
-            help="ThreadPoolExecutor max_workers (default: 5)",
-        )
-        parser.add_argument(
-            "--parent-folder-id",
-            type=str,
-            default="root",
-            help="Parent folder ID on Drive (default: root)",
+            help="Parallel workers for processing (default: 5)",
         )
         parser.add_argument(
             "--integrity",
             action="store_true",
-            help="Use new integrity pipeline (Step 1→1.5→2→3) instead of legacy extraction",
+            help="Use integrity pipeline (Step 1→2→3) instead of legacy extraction",
         )
 
+    def _parse_drive_id(self, value: str) -> str:
+        match = self._DRIVE_FOLDER_RE.match(value.strip())
+        if not match:
+            raise CommandError(f"Cannot parse Drive folder ID from: {value}")
+        return match.group(1)
+
     def handle(self, *args, **options):
-        folder = options.get("folder")
-        process_all = options.get("all")
+        parent_folder_id = self._parse_drive_id(options["drive"])
+        folder_filter = options.get("folder")
         limit = options.get("limit") or 0
         dry_run = options.get("dry_run")
         workers = options.get("workers")
-        parent_folder_id = options.get("parent_folder_id")
         self.use_integrity = options.get("integrity", False)
 
-        # Determine which folders to process
-        if process_all:
-            folders = list(CATEGORY_FOLDERS)
-        else:
-            if folder not in CATEGORY_FOLDERS:
-                raise CommandError(
-                    f"Unknown folder '{folder}'. "
-                    f"Valid folders: {', '.join(CATEGORY_FOLDERS)}"
-                )
-            folders = [folder]
-
         self.stdout.write(f"\n=== Resume Import {'(DRY RUN)' if dry_run else ''} ===")
-        self.stdout.write(
-            f"Folders: {len(folders)}, Limit: {limit or 'unlimited'}, Workers: {workers}"
-        )
 
-        # Connect to Drive
-        service = get_drive_service()
-        self.stdout.write("Google Drive connected.\n")
-
-        # Track stats
-        stats = {
-            "folders_processed": 0,
-            "files_found": 0,
-            "groups_found": 0,
-            "skipped_existing": 0,
-            "processed": 0,
-            "succeeded": 0,
-            "failed": 0,
-        }
         start_time = time.time()
 
-        for folder_name in folders:
-            self._process_folder(
-                service=service,
-                folder_name=folder_name,
-                parent_folder_id=parent_folder_id,
-                limit=limit,
-                dry_run=dry_run,
-                workers=workers,
-                stats=stats,
-            )
+        # ── Phase 1: Discover folders ──
+        t0 = time.time()
+        service = get_drive_service()
+        folders = discover_folders(service, parent_folder_id)
 
-        elapsed = time.time() - start_time
-        self._print_summary(stats, elapsed)
+        if folder_filter:
+            folders = [f for f in folders if f["name"] == folder_filter]
+            if not folders:
+                self.stderr.write(f"Folder '{folder_filter}' not found under {parent_folder_id}.")
+                return
 
-    def _process_folder(
+        folder_names = [f["name"] for f in folders]
+        phase1_sec = time.time() - t0
+        self.stdout.write(
+            f"Phase 1 — Discover: {len(folders)} folders found ({phase1_sec:.1f}s)"
+        )
+        self.stdout.write(f"  {', '.join(folder_names)}")
+
+        # ── Phase 2: List files in all folders (parallel) ──
+        t0 = time.time()
+        if not folders:
+            self.stdout.write("No folders found.")
+            self._print_summary({"total_files": 0, "total_groups": 0, "skipped": 0,
+                                  "new_groups": [], "existing_ids": set(),
+                                  "affected_folders": set()},
+                                0, 0, time.time() - start_time, phase1_sec)
+            return
+
+        folder_files = list_all_files_parallel(folders, workers=min(len(folders), 10))
+        phase2_sec = time.time() - t0
+
+        total_files = sum(len(files) for files in folder_files.values())
+        self.stdout.write(
+            f"Phase 2 — File listing: {total_files} files across "
+            f"{len(folder_files)} folders ({phase2_sec:.1f}s)"
+        )
+
+        # ── Phase 3: Group, filter, and collect work items ──
+        t0 = time.time()
+        work_items = self._collect_work_items(folder_files, limit)
+        phase3_sec = time.time() - t0
+
+        self.stdout.write(
+            f"Phase 3 — Filter: {work_items['total_groups']} groups, "
+            f"{work_items['skipped']} existing, "
+            f"{len(work_items['new_groups'])} new ({phase3_sec:.1f}s)"
+        )
+
+        if dry_run:
+            self._dry_run_report(work_items["new_groups"])
+            self._print_summary(work_items, 0, 0, time.time() - start_time,
+                                phase1_sec, phase2_sec, phase3_sec)
+            return
+
+        if not work_items["new_groups"]:
+            self.stdout.write("Nothing new to process.")
+            self._print_summary(work_items, 0, 0, time.time() - start_time,
+                                phase1_sec, phase2_sec, phase3_sec)
+            return
+
+        # ── Phase 4: Process all new groups in parallel ──
+        t0 = time.time()
+        succeeded, failed = self._process_all(
+            work_items["new_groups"], workers, work_items["existing_ids"]
+        )
+        phase4_sec = time.time() - t0
+
+        self.stdout.write(
+            f"Phase 4 — Process: {succeeded} succeeded, {failed} failed ({phase4_sec:.1f}s)"
+        )
+
+        # Update category candidate counts
+        for folder_name in work_items["affected_folders"]:
+            try:
+                cat = Category.objects.get(name=folder_name)
+                cat.candidate_count = cat.candidates.count()
+                cat.save(update_fields=["candidate_count"])
+            except Category.DoesNotExist:
+                pass
+
+        self._print_summary(work_items, succeeded, failed, time.time() - start_time,
+                            phase1_sec, phase2_sec, phase3_sec, phase4_sec)
+
+    def _collect_work_items(
         self,
-        service,
-        folder_name: str,
-        parent_folder_id: str,
+        folder_files: dict[str, list[dict]],
         limit: int,
-        dry_run: bool,
-        workers: int,
-        stats: dict,
-    ):
-        """Process a single category folder."""
-        self.stdout.write(f"\n--- {folder_name} ---")
+    ) -> dict:
+        """Group files, check DB, return new work items across all folders."""
+        all_new_groups: list[dict] = []
+        total_groups = 0
+        total_skipped = 0
+        total_files = 0
+        affected_folders: set[str] = set()
 
-        # Find folder on Drive
-        folder_id = find_category_folder(service, parent_folder_id, folder_name)
-        if not folder_id:
-            self.stderr.write(f"  Folder '{folder_name}' not found on Drive. Skipping.")
-            return
+        # Collect all file IDs for a single bulk DB check
+        all_file_ids: set[str] = set()
+        folder_groups: dict[str, list[dict]] = {}
 
-        # List files
-        files = list_files_in_folder(service, folder_id)
-        if not files:
-            self.stdout.write(f"  No files found in '{folder_name}'.")
-            return
-
-        # Normalize file dicts: ensure consistent keys for group_by_person
-        normalized = []
-        for f in files:
-            normalized.append(
+        for folder_name, files in folder_files.items():
+            normalized = [
                 {
                     "file_name": f["name"],
                     "file_id": f["id"],
@@ -174,71 +205,74 @@ class Command(BaseCommand):
                     "file_size": int(f.get("size", 0)) if f.get("size") else 0,
                     "modified_time": f.get("modifiedTime", ""),
                 }
-            )
+                for f in files
+            ]
+            if limit:
+                normalized = normalized[:limit]
 
-        # Apply limit
-        if limit:
-            normalized = normalized[:limit]
+            total_files += len(normalized)
+            groups = group_by_person(normalized)
+            folder_groups[folder_name] = groups
+            total_groups += len(groups)
 
-        stats["files_found"] += len(normalized)
+            for g in groups:
+                all_file_ids.add(g["primary"]["file_id"])
+                for other in g["others"]:
+                    all_file_ids.add(other["file_id"])
 
-        # Group by person
-        groups = group_by_person(normalized)
-        stats["groups_found"] += len(groups)
-
-        self.stdout.write(f"  Files: {len(normalized)}, Groups: {len(groups)}")
-
-        # Filter out already-imported files (idempotency)
-        all_file_ids = set()
-        for g in groups:
-            all_file_ids.add(g["primary"]["file_id"])
-            for other in g["others"]:
-                all_file_ids.add(other["file_id"])
-
+        # Single bulk DB query
         existing_ids = set(
             Resume.objects.filter(drive_file_id__in=all_file_ids).values_list(
                 "drive_file_id", flat=True
             )
         )
 
-        # Filter groups: skip if primary already imported
-        new_groups = []
-        for g in groups:
-            if g["primary"]["file_id"] in existing_ids:
-                stats["skipped_existing"] += 1
-                continue
-            new_groups.append(g)
+        # Filter new groups
+        for folder_name, groups in folder_groups.items():
+            for g in groups:
+                if g["primary"]["file_id"] in existing_ids:
+                    total_skipped += 1
+                else:
+                    g["_folder_name"] = folder_name
+                    all_new_groups.append(g)
+                    affected_folders.add(folder_name)
 
-        skipped = len(groups) - len(new_groups)
-        if skipped:
-            self.stdout.write(f"  Skipping {skipped} already-imported groups")
+        return {
+            "new_groups": all_new_groups,
+            "total_files": total_files,
+            "total_groups": total_groups,
+            "skipped": total_skipped,
+            "existing_ids": existing_ids,
+            "affected_folders": affected_folders,
+        }
 
-        if dry_run:
-            self._dry_run_report(new_groups, folder_name)
-            stats["folders_processed"] += 1
-            return
+    def _process_all(
+        self,
+        groups: list[dict],
+        workers: int,
+        existing_ids: set,
+    ) -> tuple[int, int]:
+        """Process all groups in a single thread pool. Returns (succeeded, failed)."""
+        succeeded = 0
+        failed = 0
 
-        if not new_groups:
-            self.stdout.write("  Nothing new to process.")
-            stats["folders_processed"] += 1
-            return
+        # Pre-create categories
+        folder_names = {g["_folder_name"] for g in groups}
+        categories = {}
+        for name in folder_names:
+            categories[name], _ = Category.objects.get_or_create(
+                name=name, defaults={"name_ko": ""}
+            )
 
-        # Ensure category exists
-        category, _ = Category.objects.get_or_create(
-            name=folder_name,
-            defaults={"name_ko": ""},
-        )
-
-        # Process groups in parallel (LLM calls are the bottleneck)
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = {}
-            for group in new_groups:
+            for group in groups:
+                folder_name = group["_folder_name"]
                 future = executor.submit(
                     self._process_group,
-                    service=service,
                     group=group,
                     folder_name=folder_name,
-                    category=category,
+                    category=categories[folder_name],
                     existing_ids=existing_ids,
                 )
                 futures[future] = group
@@ -246,32 +280,29 @@ class Command(BaseCommand):
             for future in as_completed(futures):
                 group = futures[future]
                 primary_name = group["primary"]["file_name"]
-                stats["processed"] += 1
+                folder_name = group["_folder_name"]
                 try:
                     result = future.result()
                     if result:
-                        stats["succeeded"] += 1
-                        self.stdout.write(self.style.SUCCESS(f"  OK: {primary_name}"))
+                        succeeded += 1
+                        self.stdout.write(
+                            self.style.SUCCESS(f"  OK: [{folder_name}] {primary_name}")
+                        )
                     else:
-                        stats["failed"] += 1
+                        failed += 1
                         self.stdout.write(
                             self.style.WARNING(
-                                f"  SKIP: {primary_name} (extraction failed)"
+                                f"  SKIP: [{folder_name}] {primary_name} (extraction failed)"
                             )
                         )
                 except Exception as e:
-                    stats["failed"] += 1
-                    self.stderr.write(f"  FAIL: {primary_name}: {e}")
+                    failed += 1
+                    self.stderr.write(f"  FAIL: [{folder_name}] {primary_name}: {e}")
 
-        # Update category candidate count
-        category.candidate_count = category.candidates.count()
-        category.save(update_fields=["candidate_count"])
-
-        stats["folders_processed"] += 1
+        return succeeded, failed
 
     def _process_group(
         self,
-        service,
         group: dict,
         folder_name: str,
         category: Category,
@@ -279,11 +310,29 @@ class Command(BaseCommand):
     ) -> bool:
         """Process a single person group: download, extract, LLM, validate, save.
 
+        Each worker creates its own Drive service (not thread-safe).
         Returns True if successful, False if skipped/failed.
         """
+        from django.db import close_old_connections
+
+        close_old_connections()
+        try:
+            return self._process_group_inner(group, folder_name, category, existing_ids)
+        finally:
+            close_old_connections()
+
+    def _process_group_inner(
+        self,
+        group: dict,
+        folder_name: str,
+        category: Category,
+        existing_ids: set,
+    ) -> bool:
         primary = group["primary"]
         others = group["others"]
         parsed = group["parsed"]
+
+        service = get_drive_service()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Step 1: Download primary file
@@ -306,20 +355,21 @@ class Command(BaseCommand):
                 category=folder_name,
                 filename_meta=parsed,
                 file_reference_date=primary.get("modified_time"),
-                use_integrity_pipeline=getattr(self, "use_integrity", False),
+                use_integrity_pipeline=self.use_integrity,
             )
 
             extracted = pipeline_result["extracted"]
             if not extracted:
-                self._save_failed_resume(
-                    primary, folder_name, "Extraction failed after retries"
+                self._save_text_only_resume(
+                    primary,
+                    folder_name,
+                    raw_text=raw_text,
+                    error_msg="Extraction failed after retries; stored raw text only",
                 )
                 return False
 
-            # Use potentially re-extracted text
             raw_text = pipeline_result["raw_text_used"]
 
-            # Fallback name from filename if LLM returned null
             if not extracted.get("name"):
                 extracted["name"] = parsed.get("name") or primary["file_name"]
 
@@ -331,7 +381,7 @@ class Command(BaseCommand):
 
                 comparison_context = build_candidate_comparison_context(extracted)
                 if (
-                    getattr(self, "use_integrity", False)
+                    self.use_integrity
                     and comparison_context
                     and comparison_context.previous_data
                 ):
@@ -363,40 +413,53 @@ class Command(BaseCommand):
         return True
 
     def _save_failed_resume(self, file_info: dict, folder_name: str, error_msg: str):
-        """Save a resume record with FAILED status for tracking."""
         from candidates.services.integrity.save import _save_failed_resume
         _save_failed_resume(file_info, folder_name, error_msg)
 
-    def _dry_run_report(self, groups: list[dict], folder_name: str):
-        """Print a dry-run report of files that would be processed."""
+    def _save_text_only_resume(
+        self, file_info: dict, folder_name: str, *, raw_text: str, error_msg: str,
+    ):
+        from candidates.services.integrity.save import _save_text_only_resume
+        _save_text_only_resume(file_info, folder_name, raw_text=raw_text, error_msg=error_msg)
+
+    def _dry_run_report(self, groups: list[dict]):
         if not groups:
             self.stdout.write("  (no new files to process)")
             return
 
-        self.stdout.write(f"  Would process {len(groups)} groups:")
+        self.stdout.write(f"\nWould process {len(groups)} groups:")
         for g in groups:
             primary = g["primary"]
             parsed = g["parsed"]
-            others_count = len(g["others"])
+            folder = g["_folder_name"]
             name = parsed.get("name") or "(unparseable)"
             birth = parsed.get("birth_year") or "?"
+            others_count = len(g["others"])
             self.stdout.write(
-                f"    {name} ({birth}) - {primary['file_name']}"
+                f"  [{folder}] {name} ({birth}) - {primary['file_name']}"
                 f"{f' + {others_count} more' if others_count else ''}"
             )
 
-    def _print_summary(self, stats: dict, elapsed: float):
-        """Print final summary statistics."""
+    def _print_summary(
+        self, work_items: dict, succeeded: int, failed: int, total_sec: float,
+        phase1_sec: float = 0, phase2_sec: float = 0,
+        phase3_sec: float = 0, phase4_sec: float = 0,
+    ):
         self.stdout.write("\n=== Import Summary ===")
-        self.stdout.write(f"Time: {elapsed:.1f}s")
-        self.stdout.write(f"Folders processed: {stats['folders_processed']}")
-        self.stdout.write(f"Files found: {stats['files_found']}")
-        self.stdout.write(f"Groups found: {stats['groups_found']}")
-        self.stdout.write(f"Skipped (existing): {stats['skipped_existing']}")
-        self.stdout.write(f"Processed: {stats['processed']}")
-        self.stdout.write(self.style.SUCCESS(f"Succeeded: {stats['succeeded']}"))
-        if stats["failed"]:
-            self.stdout.write(self.style.ERROR(f"Failed: {stats['failed']}"))
+        self.stdout.write(f"Total time: {total_sec:.1f}s")
+        self.stdout.write(
+            f"  Phase 1 (discover):   {phase1_sec:.1f}s\n"
+            f"  Phase 2 (list files): {phase2_sec:.1f}s\n"
+            f"  Phase 3 (filter):     {phase3_sec:.1f}s\n"
+            f"  Phase 4 (process):    {phase4_sec:.1f}s"
+        )
+        self.stdout.write(f"Files: {work_items['total_files']}")
+        self.stdout.write(f"Groups: {work_items['total_groups']}")
+        self.stdout.write(f"Skipped (existing): {work_items['skipped']}")
+        self.stdout.write(f"New: {len(work_items['new_groups'])}")
+        self.stdout.write(self.style.SUCCESS(f"Succeeded: {succeeded}"))
+        if failed:
+            self.stdout.write(self.style.ERROR(f"Failed: {failed}"))
         else:
-            self.stdout.write(f"Failed: {stats['failed']}")
+            self.stdout.write(f"Failed: {failed}")
         self.stdout.write("")

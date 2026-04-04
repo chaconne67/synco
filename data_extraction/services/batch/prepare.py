@@ -8,36 +8,13 @@ from data_extraction.services.batch.artifacts import raw_text_path, request_file
 from data_extraction.services.batch.request_builder import build_request_line
 from candidates.models import Resume
 from data_extraction.services.drive import (
+    discover_folders,
     download_file,
-    find_category_folder,
     get_drive_service,
     list_files_in_folder,
 )
 from data_extraction.services.filename import group_by_person
 from data_extraction.services.text import extract_text, preprocess_resume_text
-
-CATEGORY_FOLDERS: list[str] = [
-    "Accounting",
-    "EHS",
-    "Engineer",
-    "Finance",
-    "HR",
-    "Law",
-    "Logistics",
-    "Marketing",
-    "MD",
-    "MR",
-    "Plant",
-    "PR+AD",
-    "Procurement",
-    "Production",
-    "Quality",
-    "R&D",
-    "Sales",
-    "SCM",
-    "SI+IT",
-    "VMD",
-]
 
 
 def prepare_drive_job(
@@ -49,17 +26,17 @@ def prepare_drive_job(
     workers: int = 4,
 ) -> GeminiBatchJob:
     service = get_drive_service()
-    folders = [folder_name] if folder_name else list(CATEGORY_FOLDERS)
+    discovered = discover_folders(service, parent_folder_id)
+
+    if folder_name:
+        discovered = [f for f in discovered if f["name"] == folder_name]
+
     collected = []
     prepare_failures = []
 
-    for current_folder in folders:
-        folder_id = find_category_folder(service, parent_folder_id, current_folder)
-        if not folder_id:
-            prepare_failures.append(
-                {"category": current_folder, "error": "Folder not found on Drive"}
-            )
-            continue
+    for folder_info in discovered:
+        current_folder = folder_info["name"]
+        folder_id = folder_info["id"]
 
         normalized_files = _list_normalized_files(service, folder_id, limit=limit)
         groups = group_by_person(normalized_files)
@@ -147,7 +124,7 @@ def prepare_drive_job(
         "prepare_failures": prepare_failures,
         "workers": workers,
         "limit": limit,
-        "folders": folders,
+        "folders": [f["name"] for f in discovered],
     }
     job.save(
         update_fields=[

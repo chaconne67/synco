@@ -187,6 +187,15 @@ class Command(BaseCommand):
         self.stdout.write(f"  {', '.join(folder_names)}")
 
         # -- Phase 2: List files in all folders (parallel) --
+        if not folders:
+            self.stdout.write("No folders found.")
+            self._print_summary(
+                {"total_files": 0, "total_groups": 0, "skipped": 0,
+                 "new_groups": [], "existing_ids": set(), "affected_folders": set()},
+                0, 0, time.time() - start_time, phase1_sec,
+            )
+            return
+
         t0 = time.time()
         folder_files = list_all_files_parallel(folders, workers=min(len(folders), 10))
         phase2_sec = time.time() - t0
@@ -226,7 +235,9 @@ class Command(BaseCommand):
 
         # -- Phase 4: Process all new groups in parallel --
         t0 = time.time()
-        succeeded, failed = self._process_all(work_items["new_groups"], workers)
+        succeeded, failed = self._process_all(
+            work_items["new_groups"], workers, work_items["existing_ids"]
+        )
         phase4_sec = time.time() - t0
 
         self.stdout.write(
@@ -317,6 +328,7 @@ class Command(BaseCommand):
         self,
         groups: list[dict],
         workers: int,
+        existing_ids: set,
     ) -> tuple[int, int]:
         """Process all groups in a single thread pool. Returns (succeeded, failed)."""
         succeeded = 0
@@ -339,6 +351,7 @@ class Command(BaseCommand):
                     group=group,
                     folder_name=folder_name,
                     category=categories[folder_name],
+                    existing_ids=existing_ids,
                 )
                 futures[future] = group
 
@@ -371,12 +384,28 @@ class Command(BaseCommand):
         group: dict,
         folder_name: str,
         category: Category,
+        existing_ids: set,
     ) -> bool:
         """Process a single person group: download, extract, LLM, validate, save.
 
         Each worker creates its own Drive service (not thread-safe).
         Returns True if successful, False if skipped/failed.
         """
+        from django.db import close_old_connections
+
+        close_old_connections()
+        try:
+            return self._process_group_inner(group, folder_name, category, existing_ids)
+        finally:
+            close_old_connections()
+
+    def _process_group_inner(
+        self,
+        group: dict,
+        folder_name: str,
+        category: Category,
+        existing_ids: set,
+    ) -> bool:
         primary = group["primary"]
         others = group["others"]
         parsed = group["parsed"]
@@ -450,6 +479,7 @@ class Command(BaseCommand):
                 category=category,
                 primary_file=primary,
                 other_files=others,
+                existing_ids=existing_ids,
                 comparison_context=comparison_context,
             )
 
@@ -459,16 +489,16 @@ class Command(BaseCommand):
         return True
 
     def _save_failed_resume(self, file_info: dict, folder_name: str, error_msg: str):
-        from data_extraction.services.save import _save_failed_resume
+        from data_extraction.services.save import save_failed_resume
 
-        _save_failed_resume(file_info, folder_name, error_msg)
+        save_failed_resume(file_info, folder_name, error_msg)
 
     def _save_text_only_resume(
         self, file_info: dict, folder_name: str, *, raw_text: str, error_msg: str,
     ):
-        from data_extraction.services.save import _save_text_only_resume
+        from data_extraction.services.save import save_text_only_resume
 
-        _save_text_only_resume(file_info, folder_name, raw_text=raw_text, error_msg=error_msg)
+        save_text_only_resume(file_info, folder_name, raw_text=raw_text, error_msg=error_msg)
 
     def _dry_run_report(self, groups: list[dict]):
         if not groups:

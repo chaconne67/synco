@@ -71,14 +71,14 @@ def save_pipeline_result(
     extracted = pipeline_result.get("extracted")
     if not extracted:
         if raw_text and raw_text.strip():
-            _save_text_only_resume(
+            save_text_only_resume(
                 primary_file,
                 category.name,
                 raw_text=raw_text,
                 error_msg="Structured extraction unavailable; stored raw text only",
             )
         else:
-            _save_failed_resume(primary_file, category.name, "Extraction failed")
+            save_failed_resume(primary_file, category.name, "Extraction failed")
         return None
 
     diagnosis = pipeline_result["diagnosis"]
@@ -103,19 +103,18 @@ def save_pipeline_result(
     other_files = other_files or []
     existing_ids = existing_ids or set()
 
-    from candidates.services.candidate_identity import build_candidate_comparison_context
-
-    comparison_context = comparison_context or build_candidate_comparison_context(extracted)
-    matched_candidate = comparison_context.candidate if comparison_context else None
-    compared_resume = comparison_context.compared_resume if comparison_context else None
-
-    if matched_candidate:
-        logger.info(
-            "Matched existing candidate %s via %s",
-            matched_candidate.id, comparison_context.match_reason,
-        )
-
     with transaction.atomic():
+        from candidates.services.candidate_identity import build_candidate_comparison_context
+
+        comparison_context = comparison_context or build_candidate_comparison_context(extracted)
+        matched_candidate = comparison_context.candidate if comparison_context else None
+        compared_resume = comparison_context.compared_resume if comparison_context else None
+
+        if matched_candidate:
+            logger.info(
+                "Matched existing candidate %s via %s",
+                matched_candidate.id, comparison_context.match_reason,
+            )
         if matched_candidate:
             candidate = _update_candidate(
                 matched_candidate, extracted, raw_text, validation, category, primary_file,
@@ -255,7 +254,7 @@ def _convert_flags_to_alerts(flags: list[dict]) -> list[dict]:
     return alerts
 
 
-def _save_failed_resume(file_info: dict, folder_name: str, error_msg: str):
+def save_failed_resume(file_info: dict, folder_name: str, error_msg: str):
     Resume.objects.create(
         file_name=file_info["file_name"],
         drive_file_id=file_info["file_id"],
@@ -267,7 +266,7 @@ def _save_failed_resume(file_info: dict, folder_name: str, error_msg: str):
     )
 
 
-def _save_text_only_resume(
+def save_text_only_resume(
     file_info: dict,
     folder_name: str,
     *,
