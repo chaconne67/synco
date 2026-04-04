@@ -21,6 +21,7 @@ FILTER_SPEC_TEMPLATE = {
     "certification_keywords": [],
     "language_keywords": [],
     "position_keywords": [],
+    "skill_keywords": [],
     "keyword": None,
     "gender": None,
     "min_experience_years": None,
@@ -41,6 +42,7 @@ FILTER_SCHEMA_TEMPLATE = """
   "certification_keywords": ["string"],
   "language_keywords": ["string"],
   "position_keywords": ["string"],
+  "skill_keywords": ["string"],
   "keyword": "string | null",
   "gender": "string | null",
   "min_experience_years": "integer | null",
@@ -56,6 +58,7 @@ FILTER_SCHEMA_TEMPLATE = """
 - degree 상위값: {degree_values}
 - position 상위값: {position_values}
 - language 상위값: {language_values}
+- skill_keywords: 기술 스택 키워드 (영문 공식명으로 변환). 예: 사용자가 '파이썬'이라고 하면 'Python'으로 변환
 """
 
 
@@ -126,6 +129,7 @@ _SEARCH_SYSTEM_PROMPT_TEMPLATE = """당신은 헤드헌팅 후보자 검색 필�
     "certification_keywords": [],
     "language_keywords": [],
     "position_keywords": [],
+    "skill_keywords": [],
     "keyword": null,
     "gender": null,
     "min_experience_years": null,
@@ -238,6 +242,14 @@ def normalize_filter_spec(filters: dict | None) -> dict:
     normalized["position_keywords"] = _clean_text_list(
         filters.get("position_keywords")
     )
+    if "skill_keywords" in filters:
+        val = filters["skill_keywords"]
+        if isinstance(val, str):
+            normalized["skill_keywords"] = [val]
+        elif isinstance(val, list):
+            normalized["skill_keywords"] = _clean_text_list(val)
+        else:
+            normalized["skill_keywords"] = []
     normalized["min_experience_years"] = _clean_int(
         filters.get("min_experience_years")
     )
@@ -352,6 +364,11 @@ def build_search_queryset(filters: dict | None) -> QuerySet:
         normalized["position_keywords"],
     )
 
+    skill_keywords = normalized.get("skill_keywords") or []
+    if skill_keywords:
+        for kw in skill_keywords:
+            qs = qs.filter(skills__contains=[kw])
+
     if normalized["keyword"]:
         kw = normalized["keyword"]
         qs = qs.filter(
@@ -367,6 +384,7 @@ def build_search_queryset(filters: dict | None) -> QuerySet:
             | Q(educations__institution__icontains=kw)
             | Q(educations__major__icontains=kw)
             | Q(certifications__name__icontains=kw)
+            | Q(skills__icontains=kw)
         )
 
     return qs.distinct().order_by("-updated_at")
