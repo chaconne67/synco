@@ -143,6 +143,19 @@ def review_detail(request, pk):
     fc = field_scores
     live_score, _ = compute_overall_confidence(category_scores, [])
 
+    # New model fields context (same as candidate_detail)
+    extra_context = {
+        "salary_detail": candidate.salary_detail or {},
+        "military_service": candidate.military_service or {},
+        "awards_data": candidate.awards or [],
+        "self_introduction": candidate.self_introduction or "",
+        "family_info": candidate.family_info or {},
+        "overseas_experience": candidate.overseas_experience or [],
+        "trainings_data": candidate.trainings or [],
+        "patents_data": candidate.patents or [],
+        "projects_data": candidate.projects or [],
+    }
+
     template = (
         "candidates/partials/review_detail_content.html"
         if request.htmx
@@ -162,6 +175,7 @@ def review_detail(request, pk):
             "fc": fc,
             "category_scores": category_scores,
             "live_score": live_score,
+            **extra_context,
         },
     )
 

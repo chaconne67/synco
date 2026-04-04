@@ -25,6 +25,9 @@ _FIELD_LABELS = {
     "summary": "요약",
     "careers": "경력사항",
     "educations": "학력사항",
+    "skills": "기술 스택",
+    "certifications": "자격증",
+    "language_skills": "어학",
 }
 
 
