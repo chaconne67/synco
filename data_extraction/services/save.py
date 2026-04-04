@@ -295,14 +295,9 @@ def _update_candidate(
 ) -> Candidate:
     """Update an existing Candidate with new extraction data."""
     from candidates.services.detail_normalizers import (
-        normalize_awards,
         normalize_family,
         normalize_military,
-        normalize_overseas,
-        normalize_patents,
-        normalize_projects,
         normalize_self_intro,
-        normalize_trainings,
     )
     from candidates.services.salary_parser import normalize_salary
 
@@ -356,9 +351,6 @@ def _update_candidate(
     candidate.military_service = (
         normalize_military(military) if military else candidate.military_service
     )
-    candidate.awards = normalize_awards(
-        extracted.get("awards") or extracted.get("honors") or []
-    ) or candidate.awards
     candidate.self_introduction = normalize_self_intro(
         extracted.get("self_introduction")
         or extracted.get("personal_statement")
@@ -372,28 +364,20 @@ def _update_candidate(
         or extracted.get("marital_status")
         or {}
     ) or candidate.family_info
-    candidate.overseas_experience = normalize_overseas(
-        extracted.get("overseas_experience")
-        or extracted.get("international_experience")
-        or extracted.get("residence_abroad")
-        or []
-    ) or candidate.overseas_experience
-    candidate.trainings = normalize_trainings(
-        extracted.get("trainings")
-        or extracted.get("training_courses")
-        or extracted.get("training_programs")
-        or extracted.get("education_history")
-        or []
-    ) or candidate.trainings
-    candidate.patents = normalize_patents(
-        extracted.get("patents_registered")
-        or extracted.get("patents_applications")
-        or extracted.get("patents")
-        or []
-    ) or candidate.patents
-    candidate.projects = normalize_projects(
-        extracted.get("projects") or []
-    ) or candidate.projects
+
+    # New extraction fields
+    candidate.skills = extracted.get("skills", [])
+    candidate.personal_etc = extracted.get("personal_etc", [])
+    candidate.education_etc = extracted.get("education_etc", [])
+    candidate.career_etc = extracted.get("career_etc", [])
+    candidate.skills_etc = extracted.get("skills_etc", [])
+
+    # Legacy JSONFields cleared — data now lives in *_etc fields
+    candidate.awards = []        # now in skills_etc
+    candidate.patents = []       # now in skills_etc
+    candidate.projects = []      # now in career_etc
+    candidate.trainings = []     # now in education_etc
+    candidate.overseas_experience = []  # now in career_etc
 
     # Don't save here — caller sets current_resume then saves once
     return candidate
@@ -420,14 +404,9 @@ def _create_candidate(
     primary_file: dict | None = None,
 ) -> Candidate:
     from candidates.services.detail_normalizers import (
-        normalize_awards,
         normalize_family,
         normalize_military,
-        normalize_overseas,
-        normalize_patents,
-        normalize_projects,
         normalize_self_intro,
-        normalize_trainings,
     )
     from candidates.services.salary_parser import normalize_salary
 
@@ -474,9 +453,6 @@ def _create_candidate(
         desired_salary=salary_result["desired_salary_int"],
         salary_detail=salary_result["salary_detail"],
         military_service=normalize_military(military) if military else {},
-        awards=normalize_awards(
-            extracted.get("awards") or extracted.get("honors") or []
-        ),
         self_introduction=normalize_self_intro(
             extracted.get("self_introduction")
             or extracted.get("personal_statement")
@@ -490,26 +466,18 @@ def _create_candidate(
             or extracted.get("marital_status")
             or {}
         ),
-        overseas_experience=normalize_overseas(
-            extracted.get("overseas_experience")
-            or extracted.get("international_experience")
-            or extracted.get("residence_abroad")
-            or []
-        ),
-        trainings=normalize_trainings(
-            extracted.get("trainings")
-            or extracted.get("training_courses")
-            or extracted.get("training_programs")
-            or extracted.get("education_history")
-            or []
-        ),
-        patents=normalize_patents(
-            extracted.get("patents_registered")
-            or extracted.get("patents_applications")
-            or extracted.get("patents")
-            or []
-        ),
-        projects=normalize_projects(extracted.get("projects") or []),
+        # New extraction fields
+        skills=extracted.get("skills", []),
+        personal_etc=extracted.get("personal_etc", []),
+        education_etc=extracted.get("education_etc", []),
+        career_etc=extracted.get("career_etc", []),
+        skills_etc=extracted.get("skills_etc", []),
+        # Legacy JSONFields cleared — data now lives in *_etc fields
+        awards=[],             # now in skills_etc
+        patents=[],            # now in skills_etc
+        projects=[],           # now in career_etc
+        trainings=[],          # now in education_etc
+        overseas_experience=[],  # now in career_etc
     )
 
 
