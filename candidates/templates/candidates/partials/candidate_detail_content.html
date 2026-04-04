@@ -48,9 +48,14 @@
   </section>
   {% endif %}
 
+  {# ═══════════════════════════════════════════════════════ #}
+  {# 1. 인적사항                                             #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">인적사항</h2>
+
   <!-- Basic info -->
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">기본 정보</h2>
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">기본 정보</h3>
     <div class="space-y-2 text-[15px] md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 md:space-y-0">
 
       {% if candidate.birth_year %}
@@ -111,7 +116,7 @@
   <!-- Salary info -->
   {% if candidate.current_salary or candidate.desired_salary or salary_detail %}
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">연봉 정보</h2>
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">연봉 정보</h3>
     <div class="space-y-2 text-[15px]">
       {% if candidate.current_salary %}
       <p><span class="text-gray-500">현재 연봉:</span>
@@ -145,10 +150,122 @@
   </section>
   {% endif %}
 
+  <!-- Military service -->
+  {% if military_service %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+      병역
+      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
+    </h3>
+    <div class="space-y-2 text-[15px] md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 md:space-y-0">
+      {% if military_service.branch %}<p><span class="text-gray-500">구분:</span> {{ military_service.branch }}</p>{% endif %}
+      {% if military_service.rank %}<p><span class="text-gray-500">계급:</span> {{ military_service.rank }}</p>{% endif %}
+      {% if military_service.unit %}<p><span class="text-gray-500">부대:</span> {{ military_service.unit }}</p>{% endif %}
+      {% if military_service.status %}<p><span class="text-gray-500">상태:</span> {{ military_service.status }}</p>{% endif %}
+      {% if military_service.start_date or military_service.end_date %}
+      <p><span class="text-gray-500">복무:</span> {{ military_service.start_date }}{% if military_service.end_date %} ~ {{ military_service.end_date }}{% endif %}</p>
+      {% endif %}
+      {% if military_service.note %}<p><span class="text-gray-500">비고:</span> {{ military_service.note }}</p>{% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Personal etc -->
+  {% if candidate.personal_etc %}
+  <details class="mt-3 mb-3">
+    <summary class="text-[13px] text-gray-500 cursor-pointer">기타 정보</summary>
+    <div class="mt-2 space-y-2">
+      {% for item in candidate.personal_etc %}
+      <div class="text-[13px] text-gray-600">
+        <span class="font-medium text-gray-500">{{ item.type }}:</span> {{ item.description }}
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# 2. 학력                                                 #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">학력</h2>
+
+  <!-- Education -->
+  {% if educations %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">학력 목록</h3>
+    <div class="space-y-2">
+      {% for edu in educations %}
+      <div class="{% if not forloop.last %}mb-2{% endif %}">
+        <div class="text-[15px]">
+          <span class="font-medium text-gray-900">{{ edu.institution }}</span>
+          {% if edu.is_abroad %}
+          <span class="text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full ml-1">해외</span>
+          {% endif %}
+          {% if edu.degree %}<span class="text-gray-500"> · {{ edu.degree }}</span>{% endif %}
+          {% if edu.major %}<span class="text-gray-500"> · {{ edu.major }}</span>{% endif %}
+          {% if edu.end_year %}<span class="text-gray-500 ml-1">{{ edu.end_year }}</span>{% endif %}
+        </div>
+        {% if edu.gpa %}
+        <p class="text-[13px] text-gray-500 mt-0.5 ml-0.5">GPA {{ edu.gpa }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% if fc.educations is not None and fc.educations < 0.9 %}
+      <p class="text-[11px] text-gray-500 mt-1">* 일부 학력이 누락되었을 수 있음</p>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Trainings -->
+  {% if trainings_data %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+      교육 / 훈련
+      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
+    </h3>
+    <div class="space-y-2">
+      {% for item in trainings_data %}
+      <div class="text-[15px]">
+        <span class="font-medium text-gray-900">{{ item.name }}</span>
+        {% if item.institution %}
+        <span class="text-gray-500"> · {{ item.institution }}</span>
+        {% endif %}
+        {% if item.date %}
+        <span class="text-gray-500 text-sm ml-1">{{ item.date }}</span>
+        {% endif %}
+        {% if item.duration %}
+        <span class="text-gray-500 text-sm ml-1">({{ item.duration }})</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Education etc -->
+  {% if candidate.education_etc %}
+  <details class="mt-3 mb-3">
+    <summary class="text-[13px] text-gray-500 cursor-pointer">기타 정보</summary>
+    <div class="mt-2 space-y-2">
+      {% for item in candidate.education_etc %}
+      <div class="text-[13px] text-gray-600">
+        <span class="font-medium text-gray-500">{{ item.type }}:</span> {{ item.description }}
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# 3. 경력                                                 #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">경력</h2>
+
   <!-- Career timeline -->
   {% if careers %}
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">경력</h2>
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">경력 목록</h3>
     <div class="space-y-0">
       {% for career in careers %}
       <div class="flex gap-4 {% if not forloop.last %}border-b border-gray-100{% endif %} py-4 {% if forloop.first %}pt-0{% endif %}">
@@ -204,44 +321,88 @@
   </section>
   {% endif %}
 
-  <!-- Education -->
-  {% if educations %}
+  <!-- Projects -->
+  {% if projects_data %}
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">학력</h2>
-    <div class="space-y-2">
-      {% for edu in educations %}
-      <div class="{% if not forloop.last %}mb-2{% endif %}">
-        <div class="text-[15px]">
-          <span class="font-medium text-gray-900">{{ edu.institution }}</span>
-          {% if edu.is_abroad %}
-          <span class="text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full ml-1">해외</span>
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+      프로젝트
+      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
+    </h3>
+    <div class="space-y-3">
+      {% for project in projects_data %}
+      <div class="bg-gray-50 rounded-md p-3">
+        <div class="flex items-start justify-between">
+          <span class="text-[15px] font-semibold text-gray-900">{{ project.name }}</span>
+          {% if project.role %}
+          <span class="text-[13px] text-primary bg-primary-light px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{{ project.role }}</span>
           {% endif %}
-          {% if edu.degree %}<span class="text-gray-500"> · {{ edu.degree }}</span>{% endif %}
-          {% if edu.major %}<span class="text-gray-500"> · {{ edu.major }}</span>{% endif %}
-          {% if edu.end_year %}<span class="text-gray-500 ml-1">{{ edu.end_year }}</span>{% endif %}
         </div>
-        {% if edu.gpa %}
-        <p class="text-[13px] text-gray-500 mt-0.5 ml-0.5">GPA {{ edu.gpa }}</p>
+        <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+          {% if project.start_date or project.end_date %}
+          <span>{{ project.start_date }}{% if project.end_date %} ~ {{ project.end_date }}{% endif %}</span>
+          {% endif %}
+          {% if project.budget %}
+          <span>예산 {{ project.budget }}</span>
+          {% endif %}
+        </div>
+        {% if project.description %}
+        <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ project.description }}</p>
         {% endif %}
       </div>
       {% endfor %}
-      {% if fc.educations is not None and fc.educations < 0.9 %}
-      <p class="text-[11px] text-gray-500 mt-1">* 일부 학력이 누락되었을 수 있음</p>
-      {% endif %}
     </div>
   </section>
   {% endif %}
 
-  <!-- Certifications + Language -->
-  {% if certifications or language_skills %}
+  <!-- Career etc -->
+  {% if candidate.career_etc %}
+  <details class="mt-3 mb-3">
+    <summary class="text-[13px] text-gray-500 cursor-pointer">프로젝트 및 기타</summary>
+    <div class="mt-2 space-y-3">
+      {% for item in candidate.career_etc %}
+      <div class="border-l-2 border-gray-200 pl-3">
+        <div class="text-[14px] font-medium text-gray-700">{{ item.name|default:item.type }}</div>
+        {% if item.company %}<div class="text-[13px] text-gray-500">{{ item.company }}</div>{% endif %}
+        {% if item.role %}<div class="text-[13px] text-gray-500">{{ item.role }}</div>{% endif %}
+        {% if item.start_date %}<div class="text-[13px] text-gray-400">{{ item.start_date }} ~ {{ item.end_date }}</div>{% endif %}
+        {% if item.technologies %}
+        <div class="flex flex-wrap gap-1 mt-1">
+          {% for tech in item.technologies %}
+          <span class="text-[11px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{{ tech }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if item.description %}<div class="text-[13px] text-gray-600 mt-1">{{ item.description }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# 4. 능력                                                 #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3 mt-6">능력</h2>
+
+  <!-- Skills tag cloud -->
+  {% if candidate.skills %}
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">자격증 · 어학</h2>
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">기술 스택</h3>
+    <div class="flex flex-wrap gap-1.5">
+      {% for skill in candidate.skills %}
+      <span class="text-[13px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">{{ skill }}</span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Certifications -->
+  {% if certifications %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">자격증</h3>
     <div class="flex flex-wrap gap-2">
       {% for cert in certifications %}
       <span class="text-[15px] bg-gray-100 text-gray-700 px-2 py-1 rounded">{{ cert.name }}{% if cert.acquired_date %} ({{ cert.acquired_date }}){% endif %}</span>
-      {% endfor %}
-      {% for lang in language_skills %}
-      <span class="text-[15px] bg-primary-light text-primary px-2 py-1 rounded">{{ lang.language }}{% if lang.test_name %} {{ lang.test_name }}{% endif %}{% if lang.score %} {{ lang.score }}{% endif %}{% if lang.level %} · {{ lang.level }}{% endif %}</span>
       {% endfor %}
     </div>
     {% if fc.certifications is not None and fc.certifications < 0.9 %}
@@ -250,13 +411,25 @@
   </section>
   {% endif %}
 
+  <!-- Language skills -->
+  {% if language_skills %}
+  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">어학</h3>
+    <div class="flex flex-wrap gap-2">
+      {% for lang in language_skills %}
+      <span class="text-[15px] bg-primary-light text-primary px-2 py-1 rounded">{{ lang.language }}{% if lang.test_name %} {{ lang.test_name }}{% endif %}{% if lang.score %} {{ lang.score }}{% endif %}{% if lang.level %} · {{ lang.level }}{% endif %}</span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   <!-- Awards -->
   {% if awards_data %}
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
       수상
       <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
-    </h2>
+    </h3>
     <div class="space-y-2">
       {% for award in awards_data %}
       {% if award.name or award.project %}
@@ -290,10 +463,10 @@
   <!-- Patents -->
   {% if patents_data %}
   <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
       특허
       <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
-    </h2>
+    </h3>
     <div class="space-y-2">
       {% for patent in patents_data %}
       <div class="text-[15px]">
@@ -318,64 +491,23 @@
   </section>
   {% endif %}
 
-  <!-- Projects -->
-  {% if projects_data %}
-  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
-      프로젝트
-      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
-    </h2>
-    <div class="space-y-3">
-      {% for project in projects_data %}
-      <div class="bg-gray-50 rounded-md p-3">
-        <div class="flex items-start justify-between">
-          <span class="text-[15px] font-semibold text-gray-900">{{ project.name }}</span>
-          {% if project.role %}
-          <span class="text-[13px] text-primary bg-primary-light px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{{ project.role }}</span>
-          {% endif %}
-        </div>
-        <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
-          {% if project.start_date or project.end_date %}
-          <span>{{ project.start_date }}{% if project.end_date %} ~ {{ project.end_date }}{% endif %}</span>
-          {% endif %}
-          {% if project.budget %}
-          <span>예산 {{ project.budget }}</span>
-          {% endif %}
-        </div>
-        {% if project.description %}
-        <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ project.description }}</p>
-        {% endif %}
+  <!-- Skills etc -->
+  {% if candidate.skills_etc %}
+  <details class="mt-3 mb-3">
+    <summary class="text-[13px] text-gray-500 cursor-pointer">기타 정보</summary>
+    <div class="mt-2 space-y-2">
+      {% for item in candidate.skills_etc %}
+      <div class="text-[13px] text-gray-600">
+        <span class="font-medium text-gray-500">{{ item.type }}:</span> {{ item.description }}
       </div>
       {% endfor %}
     </div>
-  </section>
+  </details>
   {% endif %}
 
-  <!-- Trainings -->
-  {% if trainings_data %}
-  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
-      교육 / 훈련
-      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
-    </h2>
-    <div class="space-y-2">
-      {% for item in trainings_data %}
-      <div class="text-[15px]">
-        <span class="font-medium text-gray-900">{{ item.name }}</span>
-        {% if item.institution %}
-        <span class="text-gray-500"> · {{ item.institution }}</span>
-        {% endif %}
-        {% if item.date %}
-        <span class="text-gray-500 text-sm ml-1">{{ item.date }}</span>
-        {% endif %}
-        {% if item.duration %}
-        <span class="text-gray-500 text-sm ml-1">({{ item.duration }})</span>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
+  {# ═══════════════════════════════════════════════════════ #}
+  {# 기타 섹션 (카테고리 외)                                    #}
+  {# ═══════════════════════════════════════════════════════ #}
 
   <!-- Overseas experience -->
   {% if overseas_experience %}
@@ -406,26 +538,6 @@
         </div>
       </div>
       {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- Military service -->
-  {% if military_service %}
-  <section class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
-      병역
-      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
-    </h2>
-    <div class="space-y-2 text-[15px] md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 md:space-y-0">
-      {% if military_service.branch %}<p><span class="text-gray-500">구분:</span> {{ military_service.branch }}</p>{% endif %}
-      {% if military_service.rank %}<p><span class="text-gray-500">계급:</span> {{ military_service.rank }}</p>{% endif %}
-      {% if military_service.unit %}<p><span class="text-gray-500">부대:</span> {{ military_service.unit }}</p>{% endif %}
-      {% if military_service.status %}<p><span class="text-gray-500">상태:</span> {{ military_service.status }}</p>{% endif %}
-      {% if military_service.start_date or military_service.end_date %}
-      <p><span class="text-gray-500">복무:</span> {{ military_service.start_date }}{% if military_service.end_date %} ~ {{ military_service.end_date }}{% endif %}</p>
-      {% endif %}
-      {% if military_service.note %}<p><span class="text-gray-500">비고:</span> {{ military_service.note }}</p>{% endif %}
     </div>
   </section>
   {% endif %}
