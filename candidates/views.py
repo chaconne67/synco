@@ -120,6 +120,29 @@ def review_detail(request, pk):
     language_skills = candidate.language_skills.all()
     logs = candidate.extraction_logs.all()[:10]
 
+    # Compute field confidences (same as candidate_detail)
+    from candidates.services.validation import compute_field_confidences, compute_overall_confidence
+
+    extracted_snapshot = {
+        "name": candidate.name,
+        "birth_year": candidate.birth_year,
+        "email": candidate.email,
+        "phone": candidate.phone,
+        "address": candidate.address,
+        "current_company": candidate.current_company,
+        "current_position": candidate.current_position,
+        "total_experience_years": candidate.total_experience_years,
+        "summary": candidate.summary,
+        "careers": [{"start_date": c.start_date} for c in careers],
+        "educations": [{"institution": e.institution} for e in educations],
+        "skills": candidate.skills or [],
+        "certifications": [{"name": c.name} for c in certifications],
+        "language_skills": [{"language": l.language} for l in language_skills],
+    }
+    field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
+    fc = field_scores
+    live_score, _ = compute_overall_confidence(category_scores, [])
+
     template = (
         "candidates/partials/review_detail_content.html"
         if request.htmx
@@ -136,6 +159,9 @@ def review_detail(request, pk):
             "certifications": certifications,
             "language_skills": language_skills,
             "logs": logs,
+            "fc": fc,
+            "category_scores": category_scores,
+            "live_score": live_score,
         },
     )
 
@@ -339,6 +365,9 @@ def candidate_detail(request, pk):
         "summary": candidate.summary,
         "careers": [{"start_date": c.start_date} for c in careers],
         "educations": [{"institution": e.institution} for e in educations],
+        "skills": candidate.skills or [],
+        "certifications": [{"name": c.name} for c in certifications],
+        "language_skills": [{"language": l.language} for l in language_skills],
     }
     field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
     fc = field_scores

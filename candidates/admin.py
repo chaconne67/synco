@@ -61,6 +61,13 @@ class CandidateAdmin(admin.ModelAdmin):
     ]
     list_filter = ["status", "validation_status", "source"]
     search_fields = ["name", "name_en", "current_company", "email", "phone", "phone_normalized"]
+    readonly_fields = [
+        "skills",
+        "personal_etc",
+        "education_etc",
+        "career_etc",
+        "skills_etc",
+    ]
     inlines = [
         ResumeInline,
         CareerInline,
