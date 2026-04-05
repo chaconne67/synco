@@ -367,7 +367,10 @@ def build_search_queryset(filters: dict | None) -> QuerySet:
     skill_keywords = normalized.get("skill_keywords") or []
     if skill_keywords:
         for kw in skill_keywords:
-            qs = qs.filter(skills__contains=[kw])
+            qs = qs.filter(
+                Q(skills__contains=[kw])
+                | Q(skills__contains=[{"name": kw}])
+            )
 
     if normalized["keyword"]:
         kw = normalized["keyword"]
