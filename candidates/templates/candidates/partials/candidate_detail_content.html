@@ -28,6 +28,25 @@
 
   {% include "candidates/partials/_review_notice_section.html" with candidate=candidate %}
 
+  {% if primary_resume and primary_resume.error_message %}
+  <div class="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-3">
+    <div class="flex items-start gap-2">
+      <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+      </svg>
+      <div>
+        <p class="text-sm font-medium text-red-800">데이터 추출 실패</p>
+        <p class="text-[12px] text-red-600 mt-0.5">{{ primary_resume.error_message }}</p>
+        {% if primary_resume.drive_file_id %}
+        <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view"
+           target="_blank" rel="noopener"
+           class="text-[12px] text-red-700 underline mt-1 inline-block">원본 파일에서 직접 확인하기</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Career summary + Core competencies -->
   {% if candidate.summary or candidate.core_competencies %}
   <section class="bg-white rounded-lg border border-gray-200 mb-3">
@@ -366,7 +385,21 @@
       <h3 class="text-[13px] font-medium text-gray-400 mb-2">기술 스택</h3>
       <div class="flex flex-wrap gap-1.5">
         {% for skill in candidate.skills %}
-        <span class="text-[13px] font-medium text-primary bg-primary-light px-2.5 py-1 rounded-full">{{ skill }}</span>
+        {% with desc=skill|skill_description name=skill|skill_name %}
+        {% if desc %}
+        <span class="relative group cursor-help">
+          <span class="text-[13px] font-medium text-primary bg-primary-light px-2.5 py-1 rounded-full
+                       border border-transparent group-hover:border-primary/30 transition">{{ name }}</span>
+          <span class="invisible group-hover:visible opacity-0 group-hover:opacity-100
+                       absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5
+                       bg-gray-800 text-white text-[12px] rounded-lg px-2.5 py-1.5
+                       whitespace-nowrap shadow-lg transition-all duration-150 z-10
+                       pointer-events-none">{{ desc }}</span>
+        </span>
+        {% else %}
+        <span class="text-[13px] font-medium text-primary bg-primary-light px-2.5 py-1 rounded-full">{{ name }}</span>
+        {% endif %}
+        {% endwith %}
         {% endfor %}
       </div>
     </div>
@@ -561,14 +594,17 @@
   {% if candidate.validation_status == "needs_review" or candidate.validation_status == "failed" %}
   {% if primary_resume and primary_resume.raw_text %}
   <section class="bg-white rounded-lg border border-amber-200 mb-3">
-    <details>
-      <summary class="py-2 flex items-center gap-2 cursor-pointer select-none">
-        <h2 class="text-sm font-medium text-amber-700 uppercase tracking-wider">원본 텍스트</h2>
-        <span class="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">수동 검토 필요</span>
+    <details class="group">
+      <summary class="px-4 py-3 flex items-center gap-2 cursor-pointer select-none hover:bg-amber-50 transition rounded-lg list-none [&::-webkit-details-marker]:hidden">
+        <svg class="w-4 h-4 text-amber-600 transition-transform group-open:rotate-90 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <h2 class="text-sm font-medium text-amber-700">이력서 원본 텍스트</h2>
+        <span class="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">펼쳐서 확인</span>
       </summary>
-      <div class="mt-3 pt-3 border-t border-amber-100">
+      <div class="mt-3 pt-3 border-t border-amber-100 px-4">
         <p class="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-3">
-          AI 추출이 불완전할 수 있습니다. 원본 텍스트를 직접 확인해 주세요.
+          이력서 원본 내용을 확인하세요.
         </p>
         <pre class="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto bg-gray-50 rounded p-3">{{ primary_resume.raw_text }}</pre>
       </div>

@@ -37,6 +37,22 @@ def field_label_ko(value: str) -> str:
 
 
 @register.filter
+def skill_name(skill):
+    """Extract skill name from either string or dict format."""
+    if isinstance(skill, dict):
+        return skill.get("name", "")
+    return str(skill)
+
+
+@register.filter
+def skill_description(skill):
+    """Extract skill description from dict format. Returns empty string if none."""
+    if isinstance(skill, dict):
+        return skill.get("description") or ""
+    return ""
+
+
+@register.filter
 def highlight_notice_metrics(value: str) -> str:
     if not value:
         return ""
