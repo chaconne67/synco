@@ -177,7 +177,10 @@ def apply_cross_version_comparison(
     if not extracted or not previous_data:
         return pipeline_result
 
-    from data_extraction.services.extraction.integrity import compare_versions
+    from data_extraction.services.extraction.integrity import (
+        check_birth_year_consistency,
+        compare_versions,
+    )
 
     cross_version_flags = compare_versions(
         {
@@ -186,6 +189,14 @@ def apply_cross_version_comparison(
         },
         previous_data,
     )
+
+    # Birth year consistency check
+    birth_flags = check_birth_year_consistency(
+        extracted.get("birth_year"),
+        previous_data.get("birth_year"),
+    )
+    cross_version_flags.extend(birth_flags)
+
     if not cross_version_flags:
         return pipeline_result
 

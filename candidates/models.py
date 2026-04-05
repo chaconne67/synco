@@ -1,5 +1,6 @@
 import re
 
+from django.conf import settings
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils import timezone
@@ -179,6 +180,12 @@ class Candidate(BaseModel):
         CONFIRMED = "confirmed", "확인 완료"
         FAILED = "failed", "실패"
 
+    class RecommendationStatus(models.TextChoices):
+        PENDING = "pending", "미결정"
+        RECOMMENDED = "recommended", "추천"
+        NOT_RECOMMENDED = "not_recommended", "비추천"
+        ON_HOLD = "on_hold", "보류"
+
     class ResumeReferenceDateSource(models.TextChoices):
         DOCUMENT_TEXT = "document_text", "문서 표기"
         FILE_MODIFIED_TIME = "file_modified_time", "파일 수정일"
@@ -318,6 +325,15 @@ class Candidate(BaseModel):
         choices=ValidationStatus.choices,
         default=ValidationStatus.NEEDS_REVIEW,
     )
+
+    # Recommendation (headhunter manual judgment)
+    recommendation_status = models.CharField(
+        max_length=20,
+        choices=RecommendationStatus.choices,
+        default=RecommendationStatus.PENDING,
+        db_index=True,
+    )
+
     raw_extracted_json = models.JSONField(default=dict, blank=True)
     confidence_score = models.FloatField(null=True, blank=True)
     field_confidences = models.JSONField(default=dict, blank=True)
@@ -1326,3 +1342,76 @@ class ValidationDiagnosis(BaseModel):
 
     def __str__(self):
         return f"Attempt {self.attempt_number}: {self.verdict} ({self.overall_score})"
+
+
+REASON_CODES = {
+    # 학력
+    "edu_undergrad_missing": "학부 미기재 (대학원만 기재)",
+    "edu_campus_suspicious": "캠퍼스 미기재 또는 의심",
+    "edu_admission_year_missing": "입학년도 미기재 (편입 의심)",
+    "edu_non_degree_program": "비정규 과정 (전산원 등)",
+    # 경력
+    "career_deleted": "경력 삭제 의심",
+    "career_consolidated": "경력 통합 의심",
+    "career_content_mismatch": "업무 내용 불일치 (면접 확인)",
+    "career_gap_suspicious": "경력 공백 의심",
+    # 신상
+    "birth_year_mismatch": "출생연도 불일치",
+    # 기타
+    "other": "기타",
+}
+
+
+class CandidateComment(BaseModel):
+    """후보자 검수 코멘트. 판정 변경 이력 포함."""
+
+    class InputMethod(models.TextChoices):
+        TEXT = "text", "텍스트"
+        VOICE = "voice", "음성"
+
+    candidate = models.ForeignKey(
+        Candidate,
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="candidate_comments",
+    )
+
+    # Recommendation snapshot at the time of this comment
+    recommendation_status = models.CharField(
+        max_length=20,
+        choices=Candidate.RecommendationStatus.choices,
+    )
+
+    # Reason codes (multiple selection)
+    reason_codes = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='["edu_undergrad_missing", "career_deleted", ...]',
+    )
+
+    # Free text
+    content = models.TextField(blank=True)
+
+    # Input method
+    input_method = models.CharField(
+        max_length=10,
+        choices=InputMethod.choices,
+        default=InputMethod.TEXT,
+    )
+
+    class Meta:
+        db_table = "candidate_comments"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        status = self.get_recommendation_status_display()
+        return f"{self.candidate.name} - {status} ({self.created_at:%Y-%m-%d})"
+
+    @property
+    def reason_labels(self) -> list[str]:
+        return [REASON_CODES.get(code, code) for code in self.reason_codes]

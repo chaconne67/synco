@@ -24,6 +24,47 @@
     </button>
     {% endfor %}
   </div>
+
+  <!-- Recommendation status filter -->
+  <div class="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+    {% with rec=rec_status_filter %}
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}"
+      hx-target="#main-content" hx-push-url="true"
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+        {% if not rec %}bg-gray-700 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+      전체
+    </button>
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=pending"
+      hx-target="#main-content" hx-push-url="true"
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+        {% if rec == 'pending' %}bg-gray-700 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+      미결정
+    </button>
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=recommended"
+      hx-target="#main-content" hx-push-url="true"
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+        {% if rec == 'recommended' %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+      추천
+    </button>
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=not_recommended"
+      hx-target="#main-content" hx-push-url="true"
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+        {% if rec == 'not_recommended' %}bg-red-600 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+      비추천
+    </button>
+    <button
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=on_hold"
+      hx-target="#main-content" hx-push-url="true"
+      class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+        {% if rec == 'on_hold' %}bg-yellow-600 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+      보류
+    </button>
+    {% endwith %}
+  </div>
 </div>
 
 {% if candidates %}
@@ -38,6 +79,7 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 mb-1">
           <h3 class="text-gray-900 font-semibold truncate">{{ candidate.name }}</h3>
+          {% include "candidates/partials/_recommendation_badge.html" %}
           {% if candidate.confidence_score is not None %}
             {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
             {% if candidate.confidence_score >= 0.85 %}
@@ -79,7 +121,7 @@
   {% if has_more %}
   <div class="py-4 text-center">
     <button
-      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&page={{ page|add:1 }}"
+      hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}{% if rec_status_filter %}&rec_status={{ rec_status_filter }}{% endif %}&page={{ page|add:1 }}"
       hx-target="this"
       hx-swap="outerHTML"
       class="text-[15px] text-indigo-600 hover:text-indigo-800 font-medium transition">

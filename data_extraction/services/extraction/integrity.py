@@ -15,6 +15,7 @@ import logging
 import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from pathlib import Path
 
 from django.conf import settings
 from google import genai
@@ -474,7 +475,200 @@ def check_career_education_overlap(
 
 
 # ===========================================================================
-# Step 3b: Cross-version comparison
+# Step 3b: Education fraud detection
+# ===========================================================================
+
+_GRAD_KEYWORDS = {
+    "석사", "박사", "mba", "master", "doctor", "ph.d", "ph.d.",
+    "m.s.", "m.a.", "m.b.a.", "m.eng.", "공학석사", "이학석사",
+    "경영학석사", "공학박사", "이학박사",
+}
+
+_UNDERGRAD_KEYWORDS = {
+    "학사", "bachelor", "b.s.", "b.a.", "b.eng.", "학부",
+    "공학사", "이학사", "경영학사", "문학사", "법학사",
+}
+
+
+def check_education_gaps(educations: list[dict]) -> list[dict]:
+    """Detect missing undergrad and missing admission year."""
+    flags: list[dict] = []
+
+    has_grad = False
+    has_undergrad = False
+
+    for edu in educations:
+        degree = (edu.get("degree") or "").lower().strip()
+        if any(kw in degree for kw in _GRAD_KEYWORDS):
+            has_grad = True
+        if any(kw in degree for kw in _UNDERGRAD_KEYWORDS):
+            has_undergrad = True
+
+        # Missing start_year
+        if edu.get("end_year") and not edu.get("start_year"):
+            institution = edu.get("institution", "")
+            flags.append({
+                "type": "EDUCATION_GAP",
+                "severity": "YELLOW",
+                "field": "educations",
+                "detail": f"{institution} 입학년도가 누락됨 (졸업년도만 기재)",
+                "chosen": None,
+                "alternative": None,
+                "reasoning": "편입 이력을 숨기기 위해 입학년도를 생략하는 경우가 있음",
+            })
+
+    if has_grad and not has_undergrad:
+        flags.append({
+            "type": "EDUCATION_GAP",
+            "severity": "YELLOW",
+            "field": "educations",
+            "detail": "대학원(석사/박사) 학력만 있고 학부(학사) 학력이 없음",
+            "chosen": None,
+            "alternative": None,
+            "reasoning": "학부 학력이 대학원보다 낮아 의도적으로 생략한 경우가 있음",
+        })
+
+    return flags
+
+
+_MULTI_CAMPUS_DATA: dict | None = None
+
+
+def _load_multi_campus_data() -> dict:
+    global _MULTI_CAMPUS_DATA
+    if _MULTI_CAMPUS_DATA is None:
+        data_path = (
+            Path(__file__).resolve().parent.parent.parent
+            / "data"
+            / "multi_campus_universities.json"
+        )
+        if data_path.exists():
+            with open(data_path, encoding="utf-8") as f:
+                _MULTI_CAMPUS_DATA = json.load(f)
+        else:
+            _MULTI_CAMPUS_DATA = {}
+    return _MULTI_CAMPUS_DATA
+
+
+def _match_university(institution: str, data: dict) -> tuple[str, dict] | None:
+    """Match an institution name to a multi-campus university entry."""
+    inst_lower = institution.lower().strip()
+    for uni_name, uni_data in data.items():
+        # Exact name match
+        if uni_name.lower() in inst_lower:
+            return uni_name, uni_data
+        # Alias match
+        for alias in uni_data.get("aliases", []):
+            if alias.lower() in inst_lower:
+                return uni_name, uni_data
+    return None
+
+
+def check_campus_match(educations: list[dict]) -> list[dict]:
+    """Detect missing or suspicious campus for multi-campus universities."""
+    data = _load_multi_campus_data()
+    if not data:
+        return []
+
+    flags: list[dict] = []
+
+    for edu in educations:
+        institution = edu.get("institution", "")
+        if not institution:
+            continue
+
+        match = _match_university(institution, data)
+        if match is None:
+            continue
+
+        uni_name, uni_data = match
+        campus_keywords = uni_data.get("campus_keywords", {})
+        campus_only_depts = uni_data.get("campus_only_departments", {})
+        main_campus = uni_data.get("main_campus", "")
+
+        # Check if campus is identifiable from institution text
+        inst_lower = institution.lower()
+        major = (edu.get("major") or "").strip()
+        detected_campus = None
+
+        for campus, keywords in campus_keywords.items():
+            if any(kw.lower() in inst_lower for kw in keywords):
+                detected_campus = campus
+                break
+
+        # Check major against campus-only departments
+        major_campus = None
+        if major:
+            for campus, depts in campus_only_depts.items():
+                if any(dept in major for dept in depts):
+                    major_campus = campus
+                    break
+
+        if major_campus and major_campus != main_campus and detected_campus is None:
+            # Department only exists at non-main campus but no campus specified
+            flags.append({
+                "type": "CAMPUS_DEPARTMENT_MATCH",
+                "severity": "RED",
+                "field": "educations",
+                "detail": (
+                    f"{uni_name} {major} — "
+                    f"해당 학과는 {major_campus}캠퍼스에만 존재"
+                ),
+                "chosen": None,
+                "alternative": None,
+                "reasoning": (
+                    f"캠퍼스를 밝히지 않았으나, {major} 학과는 "
+                    f"{major_campus}캠퍼스에만 개설되어 있음"
+                ),
+            })
+        elif detected_campus is None:
+            # Multi-campus university but no campus identifiable
+            campuses = list(campus_keywords.keys())
+            flags.append({
+                "type": "CAMPUS_MISSING",
+                "severity": "YELLOW",
+                "field": "educations",
+                "detail": (
+                    f"{uni_name} 캠퍼스 확인 필요 "
+                    f"({'/'.join(campuses)})"
+                ),
+                "chosen": None,
+                "alternative": None,
+                "reasoning": (
+                    "멀티캠퍼스 대학인데 캠퍼스 정보가 없음. "
+                    "지방 캠퍼스일 가능성 확인 필요"
+                ),
+            })
+
+    return flags
+
+
+def check_birth_year_consistency(
+    current_birth_year: int | None,
+    previous_birth_year: int | None,
+) -> list[dict]:
+    """Detect birth year mismatch between resume versions."""
+    if current_birth_year is None or previous_birth_year is None:
+        return []
+    if current_birth_year == previous_birth_year:
+        return []
+
+    return [{
+        "type": "BIRTH_YEAR_MISMATCH",
+        "severity": "RED",
+        "field": "birth_year",
+        "detail": (
+            f"출생연도가 이전 이력서({previous_birth_year}년)와 "
+            f"현재({current_birth_year}년)에서 다름. 호적 기준 확인 필요"
+        ),
+        "chosen": str(current_birth_year),
+        "alternative": str(previous_birth_year),
+        "reasoning": "나이를 줄이기 위해 출생연도를 변경하는 경우가 있음. 호적 등록 기준으로 확인 필요",
+    }]
+
+
+# ===========================================================================
+# Step 3c: Cross-version comparison
 # ===========================================================================
 
 # Suffixes to strip for fuzzy company name matching
@@ -589,6 +783,13 @@ def _check_career_deleted(unmatched_previous: list[dict]) -> list[dict]:
                 else "단기 경력 삭제 — 정리 목적일 수 있음"
             ),
         })
+
+    # Upgrade all to RED if 2+ careers deleted simultaneously
+    if len(flags) >= 2:
+        for flag in flags:
+            flag["severity"] = "RED"
+            flag["reasoning"] = "2건 이상의 경력이 동시 삭제됨 — 의도적 은폐 가능성 높음"
+
     return flags
 
 
@@ -768,6 +969,38 @@ def compare_versions(current: dict, previous: dict) -> list[dict]:
 
 
 # ===========================================================================
+# Auto-correction helpers
+# ===========================================================================
+
+
+def _is_current_end_date_flag(flag: dict, autocorrected_companies: set[str]) -> bool:
+    """Check if a flag is about is_current/end_date contradiction for an auto-corrected company."""
+    detail = (flag.get("detail") or "").lower()
+    field = (flag.get("field") or "").lower()
+
+    # Check if this flag is about is_current contradiction
+    is_about_current = (
+        "is_current" in detail
+        or ("current" in detail and "end_date" in detail)
+        or "is_current" in field
+    )
+    if not is_about_current:
+        return False
+
+    # Check if it's about one of the auto-corrected companies
+    for company in autocorrected_companies:
+        if not company:
+            continue
+        flag_text = f"{detail} {(flag.get('chosen') or '').lower()} {(flag.get('alternative') or '').lower()}"
+        if company in flag_text:
+            return True
+
+    # Flag is about is_current but we can't match a specific company — still remove it
+    # since the contradiction has been auto-corrected
+    return True
+
+
+# ===========================================================================
 # Main pipeline orchestrator
 # ===========================================================================
 
@@ -864,6 +1097,21 @@ def run_integrity_pipeline(
     for i, c in enumerate(normalized_careers):
         c["order"] = i
 
+    # Auto-correct is_current/end_date contradiction:
+    # If a career has an end_date, it cannot be current.
+    autocorrected_companies = set()
+    for c in normalized_careers:
+        if c.get("end_date") and c.get("is_current"):
+            c["is_current"] = False
+            autocorrected_companies.add(_normalize_company(c.get("company", "")))
+
+    # Remove AI flags that were about the contradiction we just auto-corrected
+    if autocorrected_companies:
+        all_flags = [
+            f for f in all_flags
+            if not _is_current_end_date_flag(f, autocorrected_companies)
+        ]
+
     # Skills (code, instant)
     skills = normalize_skills(raw_data)
 
@@ -884,6 +1132,14 @@ def run_integrity_pipeline(
             previous_data,
         )
         all_flags.extend(cv_flags)
+
+    # 3d: Education gaps
+    edu_gap_flags = check_education_gaps(normalized_educations)
+    all_flags.extend(edu_gap_flags)
+
+    # 3e: Campus match
+    campus_flags = check_campus_match(normalized_educations)
+    all_flags.extend(campus_flags)
 
     # -- Assemble result --
     return apply_regex_field_filters({

@@ -163,6 +163,7 @@ def _latest_parsed_resume(candidate: Candidate) -> Resume | None:
 def _build_candidate_snapshot(candidate: Candidate) -> dict:
     """Serialize the candidate's current profile for cross-version checks."""
     return {
+        "birth_year": candidate.birth_year,
         "careers": [
             {
                 "company": c.company,

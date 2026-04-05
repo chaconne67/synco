@@ -8,6 +8,7 @@
   </a>
   <div class="flex items-center gap-2">
     <h1 class="text-lg font-bold text-gray-900">{{ candidate.name }}</h1>
+    <span id="recommendation-badge">{% include "candidates/partials/_recommendation_badge.html" %}</span>
     {% if candidate.confidence_score is not None %}
       {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
       {% if candidate.confidence_score >= 0.85 %}
@@ -23,6 +24,25 @@
 
 <div class="px-4 pb-8">
   {% include "candidates/partials/_review_notice_section.html" with candidate=candidate %}
+
+  {% if primary_resume and primary_resume.error_message %}
+  <div class="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+    <div class="flex items-start gap-2">
+      <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+      </svg>
+      <div>
+        <p class="text-sm font-medium text-red-800">데이터 추출 실패</p>
+        <p class="text-[12px] text-red-600 mt-0.5">{{ primary_resume.error_message }}</p>
+        {% if primary_resume.drive_file_id %}
+        <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view"
+           target="_blank" rel="noopener"
+           class="text-[12px] text-red-700 underline mt-1 inline-block">원본 파일에서 직접 확인하기</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Two-column layout on desktop -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -301,5 +321,13 @@
     </div>
   </div>
   {% endif %}
+
+  <!-- Comment section -->
+  <div class="mt-6 space-y-4">
+    {% include "candidates/partials/_comment_section.html" %}
+    <div id="comment-list">
+      {% include "candidates/partials/_comment_list.html" %}
+    </div>
+  </div>
 
 </div>

@@ -1,0 +1,41 @@
+{% if comments %}
+<div class="bg-white rounded-xl border border-gray-200 p-4">
+  <h2 class="text-subheading text-gray-900 mb-3">코멘트 이력</h2>
+  <div class="space-y-3">
+    {% for comment in comments %}
+    <div class="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-[12px] text-gray-400">{{ comment.created_at|date:"Y-m-d H:i" }}</span>
+        {% if comment.author %}
+        <span class="text-[12px] text-gray-500">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+        {% endif %}
+        {% if comment.recommendation_status == "recommended" %}
+          <span class="text-[11px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">추천</span>
+        {% elif comment.recommendation_status == "not_recommended" %}
+          <span class="text-[11px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">비추천</span>
+        {% elif comment.recommendation_status == "on_hold" %}
+          <span class="text-[11px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">보류</span>
+        {% endif %}
+        {% if comment.input_method == "voice" %}
+          <span class="text-[11px] text-gray-400" title="음성 입력">
+            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/>
+            </svg>
+          </span>
+        {% endif %}
+      </div>
+      {% if comment.reason_labels %}
+      <div class="flex flex-wrap gap-1 mb-1">
+        {% for label in comment.reason_labels %}
+        <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">{{ label }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if comment.content %}
+      <p class="text-[13px] text-gray-700">{{ comment.content }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

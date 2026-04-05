@@ -7,11 +7,15 @@ from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, render
 
+from django.db import transaction
+
 from .models import (
     Candidate,
+    CandidateComment,
     Category,
     DiscrepancyReport,
     ExtractionLog,
+    REASON_CODES,
     SearchSession,
     SearchTurn,
 )
@@ -65,6 +69,7 @@ def _self_consistency_prefetch() -> Prefetch:
 @login_required
 def review_list(request):
     status_filter = request.GET.get("status", "needs_review")
+    rec_status_filter = request.GET.get("rec_status", "")
 
     candidates = Candidate.objects.filter(
         validation_status=status_filter,
@@ -72,6 +77,9 @@ def review_list(request):
         "careers",
         _self_consistency_prefetch(),
     )
+
+    if rec_status_filter:
+        candidates = candidates.filter(recommendation_status=rec_status_filter)
 
     total = candidates.count()
     try:
@@ -98,6 +106,7 @@ def review_list(request):
             "has_more": has_more,
             "total": total,
             "status_filter": status_filter,
+            "rec_status_filter": rec_status_filter,
             "status_choices": STATUS_CHOICES,
         },
     )
@@ -113,7 +122,11 @@ def review_detail(request, pk):
         pk=pk,
     )
 
-    primary_resume = candidate.current_resume or candidate.resumes.filter(is_primary=True).first()
+    primary_resume = (
+        candidate.current_resume
+        or candidate.resumes.filter(is_primary=True).first()
+        or candidate.resumes.first()
+    )
     careers = candidate.careers.all()
     educations = candidate.educations.all()
     certifications = candidate.certifications.all()
@@ -155,6 +168,8 @@ def review_detail(request, pk):
         **etc_ctx,
     }
 
+    comments = candidate.comments.select_related("author").all()
+
     template = (
         "candidates/partials/review_detail_content.html"
         if request.htmx
@@ -174,6 +189,8 @@ def review_detail(request, pk):
             "fc": fc,
             "category_scores": category_scores,
             "live_score": live_score,
+            "comments": comments,
+            "reason_codes": REASON_CODES,
             **extra_context,
         },
     )
@@ -227,6 +244,46 @@ def review_reject(request, pk):
     return HttpResponse(
         status=204,
         headers={"HX-Redirect": "/candidates/review/"},
+    )
+
+
+@login_required
+def comment_create(request, pk):
+    """Create a comment with recommendation status update."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    candidate = get_object_or_404(Candidate, pk=pk)
+
+    recommendation_status = request.POST.get("recommendation_status", "")
+    reason_codes = request.POST.getlist("reason_codes")
+    content = request.POST.get("content", "").strip()
+    input_method = request.POST.get("input_method", "text")
+
+    if recommendation_status not in dict(Candidate.RecommendationStatus.choices):
+        recommendation_status = Candidate.RecommendationStatus.PENDING
+
+    with transaction.atomic():
+        CandidateComment.objects.create(
+            candidate=candidate,
+            author=request.user,
+            recommendation_status=recommendation_status,
+            reason_codes=reason_codes,
+            content=content,
+            input_method=input_method,
+        )
+        candidate.recommendation_status = recommendation_status
+        candidate.save(update_fields=["recommendation_status", "updated_at"])
+
+    comments = candidate.comments.select_related("author").all()
+    return render(
+        request,
+        "candidates/partials/_comment_response.html",
+        {
+            "candidate": candidate,
+            "comments": comments,
+            "reason_codes": REASON_CODES,
+        },
     )
 
 
@@ -361,7 +418,11 @@ def candidate_detail(request, pk):
     educations = candidate.educations.all()
     certifications = candidate.certifications.all()
     language_skills = candidate.language_skills.all()
-    primary_resume = candidate.current_resume or candidate.resumes.filter(is_primary=True).first()
+    primary_resume = (
+        candidate.current_resume
+        or candidate.resumes.filter(is_primary=True).first()
+        or candidate.resumes.first()
+    )
 
     # Compute field confidences in real-time from current candidate data
     from data_extraction.services.validation import compute_field_confidences, compute_overall_confidence
