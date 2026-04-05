@@ -221,3 +221,195 @@ class TestNoMergeByNameOnly:
             raw_text="v2", category=category, primary_file=_make_primary_file("drive_002"),
         )
         assert Candidate.objects.count() == 2
+
+
+class TestPlaceholderOnFailure:
+    """save_failed_resume / save_text_only_resume must create Candidate + Resume."""
+
+    def test_save_failed_resume_creates_candidate(self, db):
+        from data_extraction.services.save import save_failed_resume
+
+        file_info = {"file_name": "홍길동_90.pdf", "file_id": "fail_001",
+                     "mime_type": "application/pdf", "file_size": 500}
+        candidate = save_failed_resume(
+            file_info, "HR", "Download failed: 404",
+            filename_meta={"name": "홍길동", "birth_year": 1990},
+        )
+        assert Candidate.objects.count() == 1
+        assert candidate.name == "홍길동"
+        assert candidate.validation_status == "needs_review"
+
+    def test_save_failed_resume_creates_linked_resume(self, db):
+        from data_extraction.services.save import save_failed_resume
+
+        file_info = {"file_name": "test.pdf", "file_id": "fail_002",
+                     "mime_type": "application/pdf", "file_size": 500}
+        candidate = save_failed_resume(file_info, "HR", "Text extraction failed")
+        resume = Resume.objects.get(drive_file_id="fail_002")
+        assert resume.candidate == candidate
+        assert resume.processing_status == Resume.ProcessingStatus.FAILED
+        assert "Text extraction failed" in resume.error_message
+
+    def test_save_failed_resume_links_current_resume(self, db):
+        from data_extraction.services.save import save_failed_resume
+
+        file_info = {"file_name": "test.pdf", "file_id": "fail_003",
+                     "mime_type": "application/pdf", "file_size": 500}
+        candidate = save_failed_resume(file_info, "HR", "Error")
+        candidate.refresh_from_db()
+        assert candidate.current_resume is not None
+        assert candidate.current_resume.drive_file_id == "fail_003"
+
+    def test_save_failed_resume_links_category(self, db):
+        from data_extraction.services.save import save_failed_resume
+
+        file_info = {"file_name": "test.pdf", "file_id": "fail_004",
+                     "mime_type": "application/pdf", "file_size": 500}
+        candidate = save_failed_resume(file_info, "Finance", "Error")
+        assert candidate.categories.filter(name="Finance").exists()
+
+    def test_save_text_only_creates_candidate_with_raw_text(self, db):
+        from data_extraction.services.save import save_text_only_resume
+
+        file_info = {"file_name": "김철수_85.docx", "file_id": "text_001",
+                     "mime_type": "application/vnd.openxmlformats", "file_size": 1200}
+        candidate = save_text_only_resume(
+            file_info, "Engineering",
+            raw_text="이력서 원문 텍스트 내용",
+            error_msg="LLM extraction failed",
+            filename_meta={"name": "김철수", "birth_year": 1985},
+        )
+        assert Candidate.objects.count() == 1
+        assert candidate.name == "김철수"
+        resume = Resume.objects.get(drive_file_id="text_001")
+        assert resume.processing_status == Resume.ProcessingStatus.TEXT_ONLY
+        assert resume.raw_text == "이력서 원문 텍스트 내용"
+        assert candidate.current_resume == resume
+
+    def test_placeholder_name_falls_back_to_filename(self, db):
+        from data_extraction.services.save import save_failed_resume
+
+        file_info = {"file_name": "resume_unknown.pdf", "file_id": "fail_005",
+                     "mime_type": "application/pdf", "file_size": 500}
+        candidate = save_failed_resume(file_info, "HR", "Error")
+        assert candidate.name == "resume_unknown.pdf"
+
+    def test_placeholder_name_uses_filename_meta(self, db):
+        from data_extraction.services.save import save_failed_resume
+
+        file_info = {"file_name": "홍길동_90.pdf", "file_id": "fail_006",
+                     "mime_type": "application/pdf", "file_size": 500}
+        candidate = save_failed_resume(
+            file_info, "HR", "Error",
+            filename_meta={"name": "홍길동"},
+        )
+        assert candidate.name == "홍길동"
+
+    def test_save_pipeline_result_failure_creates_placeholder(self, category):
+        """save_pipeline_result with extracted=None still creates a Candidate+Resume."""
+        from data_extraction.services.save import save_pipeline_result
+
+        pipeline_result = _make_pipeline_result()
+        pipeline_result["extracted"] = None
+
+        result = save_pipeline_result(
+            pipeline_result=pipeline_result,
+            raw_text="원문 텍스트",
+            category=category,
+            primary_file=_make_primary_file("drive_placeholder"),
+        )
+        # Returns None for caller stats (extraction failed)
+        assert result is None
+        # But Candidate + Resume exist in DB
+        assert Candidate.objects.count() == 1
+        resume = Resume.objects.get(drive_file_id="drive_placeholder")
+        assert resume.candidate is not None
+        assert resume.candidate.current_resume == resume
+
+
+class TestNormalizeSkillsForSave:
+    def test_new_format_passthrough(self):
+        from data_extraction.services.save import _normalize_skills_for_save
+
+        skills = [{"name": "SCM", "description": "공급망 관리"}]
+        result = _normalize_skills_for_save(skills)
+        assert result == [{"name": "SCM", "description": "공급망 관리"}]
+
+    def test_legacy_string_format(self):
+        from data_extraction.services.save import _normalize_skills_for_save
+
+        skills = ["Python", "SAP"]
+        result = _normalize_skills_for_save(skills)
+        assert result == [
+            {"name": "Python", "description": None},
+            {"name": "SAP", "description": None},
+        ]
+
+    def test_mixed_format(self):
+        from data_extraction.services.save import _normalize_skills_for_save
+
+        skills = ["Python", {"name": "SCM", "description": "공급망 관리"}]
+        result = _normalize_skills_for_save(skills)
+        assert result == [
+            {"name": "Python", "description": None},
+            {"name": "SCM", "description": "공급망 관리"},
+        ]
+
+    def test_empty_list(self):
+        from data_extraction.services.save import _normalize_skills_for_save
+
+        assert _normalize_skills_for_save([]) == []
+
+
+class TestSanitizeFlagDetail:
+    """Developer terms in AI flag details should be replaced with Korean."""
+
+    def test_replaces_is_current(self):
+        from data_extraction.services.save import _sanitize_flag_detail
+        result = _sanitize_flag_detail("is_current가 true이지만 end_date가 존재")
+        assert "is_current" not in result
+        assert "현재 재직 여부" in result
+        assert "end_date" not in result
+        assert "종료일" in result
+
+    def test_replaces_boolean_values(self):
+        from data_extraction.services.save import _sanitize_flag_detail
+        result = _sanitize_flag_detail("값이 true입니다")
+        assert "true" not in result
+        assert "예" in result
+
+    def test_replaces_false(self):
+        from data_extraction.services.save import _sanitize_flag_detail
+        result = _sanitize_flag_detail("값이 false입니다")
+        assert "false" not in result
+        assert "아니오" in result
+
+    def test_replaces_null(self):
+        from data_extraction.services.save import _sanitize_flag_detail
+        result = _sanitize_flag_detail("필드가 null입니다")
+        assert "null" not in result
+        assert "미입력" in result
+
+    def test_replaces_boolean_keyword(self):
+        from data_extraction.services.save import _sanitize_flag_detail
+        result = _sanitize_flag_detail("boolean 타입 필드")
+        assert "boolean" not in result
+        assert "참/거짓 값" in result
+
+    def test_no_change_for_clean_text(self):
+        from data_extraction.services.save import _sanitize_flag_detail
+        text = "경력 기간이 겹칩니다"
+        result = _sanitize_flag_detail(text)
+        assert result == text
+
+    def test_convert_flags_uses_sanitizer(self):
+        from data_extraction.services.save import _convert_flags_to_alerts
+        flags = [
+            {"type": "DATE_CONFLICT", "severity": "YELLOW", "field": "is_current",
+             "detail": "is_current가 true이지만 end_date가 존재",
+             "chosen": "true", "alternative": "false", "reasoning": "test"},
+        ]
+        alerts = _convert_flags_to_alerts(flags)
+        assert len(alerts) == 1
+        assert "is_current" not in alerts[0]["detail"]
+        assert "현재 재직 여부" in alerts[0]["detail"]

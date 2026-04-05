@@ -28,6 +28,20 @@ from candidates.services.discrepancy import (
 logger = logging.getLogger(__name__)
 
 
+def _normalize_skills_for_save(skills: list) -> list[dict]:
+    """Normalize skills to [{"name": str, "description": str | None}] format."""
+    result = []
+    for item in skills:
+        if isinstance(item, str):
+            result.append({"name": item, "description": None})
+        elif isinstance(item, dict) and "name" in item:
+            result.append({
+                "name": item["name"],
+                "description": item.get("description"),
+            })
+    return result
+
+
 def _t(value: str | None, max_len: int = 200) -> str:
     s = value or ""
     return s[:max_len]
@@ -59,6 +73,7 @@ def save_pipeline_result(
     other_files: list[dict] | None = None,
     existing_ids: set | None = None,
     comparison_context=None,
+    filename_meta: dict | None = None,
 ) -> Candidate | None:
     """Save integrity pipeline result to DB.
 
@@ -76,9 +91,13 @@ def save_pipeline_result(
                 category.name,
                 raw_text=raw_text,
                 error_msg="Structured extraction unavailable; stored raw text only",
+                filename_meta=filename_meta,
             )
         else:
-            save_failed_resume(primary_file, category.name, "Extraction failed")
+            save_failed_resume(
+                primary_file, category.name, "Extraction failed",
+                filename_meta=filename_meta,
+            )
         return None
 
     diagnosis = pipeline_result["diagnosis"]
@@ -250,6 +269,53 @@ def save_pipeline_result(
     return candidate
 
 
+def _sanitize_flag_detail(text: str) -> str:
+    """Replace developer terms in AI-generated flag details with Korean equivalents.
+
+    Also detects fully English text (no Korean chars) and wraps it with
+    a Korean prefix so end users always see Korean-first output.
+    """
+    import re
+    import unicodedata
+
+    if not text:
+        return text
+
+    # Detect text with no Korean characters (fully English detail)
+    has_korean = any(
+        unicodedata.name(ch, "").startswith("HANGUL") for ch in text if not ch.isspace()
+    )
+    if not has_korean:
+        # Wrap English text with Korean context prefix
+        text = f"AI 추출 검토 필요: {text}"
+
+    # Use lookaround that matches word boundary OR Korean/non-ASCII chars adjacent
+    # \b doesn't work between ASCII and Korean, so we use explicit boundaries.
+    def _pat(term: str) -> str:
+        """Build pattern that matches term not embedded in longer ASCII identifier."""
+        return rf"(?<![a-zA-Z_]){re.escape(term)}(?![a-zA-Z_])"
+
+    replacements = [
+        # Field names → Korean
+        (_pat("is_current"), "현재 재직 여부"),
+        (_pat("end_date"), "종료일"),
+        (_pat("start_date"), "시작일"),
+        # Boolean/null values → Korean
+        (_pat("True"), "예"),
+        (_pat("true"), "예"),
+        (_pat("False"), "아니오"),
+        (_pat("false"), "아니오"),
+        (_pat("null"), "미입력"),
+        (_pat("None"), "미입력"),
+        (_pat("boolean"), "참/거짓 값"),
+    ]
+
+    for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text)
+
+    return text
+
+
 def _convert_flags_to_alerts(flags: list[dict]) -> list[dict]:
     alerts = []
     for flag in flags:
@@ -258,7 +324,7 @@ def _convert_flags_to_alerts(flags: list[dict]) -> list[dict]:
             "severity": flag.get("severity", "BLUE"),
             "field": flag.get("field", ""),
             "layer": "integrity_pipeline",
-            "detail": flag.get("detail", ""),
+            "detail": _sanitize_flag_detail(flag.get("detail", "")),
             "evidence": {
                 "chosen": flag.get("chosen"),
                 "alternative": flag.get("alternative"),
@@ -268,15 +334,81 @@ def _convert_flags_to_alerts(flags: list[dict]) -> list[dict]:
     return alerts
 
 
-def save_failed_resume(file_info: dict, folder_name: str, error_msg: str):
-    Resume.objects.create(
-        file_name=file_info["file_name"],
-        drive_file_id=file_info["file_id"],
-        drive_folder=folder_name,
-        mime_type=file_info.get("mime_type", ""),
-        file_size=file_info.get("file_size"),
+def save_placeholder_candidate(
+    file_info: dict,
+    folder_name: str,
+    *,
+    processing_status: str,
+    error_msg: str,
+    raw_text: str = "",
+    filename_meta: dict | None = None,
+) -> Candidate:
+    """Create a placeholder Candidate + Resume for failed extractions.
+
+    Ensures every file produces at least a Candidate visible in the UI,
+    regardless of extraction success or failure.
+    """
+    category, _ = Category.objects.get_or_create(
+        name=folder_name, defaults={"name_ko": ""},
+    )
+
+    name = ""
+    if filename_meta:
+        name = filename_meta.get("name", "")
+    if not name:
+        name = file_info.get("file_name", "")
+
+    with transaction.atomic():
+        resume, _ = Resume.objects.update_or_create(
+            drive_file_id=file_info["file_id"],
+            defaults={
+                "file_name": file_info["file_name"],
+                "drive_folder": folder_name,
+                "mime_type": file_info.get("mime_type", ""),
+                "file_size": file_info.get("file_size"),
+                "raw_text": raw_text,
+                "is_primary": True,
+                "version": 1,
+                "processing_status": processing_status,
+                "error_message": error_msg,
+            },
+        )
+
+        if resume.candidate_id:
+            candidate = resume.candidate
+            candidate.validation_status = "needs_review"
+            candidate.save(update_fields=["validation_status", "updated_at"])
+        else:
+            candidate = Candidate.objects.create(
+                name=name,
+                status=Candidate.Status.ACTIVE,
+                source=Candidate.Source.DRIVE_IMPORT,
+                validation_status="needs_review",
+                primary_category=category,
+            )
+            resume.candidate = candidate
+            resume.save(update_fields=["candidate", "updated_at"])
+
+        candidate.current_resume = resume
+        candidate.save(update_fields=["current_resume", "updated_at"])
+        candidate.categories.add(category)
+
+    return candidate
+
+
+def save_failed_resume(
+    file_info: dict,
+    folder_name: str,
+    error_msg: str,
+    *,
+    filename_meta: dict | None = None,
+) -> Candidate:
+    return save_placeholder_candidate(
+        file_info,
+        folder_name,
         processing_status=Resume.ProcessingStatus.FAILED,
-        error_message=error_msg,
+        error_msg=error_msg,
+        filename_meta=filename_meta,
     )
 
 
@@ -286,16 +418,15 @@ def save_text_only_resume(
     *,
     raw_text: str,
     error_msg: str,
-):
-    Resume.objects.create(
-        file_name=file_info["file_name"],
-        drive_file_id=file_info["file_id"],
-        drive_folder=folder_name,
-        mime_type=file_info.get("mime_type", ""),
-        file_size=file_info.get("file_size"),
-        raw_text=raw_text,
+    filename_meta: dict | None = None,
+) -> Candidate:
+    return save_placeholder_candidate(
+        file_info,
+        folder_name,
         processing_status=Resume.ProcessingStatus.TEXT_ONLY,
-        error_message=error_msg,
+        error_msg=error_msg,
+        raw_text=raw_text,
+        filename_meta=filename_meta,
     )
 
 
@@ -380,7 +511,7 @@ def _update_candidate(
     ) or candidate.family_info
 
     # New extraction fields
-    candidate.skills = extracted.get("skills", [])
+    candidate.skills = _normalize_skills_for_save(extracted.get("skills", []))
     candidate.personal_etc = extracted.get("personal_etc", [])
     candidate.education_etc = extracted.get("education_etc", [])
     candidate.career_etc = extracted.get("career_etc", [])
@@ -481,7 +612,7 @@ def _create_candidate(
             or {}
         ),
         # New extraction fields
-        skills=extracted.get("skills", []),
+        skills=_normalize_skills_for_save(extracted.get("skills", [])),
         personal_etc=extracted.get("personal_etc", []),
         education_etc=extracted.get("education_etc", []),
         career_etc=extracted.get("career_etc", []),
