@@ -84,15 +84,25 @@ def save_pipeline_result(
     diagnosis = pipeline_result["diagnosis"]
     field_confidences = extracted.get("field_confidences", {})
     overall_score = diagnosis.get("overall_score", 0.0)
+
+    # Critical field gate: name + (careers or educations) must exist
+    has_name = bool(extracted.get("name"))
+    has_careers = bool(extracted.get("careers"))
+    has_educations = bool(extracted.get("educations"))
+    critical_fields_present = has_name and (has_careers or has_educations)
+
+    if not critical_fields_present:
+        validation_status = "needs_review"
+    elif diagnosis["verdict"] == "pass" and overall_score >= 0.85:
+        validation_status = "auto_confirmed"
+    elif overall_score >= 0.6:
+        validation_status = "needs_review"
+    else:
+        validation_status = "failed"
+
     validation = {
         "confidence_score": overall_score,
-        "validation_status": (
-            "auto_confirmed"
-            if diagnosis["verdict"] == "pass" and overall_score >= 0.85
-            else "needs_review"
-            if overall_score >= 0.6
-            else "failed"
-        ),
+        "validation_status": validation_status,
         "field_confidences": {
             **field_confidences,
             **diagnosis.get("field_scores", {}),
@@ -132,17 +142,19 @@ def save_pipeline_result(
         )["max_v"] or 0
         next_version = max_version + 1
 
-        primary_resume = Resume.objects.create(
-            candidate=candidate,
-            file_name=primary_file["file_name"],
+        primary_resume, _created = Resume.objects.update_or_create(
             drive_file_id=primary_file["file_id"],
-            drive_folder=category.name,
-            mime_type=primary_file.get("mime_type", ""),
-            file_size=primary_file.get("file_size"),
-            raw_text=raw_text,
-            is_primary=True,
-            version=next_version,
-            processing_status=Resume.ProcessingStatus.STRUCTURED,
+            defaults={
+                "candidate": candidate,
+                "file_name": primary_file["file_name"],
+                "drive_folder": category.name,
+                "mime_type": primary_file.get("mime_type", ""),
+                "file_size": primary_file.get("file_size"),
+                "raw_text": raw_text,
+                "is_primary": True,
+                "version": next_version,
+                "processing_status": Resume.ProcessingStatus.STRUCTURED,
+            },
         )
 
         candidate.current_resume = primary_resume
@@ -150,16 +162,18 @@ def save_pipeline_result(
 
         for idx, other in enumerate(other_files):
             if other["file_id"] not in existing_ids:
-                Resume.objects.create(
-                    candidate=candidate,
-                    file_name=other["file_name"],
+                Resume.objects.update_or_create(
                     drive_file_id=other["file_id"],
-                    drive_folder=category.name,
-                    mime_type=other.get("mime_type", ""),
-                    file_size=other.get("file_size"),
-                    is_primary=False,
-                    version=next_version + idx + 1,
-                    processing_status=Resume.ProcessingStatus.PENDING,
+                    defaults={
+                        "candidate": candidate,
+                        "file_name": other["file_name"],
+                        "drive_folder": category.name,
+                        "mime_type": other.get("mime_type", ""),
+                        "file_size": other.get("file_size"),
+                        "is_primary": False,
+                        "version": next_version + idx + 1,
+                        "processing_status": Resume.ProcessingStatus.PENDING,
+                    },
                 )
 
         ExtractionLog.objects.create(

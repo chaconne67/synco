@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from batch_extract.models import GeminiBatchItem, GeminiBatchJob
+from data_extraction.models import GeminiBatchItem, GeminiBatchJob
 from data_extraction.services.batch.ingest import ingest_job_results
 from data_extraction.services.batch.ingest import _load_extracted_json
 from data_extraction.services.batch.request_builder import (

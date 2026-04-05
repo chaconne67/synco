@@ -25,11 +25,13 @@ def extract_text(file_path: str) -> str:
 
 
 def _extract_docx(file_path: str) -> str:
-    """Extract text from a .docx file using python-docx.
+    """Extract text from a .docx file.
 
-    Extracts from paragraphs, tables, AND textboxes (VML/WPS).
-    Falls back to LibreOffice if the file is corrupted or not a valid docx.
+    Tries python-docx first (paragraphs, tables, textboxes).
+    If the result is too short, tries LibreOffice and picks the longer result.
+    This handles cases where python-docx silently misses table data.
     """
+    docx_text = ""
     try:
         doc = Document(file_path)
         parts: list[str] = []
@@ -55,31 +57,59 @@ def _extract_docx(file_path: str) -> str:
         for txbx in doc.element.body.findall(f".//{{{ns_w}}}txbxContent"):
             t_elems = txbx.findall(f".//{{{ns_w}}}t")
             text = " ".join((t.text or "") for t in t_elems).strip()
-            # Deduplicate (VML textboxes often appear twice — mc:Choice + mc:Fallback)
             if text and text not in seen:
                 seen.add(text)
                 parts.append(text)
 
-        return "\n".join(parts)
+        docx_text = "\n".join(parts)
     except Exception:
-        # Corrupted/invalid docx — try LibreOffice as fallback
-        return _extract_doc_libreoffice(file_path)
+        pass
+
+    # Try LibreOffice and pick the result with richer content.
+    # Length alone is not a reliable indicator — a longer result may still
+    # miss table data while a shorter result captures it.
+    try:
+        lo_text = _extract_doc_libreoffice(file_path)
+    except Exception:
+        lo_text = ""
+
+    if not _strip_bom(lo_text):
+        return docx_text or ""
+    if not _strip_bom(docx_text):
+        return lo_text
+
+    # Pick the result with more structural resume signals
+    docx_score = _content_richness_score(docx_text)
+    lo_score = _content_richness_score(lo_text)
+    return lo_text if lo_score > docx_score else docx_text
 
 
 def _extract_doc(file_path: str) -> str:
-    """Extract text from a .doc file. Tries antiword first, falls back to LibreOffice."""
-    text = ""
+    """Extract text from a .doc file. Tries both LibreOffice and antiword,
+    picks the result with richer content."""
+    lo_text = ""
+    aw_text = ""
+
     try:
-        text = _extract_doc_antiword(file_path)
-        if _has_substantive_text(text):
-            return text
+        lo_text = _extract_doc_libreoffice(file_path)
     except Exception:
         pass
 
     try:
-        return _extract_doc_libreoffice(file_path)
+        aw_text = _extract_doc_antiword(file_path)
     except Exception:
-        return text
+        pass
+
+    if not _strip_bom(lo_text) and not _strip_bom(aw_text):
+        return ""
+    if not _strip_bom(lo_text):
+        return aw_text
+    if not _strip_bom(aw_text):
+        return lo_text
+
+    lo_score = _content_richness_score(lo_text)
+    aw_score = _content_richness_score(aw_text)
+    return lo_text if lo_score >= aw_score else aw_text
 
 
 def _extract_doc_antiword(file_path: str) -> str:
@@ -151,10 +181,14 @@ def _extract_doc_libreoffice(file_path: str) -> str:
 def preprocess_resume_text(text: str) -> str:
     """Clean and deduplicate resume text to reduce LLM token usage.
 
-    Removes blank lines, compresses whitespace, deduplicates identical and
-    similar lines (70%+ word overlap), and strips noise patterns.
+    First applies sanitize_input_text for encoding/control char cleanup,
+    then removes blank lines, compresses whitespace, deduplicates identical
+    and similar lines (70%+ word overlap), and strips noise patterns.
     Typically reduces text by 25-40%.
     """
+    from data_extraction.services.extraction.sanitizers import sanitize_input_text
+
+    text = sanitize_input_text(text)
     lines = text.split("\n")
 
     # 1) Remove blank lines, compress whitespace
@@ -194,6 +228,47 @@ def preprocess_resume_text(text: str) -> str:
     return "\n".join(final)
 
 
+def _content_richness_score(text: str) -> int:
+    """Score text by how many resume-structural signals it contains.
+
+    Checks for presence of career/education keywords, contact info patterns,
+    and date patterns — not just length.
+    """
+    score = 0
+    t = text.lower()
+
+    # Career signals
+    for kw in ["경력", "재직", "회사명", "근무기간", "experience", "career"]:
+        if kw in t:
+            score += 1
+
+    # Education signals
+    for kw in ["학력", "대학", "졸업", "university", "education"]:
+        if kw in t:
+            score += 1
+
+    # Contact signals
+    if re.search(r"010[-.\s]?\d{4}[-.\s]?\d{4}", text):
+        score += 2
+    if re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", text):
+        score += 2
+
+    # Date patterns (YYYY.MM or YYYY-MM)
+    date_count = len(re.findall(r"\d{4}[.-/]\d{1,2}", text))
+    score += min(date_count, 5)  # cap at 5
+
+    # Company name patterns (㈜, (주))
+    company_count = len(re.findall(r"㈜|\(주\)|주식회사", text))
+    score += min(company_count, 3)
+
+    return score
+
+
+def _strip_bom(text: str) -> str:
+    """Strip BOM and whitespace."""
+    return text.replace("\ufeff", "").strip()
+
+
 def _has_substantive_text(text: str) -> bool:
     if not text:
         return False
@@ -215,8 +290,8 @@ def classify_text_quality(text: str) -> str:
     if len(stripped) > 0 and alnum_chars / len(stripped) < 0.3:
         return "garbled"
 
-    # Minimum length for a resume (resumes are typically 500+ chars)
-    if len(stripped) < 100:
+    # Reject truly empty content only — actual quality is judged post-extraction
+    if len(stripped) < 50:
         return "too_short"
 
     return "ok"

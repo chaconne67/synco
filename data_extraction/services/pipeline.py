@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from data_extraction.services.filters import apply_regex_field_filters
 from data_extraction.services.extraction.gemini import extract_candidate_data
@@ -63,7 +64,10 @@ def run_extraction_with_retry(
         }
 
     if use_integrity_pipeline:
-        return _run_integrity_pipeline(raw_text, previous_data=previous_data)
+        file_name = os.path.basename(file_path) if file_path else None
+        return _run_integrity_pipeline(
+            raw_text, previous_data=previous_data, file_name=file_name,
+        )
 
     return _run_legacy_pipeline(raw_text, filename_meta, file_reference_date)
 
@@ -72,11 +76,12 @@ def _run_integrity_pipeline(
     raw_text: str,
     *,
     previous_data: dict | None = None,
+    file_name: str | None = None,
 ) -> dict:
     """New integrity pipeline: faithful extraction → grouping → normalization → cross-analysis."""
     from data_extraction.services.extraction.integrity import run_integrity_pipeline
 
-    result = run_integrity_pipeline(raw_text, previous_data=previous_data)
+    result = run_integrity_pipeline(raw_text, previous_data=previous_data, file_name=file_name)
 
     if result is None:
         logger.warning("Integrity pipeline returned None")

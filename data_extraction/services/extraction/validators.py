@@ -1,5 +1,6 @@
 """Validators for integrity pipeline step outputs.
 
+Single source of truth — no imports from candidates.services.integrity.
 Each validator function checks the output of a pipeline step and returns
 a list of issue dicts: {"severity": "error"|"warning"|"info", "message": "..."}.
 """
@@ -138,13 +139,18 @@ def validate_step1_5(
 # ---------------------------------------------------------------------------
 
 
-def validate_step2(normalized: dict) -> list[dict]:
+def validate_step2(
+    normalized: dict,
+    *,
+    raw_careers: list[dict] | None = None,
+) -> list[dict]:
     """Validate Step 2 normalization quality.
 
     Checks:
     - Required fields: company and start_date must be present in each career
     - Date format: start_date/end_date must match YYYY-MM pattern
     - Flag consistency: if a flag has severity, it must have reasoning
+    - Carry-forward field drop detection (when raw_careers provided)
     """
     issues: list[dict] = []
     careers: list[dict] = normalized.get("careers", [])
@@ -196,5 +202,18 @@ def validate_step2(normalized: dict) -> list[dict]:
                     f"but no reasoning provided"
                 ),
             })
+
+    # --- carry-forward field drop detection ---
+    if raw_careers is not None:
+        for field in ("reason_left", "achievements", "salary"):
+            step1_has = any(c.get(field) for c in raw_careers)
+            step2_has = any(c.get(field) for c in careers)
+            if step1_has and not step2_has:
+                issues.append({
+                    "severity": "warning",
+                    "message": (
+                        f"Step 1 had '{field}' data but Step 2 dropped all of it"
+                    ),
+                })
 
     return issues

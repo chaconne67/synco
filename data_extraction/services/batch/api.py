@@ -7,7 +7,7 @@ from django.conf import settings
 from google import genai
 from google.genai import types
 
-from batch_extract.models import GeminiBatchJob
+from data_extraction.models import GeminiBatchJob
 from data_extraction.services.batch.artifacts import result_file_path
 
 

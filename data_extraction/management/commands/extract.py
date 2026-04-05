@@ -89,6 +89,16 @@ class Command(BaseCommand):
             help="List files without processing",
         )
         parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Re-extract existing files (skip check disabled)",
+        )
+        parser.add_argument(
+            "--shuffle",
+            action="store_true",
+            help="Randomize file order before applying --limit",
+        )
+        parser.add_argument(
             "--batch",
             action="store_true",
             help="Use batch mode (Gemini Batch API)",
@@ -161,6 +171,8 @@ class Command(BaseCommand):
         dry_run = options.get("dry_run")
         workers = options.get("workers") or 5
         self.use_integrity = options.get("integrity", False)
+        self.force = options.get("force", False)
+        self.shuffle = options.get("shuffle", False)
 
         self.stdout.write(f"\n=== Extract {'(DRY RUN)' if dry_run else ''} ===")
 
@@ -285,6 +297,9 @@ class Command(BaseCommand):
                 }
                 for f in files
             ]
+            if getattr(self, "shuffle", False):
+                import random
+                random.shuffle(normalized)
             if limit:
                 normalized = normalized[:limit]
 
@@ -308,7 +323,7 @@ class Command(BaseCommand):
         # Filter new groups
         for folder_name, groups in folder_groups.items():
             for g in groups:
-                if g["primary"]["file_id"] in existing_ids:
+                if g["primary"]["file_id"] in existing_ids and not getattr(self, "force", False):
                     total_skipped += 1
                 else:
                     g["_folder_name"] = folder_name
@@ -409,7 +424,6 @@ class Command(BaseCommand):
         primary = group["primary"]
         others = group["others"]
         parsed = group["parsed"]
-
         service = get_drive_service()
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -566,7 +580,7 @@ class Command(BaseCommand):
             return self._batch_full(options)
 
     def _get_job(self, job_id: int):
-        from batch_extract.models import GeminiBatchJob
+        from data_extraction.models import GeminiBatchJob
 
         try:
             return GeminiBatchJob.objects.get(id=job_id)
@@ -574,7 +588,7 @@ class Command(BaseCommand):
             raise CommandError(f"Batch job {job_id} not found")
 
     def _batch_prepare(self, options):
-        from batch_extract.models import GeminiBatchJob
+        from data_extraction.models import GeminiBatchJob
         from data_extraction.services.batch.prepare import prepare_drive_job
 
         parent_folder_id = parse_drive_id(options["drive"])
@@ -746,7 +760,7 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
 
     def _handle_status(self, options):
-        from batch_extract.models import GeminiBatchJob
+        from data_extraction.models import GeminiBatchJob
 
         job_id = options.get("job_id")
 

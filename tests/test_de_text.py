@@ -19,43 +19,43 @@ class TestExtractText:
         assert "강솔찬" in text
         assert "현대엠시트" in text
 
+    @patch("data_extraction.services.text._extract_doc_libreoffice")
+    def test_doc_extraction_libreoffice_success(self, mock_libre, tmp_path):
+        mock_libre.return_value = "강솔찬\n현대엠시트 회계팀장"
+        filepath = tmp_path / "test.doc"
+        filepath.write_bytes(b"fake doc content")
+        text = extract_text(str(filepath))
+        assert "강솔찬" in text
+        mock_libre.assert_called_once()
+
     @patch("data_extraction.services.text._extract_doc_antiword")
-    def test_doc_extraction_antiword_success(self, mock_antiword, tmp_path):
-        mock_antiword.return_value = "강솔찬\n현대엠시트 회계팀장"
+    @patch("data_extraction.services.text._extract_doc_libreoffice")
+    def test_doc_fallback_to_antiword(self, mock_libre, mock_antiword, tmp_path):
+        mock_libre.side_effect = RuntimeError("libreoffice failed")
+        mock_antiword.return_value = "강솔찬 이력서"
         filepath = tmp_path / "test.doc"
         filepath.write_bytes(b"fake doc content")
         text = extract_text(str(filepath))
         assert "강솔찬" in text
         mock_antiword.assert_called_once()
 
-    @patch("data_extraction.services.text._extract_doc_libreoffice")
     @patch("data_extraction.services.text._extract_doc_antiword")
-    def test_doc_fallback_to_libreoffice(self, mock_antiword, mock_libre, tmp_path):
-        mock_antiword.side_effect = RuntimeError("antiword failed")
-        mock_libre.return_value = "강솔찬 이력서"
-        filepath = tmp_path / "test.doc"
-        filepath.write_bytes(b"fake doc content")
-        text = extract_text(str(filepath))
-        assert "강솔찬" in text
-        mock_libre.assert_called_once()
-
     @patch("data_extraction.services.text._extract_doc_libreoffice")
-    @patch("data_extraction.services.text._extract_doc_antiword")
-    def test_doc_fallback_to_libreoffice_when_antiword_returns_blankish(
+    def test_doc_fallback_to_antiword_when_libreoffice_returns_blankish(
         self,
-        mock_antiword,
         mock_libre,
+        mock_antiword,
         tmp_path,
     ):
-        mock_antiword.return_value = "\ufeff\n\n\n"
-        mock_libre.return_value = "고영호 이력서"
+        mock_libre.return_value = "\ufeff\n\n\n"
+        mock_antiword.return_value = "고영호 이력서"
         filepath = tmp_path / "test.doc"
         filepath.write_bytes(b"fake doc content")
 
         text = extract_text(str(filepath))
 
         assert text == "고영호 이력서"
-        mock_libre.assert_called_once()
+        mock_antiword.assert_called_once()
 
     def test_unsupported_extension(self, tmp_path):
         filepath = tmp_path / "test.hwp"
@@ -70,7 +70,7 @@ class TestExtractText:
         filepath = tmp_path / "empty.docx"
         doc.save(filepath)
         text = extract_text(str(filepath))
-        assert text == ""
+        assert text.strip() == ""
 
 
 class TestExtractTextLibreoffice:

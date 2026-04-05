@@ -25,10 +25,10 @@ class TestClassifyTextQuality:
         text = "###$$$%%%&&&***!!!" * 10
         assert classify_text_quality(text) == "garbled"
 
-    def test_borderline_100_chars(self):
-        text = "가" * 100
+    def test_borderline_50_chars(self):
+        text = "가" * 50
         assert classify_text_quality(text) == "ok"
 
-    def test_just_under_100_chars(self):
-        text = "가" * 99
+    def test_just_under_50_chars(self):
+        text = "가" * 49
         assert classify_text_quality(text) == "too_short"

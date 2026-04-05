@@ -7,7 +7,7 @@ from pathlib import Path
 from django.db import close_old_connections
 from django.db import transaction
 
-from batch_extract.models import GeminiBatchItem, GeminiBatchJob
+from data_extraction.models import GeminiBatchItem, GeminiBatchJob
 from data_extraction.services.batch.request_builder import extract_text_response
 from candidates.models import Category, Resume
 from data_extraction.services.filters import apply_regex_field_filters

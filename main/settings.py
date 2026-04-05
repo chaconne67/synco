@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     "accounts",
     "candidates",
     "data_extraction",
-    "batch_extract",
 ]
 
 MIDDLEWARE = [

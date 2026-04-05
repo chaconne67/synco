@@ -55,7 +55,7 @@ def test_fail_triggers_human_review(mock_extract, mock_validate):
 def test_extraction_returns_none(mock_extract):
     mock_extract.return_value = None
     result = run_extraction_with_retry(
-        raw_text="garbage text for extraction test with enough length to pass quality gate and then some more paddings",
+        raw_text="garbage text for extraction test with enough length to pass quality gate",
         file_path="/tmp/test.docx",
         category="HR",
         filename_meta={},

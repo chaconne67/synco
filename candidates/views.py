@@ -121,7 +121,7 @@ def review_detail(request, pk):
     logs = candidate.extraction_logs.all()[:10]
 
     # Compute field confidences (same as candidate_detail)
-    from candidates.services.validation import compute_field_confidences, compute_overall_confidence
+    from data_extraction.services.validation import compute_field_confidences, compute_overall_confidence
 
     extracted_snapshot = {
         "name": candidate.name,
@@ -144,16 +144,15 @@ def review_detail(request, pk):
     live_score, _ = compute_overall_confidence(category_scores, [], field_scores)
 
     # New model fields context (same as candidate_detail)
+    from candidates.services.etc_normalizer import build_etc_context
+
+    etc_ctx = build_etc_context(candidate)
     extra_context = {
         "salary_detail": candidate.salary_detail or {},
         "military_service": candidate.military_service or {},
-        "awards_data": candidate.awards or [],
         "self_introduction": candidate.self_introduction or "",
         "family_info": candidate.family_info or {},
-        "overseas_experience": candidate.overseas_experience or [],
-        "trainings_data": candidate.trainings or [],
-        "patents_data": candidate.patents or [],
-        "projects_data": candidate.projects or [],
+        **etc_ctx,
     }
 
     template = (
@@ -365,7 +364,7 @@ def candidate_detail(request, pk):
     primary_resume = candidate.current_resume or candidate.resumes.filter(is_primary=True).first()
 
     # Compute field confidences in real-time from current candidate data
-    from candidates.services.validation import compute_field_confidences, compute_overall_confidence
+    from data_extraction.services.validation import compute_field_confidences, compute_overall_confidence
 
     extracted_snapshot = {
         "name": candidate.name,
@@ -401,16 +400,15 @@ def candidate_detail(request, pk):
                 hallucinated_fields.add(issue.get("field", ""))
 
     # New model fields context
+    from candidates.services.etc_normalizer import build_etc_context
+
+    etc_ctx = build_etc_context(candidate)
     extra_context = {
         "salary_detail": candidate.salary_detail or {},
         "military_service": candidate.military_service or {},
-        "awards_data": candidate.awards or [],
         "self_introduction": candidate.self_introduction or "",
         "family_info": candidate.family_info or {},
-        "overseas_experience": candidate.overseas_experience or [],
-        "trainings_data": candidate.trainings or [],
-        "patents_data": candidate.patents or [],
-        "projects_data": candidate.projects or [],
+        **etc_ctx,
     }
 
     template = (

@@ -25,3 +25,5 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+section {@apply p-6}

@@ -39,6 +39,103 @@ GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 
 
 # ===========================================================================
+# Matching utilities (shared with backfill commands)
+# ===========================================================================
+
+_COMPANY_NOISE = re.compile(r"\(주\)|㈜|주식회사|\s+")
+
+
+def _normalize_company(name: str) -> str:
+    """Normalize company name for matching."""
+    return _COMPANY_NOISE.sub("", name).strip().lower()
+
+
+def _normalize_date_to_ym(date_str: str) -> str | None:
+    """Convert various date formats to YYYY-MM. Returns None on failure.
+
+    Supports: YYYY-MM, YYYY/MM, YYYY.MM, 2019년 3월, 2019년03월,
+    range expressions like '2019.03 ~ 현재' (extracts start only).
+    """
+    if not date_str:
+        return None
+    # Strip range expressions — use start date only
+    date_str = re.split(r"\s*[~\-–—]\s*", date_str)[0].strip()
+    # YYYY-MM, YYYY/MM, YYYY.MM
+    m = re.match(r"(\d{4})[-./](\d{1,2})", date_str)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)):02d}"
+    # 2019년 3월, 2019년03월
+    m = re.match(r"(\d{4})년\s*(\d{1,2})월?", date_str)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)):02d}"
+    return None
+
+
+# ===========================================================================
+# Carry-forward: restore fields Step 2 may have dropped
+# ===========================================================================
+
+_CAREER_CARRY_FIELDS = [
+    "reason_left", "achievements", "salary", "duration_text", "company_en",
+]
+
+
+def _carry_forward_career_fields(
+    normalized: list[dict],
+    raw_careers: list[dict],
+) -> None:
+    """Restore fields Step 2 may have dropped, using (company, start_date) composite key.
+
+    Falls back gracefully: if composite key doesn't match, no carry-forward is done
+    (missing data is safer than mismatched data).
+    """
+    raw_index: dict[tuple[str, str], list[dict]] = {}
+    for raw in raw_careers:
+        company_key = _normalize_company(raw.get("company") or "")
+        date_key = _normalize_date_to_ym(raw.get("start_date") or "")
+        if company_key and date_key:
+            raw_index.setdefault((company_key, date_key), []).append(raw)
+
+    for career in normalized:
+        company_key = _normalize_company(career.get("company") or "")
+        date_key = career.get("start_date") or ""  # Step 2 output is already YYYY-MM
+        matches = raw_index.get((company_key, date_key), [])
+        if not matches:
+            continue
+        best = max(
+            matches,
+            key=lambda r: sum(1 for f in _CAREER_CARRY_FIELDS if r.get(f)),
+        )
+        for field in _CAREER_CARRY_FIELDS:
+            if not career.get(field) and best.get(field):
+                career[field] = best[field]
+
+
+def _carry_forward_education_fields(
+    normalized: list[dict],
+    raw_educations: list[dict],
+) -> None:
+    """Restore gpa from Step 1 if Step 2 dropped it."""
+    raw_index: dict[tuple[str, int | None], dict] = {}
+    for raw in raw_educations:
+        key = (
+            (raw.get("institution") or "").strip().lower(),
+            raw.get("end_year"),
+        )
+        if key[0]:
+            raw_index.setdefault(key, raw)
+
+    for edu in normalized:
+        key = (
+            (edu.get("institution") or "").strip().lower(),
+            edu.get("end_year"),
+        )
+        raw = raw_index.get(key)
+        if raw and not edu.get("gpa") and raw.get("gpa"):
+            edu["gpa"] = raw["gpa"]
+
+
+# ===========================================================================
 # Shared Gemini helper
 # ===========================================================================
 
@@ -52,7 +149,13 @@ def _get_client() -> genai.Client:
 
 
 def _call_gemini(system: str, prompt: str, max_tokens: int = 6000) -> dict | None:
-    """Call Gemini and parse JSON response."""
+    """Call Gemini and parse JSON response.
+
+    Uses sanitizers.parse_llm_json for robust JSON recovery from
+    malformed responses (control chars, extra braces, truncation, etc.).
+    """
+    from data_extraction.services.extraction.sanitizers import parse_llm_json
+
     client = _get_client()
     try:
         response = client.models.generate_content(
@@ -65,19 +168,7 @@ def _call_gemini(system: str, prompt: str, max_tokens: int = 6000) -> dict | Non
                 response_mime_type="application/json",
             ),
         )
-        text = response.text
-        try:
-            result = json.loads(text)
-        except json.JSONDecodeError:
-            # Gemini sometimes appends extra data after JSON; parse first object
-            decoder = json.JSONDecoder()
-            result, _ = decoder.raw_decode(text.strip())
-        # Gemini sometimes wraps response in a list: [{...}]
-        if isinstance(result, list) and len(result) == 1 and isinstance(result[0], dict):
-            result = result[0]
-        if not isinstance(result, dict):
-            return None
-        return result
+        return parse_llm_json(response.text)
     except Exception:
         logger.warning("Gemini call failed", exc_info=True)
         return None
@@ -92,7 +183,8 @@ def extract_raw_data(
     resume_text: str,
     *,
     feedback: str | None = None,
-    max_retries: int = 2,
+    max_retries: int = 3,
+    file_name: str | None = None,
 ) -> dict | None:
     """Step 1: Extract all data faithfully from resume text.
 
@@ -100,17 +192,19 @@ def extract_raw_data(
         resume_text: Preprocessed resume text.
         feedback: Optional feedback from previous extraction attempt.
         max_retries: Maximum retry attempts.
+        file_name: Original file name (may contain name, age, company info).
 
     Returns:
         Raw extracted data dict, or None if extraction fails.
     """
-    prompt = build_step1_prompt(resume_text, feedback=feedback)
+    prompt = build_step1_prompt(resume_text, feedback=feedback, file_name=file_name)
 
     for attempt in range(max_retries):
         result = _call_gemini(STEP1_SYSTEM_PROMPT, prompt)
         if result and "name" in result:
             return result
-        logger.warning("Step 1 extraction attempt %d/%d failed", attempt + 1, max_retries)
+        if attempt < max_retries - 1:
+            logger.warning("Step 1 extraction attempt %d/%d failed, retrying...", attempt + 1, max_retries)
 
     return None
 
@@ -682,6 +776,7 @@ def run_integrity_pipeline(
     resume_text: str,
     *,
     previous_data: dict | None = None,
+    file_name: str | None = None,
 ) -> dict | None:
     """Run the full integrity pipeline.
 
@@ -701,7 +796,7 @@ def run_integrity_pipeline(
     retries = 0
 
     # -- Step 1: Faithful extraction --
-    raw_data = extract_raw_data(resume_text)
+    raw_data = extract_raw_data(resume_text, file_name=file_name)
     if raw_data is None:
         logger.error("Step 1 extraction failed")
         return None
@@ -711,7 +806,7 @@ def run_integrity_pipeline(
     if any(i["severity"] == "warning" for i in step1_issues):
         feedback = ". ".join(i["message"] for i in step1_issues if i["severity"] == "warning")
         logger.info("Step 1 validation issues, retrying: %s", feedback)
-        retry = extract_raw_data(resume_text, feedback=feedback)
+        retry = extract_raw_data(resume_text, feedback=feedback, file_name=file_name)
         if retry and "name" in retry:
             raw_data = retry
             retries += 1
@@ -729,7 +824,7 @@ def run_integrity_pipeline(
         if result is None:
             return
         # Validate
-        issues = validate_step2(result)
+        issues = validate_step2(result, raw_careers=careers_raw)
         if any(i["severity"] == "error" for i in issues):
             feedback = ". ".join(i["message"] for i in issues if i["severity"] == "error")
             retry = normalize_career_group(careers_raw, "전체 경력", feedback=feedback)
@@ -756,10 +851,12 @@ def run_integrity_pipeline(
             if career:
                 careers_list = [career]
         normalized_careers = careers_list
+        _carry_forward_career_fields(normalized_careers, careers_raw)
         all_flags.extend(career_result.get("flags", []))
 
     if edu_result:
         normalized_educations = edu_result.get("educations", [])
+        _carry_forward_education_fields(normalized_educations, educations_raw)
         all_flags.extend(edu_result.get("flags", []))
 
     # Sort careers by start_date descending, assign order
@@ -817,5 +914,10 @@ def run_integrity_pipeline(
         "pipeline_meta": {
             "step1_items": len(careers_raw) + len(educations_raw),
             "retries": retries,
+            # Carry-forward audit trail: Step 1 raw data preserved here.
+            # NOTE: This is a temporary preservation strategy. Long-term direction
+            # is to restructure raw_extracted_json as {step1, step2, final}.
+            "step1_careers_raw": careers_raw,
+            "step1_educations_raw": educations_raw,
         },
     })

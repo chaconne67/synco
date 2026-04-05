@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from batch_extract.models import GeminiBatchItem, GeminiBatchJob
+from data_extraction.models import GeminiBatchItem, GeminiBatchJob
 from data_extraction.services.batch.artifacts import raw_text_path, request_file_path
 from data_extraction.services.batch.request_builder import build_request_line
 from candidates.models import Resume
