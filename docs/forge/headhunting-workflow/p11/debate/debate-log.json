@@ -1,0 +1,61 @@
+{
+  "topic": "p11",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {"id": "D-R1-01", "severity": "CRITICAL", "title": "/admin/approvals/ URL 충돌", "attack": "Django admin path 충돌", "action": "accepted", "response": "/projects/approvals/로 수정", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-02", "severity": "CRITICAL", "title": "관리자 역할 미정의", "attack": "admin role 없음", "action": "accepted", "response": "OWNER=승인권한 매핑", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-03", "severity": "CRITICAL", "title": "TextChoices 저장값 불일치", "attack": "영어/한국어 값 충돌", "action": "accepted", "response": "한국어 저장값 유지", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-04", "severity": "CRITICAL", "title": "승인 요청 생성 시점 모순", "attack": "이중 생성 경로", "action": "accepted", "response": "project_create 원자적 생성 통일", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-05", "severity": "CRITICAL", "title": "position_title 필드 부재", "attack": "모델에 없는 필드 참조", "action": "accepted", "response": "Project.title 사용", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-06", "severity": "CRITICAL", "title": "HTMX 트리거 시점 오류", "attack": "단일 필드 변경만으로는 부족", "action": "accepted", "response": "양쪽 변경+두 값 존재 시 트리거", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-07", "severity": "CRITICAL", "title": "medium 과도한 차단", "attack": "모든 같은 고객사 프로젝트 차단됨", "action": "accepted", "response": "medium 비차단, high만 차단", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-08", "severity": "CRITICAL", "title": "다중 충돌 후보", "attack": "FK 1건만", "action": "rebutted", "response": "최고 유사도 1건 기록", "evidence_type": "logical_reasoning", "resolved": false},
+            {"id": "D-R1-09", "severity": "CRITICAL", "title": "상태 우회 가능", "attack": "폼/API 우회", "action": "accepted", "response": "status 제거+거부", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-10", "severity": "CRITICAL", "title": "후속 업무 미차단", "attack": "컨택/제출 생성 가능", "action": "accepted", "response": "가드 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-11", "severity": "CRITICAL", "title": "합류 삭제 위험", "attack": "FK/데이터 유실", "action": "accepted", "response": "차단+방어적 검사", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-12", "severity": "CRITICAL", "title": "취소/반려 미정의", "attack": "운명 미정의", "action": "accepted", "response": "삭제/Notification 정의", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-13", "severity": "MAJOR", "title": "승인요청 중복", "attack": "multiple pending", "action": "accepted", "response": "경로 단일화", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-14", "severity": "MAJOR", "title": "전이 규칙 미정의", "attack": "전이맵 없음", "action": "accepted", "response": "APPROVAL_TRANSITIONS 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-15", "severity": "MAJOR", "title": "조직 격리 누락", "attack": "org 필터 없음", "action": "accepted", "response": "project__organization=org 적용", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-16", "severity": "MINOR", "title": "admin.py 누락", "attack": "admin 갱신 누락", "action": "accepted", "response": "admin.py 추가", "evidence_type": "code_reference", "resolved": true}
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {"id": "D-R2-08", "severity": "CRITICAL", "title": "합류 대상 선택 불가", "attack": "파괴적 액션에 선택지 없음", "action": "partial", "response": "드롭다운+merge_target 파라미터", "evidence_type": "logical_reasoning", "resolved": true}
+          ]
+        }
+      ],
+      "summary": {"rounds": 2, "issues": 17, "accepted": 15, "rebutted": 1, "partial": 1, "escalated": 0}
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {"id": "I-R1-01", "severity": "CRITICAL", "title": "CASCADE deletes approval on project deletion", "attack": "ProjectApproval.project=CASCADE. reject/merge delete project -> approval cascaded", "action": "accepted", "response": "Change to SET_NULL null=True. Update migration.", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-02", "severity": "CRITICAL", "title": "project_delete bypasses approval_cancel", "attack": "Any org member can delete pending_approval project directly", "action": "accepted", "response": "Add pending_approval guard to project_delete", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-03", "severity": "MAJOR", "title": "project_update not guarded", "attack": "Pending projects editable via project_update", "action": "accepted", "response": "Add guard + test", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-04", "severity": "MAJOR", "title": "VIEWER not blocked from create", "attack": "VIEWER can create projects", "action": "rebutted", "response": "No existing view checks VIEWER. Codebase-wide concern, not P11.", "evidence_type": "code_reference", "resolved": false},
+            {"id": "I-R1-05", "severity": "MAJOR", "title": "Message action missing from UI", "attack": "No message button in approval card", "action": "accepted", "response": "Add message UI + test", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-06", "severity": "MAJOR", "title": "merge_target dropdown missing", "attack": "No UI for selecting merge target", "action": "accepted", "response": "Add dropdown + pass candidates + test", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-07", "severity": "MAJOR", "title": "decide_approval single function missing", "attack": "Design requires single entry point", "action": "rebutted", "response": "Design shows example signature. Requirements (transition/atomic/locking) fulfilled by individual functions.", "evidence_type": "code_reference", "resolved": false},
+            {"id": "I-R1-08", "severity": "MAJOR", "title": "PRG pattern missing", "attack": "POST renders inline, form resubmission risk", "action": "accepted", "response": "Redirect to project_list after approval submission", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-09", "severity": "MAJOR", "title": "Pending approval UI in list missing", "attack": "No badge/cancel in project list templates", "action": "accepted", "response": "Add to board/list/table templates", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-10", "severity": "CRITICAL", "title": "Regression fix incomplete", "attack": "Edit tests also use status field", "action": "accepted", "response": "Make Task 7 more explicit about update tests", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-11", "severity": "MINOR", "title": "Medium collision test inadequate", "attack": "Test allows no medium results", "action": "accepted", "response": "Add known medium fixture + verify warning + normal create", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-12", "severity": "MINOR", "title": "Sidebar badge missing", "attack": "Design requires OWNER sidebar badge", "action": "accepted", "response": "Add context processor + sidebar modification", "evidence_type": "code_reference", "resolved": true}
+          ]
+        }
+      ],
+      "summary": {"rounds": 1, "issues": 12, "accepted": 10, "rebutted": 2, "escalated": 0}
+    }
+  }
+}
