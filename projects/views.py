@@ -9,8 +9,8 @@ from django.views.decorators.http import require_http_methods
 
 from accounts.models import Organization
 
-from .forms import ContactForm, ProjectForm
-from .models import Contact, Interview, Offer, Project, ProjectStatus
+from .forms import ContactForm, ProjectForm, SubmissionFeedbackForm, SubmissionForm
+from .models import Contact, Interview, Offer, Project, ProjectStatus, Submission
 
 PAGE_SIZE = 20
 
@@ -409,6 +409,11 @@ def project_tab_contacts(request, pk):
         .order_by("-created_at")
     )
 
+    # 이미 Submission이 있는 후보자 ID (추천 서류 작성 링크 표시 판단용)
+    submitted_candidate_ids = set(
+        project.submissions.values_list("candidate_id", flat=True)
+    )
+
     return render(
         request,
         "projects/partials/tab_contacts.html",
@@ -417,22 +422,37 @@ def project_tab_contacts(request, pk):
             "completed_contacts": completed_contacts,
             "reserved_contacts": reserved_contacts,
             "can_release": request.user in project.assigned_consultants.all(),
+            "submitted_candidate_ids": submitted_candidate_ids,
         },
     )
 
 
 @login_required
 def project_tab_submissions(request, pk):
-    """추천: Submission 목록 (기본). 후속 Phase에서 완성."""
+    """추천 탭: 상태별 그룹핑 목록."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
     submissions = project.submissions.select_related(
         "candidate", "consultant"
     ).order_by("-created_at")
+
+    # 상태별 그룹핑
+    drafting = [s for s in submissions if s.status == Submission.Status.DRAFTING]
+    submitted = [s for s in submissions if s.status == Submission.Status.SUBMITTED]
+    passed = [s for s in submissions if s.status == Submission.Status.PASSED]
+    rejected = [s for s in submissions if s.status == Submission.Status.REJECTED]
+
     return render(
         request,
         "projects/partials/tab_submissions.html",
-        {"project": project, "submissions": submissions},
+        {
+            "project": project,
+            "drafting": drafting,
+            "submitted": submitted,
+            "passed": passed,
+            "rejected": rejected,
+            "total_count": submissions.count(),
+        },
     )
 
 
@@ -869,3 +889,209 @@ def contact_check_duplicate(request, pk):
             "project": project,
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# P07: Submission Management
+# ---------------------------------------------------------------------------
+
+
+@login_required
+def submission_create(request, pk):
+    """추천 서류 등록."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method == "POST":
+        form = SubmissionForm(
+            request.POST, request.FILES, organization=org, project=project
+        )
+        if form.is_valid():
+            submission = form.save(commit=False)
+            submission.project = project
+            submission.consultant = request.user
+            submission.save()
+
+            # 프로젝트 status 자동 전환
+            from projects.services.submission import maybe_advance_project_status
+
+            maybe_advance_project_status(project)
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "submissionChanged"},
+            )
+    else:
+        form = SubmissionForm(organization=org, project=project)
+
+    # 프리필: query param으로 candidate 전달 시
+    candidate_id = request.GET.get("candidate")
+    if candidate_id and request.method != "POST":
+        form.initial["candidate"] = candidate_id
+
+    return render(
+        request,
+        "projects/partials/submission_form.html",
+        {
+            "form": form,
+            "project": project,
+            "is_edit": False,
+        },
+    )
+
+
+@login_required
+def submission_update(request, pk, sub_pk):
+    """추천 서류 수정."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+
+    if request.method == "POST":
+        form = SubmissionForm(
+            request.POST,
+            request.FILES,
+            instance=submission,
+            organization=org,
+            project=project,
+        )
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "submissionChanged"},
+            )
+    else:
+        form = SubmissionForm(
+            instance=submission,
+            organization=org,
+            project=project,
+        )
+
+    return render(
+        request,
+        "projects/partials/submission_form.html",
+        {
+            "form": form,
+            "project": project,
+            "submission": submission,
+            "is_edit": True,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def submission_delete(request, pk, sub_pk):
+    """추천 서류 삭제. 면접/오퍼 존재 시 차단."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+
+    # 삭제 보호: 면접 또는 오퍼 존재 시 차단
+    has_interviews = submission.interviews.exists()
+    has_offer = hasattr(submission, "offer")
+    try:
+        submission.offer
+        has_offer = True
+    except Offer.DoesNotExist:
+        has_offer = False
+
+    if has_interviews or has_offer:
+        return HttpResponse(
+            "면접 또는 오퍼 이력이 있어 삭제할 수 없습니다.",
+            status=400,
+        )
+
+    submission.delete()
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "submissionChanged"},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def submission_submit(request, pk, sub_pk):
+    """고객사에 제출 (작성중 → 제출)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+
+    from projects.services.submission import InvalidTransition, submit_to_client
+
+    try:
+        submit_to_client(submission)
+    except InvalidTransition as e:
+        return HttpResponse(str(e), status=400)
+
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "submissionChanged"},
+    )
+
+
+@login_required
+def submission_feedback(request, pk, sub_pk):
+    """고객사 피드백 입력 (제출 → 통과/탈락)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+
+    if request.method == "POST":
+        form = SubmissionFeedbackForm(request.POST)
+        if form.is_valid():
+            from projects.services.submission import (
+                InvalidTransition,
+                apply_client_feedback,
+            )
+
+            try:
+                apply_client_feedback(
+                    submission,
+                    form.cleaned_data["result"],
+                    form.cleaned_data["feedback"],
+                )
+            except InvalidTransition as e:
+                return HttpResponse(str(e), status=400)
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "submissionChanged"},
+            )
+    else:
+        form = SubmissionFeedbackForm()
+
+    return render(
+        request,
+        "projects/partials/submission_feedback.html",
+        {
+            "form": form,
+            "project": project,
+            "submission": submission,
+        },
+    )
+
+
+@login_required
+def submission_download(request, pk, sub_pk):
+    """첨부파일 다운로드. 파일 없으면 404."""
+    import os
+
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+
+    if not submission.document_file:
+        from django.http import Http404
+
+        raise Http404("첨부파일이 없습니다.")
+
+    from django.http import FileResponse
+
+    response = FileResponse(
+        submission.document_file.open("rb"),
+        as_attachment=True,
+        filename=os.path.basename(submission.document_file.name),
+    )
+    return response

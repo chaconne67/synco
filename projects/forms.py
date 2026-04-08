@@ -1,8 +1,10 @@
+import os
+
 from django import forms
 
 from clients.models import Client
 
-from .models import Contact, JDSource, Project
+from .models import Contact, JDSource, Project, Submission
 
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
@@ -125,3 +127,95 @@ class ContactForm(forms.ModelForm):
                 self.add_error("contacted_at", "컨택 일시를 입력해주세요.")
 
         return cleaned
+
+
+# ---------------------------------------------------------------------------
+# P07: Submission forms
+# ---------------------------------------------------------------------------
+
+ALLOWED_FILE_EXTENSIONS = [".pdf", ".doc", ".docx"]
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+
+class SubmissionForm(forms.ModelForm):
+    class Meta:
+        model = Submission
+        fields = ["candidate", "template", "document_file", "notes"]
+        widgets = {
+            "candidate": forms.Select(attrs={"class": INPUT_CSS}),
+            "template": forms.Select(attrs={"class": INPUT_CSS}),
+            "document_file": forms.ClearableFileInput(attrs={"class": INPUT_CSS}),
+            "notes": forms.Textarea(
+                attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "메모"}
+            ),
+        }
+        labels = {
+            "candidate": "후보자",
+            "template": "양식",
+            "document_file": "추천 서류",
+            "notes": "메모",
+        }
+
+    def __init__(self, *args, organization=None, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if organization and project:
+            from candidates.models import Candidate
+
+            interested_candidate_ids = Contact.objects.filter(
+                project=project,
+                result=Contact.Result.INTERESTED,
+            ).values_list("candidate_id", flat=True)
+
+            # 이미 등록된 Submission의 후보자 제외 (수정 시에는 현재 후보자 포함)
+            existing_submission_ids = Submission.objects.filter(
+                project=project
+            ).values_list("candidate_id", flat=True)
+            if self.instance and self.instance.pk:
+                existing_submission_ids = existing_submission_ids.exclude(
+                    candidate_id=self.instance.candidate_id
+                )
+
+            self.fields["candidate"].queryset = Candidate.objects.filter(
+                pk__in=interested_candidate_ids,
+                owned_by=organization,
+            ).exclude(pk__in=existing_submission_ids)
+        elif organization:
+            from candidates.models import Candidate
+
+            self.fields["candidate"].queryset = Candidate.objects.filter(
+                owned_by=organization
+            )
+
+    def clean_document_file(self):
+        f = self.cleaned_data.get("document_file")
+        if f:
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in ALLOWED_FILE_EXTENSIONS:
+                raise forms.ValidationError(
+                    f"허용되지 않는 파일 형식입니다. ({', '.join(ALLOWED_FILE_EXTENSIONS)})"
+                )
+            if f.size > MAX_FILE_SIZE:
+                raise forms.ValidationError(
+                    f"파일 크기가 10MB를 초과합니다. (현재: {f.size / 1024 / 1024:.1f}MB)"
+                )
+        return f
+
+
+class SubmissionFeedbackForm(forms.Form):
+    """고객사 피드백 입력 폼."""
+
+    result = forms.ChoiceField(
+        choices=[
+            (Submission.Status.PASSED, "통과"),
+            (Submission.Status.REJECTED, "탈락"),
+        ],
+        widget=forms.Select(attrs={"class": INPUT_CSS}),
+        label="결과",
+    )
+    feedback = forms.CharField(
+        widget=forms.Textarea(
+            attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "피드백 내용"}
+        ),
+        label="피드백",
+        required=False,
+    )

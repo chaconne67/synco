@@ -50,6 +50,15 @@
               {% if contact.consultant %}{{ contact.consultant.get_full_name|default:contact.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
+              {% if contact.result == '관심' %}
+                {% if contact.candidate.pk not in submitted_candidate_ids %}
+                  <a hx-get="{% url 'projects:submission_create' project.pk %}?candidate={{ contact.candidate.pk }}"
+                     hx-target="#tab-content"
+                     class="text-[13px] text-green-600 hover:text-green-800 mr-2">추천 서류 작성 &rarr;</a>
+                {% else %}
+                  <span class="text-[13px] text-gray-400 mr-2">추천 등록 완료</span>
+                {% endif %}
+              {% endif %}
               <button hx-get="{% url 'projects:contact_update' project.pk contact.pk %}"
                       hx-target="#contact-form-area"
                       class="text-[13px] text-primary hover:text-primary-dark mr-2">수정</button>

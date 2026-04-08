@@ -83,4 +83,35 @@ urlpatterns = [
         views.contact_check_duplicate,
         name="contact_check_duplicate",
     ),
+    # P07: Submission 관리
+    path(
+        "<uuid:pk>/submissions/new/",
+        views.submission_create,
+        name="submission_create",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/edit/",
+        views.submission_update,
+        name="submission_update",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/delete/",
+        views.submission_delete,
+        name="submission_delete",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/submit/",
+        views.submission_submit,
+        name="submission_submit",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/feedback/",
+        views.submission_feedback,
+        name="submission_feedback",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/download/",
+        views.submission_download,
+        name="submission_download",
+    ),
 ]

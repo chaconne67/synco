@@ -141,6 +141,13 @@ class Contact(BaseModel):
         )
 
 
+class SubmissionTemplate(models.TextChoices):
+    XD_KO = "xd_ko", "엑스다임 국문"
+    XD_KO_EN = "xd_ko_en", "엑스다임 국영문"
+    XD_EN = "xd_en", "엑스다임 영문"
+    CUSTOM = "custom", "고객사 커스텀"
+
+
 class Submission(BaseModel):
     """고객사 제출 서류."""
 
@@ -171,12 +178,26 @@ class Submission(BaseModel):
         choices=Status.choices,
         default=Status.DRAFTING,
     )
+    template = models.CharField(
+        max_length=20,
+        choices=SubmissionTemplate.choices,
+        blank=True,
+        default="",
+    )
     document_file = models.FileField(upload_to="submissions/", blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     client_feedback = models.TextField(blank=True)
+    client_feedback_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "candidate"],
+                name="unique_submission_per_project_candidate",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.project} - {self.candidate} ({self.status})"
