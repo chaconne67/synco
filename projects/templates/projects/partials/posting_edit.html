@@ -1,0 +1,39 @@
+<section id="posting-section" class="bg-white rounded-lg border border-gray-100 p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-[15px] font-semibold text-gray-500">공지 편집</h2>
+  </div>
+
+  <form hx-post="{% url 'projects:posting_edit' project.pk %}"
+        hx-target="#posting-section"
+        hx-swap="outerHTML">
+    {% csrf_token %}
+
+    <div class="mb-4">
+      {{ form.posting_text }}
+      {% if form.posting_text.errors %}
+      <p class="text-[12px] text-red-500 mt-1">{{ form.posting_text.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button hx-post="{% url 'projects:posting_generate' project.pk %}"
+              hx-target="#posting-section"
+              hx-swap="outerHTML"
+              hx-confirm="기존 내용을 덮어쓰시겠습니까? AI가 새로 생성합니다."
+              type="button"
+              class="px-3 py-1.5 text-orange-600 text-[13px] border border-orange-300 rounded-lg hover:bg-orange-50 transition">
+        AI 재생성
+      </button>
+      <button type="submit"
+              class="px-4 py-1.5 bg-primary text-white text-[13px] rounded-lg hover:bg-primary-dark transition">
+        저장
+      </button>
+      <button hx-get="{% url 'projects:project_tab_overview' project.pk %}"
+              hx-target="#tab-content"
+              type="button"
+              class="px-3 py-1.5 text-gray-500 text-[13px] hover:text-gray-700 transition">
+        취소
+      </button>
+    </div>
+  </form>
+</section>

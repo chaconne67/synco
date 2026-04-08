@@ -1,0 +1,69 @@
+<div class="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" id="ref-modal-overlay"
+     onclick="if(event.target===this)this.remove()">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-4">
+    <h2 class="text-lg font-bold">{{ title }}</h2>
+    {% if show_autofill %}
+    <div class="flex items-center gap-2">
+      <button type="button" id="autofill-btn"
+              class="text-[13px] text-primary hover:underline"
+              onclick="doAutofill()">자동채움</button>
+      <span class="text-[11px] text-gray-400">회사명이 외부 검색 서비스로 전송됩니다</span>
+    </div>
+    <script>
+    function doAutofill() {
+      var nameInput = document.querySelector('input[name="name"]');
+      if (!nameInput || !nameInput.value.trim()) {
+        alert('회사명을 먼저 입력해 주세요.');
+        return;
+      }
+      var btn = document.getElementById('autofill-btn');
+      btn.textContent = '조회 중...';
+      btn.disabled = true;
+      fetch('/reference/companies/autofill/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: 'name=' + encodeURIComponent(nameInput.value.trim()),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          window.showToast && showToast(data.error);
+        } else {
+          Object.keys(data).forEach(function(key) {
+            var input = document.querySelector('[name="' + key + '"]');
+            if (input && data[key]) input.value = data[key];
+          });
+        }
+      })
+      .catch(() => window.showToast && showToast('자동채움에 실패했습니다.'))
+      .finally(() => { btn.textContent = '자동채움'; btn.disabled = false; });
+    }
+    </script>
+    {% endif %}
+    <form hx-post="{{ post_url }}" hx-target="#ref-form-area" hx-swap="innerHTML" class="space-y-3">
+      {% csrf_token %}
+      {% for field in form %}
+      {% if not field.is_hidden %}
+      <div>
+        <label class="block text-[13px] font-medium text-gray-700 mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <p class="text-red-500 text-[13px] mt-0.5">{{ field.errors.0 }}</p>
+        {% endif %}
+      </div>
+      {% else %}
+      {{ field }}
+      {% endif %}
+      {% endfor %}
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('ref-modal-overlay').remove()"
+                class="px-4 py-2 text-[15px] text-gray-500 hover:bg-gray-100 rounded-lg">취소</button>
+        <button type="submit"
+                class="bg-primary text-white font-semibold px-4 py-2 rounded-lg text-[15px] hover:bg-primary-dark">저장</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -4,7 +4,15 @@ from django import forms
 
 from clients.models import Client
 
-from .models import Contact, Interview, JDSource, Offer, Project, Submission
+from .models import (
+    Contact,
+    Interview,
+    JDSource,
+    Offer,
+    PostingSite,
+    Project,
+    Submission,
+)
 
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
@@ -369,3 +377,56 @@ class OfferForm(forms.ModelForm):
             self.fields["submission"].queryset = Submission.objects.filter(
                 pk__in=eligible_ids,
             ).select_related("candidate")
+
+
+# ---------------------------------------------------------------------------
+# P10: Posting forms
+# ---------------------------------------------------------------------------
+
+
+class PostingEditForm(forms.Form):
+    """공지 텍스트 편집 폼."""
+
+    posting_text = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                "class": INPUT_CSS,
+                "rows": 15,
+                "placeholder": "공지 내용을 입력하세요",
+            }
+        ),
+        label="공지 내용",
+    )
+
+
+class PostingSiteForm(forms.ModelForm):
+    class Meta:
+        model = PostingSite
+        fields = ["site", "posted_at", "is_active", "applicant_count", "url", "notes"]
+        widgets = {
+            "site": forms.Select(attrs={"class": INPUT_CSS}),
+            "posted_at": forms.DateInput(
+                attrs={"class": INPUT_CSS, "type": "date"},
+                format="%Y-%m-%d",
+            ),
+            "is_active": forms.CheckboxInput(
+                attrs={
+                    "class": "rounded border-gray-300 text-primary focus:ring-primary"
+                }
+            ),
+            "applicant_count": forms.NumberInput(attrs={"class": INPUT_CSS, "min": 0}),
+            "url": forms.URLInput(
+                attrs={"class": INPUT_CSS, "placeholder": "포스팅 URL (선택)"}
+            ),
+            "notes": forms.Textarea(
+                attrs={"class": INPUT_CSS, "rows": 2, "placeholder": "메모"}
+            ),
+        }
+        labels = {
+            "site": "사이트",
+            "posted_at": "게시일",
+            "is_active": "활성",
+            "applicant_count": "지원자 수",
+            "url": "URL",
+            "notes": "메모",
+        }

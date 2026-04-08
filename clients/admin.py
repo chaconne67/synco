@@ -26,18 +26,13 @@ class UniversityTierAdmin(admin.ModelAdmin):
 
 @admin.register(CompanyProfile)
 class CompanyProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "industry",
-        "size_category",
-        "revenue_range",
-        "preference_tier",
-    )
-    search_fields = ("name", "industry")
+    list_display = ("name", "name_en", "industry", "size_category", "listed", "region")
+    list_filter = ("size_category", "listed")
+    search_fields = ("name", "name_en", "industry")
 
 
 @admin.register(PreferredCert)
 class PreferredCertAdmin(admin.ModelAdmin):
-    list_display = ("name", "category")
-    list_filter = ("category",)
-    search_fields = ("name",)
+    list_display = ("name", "full_name", "category", "level")
+    list_filter = ("category", "level")
+    search_fields = ("name", "full_name")

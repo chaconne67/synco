@@ -202,4 +202,40 @@ urlpatterns = [
         views.offer_reject,
         name="offer_reject",
     ),
+    # P10: Posting 관리
+    path(
+        "<uuid:pk>/posting/generate/",
+        views.posting_generate,
+        name="posting_generate",
+    ),
+    path(
+        "<uuid:pk>/posting/edit/",
+        views.posting_edit,
+        name="posting_edit",
+    ),
+    path(
+        "<uuid:pk>/posting/download/",
+        views.posting_download,
+        name="posting_download",
+    ),
+    path(
+        "<uuid:pk>/posting/sites/",
+        views.posting_sites,
+        name="posting_sites",
+    ),
+    path(
+        "<uuid:pk>/posting/sites/new/",
+        views.posting_site_add,
+        name="posting_site_add",
+    ),
+    path(
+        "<uuid:pk>/posting/sites/<uuid:site_pk>/edit/",
+        views.posting_site_update,
+        name="posting_site_update",
+    ),
+    path(
+        "<uuid:pk>/posting/sites/<uuid:site_pk>/delete/",
+        views.posting_site_delete,
+        name="posting_site_delete",
+    ),
 ]

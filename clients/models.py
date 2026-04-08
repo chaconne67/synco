@@ -66,38 +66,58 @@ class UniversityTier(BaseModel):
     """대학 랭킹 마스터 데이터."""
 
     class Tier(models.TextChoices):
-        S = "S", "S"
-        A = "A", "A"
-        B = "B", "B"
-        C = "C", "C"
-        D = "D", "D"
-        E = "E", "E"
-        F = "F", "F"
-        OVERSEAS_TOP = "해외최상위", "해외최상위"
-        OVERSEAS_HIGH = "해외상위", "해외상위"
-        OVERSEAS_GOOD = "해외우수", "해외우수"
+        SKY = "SKY", "SKY"
+        SSG = "SSG", "서성한"
+        JKOS = "JKOS", "중경외시"
+        KDH = "KDH", "건동홍"
+        INSEOUL = "INSEOUL", "인서울 기타"
+        SCIENCE_ELITE = "SCIENCE_ELITE", "이공계 명문"
+        REGIONAL = "REGIONAL", "지방 거점 국립"
+        OVERSEAS_TOP = "OVERSEAS_TOP", "해외 최상위"
+        OVERSEAS_HIGH = "OVERSEAS_HIGH", "해외 상위"
+        OVERSEAS_GOOD = "OVERSEAS_GOOD", "해외 우수"
 
     name = models.CharField(max_length=200)
     name_en = models.CharField(max_length=200, blank=True)
     country = models.CharField(max_length=10, default="KR")
     tier = models.CharField(max_length=20, choices=Tier.choices)
-    ranking = models.IntegerField(null=True, blank=True)
+    ranking = models.PositiveSmallIntegerField(null=True, blank=True)
+    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ["tier", "ranking"]
+        unique_together = [("name", "country")]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.tier})"
+        return f"{self.name} ({self.get_tier_display()})"
 
 
 class CompanyProfile(BaseModel):
     """기업 분류 DB."""
 
-    name = models.CharField(max_length=200)
+    class SizeCategory(models.TextChoices):
+        LARGE = "대기업", "대기업"
+        MID = "중견", "중견"
+        SMALL = "중소", "중소"
+        FOREIGN = "외국계", "외국계"
+        STARTUP = "스타트업", "스타트업"
+
+    class Listed(models.TextChoices):
+        KOSPI = "KOSPI", "KOSPI"
+        KOSDAQ = "KOSDAQ", "KOSDAQ"
+        UNLISTED = "비상장", "비상장"
+        OVERSEAS = "해외상장", "해외상장"
+
+    name = models.CharField(max_length=200, unique=True)
+    name_en = models.CharField(max_length=200, blank=True)
     industry = models.CharField(max_length=100, blank=True)
-    size_category = models.CharField(max_length=50, blank=True)
+    size_category = models.CharField(
+        max_length=50, choices=SizeCategory.choices, blank=True
+    )
     revenue_range = models.CharField(max_length=50, blank=True)
-    preference_tier = models.CharField(max_length=50, blank=True)
+    employee_count_range = models.CharField(max_length=50, blank=True)
+    listed = models.CharField(max_length=20, choices=Listed.choices, blank=True)
+    region = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -111,18 +131,32 @@ class PreferredCert(BaseModel):
     """선호 자격증 마스터."""
 
     class Category(models.TextChoices):
-        ACCOUNTING = "회계", "회계"
+        ACCOUNTING = "회계/재무", "회계/재무"
         LAW = "법률", "법률"
-        TECH = "기술", "기술"
+        TECH = "기술/엔지니어링", "기술/엔지니어링"
+        IT = "IT", "IT"
+        MEDICAL = "의료/제약", "의료/제약"
+        TRADE = "무역/물류", "무역/물류"
+        CONSTRUCTION = "건설/부동산", "건설/부동산"
+        FOOD_ENV = "식품/환경", "식품/환경"
         LANGUAGE = "어학", "어학"
+        SAFETY = "안전/품질", "안전/품질"
         OTHER = "기타", "기타"
 
+    class Level(models.TextChoices):
+        HIGH = "상", "상"
+        MID = "중", "중"
+        LOW = "하", "하"
+
     name = models.CharField(max_length=200, unique=True)
-    category = models.CharField(max_length=20, choices=Category.choices)
-    description = models.TextField(blank=True)
+    full_name = models.CharField(max_length=200, blank=True)
+    category = models.CharField(max_length=30, choices=Category.choices)
+    level = models.CharField(max_length=10, choices=Level.choices, blank=True)
+    aliases = models.JSONField(default=list, blank=True)
+    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ["category", "name"]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.category})"
+        return f"{self.name} ({self.get_category_display()})"

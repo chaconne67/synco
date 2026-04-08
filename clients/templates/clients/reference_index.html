@@ -1,0 +1,55 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}레퍼런스 관리 — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+  <h1 class="text-heading font-bold">레퍼런스 관리</h1>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-gray-200">
+    <button hx-get="/reference/universities/" hx-target="#ref-tab-content" hx-push-url="/reference/universities/"
+            class="ref-tab px-4 py-2.5 text-[15px] font-medium rounded-t-lg border-b-2 -mb-px {% if active_tab == 'universities' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}"
+            data-tab="universities">
+      대학 랭킹
+    </button>
+    <button hx-get="/reference/companies/" hx-target="#ref-tab-content" hx-push-url="/reference/companies/"
+            class="ref-tab px-4 py-2.5 text-[15px] font-medium rounded-t-lg border-b-2 -mb-px {% if active_tab == 'companies' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}"
+            data-tab="companies">
+      기업 DB
+    </button>
+    <button hx-get="/reference/certs/" hx-target="#ref-tab-content" hx-push-url="/reference/certs/"
+            class="ref-tab px-4 py-2.5 text-[15px] font-medium rounded-t-lg border-b-2 -mb-px {% if active_tab == 'certs' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}"
+            data-tab="certs">
+      자격증
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div id="ref-tab-content">
+    {% if active_tab == "universities" %}
+      {% include "clients/partials/ref_universities.html" %}
+    {% elif active_tab == "companies" %}
+      {% include "clients/partials/ref_companies.html" %}
+    {% elif active_tab == "certs" %}
+      {% include "clients/partials/ref_certs.html" %}
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.body.addEventListener('htmx:afterSwap', function(e) {
+  if (e.detail.target.id === 'ref-tab-content') {
+    var path = window.location.pathname;
+    document.querySelectorAll('.ref-tab').forEach(function(tab) {
+      var key = tab.dataset.tab;
+      var active = path.includes('/' + key);
+      tab.className = tab.className.replace(/border-primary text-primary|border-transparent text-gray-500 hover:text-gray-700/g, '');
+      tab.classList.add(active ? 'border-primary' : 'border-transparent');
+      tab.classList.add(active ? 'text-primary' : 'text-gray-500');
+      if (!active) tab.classList.add('hover:text-gray-700');
+    });
+  }
+});
+</script>
+{% endblock %}

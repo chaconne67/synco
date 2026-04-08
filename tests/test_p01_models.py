@@ -116,7 +116,7 @@ class TestUUIDPrimaryKeys:
 
     @pytest.mark.django_db
     def test_university_tier_has_uuid_pk(self):
-        u = UniversityTier.objects.create(name="Seoul National", tier="S")
+        u = UniversityTier.objects.create(name="Seoul National", tier="SKY")
         assert isinstance(u.pk, uuid.UUID)
 
     @pytest.mark.django_db
@@ -273,17 +273,17 @@ class TestUniversityTier:
         u = UniversityTier.objects.create(
             name="서울대학교",
             name_en="Seoul National University",
-            tier="S",
+            tier="SKY",
             ranking=1,
         )
         assert u.name == "서울대학교"
-        assert u.tier == "S"
+        assert u.tier == "SKY"
         assert u.country == "KR"
 
     @pytest.mark.django_db
     def test_overseas_tier(self):
-        u = UniversityTier.objects.create(name="MIT", tier="해외최상위", country="US")
-        assert u.tier == "해외최상위"
+        u = UniversityTier.objects.create(name="MIT", tier="OVERSEAS_TOP", country="US")
+        assert u.tier == "OVERSEAS_TOP"
         assert u.country == "US"
 
 
@@ -306,15 +306,15 @@ class TestCompanyProfile:
 class TestPreferredCert:
     @pytest.mark.django_db
     def test_create_preferred_cert(self):
-        pc = PreferredCert.objects.create(name="CPA", category="회계")
+        pc = PreferredCert.objects.create(name="CPA", category="회계/재무")
         assert pc.name == "CPA"
-        assert pc.category == "회계"
+        assert pc.category == "회계/재무"
 
     @pytest.mark.django_db
     def test_preferred_cert_unique_name(self):
-        PreferredCert.objects.create(name="CPA", category="회계")
+        PreferredCert.objects.create(name="CPA", category="회계/재무")
         with pytest.raises(IntegrityError):
-            PreferredCert.objects.create(name="CPA", category="기술")
+            PreferredCert.objects.create(name="CPA", category="IT")
 
 
 # --- Project ---

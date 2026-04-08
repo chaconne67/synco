@@ -56,6 +56,7 @@ class Project(BaseModel):
     )
     requirements = models.JSONField(default=dict, blank=True)
     posting_text = models.TextField(blank=True)
+    posting_file_name = models.CharField(max_length=300, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -472,3 +473,44 @@ class Notification(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.title} ({self.status})"
+
+
+class PostingSiteChoice(models.TextChoices):
+    JOBKOREA = "jobkorea", "잡코리아"
+    SARAMIN = "saramin", "사람인"
+    INCRUIT = "incruit", "인크루트"
+    LINKEDIN = "linkedin", "LinkedIn"
+    WANTED = "wanted", "원티드"
+    CATCH = "catch", "캐치"
+    OTHER = "other", "기타"
+
+
+class PostingSite(BaseModel):
+    """포스팅 사이트별 게시 현황."""
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="posting_sites",
+    )
+    site = models.CharField(
+        max_length=20,
+        choices=PostingSiteChoice.choices,
+    )
+    posted_at = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    applicant_count = models.PositiveIntegerField(default=0)
+    url = models.URLField(blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "site"],
+                name="unique_posting_site_per_project",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.project} - {self.get_site_display()}"

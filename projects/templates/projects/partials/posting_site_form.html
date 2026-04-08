@@ -1,0 +1,58 @@
+<div class="bg-gray-50 rounded-lg p-4 mb-3">
+  <h4 class="text-[14px] font-medium text-gray-700 mb-3">
+    {% if is_edit %}포스팅 수정{% else %}포스팅 추가{% endif %}
+  </h4>
+  <form {% if is_edit %}
+          hx-post="{% url 'projects:posting_site_update' project.pk site.pk %}"
+        {% else %}
+          hx-post="{% url 'projects:posting_site_add' project.pk %}"
+        {% endif %}
+        hx-target="#posting-site-form-area"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">{{ form.site.label }}</label>
+        {{ form.site }}
+        {% if form.site.errors %}
+        <p class="text-[12px] text-red-500 mt-0.5">{{ form.site.errors.0 }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">{{ form.posted_at.label }}</label>
+        {{ form.posted_at }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">{{ form.applicant_count.label }}</label>
+        {{ form.applicant_count }}
+      </div>
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">{{ form.url.label }}</label>
+        {{ form.url }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-[13px] text-gray-500 mb-1">{{ form.notes.label }}</label>
+      {{ form.notes }}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button type="submit"
+              class="px-3 py-1.5 bg-primary text-white text-[13px] rounded-lg hover:bg-primary-dark transition">
+        저장
+      </button>
+      <button type="button"
+              hx-get="{% url 'projects:posting_sites' project.pk %}"
+              hx-target="#posting-sites-area"
+              hx-swap="innerHTML"
+              class="px-3 py-1.5 text-gray-500 text-[13px] hover:text-gray-700 transition">
+        취소
+      </button>
+    </div>
+  </form>
+</div>

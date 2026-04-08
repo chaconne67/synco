@@ -1,0 +1,101 @@
+<!-- Filters -->
+<div class="flex flex-wrap gap-2 mb-4">
+  <form hx-get="/reference/certs/" hx-target="#ref-tab-content" class="flex flex-wrap gap-2 w-full">
+    <input type="text" name="q" value="{{ q }}" placeholder="자격증명 또는 별칭 검색"
+           class="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">
+    <select name="category" class="border border-gray-300 rounded-lg px-3 py-2 text-[15px]">
+      <option value="">전체 카테고리</option>
+      {% for val, label in category_choices %}
+      <option value="{{ val }}" {% if category_filter == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="level" class="border border-gray-300 rounded-lg px-3 py-2 text-[15px]">
+      <option value="">전체 난이도</option>
+      {% for val, label in level_choices %}
+      <option value="{{ val }}" {% if level_filter == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[15px] hover:bg-gray-200">검색</button>
+  </form>
+</div>
+
+<!-- Table -->
+{% if page_obj.object_list %}
+<div class="overflow-x-auto">
+  <table class="w-full text-[15px]">
+    <thead>
+      <tr class="border-b border-gray-200 text-left text-gray-500 text-[13px]">
+        <th class="pb-2 font-medium">약칭</th>
+        <th class="pb-2 font-medium">정식 명칭</th>
+        <th class="pb-2 font-medium">카테고리</th>
+        <th class="pb-2 font-medium">난이도</th>
+        <th class="pb-2 font-medium">별칭</th>
+        {% if is_staff %}<th class="pb-2 font-medium"></th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for cert in page_obj %}
+      <tr class="border-b border-gray-100 hover:bg-gray-50">
+        <td class="py-2.5 font-medium text-gray-900">{{ cert.name }}</td>
+        <td class="py-2.5 text-gray-600">{{ cert.full_name|default:"-" }}</td>
+        <td class="py-2.5"><span class="inline-block bg-purple-50 text-purple-700 text-[13px] px-2 py-0.5 rounded">{{ cert.get_category_display }}</span></td>
+        <td class="py-2.5 text-gray-600">{{ cert.get_level_display|default:"-" }}</td>
+        <td class="py-2.5 text-gray-500 text-[13px]">{{ cert.aliases|join:", "|default:"-" }}</td>
+        {% if is_staff %}
+        <td class="py-2.5 text-right space-x-1">
+          <button hx-get="/reference/certs/{{ cert.pk }}/edit/" hx-target="#ref-form-area"
+                  class="text-[13px] text-primary hover:underline">수정</button>
+          <button hx-post="/reference/certs/{{ cert.pk }}/delete/" hx-confirm="정말 삭제하시겠습니까?"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  class="text-[13px] text-red-500 hover:underline">삭제</button>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="flex justify-center gap-2 pt-4">
+  {% if page_obj.has_previous %}
+  <button hx-get="/reference/certs/?{% if q %}q={{ q }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}{% if level_filter %}level={{ level_filter }}&{% endif %}page={{ page_obj.previous_page_number }}"
+          hx-target="#ref-tab-content"
+          class="px-3 py-2 rounded-lg text-[15px] text-gray-500 hover:bg-gray-100">이전</button>
+  {% endif %}
+  <span class="px-3 py-2 text-[15px] text-gray-500">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <button hx-get="/reference/certs/?{% if q %}q={{ q }}&{% endif %}{% if category_filter %}category={{ category_filter }}&{% endif %}{% if level_filter %}level={{ level_filter }}&{% endif %}page={{ page_obj.next_page_number }}"
+          hx-target="#ref-tab-content"
+          class="px-3 py-2 rounded-lg text-[15px] text-gray-500 hover:bg-gray-100">다음</button>
+  {% endif %}
+</div>
+{% endif %}
+{% else %}
+<p class="text-center text-gray-500 py-8">{% if q %}검색 결과가 없습니다.{% else %}등록된 자격증이 없습니다.{% endif %}</p>
+{% endif %}
+
+<!-- Actions -->
+<div class="flex gap-2 pt-4">
+  {% if is_staff %}
+  <button hx-get="/reference/certs/new/" hx-target="#ref-form-area"
+          class="bg-primary text-white font-semibold py-2 px-4 rounded-lg text-[15px] hover:bg-primary-dark transition">+ 추가</button>
+  <form hx-post="/reference/certs/import/" hx-target="#ref-import-result" hx-encoding="multipart/form-data" class="flex gap-2">
+    {% csrf_token %}
+    {{ import_form.csv_file }}
+    <button type="submit" class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[15px] hover:bg-gray-200">CSV 가져오기</button>
+  </form>
+  {% endif %}
+  <a href="/reference/certs/export/?{% if q %}q={{ q }}&{% endif %}{% if category_filter %}category={{ category_filter }}{% endif %}"
+     hx-boost="false"
+     class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[15px] hover:bg-gray-200">CSV 내보내기</a>
+</div>
+
+<div id="ref-form-area"></div>
+<div id="ref-import-result"></div>
+
+<script>
+document.body.addEventListener('certChanged', function() {
+  htmx.ajax('GET', '/reference/certs/', {target: '#ref-tab-content'});
+});
+</script>
