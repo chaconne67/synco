@@ -4,7 +4,7 @@ from django import forms
 
 from clients.models import Client
 
-from .models import Contact, JDSource, Project, Submission
+from .models import Contact, Interview, JDSource, Offer, Project, Submission
 
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
@@ -219,3 +219,153 @@ class SubmissionFeedbackForm(forms.Form):
         label="피드백",
         required=False,
     )
+
+
+# ---------------------------------------------------------------------------
+# P09: Interview / Offer forms
+# ---------------------------------------------------------------------------
+
+
+class InterviewForm(forms.ModelForm):
+    class Meta:
+        model = Interview
+        fields = ["submission", "round", "scheduled_at", "type", "location", "notes"]
+        widgets = {
+            "submission": forms.Select(attrs={"class": INPUT_CSS}),
+            "round": forms.NumberInput(attrs={"class": INPUT_CSS, "min": 1}),
+            "scheduled_at": forms.DateTimeInput(
+                attrs={"class": INPUT_CSS, "type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
+            "type": forms.Select(attrs={"class": INPUT_CSS}),
+            "location": forms.TextInput(
+                attrs={
+                    "class": INPUT_CSS,
+                    "placeholder": "면접 장소 또는 화상 링크",
+                }
+            ),
+            "notes": forms.Textarea(
+                attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "메모"}
+            ),
+        }
+        labels = {
+            "submission": "추천 건",
+            "round": "차수",
+            "scheduled_at": "면접 일시",
+            "type": "유형",
+            "location": "장소/링크",
+            "notes": "메모",
+        }
+
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project:
+            # 통과된 Submission만 선택 가능
+            self.fields["submission"].queryset = Submission.objects.filter(
+                project=project,
+                status=Submission.Status.PASSED,
+            ).select_related("candidate")
+
+    def clean(self):
+        cleaned = super().clean()
+        submission = cleaned.get("submission")
+        round_num = cleaned.get("round")
+
+        if submission and round_num:
+            # 중복 (submission, round) 검증 — 수정 시 자기 자신 제외
+            qs = Interview.objects.filter(
+                submission=submission,
+                round=round_num,
+            )
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error(
+                    "round",
+                    f"{round_num}차 면접이 이미 등록되어 있습니다.",
+                )
+
+        return cleaned
+
+
+class InterviewResultForm(forms.Form):
+    """면접 결과 입력 폼."""
+
+    result = forms.ChoiceField(
+        choices=[
+            (Interview.Result.PASSED, "합격"),
+            (Interview.Result.ON_HOLD, "보류"),
+            (Interview.Result.FAILED, "탈락"),
+        ],
+        widget=forms.Select(attrs={"class": INPUT_CSS}),
+        label="결과",
+    )
+    feedback = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                "class": INPUT_CSS,
+                "rows": 3,
+                "placeholder": "면접관/고객사 피드백",
+            }
+        ),
+        label="피드백",
+        required=False,
+    )
+
+
+class OfferForm(forms.ModelForm):
+    class Meta:
+        model = Offer
+        fields = ["submission", "salary", "position_title", "start_date", "notes"]
+        widgets = {
+            "submission": forms.Select(attrs={"class": INPUT_CSS}),
+            "salary": forms.TextInput(
+                attrs={"class": INPUT_CSS, "placeholder": "제안 연봉"}
+            ),
+            "position_title": forms.TextInput(
+                attrs={"class": INPUT_CSS, "placeholder": "제안 직책"}
+            ),
+            "start_date": forms.DateInput(
+                attrs={"class": INPUT_CSS, "type": "date"},
+                format="%Y-%m-%d",
+            ),
+            "notes": forms.Textarea(
+                attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "협상 메모"}
+            ),
+        }
+        labels = {
+            "submission": "추천 건",
+            "salary": "제안 연봉",
+            "position_title": "제안 직책",
+            "start_date": "출근 예정일",
+            "notes": "메모",
+        }
+
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project:
+            from projects.services.lifecycle import is_submission_offer_eligible
+
+            # 통과 Submission 중 최신 인터뷰 합격 + Offer 없는 것만
+            passed_submissions = Submission.objects.filter(
+                project=project,
+                status=Submission.Status.PASSED,
+            ).select_related("candidate")
+
+            # 이미 Offer 있는 Submission 제외 (수정 시 자기 submission 포함)
+            existing_offer_sub_ids = Offer.objects.filter(
+                submission__project=project,
+            ).values_list("submission_id", flat=True)
+            if self.instance and self.instance.pk:
+                existing_offer_sub_ids = existing_offer_sub_ids.exclude(
+                    submission_id=self.instance.submission_id,
+                )
+
+            eligible_ids = [
+                s.pk
+                for s in passed_submissions.exclude(pk__in=existing_offer_sub_ids)
+                if is_submission_offer_eligible(s)
+            ]
+            self.fields["submission"].queryset = Submission.objects.filter(
+                pk__in=eligible_ids,
+            ).select_related("candidate")

@@ -10,7 +10,15 @@ from django.views.decorators.http import require_http_methods
 
 from accounts.models import Organization
 
-from .forms import ContactForm, ProjectForm, SubmissionFeedbackForm, SubmissionForm
+from .forms import (
+    ContactForm,
+    InterviewForm,
+    InterviewResultForm,
+    OfferForm,
+    ProjectForm,
+    SubmissionFeedbackForm,
+    SubmissionForm,
+)
 from .models import (
     Contact,
     DEFAULT_MASKING_CONFIG,
@@ -470,35 +478,57 @@ def project_tab_submissions(request, pk):
 
 @login_required
 def project_tab_interviews(request, pk):
-    """면접: Interview 목록 (기본). 후속 Phase에서 완성."""
+    """면접 탭: 후보자별 그룹핑, 차수 순 정렬."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
+
     interviews = (
         Interview.objects.filter(submission__project=project)
-        .select_related("submission__candidate")
-        .order_by("-scheduled_at")
+        .select_related("submission__candidate", "submission__consultant")
+        .order_by("submission__candidate__name", "round")
     )
+
+    # 후보자별 그룹핑
+    from itertools import groupby
+
+    grouped = []
+    for candidate, group in groupby(interviews, key=lambda i: i.submission.candidate):
+        grouped.append(
+            {
+                "candidate": candidate,
+                "interviews": list(group),
+            }
+        )
+
     return render(
         request,
         "projects/partials/tab_interviews.html",
-        {"project": project, "interviews": interviews},
+        {
+            "project": project,
+            "grouped_interviews": grouped,
+            "total_count": interviews.count(),
+        },
     )
 
 
 @login_required
 def project_tab_offers(request, pk):
-    """오퍼: Offer 목록 (기본). 후속 Phase에서 완성."""
+    """오퍼 탭: 목록."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
     offers = (
         Offer.objects.filter(submission__project=project)
-        .select_related("submission__candidate")
+        .select_related("submission__candidate", "submission__consultant")
         .order_by("-created_at")
     )
     return render(
         request,
         "projects/partials/tab_offers.html",
-        {"project": project, "offers": offers},
+        {
+            "project": project,
+            "offers": offers,
+            "total_count": offers.count(),
+        },
     )
 
 
@@ -1276,9 +1306,7 @@ def draft_finalize(request, pk, sub_pk):
         DraftStatus.REVIEWED,  # 회귀: 재정리
     }
     if draft.status not in allowed_statuses:
-        return HttpResponse(
-            "현재 상태에서는 AI 정리를 실행할 수 없습니다.", status=400
-        )
+        return HttpResponse("현재 상태에서는 AI 정리를 실행할 수 없습니다.", status=400)
 
     from projects.services.draft_finalizer import finalize_draft
 
@@ -1309,9 +1337,7 @@ def draft_review(request, pk, sub_pk):
 
     if request.method == "POST":
         try:
-            updated_content = json.loads(
-                request.POST.get("final_content", "{}")
-            )
+            updated_content = json.loads(request.POST.get("final_content", "{}"))
         except json.JSONDecodeError:
             return HttpResponse("유효하지 않은 데이터 형식입니다.", status=400)
 
@@ -1403,4 +1429,344 @@ def draft_preview(request, pk, sub_pk):
             "submission": submission,
             "preview_data": preview_data,
         },
+    )
+
+
+# ---------------------------------------------------------------------------
+# P09: Interview CRUD
+# ---------------------------------------------------------------------------
+
+
+@login_required
+def interview_create(request, pk):
+    """면접 등록."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method == "POST":
+        form = InterviewForm(request.POST, project=project)
+        if form.is_valid():
+            form.save()
+
+            # 프로젝트 status 자동 전환
+            from projects.services.lifecycle import maybe_advance_to_interviewing
+
+            maybe_advance_to_interviewing(project)
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "interviewChanged"},
+            )
+    else:
+        form = InterviewForm(project=project)
+
+    # 프리필: query param으로 submission 전달 시
+    submission_id = request.GET.get("submission")
+    if submission_id and request.method != "POST":
+        form.initial["submission"] = submission_id
+        # round 자동 계산: 해당 submission의 max round + 1
+        max_round = (
+            Interview.objects.filter(submission_id=submission_id)
+            .order_by("-round")
+            .values_list("round", flat=True)
+            .first()
+        ) or 0
+        form.initial["round"] = max_round + 1
+
+    # 추천 탭에서 "면접 등록 →" 클릭 시: 면접 탭 + 폼을 함께 반환
+    hx_target = request.headers.get("HX-Target", "")
+    if hx_target == "tab-content":
+        from itertools import groupby
+
+        interviews = (
+            Interview.objects.filter(submission__project=project)
+            .select_related("submission__candidate", "submission__consultant")
+            .order_by("submission__candidate__name", "round")
+        )
+        grouped = []
+        for candidate, group in groupby(
+            interviews, key=lambda i: i.submission.candidate
+        ):
+            grouped.append({"candidate": candidate, "interviews": list(group)})
+        return render(
+            request,
+            "projects/partials/tab_interviews_with_form.html",
+            {
+                "form": form,
+                "project": project,
+                "is_edit": False,
+                "grouped_interviews": grouped,
+                "total_count": interviews.count(),
+            },
+        )
+
+    return render(
+        request,
+        "projects/partials/interview_form.html",
+        {
+            "form": form,
+            "project": project,
+            "is_edit": False,
+        },
+    )
+
+
+@login_required
+def interview_update(request, pk, interview_pk):
+    """면접 수정."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    interview = get_object_or_404(
+        Interview,
+        pk=interview_pk,
+        submission__project=project,
+    )
+
+    if request.method == "POST":
+        form = InterviewForm(request.POST, instance=interview, project=project)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "interviewChanged"},
+            )
+    else:
+        form = InterviewForm(instance=interview, project=project)
+
+    return render(
+        request,
+        "projects/partials/interview_form.html",
+        {
+            "form": form,
+            "project": project,
+            "interview": interview,
+            "is_edit": True,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def interview_delete(request, pk, interview_pk):
+    """면접 삭제. 삭제 보호: Offer가 연결된 Submission의 Interview는 삭제 불가."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    interview = get_object_or_404(
+        Interview,
+        pk=interview_pk,
+        submission__project=project,
+    )
+
+    # 삭제 보호: Offer가 연결된 Submission의 Interview는 삭제 불가
+    if hasattr(interview.submission, "offer"):
+        return HttpResponse(
+            "오퍼가 등록된 추천 건의 면접은 삭제할 수 없습니다.",
+            status=400,
+        )
+
+    interview.delete()
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "interviewChanged"},
+    )
+
+
+@login_required
+def interview_result(request, pk, interview_pk):
+    """면접 결과 입력 (대기 → 합격/보류/탈락)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    interview = get_object_or_404(
+        Interview,
+        pk=interview_pk,
+        submission__project=project,
+    )
+
+    if request.method == "POST":
+        form = InterviewResultForm(request.POST)
+        if form.is_valid():
+            from projects.services.lifecycle import (
+                InvalidTransition,
+                apply_interview_result,
+            )
+
+            try:
+                apply_interview_result(
+                    interview,
+                    form.cleaned_data["result"],
+                    form.cleaned_data["feedback"],
+                )
+            except InvalidTransition as e:
+                return HttpResponse(str(e), status=400)
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "interviewChanged"},
+            )
+    else:
+        form = InterviewResultForm()
+
+    return render(
+        request,
+        "projects/partials/interview_result_form.html",
+        {
+            "form": form,
+            "project": project,
+            "interview": interview,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# P09: Offer CRUD
+# ---------------------------------------------------------------------------
+
+
+@login_required
+def offer_create(request, pk):
+    """오퍼 등록."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method == "POST":
+        form = OfferForm(request.POST, project=project)
+        if form.is_valid():
+            form.save()
+
+            # 프로젝트 status 자동 전환
+            from projects.services.lifecycle import maybe_advance_to_negotiating
+
+            maybe_advance_to_negotiating(project)
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "offerChanged"},
+            )
+    else:
+        form = OfferForm(project=project)
+
+    return render(
+        request,
+        "projects/partials/offer_form.html",
+        {
+            "form": form,
+            "project": project,
+            "is_edit": False,
+        },
+    )
+
+
+@login_required
+def offer_update(request, pk, offer_pk):
+    """오퍼 수정. 협상중 상태에서만."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    offer = get_object_or_404(
+        Offer,
+        pk=offer_pk,
+        submission__project=project,
+    )
+
+    if request.method == "POST":
+        form = OfferForm(request.POST, instance=offer, project=project)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "offerChanged"},
+            )
+    else:
+        form = OfferForm(instance=offer, project=project)
+
+    return render(
+        request,
+        "projects/partials/offer_form.html",
+        {
+            "form": form,
+            "project": project,
+            "offer": offer,
+            "is_edit": True,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def offer_delete(request, pk, offer_pk):
+    """오퍼 삭제. 수락/거절 상태에서는 삭제 불가."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    offer = get_object_or_404(
+        Offer,
+        pk=offer_pk,
+        submission__project=project,
+    )
+
+    if offer.status != Offer.Status.NEGOTIATING:
+        return HttpResponse(
+            "수락 또는 거절된 오퍼는 삭제할 수 없습니다.",
+            status=400,
+        )
+
+    offer.delete()
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "offerChanged"},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def offer_accept(request, pk, offer_pk):
+    """오퍼 수락 (협상중 → 수락)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    offer = get_object_or_404(
+        Offer,
+        pk=offer_pk,
+        submission__project=project,
+    )
+
+    from projects.services.lifecycle import (
+        InvalidTransition,
+        accept_offer,
+        maybe_advance_to_closed_success,
+    )
+
+    try:
+        accept_offer(offer)
+    except InvalidTransition as e:
+        return HttpResponse(str(e), status=400)
+
+    # 프로젝트 status 자동 전환
+    maybe_advance_to_closed_success(project)
+
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "offerChanged"},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def offer_reject(request, pk, offer_pk):
+    """오퍼 거절 (협상중 → 거절)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    offer = get_object_or_404(
+        Offer,
+        pk=offer_pk,
+        submission__project=project,
+    )
+
+    from projects.services.lifecycle import InvalidTransition, reject_offer
+
+    try:
+        reject_offer(offer)
+    except InvalidTransition as e:
+        return HttpResponse(str(e), status=400)
+
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "offerChanged"},
     )

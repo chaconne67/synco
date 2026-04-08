@@ -13,8 +13,10 @@
     </button>
   </div>
 
-  <!-- 폼 삽입 영역 -->
-  <div id="interview-form-area"></div>
+  <!-- 폼 삽입 영역 — 이미 폼이 포함된 상태 -->
+  <div id="interview-form-area">
+    {% include "projects/partials/interview_form.html" %}
+  </div>
 
   <!-- 후보자별 그룹핑 -->
   {% for group in grouped_interviews %}

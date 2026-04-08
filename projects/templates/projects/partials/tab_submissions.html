@@ -134,8 +134,10 @@
               {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
-              <span class="text-[13px] text-gray-400 cursor-not-allowed"
-                    title="면접 등록은 추후 구현 예정입니다">면접 등록 (준비중)</span>
+              <a href="{% url 'projects:interview_create' project.pk %}?submission={{ submission.pk }}"
+                 hx-get="{% url 'projects:interview_create' project.pk %}?submission={{ submission.pk }}"
+                 hx-target="#tab-content"
+                 class="text-[13px] text-indigo-600 hover:text-indigo-800">면접 등록 &rarr;</a>
               {% if submission.document_file %}
                 <a href="{% url 'projects:submission_download' project.pk submission.pk %}"
                    class="text-[13px] text-gray-600 hover:text-gray-800 ml-2">다운로드</a>

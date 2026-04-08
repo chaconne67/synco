@@ -155,4 +155,51 @@ urlpatterns = [
         views.draft_preview,
         name="draft_preview",
     ),
+    # P09: Interview 관리
+    path(
+        "<uuid:pk>/interviews/new/",
+        views.interview_create,
+        name="interview_create",
+    ),
+    path(
+        "<uuid:pk>/interviews/<uuid:interview_pk>/edit/",
+        views.interview_update,
+        name="interview_update",
+    ),
+    path(
+        "<uuid:pk>/interviews/<uuid:interview_pk>/delete/",
+        views.interview_delete,
+        name="interview_delete",
+    ),
+    path(
+        "<uuid:pk>/interviews/<uuid:interview_pk>/result/",
+        views.interview_result,
+        name="interview_result",
+    ),
+    # P09: Offer 관리
+    path(
+        "<uuid:pk>/offers/new/",
+        views.offer_create,
+        name="offer_create",
+    ),
+    path(
+        "<uuid:pk>/offers/<uuid:offer_pk>/edit/",
+        views.offer_update,
+        name="offer_update",
+    ),
+    path(
+        "<uuid:pk>/offers/<uuid:offer_pk>/delete/",
+        views.offer_delete,
+        name="offer_delete",
+    ),
+    path(
+        "<uuid:pk>/offers/<uuid:offer_pk>/accept/",
+        views.offer_accept,
+        name="offer_accept",
+    ),
+    path(
+        "<uuid:pk>/offers/<uuid:offer_pk>/reject/",
+        views.offer_reject,
+        name="offer_reject",
+    ),
 ]

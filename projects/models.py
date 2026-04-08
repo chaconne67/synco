@@ -252,9 +252,7 @@ class SubmissionDraft(BaseModel):
 
     # 2단계: 상담
     consultation_input = models.TextField(blank=True)
-    consultation_audio = models.FileField(
-        upload_to="drafts/audio/", blank=True
-    )
+    consultation_audio = models.FileField(upload_to="drafts/audio/", blank=True)
     consultation_transcript = models.TextField(blank=True)
     consultation_summary = models.JSONField(default=dict, blank=True)
 
@@ -273,9 +271,7 @@ class SubmissionDraft(BaseModel):
         choices=OutputLanguage.choices,
         default=OutputLanguage.KO,
     )
-    output_file = models.FileField(
-        upload_to="drafts/output/", blank=True
-    )
+    output_file = models.FileField(upload_to="drafts/output/", blank=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -312,15 +308,23 @@ class Interview(BaseModel):
     round = models.PositiveSmallIntegerField()
     scheduled_at = models.DateTimeField()
     type = models.CharField(max_length=20, choices=Type.choices)
+    location = models.CharField(max_length=500, blank=True)
     result = models.CharField(
         max_length=20,
         choices=Result.choices,
         default=Result.PENDING,
     )
     feedback = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ["submission", "round"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["submission", "round"],
+                name="unique_interview_per_submission_round",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.submission} - {self.round}차 면접"
@@ -348,6 +352,8 @@ class Offer(BaseModel):
         default=Status.NEGOTIATING,
     )
     terms = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
