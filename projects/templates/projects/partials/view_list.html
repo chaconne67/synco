@@ -1,0 +1,85 @@
+<!-- List (Action) View -->
+<div class="space-y-6">
+  {% for group in urgency_groups %}
+  {% if group.projects %}
+  <div>
+    <!-- Group Header -->
+    <div class="flex items-center gap-2 mb-3">
+      {% if group.level == "red" %}
+      <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+      <h3 class="text-[15px] font-semibold text-red-700">{{ group.label }}</h3>
+      <span class="text-[12px] text-red-400">(경과일 20일 이상)</span>
+      {% elif group.level == "yellow" %}
+      <span class="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>
+      <h3 class="text-[15px] font-semibold text-yellow-700">{{ group.label }}</h3>
+      <span class="text-[12px] text-yellow-500">(경과일 10~20일)</span>
+      {% else %}
+      <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+      <h3 class="text-[15px] font-semibold text-green-700">{{ group.label }}</h3>
+      <span class="text-[12px] text-green-500">(경과일 10일 미만)</span>
+      {% endif %}
+      <span class="text-[12px] text-gray-400 ml-auto">{{ group.projects|length }}건</span>
+    </div>
+
+    <!-- Project Items -->
+    <div class="space-y-2">
+      {% for project in group.projects %}
+      <a href="{% url 'projects:project_detail' project.pk %}"
+         hx-get="{% url 'projects:project_detail' project.pk %}" hx-target="#main-content" hx-push-url="true"
+         class="block bg-white rounded-lg border border-gray-100 p-4 hover:border-gray-300 transition
+           {% if group.level == 'red' %}border-l-4 border-l-red-400
+           {% elif group.level == 'yellow' %}border-l-4 border-l-yellow-400
+           {% else %}border-l-4 border-l-green-400{% endif %}">
+        <div class="flex items-center justify-between">
+          <div class="min-w-0 flex-1">
+            <h4 class="text-[15px] font-semibold text-gray-900 truncate">{{ project.title }}</h4>
+            <div class="flex items-center gap-2 mt-1 flex-wrap">
+              <span class="text-[13px] text-gray-500">{{ project.client.name }}</span>
+              <span class="text-[13px] text-gray-400">·</span>
+              <span class="text-[13px] px-2 py-0.5 rounded-full
+                {% if project.status == 'new' %}bg-blue-50 text-blue-600
+                {% elif project.status == 'searching' %}bg-yellow-50 text-yellow-600
+                {% elif project.status == 'recommending' %}bg-purple-50 text-purple-600
+                {% elif project.status == 'interviewing' %}bg-indigo-50 text-indigo-600
+                {% elif project.status == 'negotiating' %}bg-green-50 text-green-600
+                {% elif project.status == 'on_hold' %}bg-orange-50 text-orange-600
+                {% elif project.status == 'pending_approval' %}bg-amber-50 text-amber-600
+                {% else %}bg-gray-50 text-gray-600{% endif %}">
+                {{ project.get_status_display }}
+              </span>
+              <span class="text-[13px] text-gray-400">·</span>
+              <span class="text-[13px] {% if project.days_elapsed > 20 %}text-red-500 font-medium{% elif project.days_elapsed > 10 %}text-yellow-600{% else %}text-gray-500{% endif %}">
+                {{ project.days_elapsed }}일 경과
+              </span>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-gray-300 shrink-0 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  {% with has_any=urgency_groups.0.projects|length|add:urgency_groups.1.projects|length|add:urgency_groups.2.projects|length %}
+  {% if not has_any %}
+  <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+    <p class="text-gray-500 text-[15px] mb-4">
+      {% if scope == "mine" %}
+      담당 프로젝트가 없습니다.
+      {% else %}
+      등록된 프로젝트가 없습니다.
+      {% endif %}
+    </p>
+    <a href="{% url 'projects:project_create' %}"
+       hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
+       class="bg-primary text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] hover:bg-primary-dark transition">
+      프로젝트 등록
+    </a>
+  </div>
+  {% endif %}
+  {% endwith %}
+</div>

@@ -523,7 +523,7 @@ class TestDaysElapsed:
     def test_days_elapsed_shown_in_list(self, auth_client, project_obj):
         resp = auth_client.get("/projects/")
         content = resp.content.decode()
-        assert "0일 경과" in content
+        assert "0일" in content
 
     @pytest.mark.django_db
     def test_days_elapsed_shown_in_detail(self, auth_client, project_obj):

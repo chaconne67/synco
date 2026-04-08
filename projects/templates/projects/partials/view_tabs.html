@@ -1,0 +1,23 @@
+<!-- View Tabs: Board / List / Table -->
+<div class="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+  {% with base_url="/projects/" %}
+  <a hx-get="{{ base_url }}?view=board&tab_switch=1&{{ filter_params }}"
+     hx-target="#view-content"
+     class="px-4 py-2 rounded-md text-[14px] font-medium transition cursor-pointer
+       {% if view_type == 'board' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+    <i class="fa-solid fa-columns mr-1"></i> 보드
+  </a>
+  <a hx-get="{{ base_url }}?view=list&tab_switch=1&{{ filter_params }}"
+     hx-target="#view-content"
+     class="px-4 py-2 rounded-md text-[14px] font-medium transition cursor-pointer
+       {% if view_type == 'list' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+    <i class="fa-solid fa-list mr-1"></i> 리스트
+  </a>
+  <a hx-get="{{ base_url }}?view=table&tab_switch=1&{{ filter_params }}"
+     hx-target="#view-content"
+     class="px-4 py-2 rounded-md text-[14px] font-medium transition cursor-pointer
+       {% if view_type == 'table' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+    <i class="fa-solid fa-table mr-1"></i> 테이블
+  </a>
+  {% endwith %}
+</div>

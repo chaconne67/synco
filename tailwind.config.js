@@ -5,6 +5,9 @@ module.exports = {
     './accounts/templates/**/*.html',
     './candidates/templates/**/*.html',
     './candidates/static/**/*.js',
+    './clients/templates/**/*.html',
+    './projects/templates/**/*.html',
+    './projects/static/**/*.js',
   ],
   theme: {
     extend: {
