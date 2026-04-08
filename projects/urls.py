@@ -21,4 +21,35 @@ urlpatterns = [
         name="start_search_session",
     ),
     path("<uuid:pk>/matching/", views.jd_matching_results, name="jd_matching_results"),
+    # P05: 탭 URL
+    path(
+        "<uuid:pk>/tab/overview/",
+        views.project_tab_overview,
+        name="project_tab_overview",
+    ),
+    path(
+        "<uuid:pk>/tab/search/",
+        views.project_tab_search,
+        name="project_tab_search",
+    ),
+    path(
+        "<uuid:pk>/tab/contacts/",
+        views.project_tab_contacts,
+        name="project_tab_contacts",
+    ),
+    path(
+        "<uuid:pk>/tab/submissions/",
+        views.project_tab_submissions,
+        name="project_tab_submissions",
+    ),
+    path(
+        "<uuid:pk>/tab/interviews/",
+        views.project_tab_interviews,
+        name="project_tab_interviews",
+    ),
+    path(
+        "<uuid:pk>/tab/offers/",
+        views.project_tab_offers,
+        name="project_tab_offers",
+    ),
 ]

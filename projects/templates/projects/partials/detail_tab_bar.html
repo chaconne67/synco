@@ -1,0 +1,56 @@
+<div class="border-b border-gray-200 flex gap-0 overflow-x-auto -mx-4 lg:-mx-8 px-4 lg:px-8">
+  {% with active=active_tab|default:"overview" %}
+
+  <button hx-get="{% url 'projects:project_tab_overview' project.pk %}"
+          hx-target="#tab-content"
+          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
+            {% if active == 'overview' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+    개요
+  </button>
+
+  <button hx-get="{% url 'projects:project_tab_search' project.pk %}"
+          hx-target="#tab-content"
+          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
+            {% if active == 'search' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+    서칭
+  </button>
+
+  <button hx-get="{% url 'projects:project_tab_contacts' project.pk %}"
+          hx-target="#tab-content"
+          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition flex items-center gap-1
+            {% if active == 'contacts' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+    컨택
+    {% if tab_counts.contacts %}
+    <span class="text-[11px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{{ tab_counts.contacts }}</span>
+    {% endif %}
+  </button>
+
+  <button hx-get="{% url 'projects:project_tab_submissions' project.pk %}"
+          hx-target="#tab-content"
+          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition flex items-center gap-1
+            {% if active == 'submissions' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+    추천
+    {% if tab_counts.submissions %}
+    <span class="text-[11px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{{ tab_counts.submissions }}</span>
+    {% endif %}
+  </button>
+
+  <button hx-get="{% url 'projects:project_tab_interviews' project.pk %}"
+          hx-target="#tab-content"
+          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition flex items-center gap-1
+            {% if active == 'interviews' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+    면접
+    {% if tab_counts.interviews %}
+    <span class="text-[11px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{{ tab_counts.interviews }}</span>
+    {% endif %}
+  </button>
+
+  <button hx-get="{% url 'projects:project_tab_offers' project.pk %}"
+          hx-target="#tab-content"
+          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
+            {% if active == 'offers' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+    오퍼
+  </button>
+
+  {% endwith %}
+</div>

@@ -527,9 +527,11 @@ class TestDaysElapsed:
 
     @pytest.mark.django_db
     def test_days_elapsed_shown_in_detail(self, auth_client, project_obj):
+        """P05: detail page shows request date instead of elapsed days."""
         resp = auth_client.get(f"/projects/{project_obj.pk}/")
         content = resp.content.decode()
-        assert "0일" in content
+        # New tab layout shows 의뢰일 with date format
+        assert "의뢰일" in content
 
 
 # --- HTMX Navigation ---

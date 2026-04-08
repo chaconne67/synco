@@ -1,0 +1,42 @@
+<div class="space-y-4">
+  <div class="bg-white rounded-lg border border-gray-100 p-5">
+    <h2 class="text-[15px] font-semibold text-gray-700 mb-4">면접 이력</h2>
+
+    {% if interviews %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-[14px]">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left py-2 text-gray-500 font-medium">후보자</th>
+            <th class="text-left py-2 text-gray-500 font-medium">차수</th>
+            <th class="text-left py-2 text-gray-500 font-medium">유형</th>
+            <th class="text-left py-2 text-gray-500 font-medium">일정</th>
+            <th class="text-left py-2 text-gray-500 font-medium">결과</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for interview in interviews %}
+          <tr class="border-b border-gray-50">
+            <td class="py-2 text-gray-800 font-medium">{{ interview.submission.candidate.name }}</td>
+            <td class="py-2 text-gray-600">{{ interview.round }}차</td>
+            <td class="py-2 text-gray-600">{{ interview.get_type_display }}</td>
+            <td class="py-2 text-gray-500">{{ interview.scheduled_at|date:"m/d H:i" }}</td>
+            <td class="py-2">
+              <span class="text-[13px] px-1.5 py-0.5 rounded
+                {% if interview.result == '합격' %}bg-green-50 text-green-600
+                {% elif interview.result == '탈락' %}bg-red-50 text-red-500
+                {% elif interview.result == '보류' %}bg-yellow-50 text-yellow-600
+                {% else %}bg-gray-50 text-gray-500{% endif %}">
+                {{ interview.get_result_display }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-[14px] text-gray-400">면접 이력이 없습니다.</p>
+    {% endif %}
+  </div>
+</div>

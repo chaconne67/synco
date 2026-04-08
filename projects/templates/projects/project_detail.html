@@ -3,7 +3,7 @@
 {% block title %}{{ project.title }} — synco{% endblock %}
 
 {% block content %}
-<div class="p-4 lg:p-8 space-y-6">
+<div class="p-4 lg:p-8 space-y-4">
 
   <!-- Back + Actions -->
   <div class="flex items-center justify-between">
@@ -37,117 +37,41 @@
   </div>
   {% endif %}
 
-  <!-- Project Info -->
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-[15px] font-semibold text-gray-500">기본 정보</h2>
-      <span class="text-[13px] px-2 py-0.5 rounded-full
-        {% if project.status == 'new' %}bg-blue-50 text-blue-600
-        {% elif project.status == 'searching' %}bg-yellow-50 text-yellow-600
-        {% elif project.status == 'recommending' %}bg-purple-50 text-purple-600
-        {% elif project.status == 'interviewing' %}bg-indigo-50 text-indigo-600
-        {% elif project.status == 'negotiating' %}bg-green-50 text-green-600
-        {% elif project.status == 'closed_success' %}bg-emerald-50 text-emerald-600
-        {% elif project.status == 'closed_fail' %}bg-red-50 text-red-600
-        {% elif project.status == 'closed_cancel' %}bg-gray-50 text-gray-600
-        {% elif project.status == 'on_hold' %}bg-orange-50 text-orange-600
-        {% elif project.status == 'pending_approval' %}bg-amber-50 text-amber-600
-        {% else %}bg-gray-50 text-gray-600{% endif %}">
-        {{ project.get_status_display }}
-      </span>
+  <!-- Project Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-[18px] font-bold text-gray-900">
+        {{ project.client.name }} · {{ project.title }}
+      </h1>
+      <p class="text-[14px] text-gray-500 mt-0.5">
+        고객사: {{ project.client.name }} |
+        등록자: {% if project.created_by %}{{ project.created_by.get_full_name|default:project.created_by.username }}{% else %}-{% endif %} |
+        의뢰일: {{ project.created_at|date:"m/d" }}
+      </p>
     </div>
-    <div class="space-y-3">
-      <div class="flex items-start justify-between">
-        <span class="text-[15px] text-gray-500">프로젝트명</span>
-        <span class="text-[15px] font-medium text-right">{{ project.title }}</span>
-      </div>
-      <div class="flex items-start justify-between">
-        <span class="text-[15px] text-gray-500">고객사</span>
-        <a href="{% url 'clients:client_detail' project.client.pk %}"
-           hx-get="{% url 'clients:client_detail' project.client.pk %}" hx-target="#main-content" hx-push-url="true"
-           class="text-[15px] font-medium text-primary hover:text-primary-dark transition text-right">
-          {{ project.client.name }}
-        </a>
-      </div>
-      <div class="flex items-start justify-between">
-        <span class="text-[15px] text-gray-500">경과일</span>
-        <span class="text-[15px] font-medium text-right">{{ project.days_elapsed }}일</span>
-      </div>
-      <div class="flex items-start justify-between">
-        <span class="text-[15px] text-gray-500">등록자</span>
-        <span class="text-[15px] font-medium text-right">
-          {% if project.created_by %}{{ project.created_by.get_full_name|default:project.created_by.username }}{% else %}-{% endif %}
-        </span>
-      </div>
-      <div class="flex items-start justify-between">
-        <span class="text-[15px] text-gray-500">등록일</span>
-        <span class="text-[15px] font-medium text-right">{{ project.created_at|date:"Y-m-d" }}</span>
-      </div>
-    </div>
-  </section>
+    <span class="text-[13px] px-2 py-0.5 rounded-full
+      {% if project.status == 'new' %}bg-blue-50 text-blue-600
+      {% elif project.status == 'searching' %}bg-yellow-50 text-yellow-600
+      {% elif project.status == 'recommending' %}bg-purple-50 text-purple-600
+      {% elif project.status == 'interviewing' %}bg-indigo-50 text-indigo-600
+      {% elif project.status == 'negotiating' %}bg-green-50 text-green-600
+      {% elif project.status == 'closed_success' %}bg-emerald-50 text-emerald-600
+      {% elif project.status == 'closed_fail' %}bg-red-50 text-red-600
+      {% elif project.status == 'closed_cancel' %}bg-gray-50 text-gray-600
+      {% elif project.status == 'on_hold' %}bg-orange-50 text-orange-600
+      {% elif project.status == 'pending_approval' %}bg-amber-50 text-amber-600
+      {% else %}bg-gray-50 text-gray-600{% endif %}">
+      {{ project.get_status_display }}
+    </span>
+  </div>
 
-  <!-- JD Section -->
-  {% if project.jd_text or project.jd_file %}
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">채용 공고 (JD)</h2>
-    {% if project.jd_text %}
-    <p class="text-[15px] text-gray-700 whitespace-pre-wrap">{{ project.jd_text }}</p>
-    {% endif %}
-    {% if project.jd_file %}
-    <div class="{% if project.jd_text %}mt-3 pt-3 border-t border-gray-50{% endif %}">
-      <a href="{{ project.jd_file.url }}" target="_blank"
-         class="text-[15px] text-primary hover:text-primary-dark transition flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        JD 파일 다운로드
-      </a>
-    </div>
-    {% endif %}
-  </section>
-  {% endif %}
+  <!-- Tab Bar -->
+  {% include "projects/partials/detail_tab_bar.html" %}
 
-  <!-- JD Analysis Section (P03a) -->
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-[15px] font-semibold text-gray-500">JD 분석</h2>
-      {% if project.jd_text or project.jd_file or project.jd_raw_text %}
-      <button hx-post="{% url 'projects:analyze_jd' project.pk %}"
-              hx-target="#jd-analysis-result"
-              hx-swap="outerHTML"
-              class="text-[13px] text-primary hover:text-primary-dark font-medium transition">
-        {% if project.jd_analysis %}재분석{% else %}분석 시작{% endif %}
-      </button>
-      {% endif %}
-    </div>
-
-    <div id="jd-analysis-result">
-      {% if project.jd_analysis %}
-        {% include "projects/partials/jd_analysis_result.html" with analysis=project %}
-      {% elif project.jd_text or project.jd_file or project.jd_raw_text %}
-        <p class="text-[14px] text-gray-400">분석을 시작해주세요.</p>
-      {% else %}
-        <p class="text-[14px] text-gray-400">JD를 먼저 등록해주세요.</p>
-      {% endif %}
-    </div>
-  </section>
-
-  <!-- Matching Results Section -->
-  <div id="matching-results"></div>
-
-  <!-- Assigned Consultants -->
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">담당 컨설턴트</h2>
-    {% if project.assigned_consultants.all %}
-    <div class="space-y-2">
-      {% for consultant in project.assigned_consultants.all %}
-      <div class="text-[15px] text-gray-700">
-        {{ consultant.get_full_name|default:consultant.username }}
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="text-[15px] text-gray-400">배정된 컨설턴트가 없습니다.</p>
-    {% endif %}
-  </section>
+  <!-- Tab Content -->
+  <div id="tab-content">
+    {% include "projects/partials/tab_overview.html" %}
+  </div>
 
 </div>
 {% endblock %}

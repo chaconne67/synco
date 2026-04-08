@@ -1,0 +1,44 @@
+<div class="space-y-4">
+  <div class="bg-white rounded-lg border border-gray-100 p-5">
+    <h2 class="text-[15px] font-semibold text-gray-700 mb-4">컨택 이력</h2>
+
+    {% if contacts %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-[14px]">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left py-2 text-gray-500 font-medium">후보자</th>
+            <th class="text-left py-2 text-gray-500 font-medium">채널</th>
+            <th class="text-left py-2 text-gray-500 font-medium">결과</th>
+            <th class="text-left py-2 text-gray-500 font-medium">컨택일</th>
+            <th class="text-left py-2 text-gray-500 font-medium">담당</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for contact in contacts %}
+          <tr class="border-b border-gray-50">
+            <td class="py-2 text-gray-800 font-medium">{{ contact.candidate.name }}</td>
+            <td class="py-2 text-gray-600">{{ contact.get_channel_display }}</td>
+            <td class="py-2">
+              <span class="text-[13px] px-1.5 py-0.5 rounded
+                {% if contact.result == '관심' %}bg-green-50 text-green-600
+                {% elif contact.result == '미응답' %}bg-gray-50 text-gray-500
+                {% elif contact.result == '거절' %}bg-red-50 text-red-500
+                {% else %}bg-blue-50 text-blue-600{% endif %}">
+                {{ contact.get_result_display }}
+              </span>
+            </td>
+            <td class="py-2 text-gray-500">{{ contact.contacted_at|date:"m/d H:i" }}</td>
+            <td class="py-2 text-gray-500">
+              {% if contact.consultant %}{{ contact.consultant.get_full_name|default:contact.consultant.username }}{% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-[14px] text-gray-400">컨택 이력이 없습니다.</p>
+    {% endif %}
+  </div>
+</div>

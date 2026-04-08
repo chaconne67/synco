@@ -1,0 +1,44 @@
+<div class="space-y-4">
+  <div class="bg-white rounded-lg border border-gray-100 p-5">
+    <h2 class="text-[15px] font-semibold text-gray-700 mb-4">추천 이력</h2>
+
+    {% if submissions %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-[14px]">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left py-2 text-gray-500 font-medium">후보자</th>
+            <th class="text-left py-2 text-gray-500 font-medium">상태</th>
+            <th class="text-left py-2 text-gray-500 font-medium">제출일</th>
+            <th class="text-left py-2 text-gray-500 font-medium">담당</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for submission in submissions %}
+          <tr class="border-b border-gray-50">
+            <td class="py-2 text-gray-800 font-medium">{{ submission.candidate.name }}</td>
+            <td class="py-2">
+              <span class="text-[13px] px-1.5 py-0.5 rounded
+                {% if submission.status == '통과' %}bg-green-50 text-green-600
+                {% elif submission.status == '탈락' %}bg-red-50 text-red-500
+                {% elif submission.status == '제출' %}bg-blue-50 text-blue-600
+                {% else %}bg-gray-50 text-gray-500{% endif %}">
+                {{ submission.get_status_display }}
+              </span>
+            </td>
+            <td class="py-2 text-gray-500">
+              {% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}{{ submission.created_at|date:"m/d" }}{% endif %}
+            </td>
+            <td class="py-2 text-gray-500">
+              {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-[14px] text-gray-400">추천 이력이 없습니다.</p>
+    {% endif %}
+  </div>
+</div>
