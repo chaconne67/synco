@@ -11,7 +11,8 @@ from docx import Document
 def extract_text(file_path: str) -> str:
     """Extract text from a resume file based on its extension.
 
-    Supports .docx (python-docx) and .doc (antiword / LibreOffice fallback).
+    Supports .docx (python-docx), .doc (antiword / LibreOffice fallback),
+    and .pdf (PyMuPDF).
     Raises ValueError for unsupported file formats.
     """
     ext = os.path.splitext(file_path)[1].lower()
@@ -20,6 +21,8 @@ def extract_text(file_path: str) -> str:
         return _extract_docx(file_path)
     elif ext == ".doc":
         return _extract_doc(file_path)
+    elif ext == ".pdf":
+        return _extract_pdf(file_path)
     else:
         raise ValueError(f"지원하지 않는 파일 형식: {ext}")
 
@@ -110,6 +113,23 @@ def _extract_doc(file_path: str) -> str:
     lo_score = _content_richness_score(lo_text)
     aw_score = _content_richness_score(aw_text)
     return lo_text if lo_score >= aw_score else aw_text
+
+
+def _extract_pdf(file_path: str) -> str:
+    """Extract text from a PDF file using PyMuPDF (fitz)."""
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        raise RuntimeError("PyMuPDF not installed. Run: uv add pymupdf")
+
+    doc = fitz.open(file_path)
+    parts: list[str] = []
+    for page in doc:
+        text = page.get_text()
+        if text.strip():
+            parts.append(text)
+    doc.close()
+    return "\n".join(parts)
 
 
 def _extract_doc_antiword(file_path: str) -> str:
@@ -214,7 +234,9 @@ def preprocess_resume_text(text: str) -> str:
         for existing in final[-10:]:
             existing_words = set(existing.lower().split())
             if existing_words:
-                overlap = len(words & existing_words) / max(len(words), len(existing_words))
+                overlap = len(words & existing_words) / max(
+                    len(words), len(existing_words)
+                )
                 if overlap > 0.7:
                     is_dup = True
                     break
@@ -222,8 +244,31 @@ def preprocess_resume_text(text: str) -> str:
             final.append(l)
 
     # 4) Remove noise patterns (basic PC skills, etc.)
-    noise = ["워드/엑셀", "ms-office", "ms office", "powerpoint", "computer :", "computer:", "컴퓨터"]
-    final = [l for l in final if not any(n in l.lower() for n in noise)]
+    # Only remove short lines that are purely noise — skip lines with dates
+    # or company-name suffixes to avoid deleting career history.
+    noise = [
+        "워드/엑셀",
+        "ms-office",
+        "ms office",
+        "powerpoint",
+        "computer :",
+        "computer:",
+    ]
+    date_pattern = re.compile(r"\d{4}")
+    company_suffixes = ("㈜", "주식회사", "(주)", "co.", "corp", "inc")
+    cleaned: list[str] = []
+    for l in final:
+        lower = l.lower()
+        if any(n in lower for n in noise):
+            # Preserve lines that look like career entries
+            if date_pattern.search(l) or any(s in lower for s in company_suffixes):
+                cleaned.append(l)
+                continue
+            # Only drop short noise lines (< 40 chars)
+            if len(l.strip()) < 40:
+                continue
+        cleaned.append(l)
+    final = cleaned
 
     return "\n".join(final)
 
@@ -286,7 +331,7 @@ def classify_text_quality(text: str) -> str:
     stripped = text.strip()
 
     # Check ratio of meaningful characters (Korean, Latin, digits)
-    alnum_chars = sum(1 for c in stripped if c.isalnum() or '\uac00' <= c <= '\ud7a3')
+    alnum_chars = sum(1 for c in stripped if c.isalnum() or "\uac00" <= c <= "\ud7a3")
     if len(stripped) > 0 and alnum_chars / len(stripped) < 0.3:
         return "garbled"
 

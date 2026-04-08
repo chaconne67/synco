@@ -105,6 +105,34 @@
   </section>
   {% endif %}
 
+  <!-- JD Analysis Section (P03a) -->
+  <section class="bg-white rounded-lg border border-gray-100 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-[15px] font-semibold text-gray-500">JD 분석</h2>
+      {% if project.jd_text or project.jd_file or project.jd_raw_text %}
+      <button hx-post="{% url 'projects:analyze_jd' project.pk %}"
+              hx-target="#jd-analysis-result"
+              hx-swap="outerHTML"
+              class="text-[13px] text-primary hover:text-primary-dark font-medium transition">
+        {% if project.jd_analysis %}재분석{% else %}분석 시작{% endif %}
+      </button>
+      {% endif %}
+    </div>
+
+    <div id="jd-analysis-result">
+      {% if project.jd_analysis %}
+        {% include "projects/partials/jd_analysis_result.html" with analysis=project %}
+      {% elif project.jd_text or project.jd_file or project.jd_raw_text %}
+        <p class="text-[14px] text-gray-400">분석을 시작해주세요.</p>
+      {% else %}
+        <p class="text-[14px] text-gray-400">JD를 먼저 등록해주세요.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Matching Results Section -->
+  <div id="matching-results"></div>
+
   <!-- Assigned Consultants -->
   <section class="bg-white rounded-lg border border-gray-100 p-5">
     <h2 class="text-[15px] font-semibold text-gray-500 mb-4">담당 컨설턴트</h2>

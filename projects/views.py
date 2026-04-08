@@ -237,3 +237,200 @@ def project_delete(request, pk):
 
     project.delete()
     return redirect("projects:project_list")
+
+
+# ---------------------------------------------------------------------------
+# P03a: JD Analysis views
+# ---------------------------------------------------------------------------
+
+
+@login_required
+@require_http_methods(["POST"])
+def analyze_jd(request, pk):
+    """JD 분석 트리거. 파일 업로드 시 텍스트 추출 후 AI 분석."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    from projects.services.jd_analysis import (
+        analyze_jd as run_analysis,
+        extract_text_from_file,
+    )
+
+    # 파일 업로드 소스인 경우: 파일에서 텍스트 추출
+    if project.jd_source == "upload" and project.jd_file:
+        if not project.jd_raw_text:
+            try:
+                project.jd_raw_text = extract_text_from_file(project.jd_file)
+                project.save(update_fields=["jd_raw_text"])
+            except (ValueError, RuntimeError) as e:
+                return render(
+                    request,
+                    "projects/partials/jd_analysis_error.html",
+                    {"error": str(e), "project": project},
+                )
+
+    # AI 분석 실행
+    try:
+        result = run_analysis(project)
+    except ValueError as e:
+        return render(
+            request,
+            "projects/partials/jd_analysis_error.html",
+            {"error": str(e), "project": project},
+        )
+    except RuntimeError as e:
+        return render(
+            request,
+            "projects/partials/jd_analysis_error.html",
+            {"error": str(e), "project": project},
+        )
+
+    # 분석 결과 partial 반환
+    return render(
+        request,
+        "projects/partials/jd_analysis_result.html",
+        {"project": project, "analysis": result},
+    )
+
+
+@login_required
+def jd_results(request, pk):
+    """JD 분석 결과 표시 (HTMX partial)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    return render(
+        request,
+        "projects/partials/jd_analysis_result.html",
+        {
+            "project": project,
+            "analysis": {
+                "requirements": project.requirements,
+                "full_analysis": project.jd_analysis,
+            },
+        },
+    )
+
+
+@login_required
+def drive_picker(request, pk):
+    """Drive 파일 선택 UI. GET=파일 목록, POST=파일 선택+텍스트 추출."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method == "POST":
+        file_id = request.POST.get("file_id")
+        if not file_id:
+            return render(
+                request,
+                "projects/partials/jd_drive_picker.html",
+                {"project": project, "error": "파일을 선택해주세요."},
+            )
+
+        from projects.services.jd_analysis import extract_text_from_drive
+
+        try:
+            raw_text = extract_text_from_drive(file_id)
+        except (ValueError, RuntimeError) as e:
+            return render(
+                request,
+                "projects/partials/jd_drive_picker.html",
+                {"project": project, "error": str(e)},
+            )
+
+        project.jd_source = "drive"
+        project.jd_drive_file_id = file_id
+        project.jd_raw_text = raw_text
+        # 기존 분석 리셋
+        project.jd_analysis = {}
+        project.requirements = {}
+        project.save(
+            update_fields=[
+                "jd_source",
+                "jd_drive_file_id",
+                "jd_raw_text",
+                "jd_analysis",
+                "requirements",
+            ]
+        )
+
+        return render(
+            request,
+            "projects/partials/jd_drive_picker.html",
+            {"project": project, "success": True},
+        )
+
+    # GET: Drive 파일 목록
+    from django.conf import settings as django_settings
+
+    from data_extraction.services.drive import (
+        get_drive_service,
+        list_files_in_folder,
+    )
+
+    try:
+        service = get_drive_service()
+        parent_folder_id = getattr(django_settings, "GOOGLE_DRIVE_PARENT_FOLDER_ID", "")
+        files = (
+            list_files_in_folder(service, parent_folder_id) if parent_folder_id else []
+        )
+    except Exception:
+        files = []
+
+    return render(
+        request,
+        "projects/partials/jd_drive_picker.html",
+        {"project": project, "drive_files": files},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def start_search_session(request, pk):
+    """프로젝트 requirements → SearchSession 생성 → 후보자 검색으로 redirect."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if not project.requirements:
+        return render(
+            request,
+            "projects/partials/jd_analysis_error.html",
+            {"error": "JD 분석이 먼저 필요합니다.", "project": project},
+        )
+
+    from candidates.models import SearchSession
+
+    from projects.services.jd_analysis import requirements_to_search_filters
+
+    filters = requirements_to_search_filters(project.requirements)
+
+    session = SearchSession.objects.create(
+        user=request.user,
+        current_filters=filters,
+    )
+
+    return redirect(f"/candidates/?session_id={session.pk}")
+
+
+@login_required
+def jd_matching_results(request, pk):
+    """프로젝트 상세 내 후보자 매칭 결과 목록."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if not project.requirements:
+        return render(
+            request,
+            "projects/partials/jd_matching_empty.html",
+            {"project": project},
+        )
+
+    from projects.services.candidate_matching import match_candidates
+
+    results = match_candidates(project.requirements, limit=50)
+
+    return render(
+        request,
+        "projects/partials/jd_matching_results.html",
+        {"project": project, "results": results},
+    )

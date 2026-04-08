@@ -1,0 +1,9 @@
+<div id="jd-analysis-result" class="bg-red-50 border border-red-200 rounded-lg p-4">
+  <p class="text-[14px] text-red-600">{{ error }}</p>
+  <button hx-post="{% url 'projects:analyze_jd' project.pk %}"
+          hx-target="#jd-analysis-result"
+          hx-swap="outerHTML"
+          class="mt-2 text-[13px] text-red-500 hover:text-red-700 underline">
+    다시 시도
+  </button>
+</div>

@@ -114,7 +114,7 @@ def find_category_folder(service, parent_id: str, folder_name: str) -> str | Non
 
 
 def list_files_in_folder(service, folder_id: str, page_size: int = 1000) -> list[dict]:
-    """List .doc/.docx files in *folder_id*, paginating with nextPageToken.
+    """List .doc/.docx/.pdf files in *folder_id*, paginating with nextPageToken.
 
     Returns a list of dicts with keys: id, name, mimeType, size, modifiedTime.
     """
@@ -123,6 +123,7 @@ def list_files_in_folder(service, folder_id: str, page_size: int = 1000) -> list
         " and ("
         "mimeType = 'application/msword'"
         " or mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'"
+        " or mimeType = 'application/pdf'"
         ")"
         " and trashed = false"
     )

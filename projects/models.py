@@ -5,6 +5,12 @@ from django.utils import timezone
 from common.mixins import BaseModel
 
 
+class JDSource(models.TextChoices):
+    UPLOAD = "upload", "파일 업로드"
+    DRIVE = "drive", "Google Drive"
+    TEXT = "text", "텍스트 입력"
+
+
 class ProjectStatus(models.TextChoices):
     NEW = "new", "신규"
     SEARCHING = "searching", "서칭중"
@@ -34,6 +40,10 @@ class Project(BaseModel):
     title = models.CharField(max_length=300)
     jd_text = models.TextField(blank=True)
     jd_file = models.FileField(upload_to="projects/jd/", blank=True)
+    jd_source = models.CharField(max_length=20, choices=JDSource.choices, blank=True)
+    jd_drive_file_id = models.CharField(max_length=255, blank=True)
+    jd_raw_text = models.TextField(blank=True)
+    jd_analysis = models.JSONField(default=dict, blank=True)
     status = models.CharField(
         max_length=30,
         choices=ProjectStatus.choices,

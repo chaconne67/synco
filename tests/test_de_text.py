@@ -57,6 +57,21 @@ class TestExtractText:
         assert text == "고영호 이력서"
         mock_antiword.assert_called_once()
 
+    def test_pdf_extraction(self, tmp_path):
+        """PyMuPDF로 .pdf 파일에서 텍스트 추출."""
+        import fitz
+
+        pdf_path = tmp_path / "test.pdf"
+        doc = fitz.open()
+        page = doc.new_page()
+        # Use ASCII text to avoid font/encoding issues in CI
+        page.insert_text((72, 72), "Quality Manager Job Description 2026")
+        doc.save(str(pdf_path))
+        doc.close()
+
+        text = extract_text(str(pdf_path))
+        assert "Quality Manager" in text
+
     def test_unsupported_extension(self, tmp_path):
         filepath = tmp_path / "test.hwp"
         filepath.write_bytes(b"fake")

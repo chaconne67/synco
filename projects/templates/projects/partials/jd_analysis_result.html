@@ -1,0 +1,91 @@
+<div id="jd-analysis-result" class="space-y-4">
+  {% if analysis.requirements %}
+  <div class="bg-white rounded-lg border border-gray-100 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-[15px] font-semibold text-gray-700">JD 분석 결과</h3>
+      <div class="flex items-center gap-2">
+        <button hx-post="{% url 'projects:analyze_jd' project.pk %}"
+                hx-target="#jd-analysis-result"
+                hx-swap="outerHTML"
+                class="text-[13px] text-primary hover:text-primary-dark">
+          재분석
+        </button>
+      </div>
+    </div>
+
+    {% with reqs=analysis.requirements %}
+    <div class="space-y-3">
+      {% if reqs.position %}
+      <div class="flex items-start justify-between">
+        <span class="text-[14px] text-gray-500 w-24 shrink-0">포지션</span>
+        <span class="text-[14px] text-gray-800 text-right">{{ reqs.position }}</span>
+      </div>
+      {% endif %}
+
+      {% if reqs.min_experience_years or reqs.max_experience_years %}
+      <div class="flex items-start justify-between">
+        <span class="text-[14px] text-gray-500 w-24 shrink-0">경력</span>
+        <span class="text-[14px] text-gray-800 text-right">
+          {% if reqs.min_experience_years and reqs.max_experience_years %}
+            {{ reqs.min_experience_years }}~{{ reqs.max_experience_years }}년
+          {% elif reqs.min_experience_years %}
+            {{ reqs.min_experience_years }}년 이상
+          {% else %}
+            {{ reqs.max_experience_years }}년 이하
+          {% endif %}
+        </span>
+      </div>
+      {% endif %}
+
+      {% if reqs.education_fields %}
+      <div class="flex items-start justify-between">
+        <span class="text-[14px] text-gray-500 w-24 shrink-0">전공</span>
+        <span class="text-[14px] text-gray-800 text-right">
+          {{ reqs.education_fields|join:", " }}
+        </span>
+      </div>
+      {% endif %}
+
+      {% if reqs.keywords %}
+      <div class="flex items-start">
+        <span class="text-[14px] text-gray-500 w-24 shrink-0">키워드</span>
+        <div class="flex flex-wrap gap-1.5">
+          {% for kw in reqs.keywords %}
+          <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-[12px] rounded-full">{{ kw }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if reqs.role_summary %}
+      <div class="pt-2 border-t border-gray-50">
+        <span class="text-[14px] text-gray-500 block mb-1">직무 요약</span>
+        <p class="text-[14px] text-gray-700">{{ reqs.role_summary }}</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endwith %}
+
+    <!-- Action buttons -->
+    <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
+      <form method="post" action="{% url 'projects:start_search_session' project.pk %}">
+        {% csrf_token %}
+        <button type="submit"
+                class="px-4 py-2 bg-primary text-white text-[14px] font-medium rounded-lg hover:bg-primary-dark transition">
+          후보자 서칭
+        </button>
+      </form>
+      <button hx-get="{% url 'projects:jd_matching_results' project.pk %}"
+              hx-target="#matching-results"
+              hx-swap="outerHTML"
+              class="px-4 py-2 border border-gray-300 text-gray-700 text-[14px] font-medium rounded-lg hover:bg-gray-50 transition">
+        매칭 결과 보기
+      </button>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-gray-50 rounded-lg p-4 text-center">
+    <p class="text-[14px] text-gray-500">분석 결과가 없습니다.</p>
+  </div>
+  {% endif %}
+</div>
