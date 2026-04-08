@@ -1,0 +1,141 @@
+<section class="bg-white rounded-lg border border-gray-100 p-5 space-y-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-[15px] font-semibold text-gray-500">계약 이력</h2>
+    <button type="button"
+            hx-get="{% url 'clients:contract_create' client.pk %}"
+            hx-target="#contract-section"
+            class="text-[13px] text-primary font-medium hover:text-primary-dark transition">
+      + 계약 추가
+    </button>
+  </div>
+
+  {% if show_form %}
+  <!-- New Contract Form -->
+  <form hx-post="{% url 'clients:contract_create' client.pk %}"
+        hx-target="#contract-section"
+        class="border border-gray-200 rounded-lg p-4 space-y-3">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">시작일 <span class="text-red-500">*</span></label>
+        {{ contract_form.start_date }}
+      </div>
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">종료일</label>
+        {{ contract_form.end_date }}
+      </div>
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">상태</label>
+        {{ contract_form.status }}
+      </div>
+    </div>
+    <div>
+      <label class="block text-[13px] text-gray-500 mb-1">계약 조건</label>
+      {{ contract_form.terms }}
+    </div>
+    <div class="flex gap-2">
+      <button type="submit"
+              class="bg-primary text-white font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-primary-dark transition">
+        저장
+      </button>
+      <button type="button"
+              hx-get="{% url 'clients:client_detail' client.pk %}"
+              hx-target="#main-content" hx-push-url="false"
+              hx-select="#contract-section" hx-swap="outerHTML" hx-target="#contract-section"
+              class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-gray-200 transition">
+        취소
+      </button>
+    </div>
+  </form>
+  {% endif %}
+
+  {% if edit_contract %}
+  <!-- Edit Contract Form -->
+  <form hx-post="{% url 'clients:contract_update' client.pk edit_contract.pk %}"
+        hx-target="#contract-section"
+        class="border border-blue-200 rounded-lg p-4 space-y-3 bg-blue-50">
+    {% csrf_token %}
+    <div class="text-[13px] text-blue-600 font-medium mb-2">계약 수정</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">시작일 <span class="text-red-500">*</span></label>
+        {{ edit_form.start_date }}
+      </div>
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">종료일</label>
+        {{ edit_form.end_date }}
+      </div>
+      <div>
+        <label class="block text-[13px] text-gray-500 mb-1">상태</label>
+        {{ edit_form.status }}
+      </div>
+    </div>
+    <div>
+      <label class="block text-[13px] text-gray-500 mb-1">계약 조건</label>
+      {{ edit_form.terms }}
+    </div>
+    <div class="flex gap-2">
+      <button type="submit"
+              class="bg-primary text-white font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-primary-dark transition">
+        저장
+      </button>
+      <button type="button"
+              hx-get="{% url 'clients:client_detail' client.pk %}"
+              hx-target="#main-content"
+              hx-select="#contract-section" hx-swap="outerHTML" hx-target="#contract-section"
+              class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-gray-200 transition">
+        취소
+      </button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- Contract List -->
+  {% if contracts %}
+  <div class="space-y-2">
+    {% for contract in contracts %}
+    <div class="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] px-2 py-0.5 rounded-full
+            {% if contract.status == '체결' %}bg-green-50 text-green-600
+            {% elif contract.status == '협의중' %}bg-yellow-50 text-yellow-600
+            {% elif contract.status == '만료' %}bg-gray-100 text-gray-500
+            {% elif contract.status == '해지' %}bg-red-50 text-red-500
+            {% else %}bg-gray-50 text-gray-600{% endif %}">
+            {{ contract.get_status_display }}
+          </span>
+          <span class="text-[15px] text-gray-700">
+            {{ contract.start_date|date:"Y.m.d" }}
+            {% if contract.end_date %}~ {{ contract.end_date|date:"Y.m.d" }}{% endif %}
+          </span>
+        </div>
+        {% if contract.terms %}
+        <p class="text-[13px] text-gray-400 mt-1 line-clamp-1">{{ contract.terms }}</p>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button hx-get="{% url 'clients:contract_update' client.pk contract.pk %}"
+                hx-target="#contract-section"
+                class="text-[13px] text-gray-400 hover:text-primary transition">
+          수정
+        </button>
+        <form method="post" action="{% url 'clients:contract_delete' client.pk contract.pk %}"
+              hx-post="{% url 'clients:contract_delete' client.pk contract.pk %}"
+              hx-target="#contract-section"
+              hx-confirm="계약을 삭제하시겠습니까?"
+              class="inline">
+          {% csrf_token %}
+          <button type="submit"
+                  class="text-[13px] text-gray-400 hover:text-red-500 transition">
+            삭제
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif not show_form %}
+  <p class="text-[15px] text-gray-400">등록된 계약이 없습니다.</p>
+  {% endif %}
+</section>

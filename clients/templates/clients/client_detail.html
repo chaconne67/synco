@@ -1,0 +1,135 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}{{ client.name }} — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+
+  <!-- Back + Actions -->
+  <div class="flex items-center justify-between">
+    <a href="{% url 'clients:client_list' %}"
+       hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
+       class="flex items-center gap-1 text-[15px] text-gray-500 hover:text-gray-700 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      목록
+    </a>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'clients:client_update' client.pk %}"
+         hx-get="{% url 'clients:client_update' client.pk %}" hx-target="#main-content" hx-push-url="true"
+         class="text-[15px] text-primary font-medium hover:text-primary-dark transition">
+        수정
+      </a>
+      <form method="post" action="{% url 'clients:client_delete' client.pk %}"
+            onsubmit="return confirm('정말 삭제하시겠습니까?');"
+            class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                class="text-[15px] text-red-500 font-medium hover:text-red-700 transition">
+          삭제
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if error_message %}
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+    <p class="text-[15px] text-red-600">{{ error_message }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Client Info -->
+  <section class="bg-white rounded-lg border border-gray-100 p-5">
+    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">기본 정보</h2>
+    <div class="space-y-3">
+      <div class="flex items-start justify-between">
+        <span class="text-[15px] text-gray-500">고객사명</span>
+        <span class="text-[15px] font-medium text-right">{{ client.name }}</span>
+      </div>
+      {% if client.industry %}
+      <div class="flex items-start justify-between">
+        <span class="text-[15px] text-gray-500">업종</span>
+        <span class="text-[15px] font-medium text-right">{{ client.industry }}</span>
+      </div>
+      {% endif %}
+      {% if client.size %}
+      <div class="flex items-start justify-between">
+        <span class="text-[15px] text-gray-500">규모</span>
+        <span class="text-[15px] font-medium text-right">{{ client.get_size_display }}</span>
+      </div>
+      {% endif %}
+      {% if client.region %}
+      <div class="flex items-start justify-between">
+        <span class="text-[15px] text-gray-500">지역</span>
+        <span class="text-[15px] font-medium text-right">{{ client.region }}</span>
+      </div>
+      {% endif %}
+      {% if client.notes %}
+      <div class="pt-2 border-t border-gray-50">
+        <span class="text-[15px] text-gray-500 block mb-1">비고</span>
+        <p class="text-[15px] text-gray-700 whitespace-pre-wrap">{{ client.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Contact Persons -->
+  <section class="bg-white rounded-lg border border-gray-100 p-5">
+    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">담당자</h2>
+    {% if client.contact_persons %}
+    <div class="space-y-3">
+      {% for person in client.contact_persons %}
+      <div class="border border-gray-50 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <span class="text-[15px] font-medium">{{ person.name }}</span>
+          {% if person.position %}
+          <span class="text-[13px] text-gray-400">{{ person.position }}</span>
+          {% endif %}
+        </div>
+        <div class="flex items-center gap-3 mt-1 text-[13px] text-gray-500">
+          {% if person.phone %}
+          <span>{{ person.phone }}</span>
+          {% endif %}
+          {% if person.email %}
+          <span>{{ person.email }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-[15px] text-gray-400">등록된 담당자가 없습니다.</p>
+    {% endif %}
+  </section>
+
+  <!-- Active Projects -->
+  <section class="bg-white rounded-lg border border-gray-100 p-5">
+    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">진행중 프로젝트</h2>
+    {% if active_projects %}
+    <div class="space-y-2">
+      {% for project in active_projects %}
+      <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+        <span class="text-[15px] text-gray-900">{{ project.title }}</span>
+        <span class="text-[13px] px-2 py-0.5 rounded-full
+          {% if project.status == 'new' %}bg-blue-50 text-blue-600
+          {% elif project.status == 'searching' %}bg-yellow-50 text-yellow-600
+          {% elif project.status == 'recommending' %}bg-purple-50 text-purple-600
+          {% elif project.status == 'interviewing' %}bg-indigo-50 text-indigo-600
+          {% elif project.status == 'negotiating' %}bg-green-50 text-green-600
+          {% else %}bg-gray-50 text-gray-600{% endif %}">
+          {{ project.get_status_display }}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-[15px] text-gray-400">진행중인 프로젝트가 없습니다.</p>
+    {% endif %}
+  </section>
+
+  <!-- Contracts Section -->
+  <div id="contract-section">
+    {% include "clients/partials/contract_section.html" %}
+  </div>
+
+</div>
+{% endblock %}

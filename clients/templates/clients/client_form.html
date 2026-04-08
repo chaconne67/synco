@@ -1,0 +1,150 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}{% if is_edit %}고객사 수정{% else %}고객사 등록{% endif %} — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+
+  <!-- Back -->
+  <div>
+    {% if is_edit %}
+    <a href="{% url 'clients:client_detail' client.pk %}"
+       hx-get="{% url 'clients:client_detail' client.pk %}" hx-target="#main-content" hx-push-url="true"
+       class="flex items-center gap-1 text-[15px] text-gray-500 hover:text-gray-700 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      상세로 돌아가기
+    </a>
+    {% else %}
+    <a href="{% url 'clients:client_list' %}"
+       hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
+       class="flex items-center gap-1 text-[15px] text-gray-500 hover:text-gray-700 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      목록으로 돌아가기
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Title -->
+  <h1 class="text-heading font-bold">{% if is_edit %}고객사 수정{% else %}고객사 등록{% endif %}</h1>
+
+  <!-- Form -->
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Basic Info -->
+    <section class="bg-white rounded-lg border border-gray-100 p-5 space-y-4">
+      <h2 class="text-[15px] font-semibold text-gray-500">기본 정보</h2>
+
+      {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-[15px] text-gray-700 font-medium mb-1">
+          {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+        <p class="text-[13px] text-red-500 mt-1">{{ field.errors.0 }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+
+    <!-- Contact Persons -->
+    <section class="bg-white rounded-lg border border-gray-100 p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[15px] font-semibold text-gray-500">담당자</h2>
+        <button type="button" onclick="addContactPerson()"
+                class="text-[13px] text-primary font-medium hover:text-primary-dark transition">
+          + 추가
+        </button>
+      </div>
+
+      <div id="contact-persons-container" class="space-y-3">
+        <!-- JS will populate rows here -->
+      </div>
+
+      <input type="hidden" name="contact_persons_json" id="contact-persons-json" value="[]">
+    </section>
+
+    <!-- Submit -->
+    <div class="flex gap-3">
+      <button type="submit"
+              class="flex-1 bg-primary text-white font-semibold py-3 rounded-lg text-[15px] hover:bg-primary-dark transition">
+        {% if is_edit %}저장{% else %}등록{% endif %}
+      </button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+(function() {
+  var container = document.getElementById('contact-persons-container');
+  var jsonInput = document.getElementById('contact-persons-json');
+
+  // Initialize from existing data (edit mode)
+  var initial = {{ contact_persons_json|safe }};
+  initial.forEach(function(p) { addRow(p); });
+
+  window.addContactPerson = function() {
+    addRow({name: '', position: '', phone: '', email: ''});
+  };
+
+  function addRow(data) {
+    var row = document.createElement('div');
+    row.className = 'contact-person-row border border-gray-200 rounded-lg p-3 space-y-2';
+    row.innerHTML =
+      '<div class="flex items-center justify-between mb-2">' +
+        '<span class="text-[13px] text-gray-400">담당자</span>' +
+        '<button type="button" onclick="removeContactPerson(this)" class="text-[13px] text-red-400 hover:text-red-600">삭제</button>' +
+      '</div>' +
+      '<div class="grid grid-cols-2 gap-2">' +
+        '<input type="text" placeholder="이름" data-cp="name" value="' + escapeHtml(data.name || '') + '"' +
+          ' class="border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">' +
+        '<input type="text" placeholder="직책" data-cp="position" value="' + escapeHtml(data.position || '') + '"' +
+          ' class="border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">' +
+        '<input type="text" placeholder="전화번호" data-cp="phone" value="' + escapeHtml(data.phone || '') + '"' +
+          ' class="border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">' +
+        '<input type="text" placeholder="이메일" data-cp="email" value="' + escapeHtml(data.email || '') + '"' +
+          ' class="border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">' +
+      '</div>';
+    container.appendChild(row);
+    updateJson();
+
+    // Listen for changes
+    row.querySelectorAll('input').forEach(function(input) {
+      input.addEventListener('input', updateJson);
+    });
+  }
+
+  window.removeContactPerson = function(btn) {
+    btn.closest('.contact-person-row').remove();
+    updateJson();
+  };
+
+  function updateJson() {
+    var rows = container.querySelectorAll('.contact-person-row');
+    var persons = [];
+    rows.forEach(function(row) {
+      var person = {};
+      row.querySelectorAll('[data-cp]').forEach(function(input) {
+        person[input.dataset.cp] = input.value;
+      });
+      // Only include if at least name is filled
+      if (person.name && person.name.trim()) {
+        persons.push(person);
+      }
+    });
+    jsonInput.value = JSON.stringify(persons);
+  }
+
+  function escapeHtml(s) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(s));
+    return div.innerHTML;
+  }
+
+  // Serialize before form submit
+  document.querySelector('form').addEventListener('submit', updateJson);
+})();
+</script>
+{% endblock %}

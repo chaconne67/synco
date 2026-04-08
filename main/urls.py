@@ -9,6 +9,7 @@ urlpatterns = [
     path("", lambda r: redirect("/candidates/"), name="root"),
     path("", include("accounts.urls")),
     path("candidates/", include("candidates.urls")),
+    path("clients/", include("clients.urls")),
 ]
 
 if settings.DEBUG:
