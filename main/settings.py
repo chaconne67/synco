@@ -12,7 +12,9 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
-RUNNING_TESTS = "pytest" in sys.modules or any(arg in {"pytest", "test"} for arg in sys.argv)
+RUNNING_TESTS = "pytest" in sys.modules or any(
+    arg in {"pytest", "test"} for arg in sys.argv
+)
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 if not SECRET_KEY:
@@ -53,6 +55,8 @@ INSTALLED_APPS = [
     # Local
     "accounts",
     "candidates",
+    "clients",
+    "projects",
     "data_extraction",
 ]
 
@@ -175,6 +179,10 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media files (uploads)
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -214,13 +222,10 @@ LLM_PROVIDERS = {
 
 # Production security settings
 if not DEBUG:
-    SECURE_SSL_REDIRECT = (
-        os.environ.get(
-            "SECURE_SSL_REDIRECT",
-            "false" if RUNNING_TESTS else "true",
-        ).lower()
-        in ("true", "1", "yes")
-    )
+    SECURE_SSL_REDIRECT = os.environ.get(
+        "SECURE_SSL_REDIRECT",
+        "false" if RUNNING_TESTS else "true",
+    ).lower() in ("true", "1", "yes")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000

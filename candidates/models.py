@@ -302,20 +302,24 @@ class Candidate(BaseModel):
         help_text='["Python", "Oracle", "SAP", ...]',
     )
     personal_etc = models.JSONField(
-        default=list, blank=True,
-        help_text='[{type, description}]',
+        default=list,
+        blank=True,
+        help_text="[{type, description}]",
     )
     education_etc = models.JSONField(
-        default=list, blank=True,
-        help_text='[{type, title, institution, date, description}]',
+        default=list,
+        blank=True,
+        help_text="[{type, title, institution, date, description}]",
     )
     career_etc = models.JSONField(
-        default=list, blank=True,
-        help_text='[{type, name, company, role, start_date, end_date, technologies[], description}]',
+        default=list,
+        blank=True,
+        help_text="[{type, name, company, role, start_date, end_date, technologies[], description}]",
     )
     skills_etc = models.JSONField(
-        default=list, blank=True,
-        help_text='[{type, title, description, date}]',
+        default=list,
+        blank=True,
+        help_text="[{type, title, description, date}]",
     )
 
     # AI extraction metadata
@@ -337,6 +341,15 @@ class Candidate(BaseModel):
     raw_extracted_json = models.JSONField(default=dict, blank=True)
     confidence_score = models.FloatField(null=True, blank=True)
     field_confidences = models.JSONField(default=dict, blank=True)
+
+    # Organization ownership (DB sharing network)
+    owned_by = models.ForeignKey(
+        "accounts.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_candidates",
+    )
 
     class Meta:
         db_table = "candidates"
@@ -466,7 +479,9 @@ class Candidate(BaseModel):
             if start_index > current_month_index:
                 continue
 
-            end = career.effective_end_year_month((current_date.year, current_date.month))
+            end = career.effective_end_year_month(
+                (current_date.year, current_date.month)
+            )
             if end is None:
                 continue
             end_index = min(_month_index(*end), current_month_index)
@@ -501,7 +516,9 @@ class Candidate(BaseModel):
                 "ignored_careers": 0,
                 "capped_future_dates": 0,
             }
-        return self._build_experience_metrics(self.effective_resume_reference_year_month)
+        return self._build_experience_metrics(
+            self.effective_resume_reference_year_month
+        )
 
     @property
     def resume_reference_year_month(self) -> tuple[int, int] | None:
@@ -518,7 +535,10 @@ class Candidate(BaseModel):
         if extracted is None or computed is None or extracted >= computed:
             return None
 
-        if not any(career.is_current and not career.end_date.strip() for career in self.careers.all()):
+        if not any(
+            career.is_current and not career.end_date.strip()
+            for career in self.careers.all()
+        ):
             return None
 
         remaining = extracted
@@ -534,7 +554,10 @@ class Candidate(BaseModel):
 
     @property
     def effective_resume_reference_year_month(self) -> tuple[int, int] | None:
-        return self.resume_reference_year_month or self.inferred_resume_reference_year_month
+        return (
+            self.resume_reference_year_month
+            or self.inferred_resume_reference_year_month
+        )
 
     @property
     def effective_resume_reference_date_display(self) -> str:
@@ -603,7 +626,9 @@ class Candidate(BaseModel):
 
     @property
     def experience_reference_span_display(self) -> str:
-        return _format_duration_months(self._experience_metrics["reference_span_months"])
+        return _format_duration_months(
+            self._experience_metrics["reference_span_months"]
+        )
 
     @property
     def current_vs_reference_experience_gap_months(self) -> int | None:
@@ -688,14 +713,17 @@ class Candidate(BaseModel):
         for item in items:
             key = (item.get("type", ""), item.get("detail", ""))
             existing = deduped.get(key)
-            if existing is None or _severity_sort_key(item["severity"]) < _severity_sort_key(
-                existing["severity"]
-            ):
+            if existing is None or _severity_sort_key(
+                item["severity"]
+            ) < _severity_sort_key(existing["severity"]):
                 deduped[key] = item
 
         return sorted(
             deduped.values(),
-            key=lambda item: (_severity_sort_key(item["severity"]), item.get("detail", "")),
+            key=lambda item: (
+                _severity_sort_key(item["severity"]),
+                item.get("detail", ""),
+            ),
         )
 
     @property
@@ -710,14 +738,17 @@ class Candidate(BaseModel):
         for item in items:
             key = (item.get("type", ""), item.get("detail", ""))
             existing = deduped.get(key)
-            if existing is None or _severity_sort_key(item["severity"]) < _severity_sort_key(
-                existing["severity"]
-            ):
+            if existing is None or _severity_sort_key(
+                item["severity"]
+            ) < _severity_sort_key(existing["severity"]):
                 deduped[key] = item
 
         return sorted(
             deduped.values(),
-            key=lambda item: (_severity_sort_key(item["severity"]), item.get("detail", "")),
+            key=lambda item: (
+                _severity_sort_key(item["severity"]),
+                item.get("detail", ""),
+            ),
         )
 
     @property
@@ -945,13 +976,19 @@ class Career(BaseModel):
                     continue
                 closest_match = min(
                     duration_matches,
-                    key=lambda duration_match: abs(duration_match.start() - local_company_index),
+                    key=lambda duration_match: abs(
+                        duration_match.start() - local_company_index
+                    ),
                 )
                 years = int(
-                    closest_match.group("years") or closest_match.group("years_only") or 0
+                    closest_match.group("years")
+                    or closest_match.group("years_only")
+                    or 0
                 )
                 months = int(
-                    closest_match.group("months") or closest_match.group("months_only") or 0
+                    closest_match.group("months")
+                    or closest_match.group("months_only")
+                    or 0
                 )
                 duration = years * 12 + months
                 if duration <= 0:
@@ -965,7 +1002,9 @@ class Career(BaseModel):
 
     @cached_property
     def inferred_end_year_month(self) -> tuple[int, int] | None:
-        explicit_inference = self._parse_year_month(self.end_date_inferred, default_month=12)
+        explicit_inference = self._parse_year_month(
+            self.end_date_inferred, default_month=12
+        )
         if explicit_inference is not None:
             return explicit_inference
 
@@ -1004,7 +1043,8 @@ class Career(BaseModel):
             not self.is_current
             and not self.end_date.strip()
             and (
-                self._parse_year_month(self.end_date_inferred, default_month=12) is not None
+                self._parse_year_month(self.end_date_inferred, default_month=12)
+                is not None
                 or self.inferred_duration_months is not None
             )
             and self.effective_end_year_month(reference_year_month) is not None
@@ -1012,9 +1052,9 @@ class Career(BaseModel):
 
     @property
     def start_date_display(self) -> str:
-        return _format_year_month(self._parse_year_month(self.start_date, default_month=1)) or (
-            self.start_date or ""
-        )
+        return _format_year_month(
+            self._parse_year_month(self.start_date, default_month=1)
+        ) or (self.start_date or "")
 
     @property
     def end_date_display(self) -> str:
@@ -1303,7 +1343,9 @@ class DiscrepancyReport(BaseModel):
                 continue
             severity = alert.get("severity", "BLUE")
             detail = alert["detail"]
-            summary = alert.get("summary") or (detail[:30] + "…" if len(detail) > 30 else detail)
+            summary = alert.get("summary") or (
+                detail[:30] + "…" if len(detail) > 30 else detail
+            )
             items.append(
                 {
                     "severity": severity,
