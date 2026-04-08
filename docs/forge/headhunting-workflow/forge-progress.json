@@ -1,80 +1,136 @@
 {
   "project": "headhunting-workflow",
-  "total_todos": 4,
-  "created_at": "2026-04-08T10:00:00Z",
+  "total_todos": 6,
+  "created_at": "2026-04-09T12:00:00Z",
+  "batch_status": "running",
+  "trigger_id": null,
+  "scope": "impl_only",
   "stages": [
     {
       "stage": 1,
+      "phase": "tempering",
       "todos": [
         {
-          "slug": "p10",
-          "status": "completed",
-          "entry_point": "design",
-          "complexity": "medium",
-          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
-          "committed": true,
-          "debate_summary": {
-            "design": {"rounds": 2, "issues": 17, "accepted": 8, "rebutted": 6, "escalated": 0},
-            "impl": {"rounds": 2, "issues": 11, "accepted": 8, "rebutted": 1, "escalated": 0}
-          }
-        },
-        {
-          "slug": "p12",
-          "status": "completed",
+          "slug": "p14",
+          "tempering_status": "pending",
+          "impl_status": "pending",
+          "impl_commit": null,
+          "verification_status": null,
+          "verification_result": null,
           "entry_point": "design",
           "complexity": "large",
-          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
-          "committed": true,
-          "debate_summary": {
-            "design": {"rounds": 2, "issues": 18, "accepted": 13, "rebutted": 2, "escalated": 0},
-            "impl": {"rounds": 1, "issues": 6, "accepted": 4, "rebutted": 0, "escalated": 0}
-          }
+          "artifacts": [],
+          "committed": false,
+          "depends_on": null,
+          "debate_summary": null
+        },
+        {
+          "slug": "p19",
+          "tempering_status": "pending",
+          "impl_status": "pending",
+          "impl_commit": null,
+          "verification_status": null,
+          "verification_result": null,
+          "entry_point": "design",
+          "complexity": "small",
+          "artifacts": [],
+          "committed": false,
+          "depends_on": null,
+          "debate_summary": null
         }
       ],
-      "summary": "2/2 성공. P10: 설계2R(17이슈→8수용/6반박)/구현2R(11이슈→8수용/1반박). P12: 설계2R(18이슈→13수용/2반박)/구현1R(6이슈→4수용)."
+      "summary": null
     },
     {
       "stage": 2,
+      "phase": "tempering",
       "todos": [
         {
-          "slug": "p11",
-          "status": "completed",
+          "slug": "p15",
+          "tempering_status": "pending",
+          "impl_status": "pending",
+          "impl_commit": null,
+          "verification_status": null,
+          "verification_result": null,
           "entry_point": "design",
-          "complexity": "medium",
-          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
-          "committed": true,
-          "debate_summary": {
-            "design": {"rounds": 2, "issues": 17, "accepted": 15, "rebutted": 1, "escalated": 0},
-            "impl": {"rounds": 1, "issues": 12, "accepted": 10, "rebutted": 2, "escalated": 0}
-          }
+          "complexity": "large",
+          "artifacts": [],
+          "committed": false,
+          "depends_on": null,
+          "debate_summary": null
         }
       ],
-      "summary": "1/1 성공. P11: 설계2R(17이슈→15수용/1반박)/구현1R(12이슈→10수용/2반박). CASCADE→SET_NULL 변경, pending_approval 가드 추가."
+      "summary": null
     },
     {
       "stage": 3,
+      "phase": "tempering",
       "todos": [
         {
-          "slug": "p13",
-          "status": "completed",
+          "slug": "p16",
+          "tempering_status": "pending",
+          "impl_status": "pending",
+          "impl_commit": null,
+          "verification_status": null,
+          "verification_result": null,
           "entry_point": "design",
-          "complexity": "medium",
-          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
+          "complexity": "large",
+          "artifacts": [],
           "committed": false,
-          "debate_summary": {
-            "design": {"rounds": 2, "issues": 10, "accepted": 8, "rebutted": 1, "escalated": 0},
-            "impl": {"rounds": 1, "issues": 6, "accepted": 5, "rebutted": 0, "escalated": 0}
-          }
+          "depends_on": ["p14"],
+          "debate_summary": null
         }
       ],
-      "summary": "1/1 성공. P13: 설계2R(10이슈→8수용/1반박)/구현1R(6이슈→5수용). CRITICAL 0건, 교차 학습 효과."
+      "summary": null
+    },
+    {
+      "stage": 4,
+      "phase": "tempering",
+      "todos": [
+        {
+          "slug": "p17",
+          "tempering_status": "pending",
+          "impl_status": "pending",
+          "impl_commit": null,
+          "verification_status": null,
+          "verification_result": null,
+          "entry_point": "design",
+          "complexity": "medium",
+          "artifacts": [],
+          "committed": false,
+          "depends_on": ["p15"],
+          "debate_summary": null
+        }
+      ],
+      "summary": null
+    },
+    {
+      "stage": 5,
+      "phase": "tempering",
+      "todos": [
+        {
+          "slug": "p18",
+          "tempering_status": "pending",
+          "impl_status": "pending",
+          "impl_commit": null,
+          "verification_status": null,
+          "verification_result": null,
+          "entry_point": "design",
+          "complexity": "large",
+          "artifacts": [],
+          "committed": false,
+          "depends_on": null,
+          "debate_summary": null
+        }
+      ],
+      "summary": null
     }
   ],
   "decisions": [
     {
       "stage": 0,
-      "decision": "P10∥P12 병렬(앱 분리, 파일 겹침 0), P11→P10 이후(projects/ 충돌), P13→P11+P12 이후(의존성+사이드바)",
-      "timestamp": "2026-04-08T10:00:00Z"
+      "decision": "P14-P18: projects/views.py+urls.py 공유로 순차 강제. P19: 파일 겹침 없어 P14와 병렬. P16→P14, P17→P15 의존.",
+      "timestamp": "2026-04-09T12:00:00Z"
     }
   ]
 }
