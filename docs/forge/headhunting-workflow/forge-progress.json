@@ -1,0 +1,58 @@
+{
+  "project": "headhunting-workflow",
+  "total_todos": 4,
+  "created_at": "2026-04-08T10:00:00Z",
+  "stages": [
+    {
+      "stage": 1,
+      "todos": [
+        {
+          "slug": "p10",
+          "status": "completed",
+          "entry_point": "design",
+          "complexity": "medium",
+          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
+          "committed": false,
+          "debate_summary": {
+            "design": {"rounds": 2, "issues": 17, "accepted": 8, "rebutted": 6, "escalated": 0},
+            "impl": {"rounds": 2, "issues": 11, "accepted": 8, "rebutted": 1, "escalated": 0}
+          }
+        },
+        {
+          "slug": "p12",
+          "status": "completed",
+          "entry_point": "design",
+          "complexity": "large",
+          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
+          "committed": false,
+          "debate_summary": {
+            "design": {"rounds": 2, "issues": 18, "accepted": 13, "rebutted": 2, "escalated": 0},
+            "impl": {"rounds": 1, "issues": 6, "accepted": 4, "rebutted": 0, "escalated": 0}
+          }
+        }
+      ],
+      "summary": "2/2 성공. P10: 설계2R(17이슈→8수용/6반박)/구현2R(11이슈→8수용/1반박). P12: 설계2R(18이슈→13수용/2반박)/구현1R(6이슈→4수용)."
+    },
+    {
+      "stage": 2,
+      "todos": [
+        {"slug": "p11", "status": "pending", "entry_point": "design", "complexity": "medium"}
+      ],
+      "summary": null
+    },
+    {
+      "stage": 3,
+      "todos": [
+        {"slug": "p13", "status": "pending", "entry_point": "design", "complexity": "medium"}
+      ],
+      "summary": null
+    }
+  ],
+  "decisions": [
+    {
+      "stage": 0,
+      "decision": "P10∥P12 병렬(앱 분리, 파일 겹침 0), P11→P10 이후(projects/ 충돌), P13→P11+P12 이후(의존성+사이드바)",
+      "timestamp": "2026-04-08T10:00:00Z"
+    }
+  ]
+}

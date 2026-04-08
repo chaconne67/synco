@@ -1,0 +1,65 @@
+{
+  "topic": "p10",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {"id": "D-R1-01", "severity": "CRITICAL", "title": "회사명 비노출 vs 파일명 규칙 충돌", "attack": "파일명에 회사명이 포함되어 비노출 규칙 위반", "action": "partial", "response": "비노출은 공지 본문에만 적용, 파일명은 내부 관리용", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-02", "severity": "CRITICAL", "title": "상장구분 데이터 부재", "attack": "Client에 상장구분 필드 없음", "action": "accepted", "response": "업종+규모 기반으로 변경", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-03", "severity": "CRITICAL", "title": "담당자명 출처 미정의", "attack": "M2M에서 단일 담당자 특정 불가", "action": "accepted", "response": "request.user로 고정", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-04", "severity": "CRITICAL", "title": "JD 입력 경로 불일치", "attack": "jd_raw_text 누락", "action": "accepted", "response": "우선순위 수정", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-05", "severity": "CRITICAL", "title": "requirements 존재 가정", "attack": "requirements 미존재 시 불가", "action": "partial", "response": "선택적 보조 데이터로 변경", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-06", "severity": "CRITICAL", "title": "비동기 메커니즘 부재", "attack": "비동기 인프라 없음", "action": "accepted", "response": "동기 POST로 변경", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-07", "severity": "MAJOR", "title": "근무지/처우 데이터 소스 미정의", "attack": "데이터 소스 매핑 없음", "action": "accepted", "response": "섹션별 소스 명시", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-08", "severity": "MAJOR", "title": "덮어쓰기 정책 모호", "attack": "자동 생성이 수동 편집본 덮어쓸 위험", "action": "accepted", "response": "덮어쓰기 확인 정책 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-09", "severity": "CRITICAL", "title": "미게시 사이트 렌더링 모호", "attack": "UI가 DB 없는 사이트도 표시하는 것처럼 보임", "action": "rebutted", "response": "DB 행만 표시로 명시", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-10", "severity": "MAJOR", "title": "unique_together vs 이력 추적 충돌", "attack": "재게시/이력 추적 불가", "action": "rebutted", "response": "현재 상태 스냅샷 모델", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-11", "severity": "MAJOR", "title": "삭제와 추적 목적 충돌", "attack": "하드 삭제 시 데이터 소실", "action": "partial", "response": "소프트 삭제로 변경", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-12", "severity": "CRITICAL", "title": "posting_site_update 범위 모호", "attack": "수정 범위 불명확", "action": "accepted", "response": "전체 필드 수정으로 명확화", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-13", "severity": "MAJOR", "title": "실패 경로 테스트 누락", "attack": "성공 경로만 커버", "action": "accepted", "response": "실패 테스트 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-14", "severity": "MINOR", "title": "TextChoices 저장값 컨벤션", "attack": "영어 slug 저장 vs 한국어 컨벤션", "action": "rebutted", "response": "외부 식별자 예외", "evidence_type": "logical_reasoning", "resolved": true}
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {"id": "D-R2-09", "severity": "CRITICAL", "title": "미게시 사이트 렌더링 (follow-up)", "attack": "재심의", "action": "rebutted", "response": "레드팀 ACCEPT", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R2-10", "severity": "MAJOR", "title": "unique_together (follow-up)", "attack": "재심의", "action": "rebutted", "response": "레드팀 ACCEPT", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R2-14", "severity": "MINOR", "title": "TextChoices (follow-up)", "attack": "재심의", "action": "rebutted", "response": "레드팀 ACCEPT", "evidence_type": "code_reference", "resolved": true}
+          ]
+        }
+      ],
+      "summary": {"rounds": 2, "issues": 14, "accepted": 9, "rebutted": 3, "escalated": 0, "partial": 2}
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {"id": "I-R1-01", "severity": "MAJOR", "title": "posting_site_add/update GET/POST vs POST-only", "attack": "설계서는 POST-only인데 계획은 GET/POST", "action": "accepted", "response": "설계서 갱신. HTMX 인라인 폼에 GET 필요", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-02", "severity": "MAJOR", "title": "PostingSiteForm에 is_active 누락", "attack": "스펙이 is_active 포함을 명시", "action": "rebutted", "response": "is_active는 내부 플래그, 기존 패턴 참조", "evidence_type": "code_reference", "resolved": false},
+            {"id": "I-R1-03", "severity": "CRITICAL", "title": "posting_site_update UniqueConstraint 500", "attack": "site 변경 시 IntegrityError 미처리", "action": "accepted", "response": "try/except 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-04", "severity": "MAJOR", "title": "소프트 삭제 후 재등록 불가", "attack": "unique + soft delete = 재등록 차단", "action": "accepted", "response": "재활성화 로직 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-05", "severity": "MAJOR", "title": "데이터 소스 매핑 프롬프트 부족", "attack": "섹션별 우선순위 미구현", "action": "partial", "response": "프롬프트에 규칙 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-06", "severity": "MAJOR", "title": "Gemini 오류 시 보존 테스트 누락", "attack": "RuntimeError 테스트 없음", "action": "accepted", "response": "테스트 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-07", "severity": "MAJOR", "title": "덮어쓰기 취소 테스트 불가", "attack": "hx-confirm은 브라우저 테스트 불가", "action": "partial", "response": "서버사이드 overwrite 파라미터 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-08", "severity": "MAJOR", "title": "Lint 실패 (unused imports)", "attack": "미사용 import 존재", "action": "accepted", "response": "정리 필요", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-09", "severity": "MINOR", "title": "Task 5 기대 테스트 수 오류", "attack": "12개가 아니라 11개", "action": "accepted", "response": "수정", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-10", "severity": "MINOR", "title": "파일명 테스트 정확도 부족", "attack": "부분 문자열만 검증", "action": "accepted", "response": "regex 패턴 매칭 추가", "evidence_type": "logical_reasoning", "resolved": true}
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {"id": "I-R2-02", "severity": "MAJOR", "title": "PostingSiteForm is_active (follow-up)", "attack": "합의 스펙이 명시적으로 is_active 포함 요구", "action": "accepted", "response": "스펙 계약 준수. PostingSiteForm에 is_active 추가", "evidence_type": "code_reference", "resolved": true}
+          ]
+        }
+      ],
+      "summary": {"rounds": 2, "issues": 10, "accepted": 9, "rebutted": 0, "escalated": 0, "partial": 1}
+    }
+  }
+}

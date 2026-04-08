@@ -1,0 +1,286 @@
+{
+  "topic": "p12",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "CRITICAL",
+              "title": "Organization isolation vs reference models",
+              "attack": "3 reference models lack organization field, violating project-wide org isolation rule",
+              "action": "accepted",
+              "response": "Reference data is global system master. Will mark as org-isolation exception, restrict CRUD to staff only",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "CRITICAL",
+              "title": "URL routing mismatch (/reference/ vs /clients/)",
+              "attack": "clients.urls included under /clients/ but spec uses /reference/ prefix",
+              "action": "accepted",
+              "response": "Will add separate urls_reference.py and register /reference/ in main/urls.py",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "CRITICAL",
+              "title": "Sidebar HTMX target mismatch (main vs #main-content)",
+              "attack": "hx-target='main' doesn't match project standard #main-content",
+              "action": "accepted",
+              "response": "Typo fix to #main-content",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "CRITICAL",
+              "title": "Tab container id inconsistency (#ref-content vs #tab-content)",
+              "attack": "Spec uses #ref-content but project convention is #tab-content",
+              "action": "accepted",
+              "response": "Will use #ref-tab-content as dedicated container for reference page tabs",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "CRITICAL",
+              "title": "Schema migration strategy missing for existing models",
+              "attack": "Destructive schema changes on P01 models without migration plan",
+              "action": "accepted",
+              "response": "Will enumerate field additions/removals per model. Tables are empty so no backfill needed",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "CRITICAL",
+              "title": "University tier system incompatibility (S/A/B vs SKY/SSG)",
+              "attack": "P01 S/A/B tier values incompatible with P12 SKY/SSG system",
+              "action": "accepted",
+              "response": "Will include mapping table. Tables empty so AlterField suffices",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "CRITICAL",
+              "title": "Name-based upsert fragile for duplicates",
+              "attack": "Name alone insufficient for idempotent upsert across all 3 models",
+              "action": "partial",
+              "response": "University uses (name, country) composite unique. Cert keeps unique name. Company uses unique name with error report for collisions",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "CRITICAL",
+              "title": "CSV import preview flow undefined",
+              "attack": "2-step preview/confirm flow lacks state storage, token, URL design",
+              "action": "partial",
+              "response": "Simplified to single POST + immediate processing + result report. No preview step needed for admin-verified CSV",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "CSV import error handling rules missing",
+              "attack": "No specs for header validation, encoding errors, partial success",
+              "action": "accepted",
+              "response": "Will add header validation, encoding rules, transaction-level rollback on any error, error report with row numbers",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-10",
+              "severity": "MAJOR",
+              "title": "CSV export conflicts with HTMX navigation",
+              "attack": "Download response may get injected into DOM via HTMX",
+              "action": "accepted",
+              "response": "Export will use plain <a> with hx-boost=false, Content-Disposition: attachment",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-11",
+              "severity": "MAJOR",
+              "title": "Delete protection references undefined",
+              "attack": "No FK references to reference models exist, making delete protection hollow",
+              "action": "rebutted",
+              "response": "No FK references currently exist in codebase. Delete protection unnecessary at P12. Will add when FK references are introduced",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-12",
+              "severity": "MAJOR",
+              "title": "Autofill web search API dependency undefined",
+              "attack": "Which API, timeout, retry, cost, error UX all missing",
+              "action": "accepted",
+              "response": "Will specify Gemini API + Google Search grounding, 10s timeout, failure toast, no auto-save",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-13",
+              "severity": "MAJOR",
+              "title": "Autofill data leak risk",
+              "attack": "Sending company names to external API may leak confidential client/target info",
+              "action": "rebutted",
+              "response": "CompanyProfile is global master of public companies, not confidential Client data",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-14",
+              "severity": "MAJOR",
+              "title": "No permission model for reference CRUD",
+              "attack": "Any logged-in user can modify master data with only @login_required",
+              "action": "accepted",
+              "response": "CRUD restricted to staff. Read/export open to all logged-in users",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-15",
+              "severity": "MAJOR",
+              "title": "aliases JSONField search/CSV serialization rules missing",
+              "attack": "No normalization, case handling, CSV format for JSON array field",
+              "action": "accepted",
+              "response": "Aliases stored as JSON array with trim. CSV uses semicolon delimiter. Search uses case-insensitive contains",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-16",
+              "severity": "MAJOR",
+              "title": "Initial data source and refresh policy missing",
+              "attack": "Listed companies change frequently but treated as static fixture",
+              "action": "partial",
+              "response": "Data sources specified (DART, manual). Periodic refresh out of P12 scope. Manual refresh via CSV update + command re-run",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "D-R2-11",
+              "severity": "MAJOR",
+              "title": "Delete protection references undefined (follow-up)",
+              "attack": "Restatement — no new evidence",
+              "action": "accepted_by_redteam",
+              "response": "Red team accepted author's rebuttal. No FK references exist.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R2-13",
+              "severity": "MAJOR",
+              "title": "Autofill data leak risk (follow-up)",
+              "attack": "CompanyProfile includes 비상장 companies. Spec says unlisted companies added during project registration. Autofill sends arbitrary names to external API, revealing operator interest",
+              "action": "accepted",
+              "response": "Valid point. Will add external transmission notice on autofill button, explicit user action only, no auto-save",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 16,
+        "accepted": 13,
+        "rebutted": 1,
+        "partial": 2,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "clients/admin.py not updated after model field removal",
+              "attack": "admin.py references preference_tier and old fields that will be removed by migration",
+              "action": "accepted",
+              "response": "Add admin.py update step in Task 1",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "company_autofill view requires pk but create form has no pk",
+              "attack": "Design spec says autofill works on create form, but view needs existing object",
+              "action": "accepted",
+              "response": "Change autofill to accept name via POST body, remove pk requirement",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "Task 4 placeholder views cause template errors",
+              "attack": "reference_index.html includes company/cert tabs but views/templates don't exist yet",
+              "action": "accepted",
+              "response": "Create stub views and empty tab templates in Task 4",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "aliases __icontains on JSONField is fragile",
+              "attack": "Searches serialized JSON text, not individual array elements",
+              "action": "partial",
+              "response": "Keep __icontains as practical approximation. Works for short alias tokens. Add comment.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MINOR",
+              "title": "CSV handler two-pass approach has subtle issues",
+              "attack": "Validate then re-read and upsert is complex and could miss second-pass errors",
+              "action": "partial",
+              "response": "Simplify to single-pass: validate + upsert per row within one atomic block",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MINOR",
+              "title": "_render_reference_page always loads university data",
+              "attack": "Falls back to university data even when active tab is companies or certs",
+              "action": "accepted",
+              "response": "Make helper tab-aware",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 4,
+        "rebutted": 0,
+        "partial": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
