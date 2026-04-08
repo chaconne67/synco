@@ -9,8 +9,8 @@ from django.views.decorators.http import require_http_methods
 
 from accounts.models import Organization
 
-from .forms import ProjectForm
-from .models import Interview, Offer, Project, ProjectStatus
+from .forms import ContactForm, ProjectForm
+from .models import Contact, Interview, Offer, Project, ProjectStatus
 
 PAGE_SIZE = 20
 
@@ -186,9 +186,7 @@ def project_detail(request, pk):
     tab_counts = {
         "contacts": project.contacts.count(),
         "submissions": project.submissions.count(),
-        "interviews": Interview.objects.filter(
-            submission__project=project
-        ).count(),
+        "interviews": Interview.objects.filter(submission__project=project).count(),
         "offers": Offer.objects.filter(submission__project=project).count(),
     }
 
@@ -247,12 +245,8 @@ def project_delete(request, pk):
         tab_counts = {
             "contacts": project.contacts.count(),
             "submissions": project.submissions.count(),
-            "interviews": Interview.objects.filter(
-                submission__project=project
-            ).count(),
-            "offers": Offer.objects.filter(
-                submission__project=project
-            ).count(),
+            "interviews": Interview.objects.filter(submission__project=project).count(),
+            "offers": Offer.objects.filter(submission__project=project).count(),
         }
         overview_context = _build_overview_context(project)
         return render(
@@ -281,22 +275,16 @@ def _build_overview_context(project):
     funnel = {
         "contacts": project.contacts.count(),
         "submissions": project.submissions.count(),
-        "interviews": Interview.objects.filter(
-            submission__project=project
-        ).count(),
+        "interviews": Interview.objects.filter(submission__project=project).count(),
         "offers": Offer.objects.filter(submission__project=project).count(),
     }
 
-    recent_contacts = (
-        project.contacts.select_related("candidate", "consultant").order_by(
-            "-contacted_at"
-        )[:3]
-    )
-    recent_submissions = (
-        project.submissions.select_related("candidate", "consultant").order_by(
-            "-created_at"
-        )[:2]
-    )
+    recent_contacts = project.contacts.select_related(
+        "candidate", "consultant"
+    ).order_by("-contacted_at")[:3]
+    recent_submissions = project.submissions.select_related(
+        "candidate", "consultant"
+    ).order_by("-created_at")[:2]
 
     consultants = project.assigned_consultants.all()
 
@@ -320,26 +308,66 @@ def project_tab_overview(request, pk):
 
 @login_required
 def project_tab_search(request, pk):
-    """서칭: 읽기 전용 매칭 결과 + 컨택 이력 표시."""
+    """서칭: 매칭 결과 + 컨택 상태 표시 + 예정 등록."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
+
+    # 만료 예정 건 해제
+    from projects.services.contact import release_expired_reservations
+
+    release_expired_reservations()
 
     results = []
     if project.requirements:
         from projects.services.candidate_matching import match_candidates
 
-        results = match_candidates(
-            project.requirements, organization=org, limit=50
-        )
+        results = match_candidates(project.requirements, organization=org, limit=50)
 
-        # 컨택 이력 있는 후보자 표시
-        contacted_candidate_ids = set(
-            project.contacts.values_list("candidate_id", flat=True)
+        from django.utils import timezone as tz
+
+        now = tz.now()
+
+        # 이 프로젝트의 컨택 이력
+        project_contacts = {
+            c.candidate_id: c
+            for c in project.contacts.select_related("consultant").all()
+        }
+
+        # 다른 프로젝트의 컨택 이력 (같은 org)
+        candidate_ids = [item["candidate"].pk for item in results]
+        other_contacts = (
+            Contact.objects.filter(candidate_id__in=candidate_ids)
+            .exclude(project=project)
+            .exclude(result=Contact.Result.RESERVED)
+            .select_related("project", "consultant")
         )
+        other_contacts_map: dict = {}
+        for c in other_contacts:
+            other_contacts_map.setdefault(c.candidate_id, []).append(c)
+
         for item in results:
-            item["has_contact_history"] = (
-                item["candidate"].pk in contacted_candidate_ids
-            )
+            cid = item["candidate"].pk
+            contact = project_contacts.get(cid)
+
+            if contact:
+                if contact.result == Contact.Result.RESERVED:
+                    if contact.locked_until and contact.locked_until > now:
+                        item["contact_status"] = "reserved"
+                        item["reserved_by"] = contact.consultant
+                        item["locked_until"] = contact.locked_until
+                        item["disabled"] = contact.consultant != request.user
+                    else:
+                        item["contact_status"] = "expired"
+                        item["disabled"] = False
+                else:
+                    item["contact_status"] = "contacted"
+                    item["contact_result"] = contact.get_result_display()
+                    item["disabled"] = True
+            else:
+                item["contact_status"] = None
+                item["disabled"] = False
+
+            item["other_project_contacts"] = other_contacts_map.get(cid, [])
 
     return render(
         request,
@@ -354,18 +382,42 @@ def project_tab_search(request, pk):
 
 @login_required
 def project_tab_contacts(request, pk):
-    """컨택: Contact 목록 (기본). P06에서 완성."""
+    """컨택 탭: 완료 목록 + 예정 목록."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
-    contacts = (
-        project.contacts.select_related("candidate", "consultant").order_by(
-            "-contacted_at"
-        )
+
+    # 만료 예정 건 잠금 해제
+    from projects.services.contact import release_expired_reservations
+
+    release_expired_reservations()
+
+    from django.utils import timezone as tz
+
+    now = tz.now()
+
+    # 실제 컨택 완료 목록 (예정 제외)
+    completed_contacts = (
+        project.contacts.exclude(result=Contact.Result.RESERVED)
+        .select_related("candidate", "consultant")
+        .order_by("-contacted_at")
     )
+
+    # 컨택 예정(잠금) 목록 — 유효한 것만
+    reserved_contacts = (
+        project.contacts.filter(result=Contact.Result.RESERVED, locked_until__gt=now)
+        .select_related("candidate", "consultant")
+        .order_by("-created_at")
+    )
+
     return render(
         request,
         "projects/partials/tab_contacts.html",
-        {"project": project, "contacts": contacts},
+        {
+            "project": project,
+            "completed_contacts": completed_contacts,
+            "reserved_contacts": reserved_contacts,
+            "can_release": request.user in project.assigned_consultants.all(),
+        },
     )
 
 
@@ -374,11 +426,9 @@ def project_tab_submissions(request, pk):
     """추천: Submission 목록 (기본). 후속 Phase에서 완성."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
-    submissions = (
-        project.submissions.select_related("candidate", "consultant").order_by(
-            "-created_at"
-        )
-    )
+    submissions = project.submissions.select_related(
+        "candidate", "consultant"
+    ).order_by("-created_at")
     return render(
         request,
         "projects/partials/tab_submissions.html",
@@ -614,4 +664,208 @@ def jd_matching_results(request, pk):
         request,
         "projects/partials/jd_matching_results.html",
         {"project": project, "results": results},
+    )
+
+
+# ---------------------------------------------------------------------------
+# P06: Contact Management
+# ---------------------------------------------------------------------------
+
+
+@login_required
+def contact_create(request, pk):
+    """컨택 기록 등록."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method == "POST":
+        form = ContactForm(request.POST, organization=org)
+        if form.is_valid():
+            # 중복 체크
+            from projects.services.contact import check_duplicate
+
+            dup = check_duplicate(project, form.cleaned_data["candidate"])
+            if dup["blocked"]:
+                return render(
+                    request,
+                    "projects/partials/contact_form.html",
+                    {
+                        "form": form,
+                        "project": project,
+                        "is_edit": False,
+                        "duplicate_warnings": dup["warnings"],
+                        "blocked": True,
+                    },
+                )
+
+            contact = form.save(commit=False)
+            contact.project = project
+            contact.consultant = request.user
+            contact.save()
+
+            # 같은 후보자의 예정 건이 있으면 해제 (결과 기록 시 잠금 자동 해제)
+            Contact.objects.filter(
+                project=project,
+                candidate=contact.candidate,
+                result=Contact.Result.RESERVED,
+            ).exclude(pk=contact.pk).update(
+                locked_until=None,
+            )
+
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "contactChanged"},
+            )
+    else:
+        form = ContactForm(organization=org)
+
+    # 프리필: query param으로 candidate 전달 시
+    dup = None
+    candidate_id = request.GET.get("candidate")
+    if candidate_id and request.method != "POST":
+        form.initial["candidate"] = candidate_id
+        from candidates.models import Candidate
+        from projects.services.contact import check_duplicate
+
+        try:
+            candidate_obj = Candidate.objects.get(pk=candidate_id, owned_by=org)
+            dup = check_duplicate(project, candidate_obj)
+        except Candidate.DoesNotExist:
+            pass
+
+    return render(
+        request,
+        "projects/partials/contact_form.html",
+        {
+            "form": form,
+            "project": project,
+            "is_edit": False,
+            "duplicate_warnings": dup["warnings"] if dup else [],
+            "other_project_contacts": dup["other_projects"] if dup else [],
+            "blocked": dup["blocked"] if dup else False,
+        },
+    )
+
+
+@login_required
+def contact_update(request, pk, contact_pk):
+    """컨택 기록 수정."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    contact = get_object_or_404(Contact, pk=contact_pk, project=project)
+
+    if request.method == "POST":
+        form = ContactForm(request.POST, instance=contact, organization=org)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                status=204,
+                headers={"HX-Trigger": "contactChanged"},
+            )
+    else:
+        form = ContactForm(instance=contact, organization=org)
+
+    return render(
+        request,
+        "projects/partials/contact_form.html",
+        {
+            "form": form,
+            "project": project,
+            "contact": contact,
+            "is_edit": True,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def contact_delete(request, pk, contact_pk):
+    """컨택 기록 삭제."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    contact = get_object_or_404(Contact, pk=contact_pk, project=project)
+    contact.delete()
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "contactChanged"},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def contact_reserve(request, pk):
+    """컨택 예정 등록 (잠금). 서칭 탭에서 체크박스 선택 후 호출."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    candidate_ids = request.POST.getlist("candidate_ids")
+    if not candidate_ids:
+        return HttpResponse("후보자를 선택해주세요.", status=400)
+
+    from projects.services.contact import reserve_candidates
+
+    reserve_candidates(project, candidate_ids, request.user)
+
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "contactChanged"},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def contact_release_lock(request, pk, contact_pk):
+    """잠금 해제. 담당 컨설턴트 또는 잠금 본인만 가능."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    contact = get_object_or_404(
+        Contact,
+        pk=contact_pk,
+        project=project,
+        result=Contact.Result.RESERVED,
+    )
+
+    # 권한 체크: 담당 컨설턴트이거나 잠금 본인
+    if (
+        request.user not in project.assigned_consultants.all()
+        and request.user != contact.consultant
+    ):
+        return HttpResponse("잠금 해제 권한이 없습니다.", status=403)
+
+    contact.locked_until = None
+    contact.save(update_fields=["locked_until"])
+
+    return HttpResponse(
+        status=204,
+        headers={"HX-Trigger": "contactChanged"},
+    )
+
+
+@login_required
+def contact_check_duplicate(request, pk):
+    """중복 체크 (HTMX partial). 후보자 드롭다운 변경 시 호출."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    candidate_id = request.GET.get("candidate")
+    if not candidate_id:
+        return HttpResponse("")
+
+    from candidates.models import Candidate
+    from projects.services.contact import check_duplicate
+
+    try:
+        candidate = Candidate.objects.get(pk=candidate_id, owned_by=org)
+    except Candidate.DoesNotExist:
+        return HttpResponse("")
+
+    dup = check_duplicate(project, candidate)
+
+    return render(
+        request,
+        "projects/partials/duplicate_check_result.html",
+        {
+            "duplicate": dup,
+            "project": project,
+        },
     )

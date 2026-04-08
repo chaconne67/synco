@@ -52,4 +52,35 @@ urlpatterns = [
         views.project_tab_offers,
         name="project_tab_offers",
     ),
+    # P06: 컨택 관리
+    path(
+        "<uuid:pk>/contacts/new/",
+        views.contact_create,
+        name="contact_create",
+    ),
+    path(
+        "<uuid:pk>/contacts/<uuid:contact_pk>/edit/",
+        views.contact_update,
+        name="contact_update",
+    ),
+    path(
+        "<uuid:pk>/contacts/<uuid:contact_pk>/delete/",
+        views.contact_delete,
+        name="contact_delete",
+    ),
+    path(
+        "<uuid:pk>/contacts/reserve/",
+        views.contact_reserve,
+        name="contact_reserve",
+    ),
+    path(
+        "<uuid:pk>/contacts/<uuid:contact_pk>/release/",
+        views.contact_release_lock,
+        name="contact_release_lock",
+    ),
+    path(
+        "<uuid:pk>/contacts/check-duplicate/",
+        views.contact_check_duplicate,
+        name="contact_check_duplicate",
+    ),
 ]

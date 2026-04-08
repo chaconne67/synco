@@ -1,0 +1,16 @@
+{
+  "topic": "p06",
+  "steps": {
+    "브레인스토밍": "skip",
+    "설계담금질": "skip",
+    "구현계획수립": "done",
+    "구현담금질": "done",
+    "구현실행": "done"
+  },
+  "current": "done",
+  "step_completed": "구현실행",
+  "test_result": "pass",
+  "next_step": "done",
+  "impl_rulings_complete": true,
+  "sentinel": "forge:p06:구현담금질:complete:2026-04-08T18:30:00+09:00"
+}

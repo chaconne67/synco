@@ -1,0 +1,131 @@
+# P06: Contact Management
+
+> **Phase:** 6 / 6
+> **선행조건:** P05 (프로젝트 상세 탭 구조 — 컨택 탭 골격 존재)
+> **산출물:** 컨택 탭 완성 + 컨택 예정 잠금 + 중복 방지 시스템
+
+---
+
+## 목표
+
+프로젝트 상세의 컨택 탭을 완성한다. 컨택 기록 CRUD, 컨택 예정 등록(잠금),
+중복 방지 경고/차단, 서칭 탭 연동을 구현한다.
+
+---
+
+## URL 설계
+
+| URL | Method | View | 설명 |
+|-----|--------|------|------|
+| `/projects/<pk>/tab/contacts/` | GET | `project_tab_contacts` | 컨택 탭 (목록) |
+| `/projects/<pk>/contacts/new/` | GET/POST | `contact_create` | 컨택 기록 등록 |
+| `/projects/<pk>/contacts/<contact_pk>/edit/` | GET/POST | `contact_update` | 컨택 기록 수정 |
+| `/projects/<pk>/contacts/<contact_pk>/delete/` | POST | `contact_delete` | 컨택 기록 삭제 |
+| `/projects/<pk>/contacts/reserve/` | POST | `contact_reserve` | 컨택 예정 등록 (잠금) |
+| `/projects/<pk>/contacts/<contact_pk>/release/` | POST | `contact_release_lock` | 잠금 해제 |
+
+---
+
+## 컨택 기록 CRUD
+
+### 등록 폼
+
+후보자 드롭다운, 연락 방법(전화/문자/카톡/이메일/LinkedIn), 일시, 결과(응답/미응답/거절/관심/보류), 메모.
+
+### 후보자 선택 시 중복 체크
+
+후보자 드롭다운 변경 시 `hx-get`으로 중복 체크 API 호출:
+```
+GET /projects/<pk>/contacts/check-duplicate/?candidate=<candidate_pk>
+```
+
+---
+
+## 컨택 예정 등록 (잠금 메커니즘)
+
+### 잠금 규칙
+
+| 규칙 | 상세 |
+|------|------|
+| **선착순** | 같은 프로젝트 내 동일 후보자 — 먼저 예정 등록한 컨설턴트가 우선권 |
+| **유효기간** | 예정 등록 후 7일. `Contact.locked_until` 필드로 관리 |
+| **자동 해제** | cron/체크 시점에 `locked_until < now()` 인 예정 건 자동 해제 |
+| **수동 해제** | 프로젝트 리드(assigned_consultants 첫번째)가 잠금 해제 가능 |
+| **결과 기록** | 예정 → 실제 컨택 결과 기록 시 잠금 자동 해제 |
+
+### 잠금 데이터 모델
+
+Contact 모델의 기존 필드 활용:
+- `result = "reserved"` (예정 상태 — ContactResult choices에 추가)
+- `locked_until = now() + 7days`
+- 실제 컨택 결과 기록 시 `result` 업데이트 + `locked_until = None`
+
+### 자동 해제
+
+management command 또는 view 진입 시 만료 체크:
+`Contact.objects.filter(result="reserved", locked_until__lt=now()).delete()`
+
+---
+
+## 중복 컨택 방지
+
+| 상황 | 동작 | 구현 |
+|------|------|------|
+| **같은 프로젝트 + 같은 후보자 + 컨택 완료** | 차단 | 폼에서 저장 불가 + 경고 메시지 |
+| **같은 프로젝트 + 같은 후보자 + 예정(잠금)** | 경고 | "OOO가 컨택 예정 등록 (잠금 만료: MM/DD)" |
+| **다른 프로젝트 + 같은 후보자** | 허용 + 알림 | 저장 가능 + 이전 컨택 이력 표시 |
+
+`projects/services/contact.py` — `check_duplicate(project, candidate)` 함수.
+
+---
+
+## 컨택 탭 완성 UI
+
+상단: 실제 컨택 완료된 기록 (최신순)
+하단: 컨택 예정(잠금) 목록
+"추천 서류 작성 →": 관심 결과인 건에 표시 (Submission 생성 연결, 후속 Phase)
+"결과 기록": 예정 → 실제 컨택 결과 입력 폼 전환
+
+---
+
+## 서칭 탭 연동 (P05 확장)
+
+`project_tab_search` 뷰 수정: 검색 결과 후보자 목록에 Contact 매칭하여 상태 표시.
+- ⚠ 컨택됨: `result != "reserved"` → 체크박스 비활성화
+- 🔒 컨택 예정: `result == "reserved"` + `locked_until > now()` → 다른 컨설턴트 잠금 시 비활성화
+- ℹ 다른 프로젝트 이력: 툴팁으로 표시
+
+---
+
+## 추가 URL
+
+| URL | Method | 설명 |
+|-----|--------|------|
+| `/projects/<pk>/contacts/check-duplicate/` | GET | 중복 체크 (HTMX partial) |
+
+---
+
+## 테스트 기준
+
+| 항목 | 검증 방법 |
+|------|----------|
+| 컨택 CRUD | 등록 → 목록 표시 → 수정 → 삭제 |
+| 잠금 생성 | 컨택 예정 등록 시 locked_until 설정 확인 |
+| 잠금 자동 해제 | 7일 경과 후 예정 건 해제 |
+| 같은 프로젝트 차단 | 이미 컨택된 후보자 재등록 시 폼 저장 불가 |
+| 다른 프로젝트 허용 | 다른 프로젝트 컨택 이력 표시 + 저장 가능 |
+| 서칭 탭 상태 | ⚠/🔒 표시 + 체크박스 비활성화 |
+| 잠금 해제 | 프로젝트 리드가 수동 해제 가능 |
+
+---
+
+## 산출물
+
+- `projects/views.py` — 컨택 CRUD 뷰 + 잠금 + 중복 체크
+- `projects/services/contact.py` — 중복 체크 서비스
+- `projects/urls.py` — 컨택 관련 URL 추가
+- `projects/forms.py` — ContactForm
+- `projects/templates/projects/partials/tab_contacts.html` — 컨택 탭 완성
+- `projects/templates/projects/partials/contact_form.html` — 컨택 등록/수정 폼
+- P05 서칭 탭 템플릿 수정 (컨택 상태 표시)
+- 테스트 파일

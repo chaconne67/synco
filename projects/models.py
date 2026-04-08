@@ -90,6 +90,7 @@ class Contact(BaseModel):
         REJECTED = "거절", "거절"
         INTERESTED = "관심", "관심"
         ON_HOLD = "보류", "보류"
+        RESERVED = "예정", "예정"  # P06: 컨택 예정(잠금)
 
     project = models.ForeignKey(
         Project,
@@ -107,8 +108,12 @@ class Contact(BaseModel):
         null=True,
         related_name="contacts",
     )
-    channel = models.CharField(max_length=20, choices=Channel.choices)
-    contacted_at = models.DateTimeField()
+    channel = models.CharField(
+        max_length=20, choices=Channel.choices, blank=True
+    )  # P06: blank for reserved
+    contacted_at = models.DateTimeField(
+        null=True, blank=True
+    )  # P06: nullable for reserved
     result = models.CharField(max_length=20, choices=Result.choices)
     notes = models.TextField(blank=True)
     locked_until = models.DateTimeField(null=True, blank=True)
@@ -118,6 +123,22 @@ class Contact(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.project} - {self.candidate} ({self.channel})"
+
+    @property
+    def is_reserved(self) -> bool:
+        """예정 상태이고 잠금이 유효한지."""
+        return (
+            self.result == self.Result.RESERVED
+            and self.locked_until is not None
+            and self.locked_until > timezone.now()
+        )
+
+    @property
+    def is_expired_reservation(self) -> bool:
+        """만료된 예정인지."""
+        return self.result == self.Result.RESERVED and (
+            self.locked_until is None or self.locked_until <= timezone.now()
+        )
 
 
 class Submission(BaseModel):
