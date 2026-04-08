@@ -1,0 +1,18 @@
+{% load humanize %}
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+  <h2 class="text-[16px] font-semibold text-gray-900 mb-3">최근 활동</h2>
+  {% if activities %}
+  <ul class="space-y-2">
+    {% for activity in activities %}
+    <li class="flex items-center gap-3 py-1.5">
+      <span class="text-[12px] text-gray-400 whitespace-nowrap min-w-[60px] text-right">
+        {{ activity.timestamp|naturaltime }}
+      </span>
+      <span class="text-[14px] text-gray-700">{{ activity.description }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-[14px] text-gray-400 text-center py-4">최근 활동이 없습니다.</p>
+  {% endif %}
+</section>

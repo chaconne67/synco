@@ -118,6 +118,7 @@ class Contact(BaseModel):
     result = models.CharField(max_length=20, choices=Result.choices)
     notes = models.TextField(blank=True)
     locked_until = models.DateTimeField(null=True, blank=True)
+    next_contact_date = models.DateField(null=True, blank=True)  # 재컨택 예정일
 
     class Meta:
         ordering = ["-contacted_at"]

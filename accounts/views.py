@@ -9,7 +9,7 @@ from .models import User
 
 @login_required
 def home(request):
-    return redirect("candidate_list")
+    return redirect("/")
 
 
 def login_page(request):

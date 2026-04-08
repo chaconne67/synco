@@ -1,0 +1,17 @@
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+  <h2 class="text-[16px] font-semibold text-gray-900 mb-3">내 파이프라인</h2>
+  <div class="flex items-center gap-2 text-[14px] flex-wrap">
+    <span class="px-2 py-1 rounded bg-blue-50 text-blue-700">신규({{ pipeline.status_counts.new|default:"0" }})</span>
+    <span class="text-gray-400">&rarr;</span>
+    <span class="px-2 py-1 rounded bg-blue-50 text-blue-700">서칭({{ pipeline.status_counts.searching|default:"0" }})</span>
+    <span class="text-gray-400">&rarr;</span>
+    <span class="px-2 py-1 rounded bg-blue-50 text-blue-700">추천({{ pipeline.status_counts.recommending|default:"0" }})</span>
+    <span class="text-gray-400">&rarr;</span>
+    <span class="px-2 py-1 rounded bg-blue-50 text-blue-700">면접({{ pipeline.status_counts.interviewing|default:"0" }})</span>
+    <span class="text-gray-400">&rarr;</span>
+    <span class="px-2 py-1 rounded bg-blue-50 text-blue-700">오퍼({{ pipeline.status_counts.negotiating|default:"0" }})</span>
+  </div>
+  <div class="mt-2 text-[13px] text-gray-500">
+    진행 중: {{ pipeline.total_active }}건 | 이번 달 클로즈: {{ pipeline.month_closed }}건
+  </div>
+</section>

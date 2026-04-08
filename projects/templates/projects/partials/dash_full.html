@@ -1,0 +1,19 @@
+{% load humanize %}
+<div class="p-4 lg:p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-[22px] font-bold text-gray-900">대시보드</h1>
+    <span class="text-[14px] text-gray-500">{% now "Y년 n월 j일" %}</span>
+  </div>
+
+  <div id="dash-actions">
+    {% include "projects/partials/dash_actions.html" %}
+  </div>
+
+  {% include "projects/partials/dash_schedule.html" %}
+  {% include "projects/partials/dash_pipeline.html" %}
+  {% include "projects/partials/dash_activity.html" %}
+
+  {% if is_owner %}
+  {% include "projects/partials/dash_admin.html" %}
+  {% endif %}
+</div>

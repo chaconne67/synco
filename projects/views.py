@@ -2269,3 +2269,89 @@ def approval_cancel(request, pk):
     cancel_approval(approval)
 
     return redirect("projects:project_list")
+
+
+# ---------------------------------------------------------------------------
+# P13: Dashboard
+# ---------------------------------------------------------------------------
+
+
+@login_required
+def dashboard(request):
+    """대시보드 메인 화면."""
+    org = _get_org(request)
+    user = request.user
+
+    from projects.services.dashboard import (
+        get_pending_approvals,
+        get_pipeline_summary,
+        get_recent_activities,
+        get_team_summary,
+        get_today_actions,
+        get_weekly_schedule,
+    )
+
+    today_actions = get_today_actions(user, org)
+    weekly_schedule = get_weekly_schedule(user, org)
+    pipeline = get_pipeline_summary(user, org)
+    activities = get_recent_activities(user, org, limit=10)
+
+    is_owner = False
+    try:
+        is_owner = request.user.membership.role == "owner"
+    except Exception:
+        pass
+
+    context = {
+        "today_actions": today_actions,
+        "weekly_schedule": weekly_schedule,
+        "pipeline": pipeline,
+        "activities": activities,
+        "is_owner": is_owner,
+    }
+
+    if is_owner:
+        context["pending_approvals"] = get_pending_approvals(org)
+        context["team_summary"] = get_team_summary(user, org)
+
+    if getattr(request, "htmx", None):
+        return render(request, "projects/partials/dash_full.html", context)
+    return render(request, "projects/dashboard.html", context)
+
+
+@login_required
+def dashboard_actions(request):
+    """오늘의 액션 HTMX partial (새로고침용)."""
+    org = _get_org(request)
+
+    from projects.services.dashboard import get_today_actions
+
+    today_actions = get_today_actions(request.user, org)
+    return render(
+        request,
+        "projects/partials/dash_actions.html",
+        {"today_actions": today_actions},
+    )
+
+
+@login_required
+def dashboard_team(request):
+    """팀 현황 HTMX partial (OWNER 전용)."""
+    is_owner = False
+    try:
+        is_owner = request.user.membership.role == "owner"
+    except Exception:
+        pass
+
+    if not is_owner:
+        return HttpResponse(status=403)
+
+    org = _get_org(request)
+
+    from projects.services.dashboard import get_pending_approvals, get_team_summary
+
+    context = {
+        "pending_approvals": get_pending_approvals(org),
+        "team_summary": get_team_summary(request.user, org),
+    }
+    return render(request, "projects/partials/dash_admin.html", context)

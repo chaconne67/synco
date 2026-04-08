@@ -1,0 +1,67 @@
+<!-- 승인 요청 -->
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-[16px] font-semibold text-gray-900">
+      승인 요청
+      {% if pending_approvals %}
+      <span class="ml-1 text-[13px] text-red-500">({{ pending_approvals.count }}건)</span>
+      {% endif %}
+    </h2>
+    {% if pending_approvals %}
+    <a href="/projects/approvals/"
+       hx-get="/projects/approvals/" hx-target="#main-content" hx-push-url="true"
+       class="text-[13px] text-primary hover:underline">승인 큐 보기 &rarr;</a>
+    {% endif %}
+  </div>
+  {% if pending_approvals %}
+  <ul class="space-y-2">
+    {% for approval in pending_approvals %}
+    <li class="flex items-center justify-between py-2 px-3 rounded-lg bg-yellow-50">
+      <span class="text-[14px] text-gray-900">
+        {{ approval.requested_by.first_name|default:approval.requested_by.username }}
+        &rarr; {{ approval.project.title }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-[14px] text-gray-400 text-center py-4">대기 중인 승인 요청이 없습니다.</p>
+  {% endif %}
+</section>
+
+<!-- 팀 전체 현황 -->
+{% if team_summary %}
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+  <h2 class="text-[16px] font-semibold text-gray-900 mb-3">팀 전체 현황</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-[14px]">
+      <thead>
+        <tr class="text-gray-500 border-b">
+          <th class="text-left py-2 pr-4">컨설턴트</th>
+          <th class="text-center py-2 px-2">진행</th>
+          <th class="text-center py-2 px-2">컨택</th>
+          <th class="text-center py-2 px-2">추천</th>
+          <th class="text-center py-2 px-2">면접</th>
+          <th class="text-center py-2 px-2">클로즈</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in team_summary.consultants %}
+        <tr class="border-b border-gray-50">
+          <td class="py-2 pr-4 font-medium">{{ c.user.first_name|default:c.user.username }}</td>
+          <td class="text-center py-2 px-2">{{ c.active }}</td>
+          <td class="text-center py-2 px-2">{{ c.contacts }}</td>
+          <td class="text-center py-2 px-2">{{ c.submissions }}</td>
+          <td class="text-center py-2 px-2">{{ c.interviews }}</td>
+          <td class="text-center py-2 px-2">{{ c.closed }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-3 text-[13px] text-gray-500">
+    팀 KPI: 컨택&rarr;추천 {{ team_summary.kpi.contact_to_submission }}%
+    | 추천&rarr;면접 {{ team_summary.kpi.submission_to_interview }}%
+  </div>
+</section>
+{% endif %}

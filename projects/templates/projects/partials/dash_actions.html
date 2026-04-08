@@ -1,0 +1,23 @@
+<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-[16px] font-semibold text-gray-900">오늘의 액션</h2>
+    <button hx-get="/dashboard/actions/" hx-target="#dash-actions" hx-swap="innerHTML"
+            class="text-[13px] text-primary hover:underline">새로고침</button>
+  </div>
+  {% if today_actions %}
+  <ul class="space-y-2">
+    {% for action in today_actions %}
+    <li class="flex items-center justify-between py-2 px-3 rounded-lg bg-red-50">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+        <span class="text-[14px] font-medium text-gray-900">{{ action.label }}</span>
+        <span class="text-[13px] text-gray-500">{{ action.project.title }}</span>
+      </div>
+      <span class="text-[13px] text-gray-500">{{ action.detail }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-[14px] text-gray-400 text-center py-4">오늘 긴급한 액션이 없습니다.</p>
+  {% endif %}
+</section>
