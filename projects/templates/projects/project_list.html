@@ -1,0 +1,140 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}프로젝트 관리 — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <h1 class="text-heading font-bold">프로젝트</h1>
+    <a href="{% url 'projects:project_create' %}"
+       hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
+       class="bg-primary text-white font-semibold py-2 px-4 rounded-lg text-[15px] hover:bg-primary-dark transition">
+      + 등록
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" action="{% url 'projects:project_list' %}"
+        hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
+        class="flex flex-wrap gap-2">
+    <!-- Scope -->
+    <select name="scope"
+            class="border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">
+      <option value="mine" {% if scope == "mine" %}selected{% endif %}>내 프로젝트</option>
+      <option value="all" {% if scope == "all" %}selected{% endif %}>전체</option>
+    </select>
+    <!-- Client -->
+    <select name="client"
+            class="border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">
+      <option value="">고객사 전체</option>
+      {% for client in clients %}
+      <option value="{{ client.pk }}" {% if current_client == client.pk|slugify %}selected{% endif %}>{{ client.name }}</option>
+      {% endfor %}
+    </select>
+    <!-- Status -->
+    <select name="status"
+            class="border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">
+      <option value="">상태 전체</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <!-- Sort -->
+    <select name="sort"
+            class="border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">
+      <option value="days_desc" {% if current_sort == "days_desc" %}selected{% endif %}>경과일 많은 순</option>
+      <option value="days_asc" {% if current_sort == "days_asc" %}selected{% endif %}>경과일 적은 순</option>
+      <option value="created" {% if current_sort == "created" %}selected{% endif %}>최신 등록순</option>
+    </select>
+    <button type="submit"
+            class="bg-gray-100 text-gray-700 font-medium py-2.5 px-4 rounded-lg text-[15px] hover:bg-gray-200 transition">
+      필터
+    </button>
+  </form>
+
+  <!-- Project List -->
+  {% if page_obj.object_list %}
+  <div class="space-y-3">
+    {% for project in page_obj %}
+    <a href="{% url 'projects:project_detail' project.pk %}"
+       hx-get="{% url 'projects:project_detail' project.pk %}" hx-target="#main-content" hx-push-url="true"
+       class="block bg-white rounded-lg border border-gray-100 p-4 hover:border-gray-300 transition">
+      <div class="flex items-center justify-between">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-[15px] font-semibold text-gray-900 truncate">{{ project.title }}</h3>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <span class="text-[13px] text-gray-500">{{ project.client.name }}</span>
+            <span class="text-[13px] text-gray-400">·</span>
+            <span class="text-[13px] text-gray-500">{{ project.days_elapsed }}일 경과</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 ml-3 shrink-0">
+          <span class="text-[13px] px-2 py-0.5 rounded-full
+            {% if project.status == 'new' %}bg-blue-50 text-blue-600
+            {% elif project.status == 'searching' %}bg-yellow-50 text-yellow-600
+            {% elif project.status == 'recommending' %}bg-purple-50 text-purple-600
+            {% elif project.status == 'interviewing' %}bg-indigo-50 text-indigo-600
+            {% elif project.status == 'negotiating' %}bg-green-50 text-green-600
+            {% elif project.status == 'closed_success' %}bg-emerald-50 text-emerald-600
+            {% elif project.status == 'closed_fail' %}bg-red-50 text-red-600
+            {% elif project.status == 'closed_cancel' %}bg-gray-50 text-gray-600
+            {% elif project.status == 'on_hold' %}bg-orange-50 text-orange-600
+            {% elif project.status == 'pending_approval' %}bg-amber-50 text-amber-600
+            {% else %}bg-gray-50 text-gray-600{% endif %}">
+            {{ project.get_status_display }}
+          </span>
+          <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div class="flex justify-center gap-2 pt-4">
+    {% if page_obj.has_previous %}
+    <a href="?scope={{ scope }}&client={{ current_client }}&status={{ current_status }}&sort={{ current_sort }}&page={{ page_obj.previous_page_number }}"
+       hx-get="{% url 'projects:project_list' %}?scope={{ scope }}&client={{ current_client }}&status={{ current_status }}&sort={{ current_sort }}&page={{ page_obj.previous_page_number }}"
+       hx-target="#main-content" hx-push-url="true"
+       class="px-3 py-2 rounded-lg text-[15px] text-gray-500 hover:bg-gray-100 transition">
+      이전
+    </a>
+    {% endif %}
+    <span class="px-3 py-2 text-[15px] text-gray-500">
+      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?scope={{ scope }}&client={{ current_client }}&status={{ current_status }}&sort={{ current_sort }}&page={{ page_obj.next_page_number }}"
+       hx-get="{% url 'projects:project_list' %}?scope={{ scope }}&client={{ current_client }}&status={{ current_status }}&sort={{ current_sort }}&page={{ page_obj.next_page_number }}"
+       hx-target="#main-content" hx-push-url="true"
+       class="px-3 py-2 rounded-lg text-[15px] text-gray-500 hover:bg-gray-100 transition">
+      다음
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+    <p class="text-gray-500 text-[15px] mb-4">
+      {% if scope == "mine" %}
+      담당 프로젝트가 없습니다.
+      {% else %}
+      등록된 프로젝트가 없습니다.
+      {% endif %}
+    </p>
+    <a href="{% url 'projects:project_create' %}"
+       hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
+       class="bg-primary text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] hover:bg-primary-dark transition">
+      프로젝트 등록
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

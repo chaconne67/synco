@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from common.mixins import BaseModel
 
@@ -57,6 +58,10 @@ class Project(BaseModel):
 
     def __str__(self) -> str:
         return self.title
+
+    @property
+    def days_elapsed(self) -> int:
+        return (timezone.now().date() - self.created_at.date()).days
 
 
 class Contact(BaseModel):

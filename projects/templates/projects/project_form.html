@@ -1,0 +1,61 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}{% if is_edit %}프로젝트 수정{% else %}프로젝트 등록{% endif %} — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+
+  <!-- Back -->
+  <div>
+    {% if is_edit %}
+    <a href="{% url 'projects:project_detail' project.pk %}"
+       hx-get="{% url 'projects:project_detail' project.pk %}" hx-target="#main-content" hx-push-url="true"
+       class="flex items-center gap-1 text-[15px] text-gray-500 hover:text-gray-700 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      상세로 돌아가기
+    </a>
+    {% else %}
+    <a href="{% url 'projects:project_list' %}"
+       hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
+       class="flex items-center gap-1 text-[15px] text-gray-500 hover:text-gray-700 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      목록으로 돌아가기
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Title -->
+  <h1 class="text-heading font-bold">{% if is_edit %}프로젝트 수정{% else %}프로젝트 등록{% endif %}</h1>
+
+  <!-- Form -->
+  <form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Fields -->
+    <section class="bg-white rounded-lg border border-gray-100 p-5 space-y-4">
+      <h2 class="text-[15px] font-semibold text-gray-500">프로젝트 정보</h2>
+
+      {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-[15px] text-gray-700 font-medium mb-1">
+          {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+        <p class="text-[13px] text-red-500 mt-1">{{ field.errors.0 }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+
+    <!-- Submit -->
+    <div class="flex gap-3">
+      <button type="submit"
+              class="flex-1 bg-primary text-white font-semibold py-3 rounded-lg text-[15px] hover:bg-primary-dark transition">
+        {% if is_edit %}저장{% else %}등록{% endif %}
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
