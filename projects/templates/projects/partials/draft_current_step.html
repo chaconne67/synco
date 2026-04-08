@@ -1,0 +1,14 @@
+{# 현재 단계에 따른 분기 렌더링 #}
+{% if draft.status == 'pending' %}
+  {% include "projects/partials/draft_step_pending.html" %}
+{% elif draft.status == 'draft_generated' %}
+  {% include "projects/partials/draft_step_generated.html" %}
+{% elif draft.status == 'consultation_added' %}
+  {% include "projects/partials/draft_step_consultation.html" %}
+{% elif draft.status == 'finalized' %}
+  {% include "projects/partials/draft_step_review.html" %}
+{% elif draft.status == 'reviewed' %}
+  {% include "projects/partials/draft_step_convert.html" %}
+{% elif draft.status == 'converted' %}
+  {% include "projects/partials/draft_step_converted.html" %}
+{% endif %}

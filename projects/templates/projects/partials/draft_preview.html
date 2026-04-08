@@ -1,0 +1,109 @@
+{# 데이터 미리보기 #}
+
+<div class="space-y-4">
+
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">미리보기</h2>
+      <a href="{% url 'projects:submission_draft' project.pk submission.pk %}"
+         hx-get="{% url 'projects:submission_draft' project.pk submission.pk %}"
+         hx-target="#main-content"
+         class="text-sm text-gray-500 hover:text-gray-700">
+        &larr; 돌아가기
+      </a>
+    </div>
+
+    {% if preview_data %}
+      {# 인적사항 #}
+      {% if preview_data.personal_info %}
+      <div class="border-b border-gray-100 pb-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">인적사항</h3>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          {% for key, value in preview_data.personal_info.items %}
+            {% if value and value != "None" %}
+            <div>
+              <span class="text-gray-500">{{ key }}:</span>
+              <span class="text-gray-900">{{ value }}</span>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {# 요약 #}
+      {% if preview_data.summary %}
+      <div class="border-b border-gray-100 pb-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">전문 요약</h3>
+        <p class="text-sm text-gray-600">{{ preview_data.summary }}</p>
+      </div>
+      {% endif %}
+
+      {# 핵심 역량 #}
+      {% if preview_data.core_competencies %}
+      <div class="border-b border-gray-100 pb-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">핵심 역량</h3>
+        <div class="flex flex-wrap gap-1">
+          {% for comp in preview_data.core_competencies %}
+          <span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{{ comp }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {# 경력 #}
+      {% if preview_data.careers %}
+      <div class="border-b border-gray-100 pb-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">경력사항</h3>
+        {% for career in preview_data.careers %}
+        <div class="mb-3 last:mb-0">
+          <div class="font-medium text-sm text-gray-900">
+            {{ career.company }} — {{ career.position }}
+            {% if career.period %}<span class="text-gray-500 font-normal">({{ career.period }})</span>{% endif %}
+          </div>
+          {% if career.company_intro %}
+          <p class="text-xs text-gray-500 mt-1">{{ career.company_intro }}</p>
+          {% endif %}
+          {% if career.responsibilities %}
+          <ul class="text-sm text-gray-600 mt-1 list-disc list-inside">
+            {% for resp in career.responsibilities %}
+            <li>{{ resp }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# 학력 #}
+      {% if preview_data.educations %}
+      <div class="border-b border-gray-100 pb-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">학력</h3>
+        {% for edu in preview_data.educations %}
+        <p class="text-sm text-gray-600">
+          {{ edu.institution }} {{ edu.degree }} {{ edu.major }}
+          {% if edu.period %}<span class="text-gray-400">({{ edu.period }})</span>{% endif %}
+        </p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# 기술 #}
+      {% if preview_data.skills %}
+      <div class="border-b border-gray-100 pb-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">보유 기술</h3>
+        <div class="flex flex-wrap gap-1">
+          {% for skill in preview_data.skills %}
+          <span class="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    {% else %}
+      <p class="text-sm text-gray-500">미리보기할 데이터가 없습니다.</p>
+    {% endif %}
+  </div>
+
+</div>

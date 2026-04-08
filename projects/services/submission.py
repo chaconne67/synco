@@ -25,6 +25,8 @@ def submit_to_client(submission: Submission) -> Submission:
         raise InvalidTransition(
             f"'{submission.get_status_display()}' 상태에서는 제출할 수 없습니다."
         )
+    if not submission.document_file:
+        raise InvalidTransition("제출할 서류 파일이 없습니다.")
     submission.status = Submission.Status.SUBMITTED
     submission.submitted_at = timezone.now()
     submission.save(update_fields=["status", "submitted_at"])

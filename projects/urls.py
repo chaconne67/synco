@@ -114,4 +114,45 @@ urlpatterns = [
         views.submission_download,
         name="submission_download",
     ),
+    # P08: Draft 파이프라인
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/",
+        views.submission_draft,
+        name="submission_draft",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/generate/",
+        views.draft_generate,
+        name="draft_generate",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/consultation/",
+        views.draft_consultation,
+        name="draft_consultation",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/consultation/audio/",
+        views.draft_consultation_audio,
+        name="draft_consultation_audio",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/finalize/",
+        views.draft_finalize,
+        name="draft_finalize",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/review/",
+        views.draft_review,
+        name="draft_review",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/convert/",
+        views.draft_convert,
+        name="draft_convert",
+    ),
+    path(
+        "<uuid:pk>/submissions/<uuid:sub_pk>/draft/preview/",
+        views.draft_preview,
+        name="draft_preview",
+    ),
 ]

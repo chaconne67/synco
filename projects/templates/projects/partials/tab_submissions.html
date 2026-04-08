@@ -41,9 +41,14 @@
               {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
+              <a href="{% url 'projects:submission_draft' project.pk submission.pk %}"
+                 hx-get="{% url 'projects:submission_draft' project.pk submission.pk %}"
+                 hx-target="#main-content"
+                 hx-push-url="true"
+                 class="text-[13px] text-indigo-600 hover:text-indigo-800">초안 작업</a>
               <button hx-get="{% url 'projects:submission_update' project.pk submission.pk %}"
                       hx-target="#submission-form-area"
-                      class="text-[13px] text-primary hover:text-primary-dark">수정</button>
+                      class="text-[13px] text-primary hover:text-primary-dark ml-2">수정</button>
               <button hx-post="{% url 'projects:submission_submit' project.pk submission.pk %}"
                       hx-confirm="고객사에 제출하시겠습니까?"
                       class="text-[13px] text-blue-600 hover:text-blue-800 ml-2">제출하기</button>

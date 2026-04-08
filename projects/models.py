@@ -203,6 +203,93 @@ class Submission(BaseModel):
         return f"{self.project} - {self.candidate} ({self.status})"
 
 
+class DraftStatus(models.TextChoices):
+    PENDING = "pending", "대기"
+    DRAFT_GENERATED = "draft_generated", "초안 생성됨"
+    CONSULTATION_ADDED = "consultation_added", "상담 입력됨"
+    FINALIZED = "finalized", "AI 정리 완료"
+    REVIEWED = "reviewed", "검토 완료"
+    CONVERTED = "converted", "변환 완료"
+
+
+class OutputLanguage(models.TextChoices):
+    KO = "ko", "국문"
+    EN = "en", "영문"
+    KO_EN = "ko_en", "국영문"
+
+
+class OutputFormat(models.TextChoices):
+    WORD = "word", "Word"
+    PDF = "pdf", "PDF"
+
+
+DEFAULT_MASKING_CONFIG = {
+    "salary": True,
+    "birth_detail": True,
+    "contact": True,
+    "current_company": False,
+}
+
+
+class SubmissionDraft(BaseModel):
+    """AI 문서 생성 파이프라인 초안."""
+
+    submission = models.OneToOneField(
+        Submission,
+        on_delete=models.CASCADE,
+        related_name="draft",
+    )
+    # template은 Submission.template을 참조 — 중복 저장하지 않음
+    status = models.CharField(
+        max_length=30,
+        choices=DraftStatus.choices,
+        default=DraftStatus.PENDING,
+    )
+
+    # 1단계: AI 초안
+    auto_draft_json = models.JSONField(default=dict, blank=True)
+    auto_corrections = models.JSONField(default=list, blank=True)
+
+    # 2단계: 상담
+    consultation_input = models.TextField(blank=True)
+    consultation_audio = models.FileField(
+        upload_to="drafts/audio/", blank=True
+    )
+    consultation_transcript = models.TextField(blank=True)
+    consultation_summary = models.JSONField(default=dict, blank=True)
+
+    # 3단계: AI 최종 정리
+    final_content_json = models.JSONField(default=dict, blank=True)
+
+    # 4단계: 변환 설정
+    masking_config = models.JSONField(default=dict, blank=True)
+    output_format = models.CharField(
+        max_length=10,
+        choices=OutputFormat.choices,
+        default=OutputFormat.WORD,
+    )
+    output_language = models.CharField(
+        max_length=10,
+        choices=OutputLanguage.choices,
+        default=OutputLanguage.KO,
+    )
+    output_file = models.FileField(
+        upload_to="drafts/output/", blank=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Draft: {self.submission} ({self.get_status_display()})"
+
+    def save(self, *args, **kwargs):
+        # masking_config 기본값 보장
+        if not self.masking_config:
+            self.masking_config = DEFAULT_MASKING_CONFIG.copy()
+        super().save(*args, **kwargs)
+
+
 class Interview(BaseModel):
     """면접 단계."""
 

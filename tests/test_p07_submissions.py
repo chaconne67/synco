@@ -466,8 +466,15 @@ class TestFileUploadDownload:
 
 
 class TestStateTransitions:
-    def test_submit_drafting_to_submitted(self, auth_client, project, submission):
+    def test_submit_drafting_to_submitted(
+        self, auth_client, project, submission, media_root
+    ):
         """작성중 → 제출 전환 + submitted_at 기록."""
+        # P08: 제출 시 document_file 필수
+        submission.document_file = SimpleUploadedFile(
+            "test.docx", b"fake content"
+        )
+        submission.save()
         url = reverse("projects:submission_submit", args=[project.pk, submission.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 204
@@ -734,8 +741,13 @@ class TestModelConstraints:
 
 
 class TestSubmissionService:
-    def test_submit_to_client_success(self, submission):
+    def test_submit_to_client_success(self, submission, media_root):
         """submit_to_client: 작성중 → 제출."""
+        # P08: 제출 시 document_file 필수
+        submission.document_file = SimpleUploadedFile(
+            "test.docx", b"fake content"
+        )
+        submission.save()
         result = submit_to_client(submission)
         assert result.status == Submission.Status.SUBMITTED
         assert result.submitted_at is not None

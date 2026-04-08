@@ -1,0 +1,60 @@
+{# AI 최종 정리 결과 + 편집 (FINALIZED/REVIEWED 상태) #}
+<div class="space-y-4">
+
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">최종 정리 결과</h2>
+      <span class="text-xs px-2 py-1 rounded-full
+        {% if draft.status == 'reviewed' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+        {{ draft.get_status_display }}
+      </span>
+    </div>
+
+    {# 미리보기 링크 #}
+    <a href="{% url 'projects:draft_preview' project.pk submission.pk %}"
+       hx-get="{% url 'projects:draft_preview' project.pk submission.pk %}"
+       hx-target="#draft-content"
+       class="text-sm text-primary hover:text-primary/80 font-medium">
+      전체 미리보기 &rarr;
+    </a>
+
+    {# 편집 폼 #}
+    <form hx-post="{% url 'projects:draft_review' project.pk submission.pk %}"
+          hx-target="#draft-content"
+          hx-swap="innerHTML">
+      {% csrf_token %}
+      <div class="space-y-3">
+        <label class="block text-sm font-medium text-gray-700">
+          최종 데이터 (JSON)
+        </label>
+        <textarea name="final_content"
+                  rows="12"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-primary focus:border-primary">{{ draft.final_content_json|default:"{}"|safe }}</textarea>
+        <p class="text-xs text-gray-400">JSON 형식으로 직접 수정할 수 있습니다.</p>
+      </div>
+      <div class="flex justify-end mt-3">
+        <button type="submit"
+                class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition">
+          검토 완료
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {# 재정리 옵션 #}
+  {% if draft.status == 'reviewed' %}
+  <div class="flex items-center gap-3">
+    <form hx-post="{% url 'projects:draft_finalize' project.pk submission.pk %}"
+          hx-target="#draft-content"
+          hx-swap="innerHTML"
+          class="inline">
+      {% csrf_token %}
+      <button type="submit"
+              class="text-sm text-gray-500 hover:text-gray-700 underline">
+        AI 재정리
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+</div>

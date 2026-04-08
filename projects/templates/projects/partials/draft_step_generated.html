@@ -1,0 +1,78 @@
+{# 초안 생성 완료 — 보정 내역 + 다음 단계 #}
+<div class="space-y-4">
+
+  {# 초안 결과 요약 #}
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </span>
+      <h2 class="text-lg font-semibold text-gray-900">초안이 생성되었습니다</h2>
+    </div>
+
+    {% if draft.auto_draft_json.summary %}
+    <div class="bg-gray-50 rounded-lg p-4">
+      <p class="text-sm text-gray-700">{{ draft.auto_draft_json.summary }}</p>
+    </div>
+    {% endif %}
+
+    {# 미리보기 버튼 #}
+    <a href="{% url 'projects:draft_preview' project.pk submission.pk %}"
+       hx-get="{% url 'projects:draft_preview' project.pk submission.pk %}"
+       hx-target="#draft-content"
+       class="text-sm text-primary hover:text-primary/80 font-medium">
+      전체 미리보기 &rarr;
+    </a>
+  </div>
+
+  {# 자동 보정 내역 #}
+  {% if draft.auto_corrections %}
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
+    <h3 class="text-sm font-semibold text-gray-700">자동 보정 내역 ({{ draft.auto_corrections|length }}건)</h3>
+    <div class="divide-y divide-gray-100">
+      {% for correction in draft.auto_corrections %}
+      <div class="py-2 text-sm">
+        <span class="text-gray-500">{{ correction.field }}:</span>
+        <span class="text-red-500 line-through">{{ correction.original }}</span>
+        &rarr;
+        <span class="text-green-600 font-medium">{{ correction.corrected }}</span>
+        {% if correction.reason %}
+        <span class="text-gray-400 ml-1">({{ correction.reason }})</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# 다음 단계 선택 #}
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <h3 class="text-sm font-semibold text-gray-700">다음 단계</h3>
+    <div class="flex flex-wrap gap-3">
+      <a href="{% url 'projects:draft_consultation' project.pk submission.pk %}"
+         hx-get="{% url 'projects:draft_consultation' project.pk submission.pk %}"
+         hx-target="#draft-content"
+         class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+        상담 내용 입력
+      </a>
+      <form hx-post="{% url 'projects:draft_finalize' project.pk submission.pk %}"
+            hx-target="#draft-content"
+            hx-swap="innerHTML"
+            hx-indicator="#finalize-spinner"
+            class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition">
+          상담 건너뛰고 AI 정리
+          <span id="finalize-spinner" class="htmx-indicator">
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>

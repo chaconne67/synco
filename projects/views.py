@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -10,7 +11,18 @@ from django.views.decorators.http import require_http_methods
 from accounts.models import Organization
 
 from .forms import ContactForm, ProjectForm, SubmissionFeedbackForm, SubmissionForm
-from .models import Contact, Interview, Offer, Project, ProjectStatus, Submission
+from .models import (
+    Contact,
+    DEFAULT_MASKING_CONFIG,
+    DraftStatus,
+    Interview,
+    Offer,
+    OutputLanguage,
+    Project,
+    ProjectStatus,
+    Submission,
+    SubmissionDraft,
+)
 
 PAGE_SIZE = 20
 
@@ -1076,8 +1088,6 @@ def submission_feedback(request, pk, sub_pk):
 @login_required
 def submission_download(request, pk, sub_pk):
     """첨부파일 다운로드. 파일 없으면 404."""
-    import os
-
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
@@ -1095,3 +1105,302 @@ def submission_download(request, pk, sub_pk):
         filename=os.path.basename(submission.document_file.name),
     )
     return response
+
+
+# ---------------------------------------------------------------------------
+# P08: AI Document Pipeline
+# ---------------------------------------------------------------------------
+
+ALLOWED_AUDIO_EXTENSIONS = {".webm", ".mp4", ".m4a", ".ogg", ".wav", ".mp3"}
+MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25MB (Whisper API limit)
+
+
+def _get_draft_context(request, pk, sub_pk):
+    """Draft 뷰 공통: org 검증 + project + submission + draft(get_or_create)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    draft, _created = SubmissionDraft.objects.get_or_create(
+        submission=submission,
+        defaults={"masking_config": DEFAULT_MASKING_CONFIG.copy()},
+    )
+    return org, project, submission, draft
+
+
+@login_required
+def submission_draft(request, pk, sub_pk):
+    """초안 작업 메인 화면. 현재 상태에 따라 적절한 단계 표시."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    return render(
+        request,
+        "projects/submission_draft.html",
+        {
+            "project": project,
+            "submission": submission,
+            "draft": draft,
+            "candidate": submission.candidate,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def draft_generate(request, pk, sub_pk):
+    """AI 초안 생성. Gemini API 호출."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    if draft.status not in (DraftStatus.PENDING, DraftStatus.DRAFT_GENERATED):
+        return HttpResponse("이미 초안 생성이 완료되었습니다.", status=400)
+
+    from projects.services.draft_generator import generate_draft
+
+    try:
+        generate_draft(draft)
+    except Exception as e:
+        return render(
+            request,
+            "projects/partials/draft_error.html",
+            {"error": str(e), "draft": draft},
+        )
+
+    return render(
+        request,
+        "projects/partials/draft_step_generated.html",
+        {"draft": draft, "project": project, "submission": submission},
+    )
+
+
+@login_required
+def draft_consultation(request, pk, sub_pk):
+    """상담 내용 직접 입력."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    if request.method == "POST":
+        draft.consultation_input = request.POST.get("consultation_input", "")
+        draft.save(update_fields=["consultation_input", "updated_at"])
+
+        # AI 상담 정리
+        from projects.services.draft_consultation import summarize_consultation
+
+        try:
+            summarize_consultation(draft)
+        except Exception:
+            pass  # 정리 실패해도 입력은 저장됨
+
+        from projects.services.draft_pipeline import transition_draft
+
+        if draft.status == DraftStatus.DRAFT_GENERATED:
+            transition_draft(draft, DraftStatus.CONSULTATION_ADDED)
+
+        return render(
+            request,
+            "projects/partials/draft_step_consultation.html",
+            {"draft": draft, "project": project, "submission": submission},
+        )
+
+    return render(
+        request,
+        "projects/partials/draft_step_consultation.html",
+        {"draft": draft, "project": project, "submission": submission},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def draft_consultation_audio(request, pk, sub_pk):
+    """녹음 파일 업로드 + Whisper 딕테이션."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    audio_file = request.FILES.get("audio_file")
+    if not audio_file:
+        return HttpResponse("오디오 파일이 필요합니다.", status=400)
+
+    # 파일 검증
+    ext = os.path.splitext(audio_file.name)[1].lower()
+    if ext not in ALLOWED_AUDIO_EXTENSIONS:
+        return HttpResponse(
+            f"지원하지 않는 오디오 형식입니다. ({', '.join(ALLOWED_AUDIO_EXTENSIONS)})",
+            status=400,
+        )
+    if audio_file.size > MAX_AUDIO_SIZE:
+        return HttpResponse("오디오 파일은 25MB 이하만 가능합니다.", status=400)
+    if audio_file.size == 0:
+        return HttpResponse("빈 오디오 파일입니다.", status=400)
+
+    # 저장 + 딕테이션
+    draft.consultation_audio = audio_file
+    draft.save(update_fields=["consultation_audio", "updated_at"])
+
+    from candidates.services.whisper import transcribe_audio
+
+    try:
+        transcript = transcribe_audio(audio_file)
+        draft.consultation_transcript = transcript
+        draft.save(update_fields=["consultation_transcript", "updated_at"])
+    except RuntimeError as e:
+        return render(
+            request,
+            "projects/partials/draft_error.html",
+            {"error": str(e), "draft": draft},
+        )
+
+    # AI 상담 정리 (transcript 포함)
+    from projects.services.draft_consultation import summarize_consultation
+
+    try:
+        summarize_consultation(draft)
+    except Exception:
+        pass  # 정리 실패해도 transcript는 저장됨
+
+    from projects.services.draft_pipeline import transition_draft
+
+    if draft.status == DraftStatus.DRAFT_GENERATED:
+        transition_draft(draft, DraftStatus.CONSULTATION_ADDED)
+
+    return render(
+        request,
+        "projects/partials/draft_step_consultation.html",
+        {"draft": draft, "project": project, "submission": submission},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def draft_finalize(request, pk, sub_pk):
+    """AI 최종 정리: 초안 + 상담 병합."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    allowed_statuses = {
+        DraftStatus.DRAFT_GENERATED,
+        DraftStatus.CONSULTATION_ADDED,
+        DraftStatus.REVIEWED,  # 회귀: 재정리
+    }
+    if draft.status not in allowed_statuses:
+        return HttpResponse(
+            "현재 상태에서는 AI 정리를 실행할 수 없습니다.", status=400
+        )
+
+    from projects.services.draft_finalizer import finalize_draft
+
+    try:
+        finalize_draft(draft)
+    except Exception as e:
+        return render(
+            request,
+            "projects/partials/draft_error.html",
+            {"error": str(e), "draft": draft},
+        )
+
+    from projects.services.draft_pipeline import transition_draft
+
+    transition_draft(draft, DraftStatus.FINALIZED)
+
+    return render(
+        request,
+        "projects/partials/draft_step_review.html",
+        {"draft": draft, "project": project, "submission": submission},
+    )
+
+
+@login_required
+def draft_review(request, pk, sub_pk):
+    """컨설턴트가 final_content_json을 직접 수정."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    if request.method == "POST":
+        try:
+            updated_content = json.loads(
+                request.POST.get("final_content", "{}")
+            )
+        except json.JSONDecodeError:
+            return HttpResponse("유효하지 않은 데이터 형식입니다.", status=400)
+
+        draft.final_content_json = updated_content
+        draft.save(update_fields=["final_content_json", "updated_at"])
+
+        from projects.services.draft_pipeline import transition_draft
+
+        if draft.status == DraftStatus.FINALIZED:
+            transition_draft(draft, DraftStatus.REVIEWED)
+
+        return render(
+            request,
+            "projects/partials/draft_step_review.html",
+            {"draft": draft, "project": project, "submission": submission},
+        )
+
+    return render(
+        request,
+        "projects/partials/draft_step_review.html",
+        {"draft": draft, "project": project, "submission": submission},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def draft_convert(request, pk, sub_pk):
+    """제출용 Word 파일 변환 + 마스킹."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    allowed_statuses = {DraftStatus.REVIEWED, DraftStatus.CONVERTED}
+    if draft.status not in allowed_statuses:
+        return HttpResponse("검토 완료 후 변환할 수 있습니다.", status=400)
+
+    # 마스킹/언어 설정 업데이트
+    masking_str = request.POST.get("masking_config", "")
+    if masking_str:
+        try:
+            draft.masking_config = json.loads(masking_str)
+        except json.JSONDecodeError:
+            pass
+    output_language = request.POST.get("output_language", draft.output_language)
+    if output_language in dict(OutputLanguage.choices):
+        draft.output_language = output_language
+    draft.save(update_fields=["masking_config", "output_language", "updated_at"])
+
+    from projects.services.draft_converter import convert_to_word
+
+    try:
+        convert_to_word(draft)
+    except Exception as e:
+        return render(
+            request,
+            "projects/partials/draft_error.html",
+            {"error": str(e), "draft": draft},
+        )
+
+    # output_file → Submission.document_file 복사
+    if draft.output_file:
+        submission.document_file = draft.output_file
+        submission.save(update_fields=["document_file", "updated_at"])
+
+    from projects.services.draft_pipeline import transition_draft
+
+    if draft.status != DraftStatus.CONVERTED:
+        transition_draft(draft, DraftStatus.CONVERTED)
+
+    return render(
+        request,
+        "projects/partials/draft_step_converted.html",
+        {"draft": draft, "project": project, "submission": submission},
+    )
+
+
+@login_required
+def draft_preview(request, pk, sub_pk):
+    """현재 단계의 데이터를 미리보기."""
+    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+
+    # final_content_json이 있으면 최종, 없으면 auto_draft_json
+    preview_data = draft.final_content_json or draft.auto_draft_json
+
+    return render(
+        request,
+        "projects/partials/draft_preview.html",
+        {
+            "draft": draft,
+            "project": project,
+            "submission": submission,
+            "preview_data": preview_data,
+        },
+    )

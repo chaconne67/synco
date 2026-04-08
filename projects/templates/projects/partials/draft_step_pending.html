@@ -1,0 +1,33 @@
+{# 대기 상태 — AI 초안 생성 버튼 #}
+<div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+  <h2 class="text-lg font-semibold text-gray-900">AI 초안 생성</h2>
+  <p class="text-sm text-gray-600">
+    {{ candidate.name }} 후보자의 데이터를 기반으로 AI가 추천 서류 초안을 자동 생성합니다.
+  </p>
+
+  <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
+    <p><strong>양식:</strong> {{ submission.get_template_display|default:"미선택" }}</p>
+    <p><strong>경력:</strong> {{ candidate.total_experience_years|default:"–" }}년</p>
+    <p><strong>현재:</strong> {{ candidate.current_company|default:"–" }} {{ candidate.current_position|default:"" }}</p>
+  </div>
+
+  <form hx-post="{% url 'projects:draft_generate' project.pk submission.pk %}"
+        hx-target="#draft-content"
+        hx-swap="innerHTML"
+        hx-indicator="#generate-spinner">
+    {% csrf_token %}
+    <button type="submit"
+            class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      AI 초안 생성
+      <span id="generate-spinner" class="htmx-indicator">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+      </span>
+    </button>
+  </form>
+</div>
