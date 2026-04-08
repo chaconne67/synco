@@ -42,7 +42,7 @@
           "entry_point": "design",
           "complexity": "medium",
           "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
-          "committed": false,
+          "committed": true,
           "debate_summary": {
             "design": {"rounds": 2, "issues": 17, "accepted": 15, "rebutted": 1, "escalated": 0},
             "impl": {"rounds": 1, "issues": 12, "accepted": 10, "rebutted": 2, "escalated": 0}
@@ -54,9 +54,20 @@
     {
       "stage": 3,
       "todos": [
-        {"slug": "p13", "status": "pending", "entry_point": "design", "complexity": "medium"}
+        {
+          "slug": "p13",
+          "status": "completed",
+          "entry_point": "design",
+          "complexity": "medium",
+          "artifacts": ["design-spec-agreed.md", "impl-plan-agreed.md"],
+          "committed": false,
+          "debate_summary": {
+            "design": {"rounds": 2, "issues": 10, "accepted": 8, "rebutted": 1, "escalated": 0},
+            "impl": {"rounds": 1, "issues": 6, "accepted": 5, "rebutted": 0, "escalated": 0}
+          }
+        }
       ],
-      "summary": null
+      "summary": "1/1 성공. P13: 설계2R(10이슈→8수용/1반박)/구현1R(6이슈→5수용). CRITICAL 0건, 교차 학습 효과."
     }
   ],
   "decisions": [

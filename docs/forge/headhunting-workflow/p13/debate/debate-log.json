@@ -1,0 +1,203 @@
+{
+  "topic": "p13",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "CRITICAL",
+              "title": "루트 진입점 설계가 잘못된 위치를 가리킴",
+              "attack": "projects/urls.py에 / 매핑은 main/urls.py 구조상 작동하지 않음",
+              "action": "accepted",
+              "response": "main/urls.py에서 루트 변경, projects/urls.py에는 /dashboard/만 추가",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "CRITICAL",
+              "title": "로그인 후 대시보드 리다이렉트가 현재 인증 플로우 미반영",
+              "attack": "LOGIN_REDIRECT_URL만으로는 커스텀 로그인 플로우의 redirect가 안 바뀜",
+              "action": "accepted",
+              "response": "accounts/views.py home() 리다이렉트 대상 변경 필요, 산출물에 명시",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "CRITICAL",
+              "title": "관리자 판별 기준이 현재 권한 모델과 충돌",
+              "attack": "user.is_staff는 Membership.Role.OWNER와 무관함",
+              "action": "accepted",
+              "response": "Membership.role == owner 기준으로 통일",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "CRITICAL",
+              "title": "긴급도 규칙이 현재 스키마에 없는 필드를 전제",
+              "attack": "재컨택 예정일, 서류 검토 대기 상태 필드가 모델에 없음",
+              "action": "partial",
+              "response": "next_contact_date 1개 필드 추가로 해결, 서류 검토는 기존 submitted_at으로 계산 가능",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "CRITICAL",
+              "title": "관리자 승인 섹션의 액션 버튼에 동작 경로가 없음",
+              "attack": "인라인 승인/합류/반려 버튼의 POST 경로와 HTMX 응답 미정의",
+              "action": "accepted",
+              "response": "인라인 버튼 제거, 승인 큐 /projects/approvals/ 링크로 대체하여 P11 재사용",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "CRITICAL",
+              "title": "사이드바 HTMX target이 잘못됨",
+              "attack": "hx-target='main'은 기존 #main-content 패턴과 불일치, 로딩바 미작동",
+              "action": "accepted",
+              "response": "hx-target='#main-content'로 수정",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "MAJOR",
+              "title": "서비스 인터페이스가 조직 격리 요구를 누락",
+              "attack": "서비스 시그니처에 org 파라미터 없어 멀티테넌트 누수 위험",
+              "action": "accepted",
+              "response": "모든 서비스 함수에 org: Organization 파라미터 추가",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "MAJOR",
+              "title": "승인 뱃지용 context processor 설계 누락",
+              "attack": "산출물에 context processor 파일과 settings 등록이 없음",
+              "action": "accepted",
+              "response": "P11 선행에서 생성될 context processor 재사용, P13 선행조건으로 명시",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "ProjectApproval.project 삭제 정책 미반영",
+              "attack": "현재 CASCADE FK로 프로젝트 삭제 시 승인 기록 소실 위험",
+              "action": "rebutted",
+              "response": "P11 구현 범위이며 P13 선행조건으로 이미 완료 예정, 중복 기술 불필요",
+              "evidence_type": "code_reference",
+              "resolved": false
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "ProjectApproval.project 삭제 정책 미반영",
+              "attack": "(Follow-up) 반박 검증",
+              "action": "accepted",
+              "response": "레드팀이 저자 반박을 수용. P11 선행조건에서 SET_NULL 변경이 확정되어 있으므로 P13에서 중복 명시 불필요.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 9,
+        "accepted": 8,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "MAJOR",
+              "title": "get_weekly_schedule()가 compute_project_urgency()의 단일 결과에 의존",
+              "attack": "프로젝트당 1개 액션만 반환하므로 빨강 프로젝트의 노랑 일정 누락",
+              "action": "accepted",
+              "response": "collect_all_actions() 추가, today/weekly는 직접 쿼리로 변경",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "MAJOR",
+              "title": "팀 KPI가 공유 프로젝트 이중 카운트 + viewer 포함",
+              "attack": "ManyToMany 프로젝트 합산 시 중복, viewer 역할도 포함",
+              "action": "accepted",
+              "response": "consultant/owner만 필터, Contact.consultant/Submission.consultant 기준 집계",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "라우팅 계획이 내부적으로 모순",
+              "attack": "projects/urls.py vs main/urls.py 오락가락, 모순된 지시",
+              "action": "accepted",
+              "response": "main/urls.py에서만 dashboard URL 정의, Task 4 라우팅 삭제",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MINOR",
+              "title": "루트 URL이 redirect로 처리되어 불필요한 hop",
+              "action": "accepted",
+              "response": "path('', dashboard)를 accounts include 앞에 배치",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MINOR",
+              "title": "Task 5(humanize 추가)가 불필요",
+              "attack": "settings.py에 이미 humanize 설치됨",
+              "action": "accepted",
+              "response": "Task 5 삭제",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MINOR",
+              "title": "최근 활동에 AI 초안 이벤트 미반영",
+              "attack": "SubmissionDraft 쿼리 없이 docstring만 언급",
+              "action": "partial",
+              "response": "docstring 수정으로 일치, SubmissionDraft 활동은 향후 범위",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 5,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
