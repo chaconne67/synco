@@ -48,6 +48,9 @@
       {% endfor %}
     </section>
 
+    <!-- Collision Warning Area -->
+    <div id="collision-warning"></div>
+
     <!-- Submit -->
     <div class="flex gap-3">
       <button type="submit"
@@ -56,6 +59,37 @@
       </button>
     </div>
   </form>
+
+  {% if not is_edit %}
+  <script>
+  (function() {
+    const clientField = document.getElementById('id_client');
+    const titleField = document.getElementById('id_title');
+    const warningArea = document.getElementById('collision-warning');
+
+    function checkCollision() {
+      const clientId = clientField ? clientField.value : '';
+      const title = titleField ? titleField.value.trim() : '';
+      if (!clientId || !title) {
+        warningArea.innerHTML = '';
+        return;
+      }
+      htmx.ajax('POST', '{% url "projects:project_check_collision" %}', {
+        target: '#collision-warning',
+        swap: 'innerHTML',
+        values: {
+          client_id: clientId,
+          title: title,
+          csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      });
+    }
+
+    if (clientField) clientField.addEventListener('change', checkCollision);
+    if (titleField) titleField.addEventListener('blur', checkCollision);
+  })();
+  </script>
+  {% endif %}
 
 </div>
 {% endblock %}

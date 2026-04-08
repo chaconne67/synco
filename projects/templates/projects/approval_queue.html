@@ -1,0 +1,30 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}승인 요청 — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-heading font-bold">승인 요청 ({{ approval_count }}건)</h1>
+    <a href="{% url 'projects:project_list' %}"
+       hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
+       class="text-[15px] text-gray-500 hover:text-gray-700 transition">
+      프로젝트 목록
+    </a>
+  </div>
+
+  {% if approvals %}
+  <div class="space-y-4">
+    {% for approval in approvals %}
+    {% include "projects/partials/approval_card.html" with approval=approval %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-gray-50 rounded-lg p-8 text-center text-gray-500 text-[15px]">
+    대기 중인 승인 요청이 없습니다.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

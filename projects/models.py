@@ -363,6 +363,11 @@ class Offer(BaseModel):
         return f"Offer: {self.submission}"
 
 
+class ConflictType(models.TextChoices):
+    HIGH = "높은중복", "높은 중복 가능성"
+    MEDIUM = "참고정보", "참고 정보"
+
+
 class ProjectApproval(BaseModel):
     """충돌 감지 승인 요청."""
 
@@ -374,7 +379,9 @@ class ProjectApproval(BaseModel):
 
     project = models.ForeignKey(
         Project,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="approvals",
     )
     requested_by = models.ForeignKey(
@@ -388,6 +395,13 @@ class ProjectApproval(BaseModel):
         null=True,
         blank=True,
         related_name="conflict_approvals",
+    )
+    conflict_score = models.FloatField(default=0.0)
+    conflict_type = models.CharField(
+        max_length=20,
+        choices=ConflictType.choices,
+        blank=True,
+        default="",
     )
     status = models.CharField(
         max_length=20,

@@ -46,6 +46,11 @@
               {% else %}bg-gray-50 text-gray-600{% endif %}">
               {{ project.get_status_display }}
             </span>
+            {% if project.status == "pending_approval" %}
+            <span class="inline-flex items-center ml-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-yellow-100 text-yellow-800">
+              대기중
+            </span>
+            {% endif %}
           </td>
           <td class="px-4 py-3 text-[13px] text-gray-500">
             {% for consultant in project.assigned_consultants.all %}

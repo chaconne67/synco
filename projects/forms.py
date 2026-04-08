@@ -23,7 +23,7 @@ INPUT_CSS = (
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ["client", "title", "jd_source", "jd_text", "jd_file", "status"]
+        fields = ["client", "title", "jd_source", "jd_text", "jd_file"]
         widgets = {
             "client": forms.Select(attrs={"class": INPUT_CSS}),
             "title": forms.TextInput(
@@ -42,7 +42,6 @@ class ProjectForm(forms.ModelForm):
                     "class": INPUT_CSS,
                 }
             ),
-            "status": forms.Select(attrs={"class": INPUT_CSS}),
         }
         labels = {
             "client": "고객사",
@@ -50,7 +49,6 @@ class ProjectForm(forms.ModelForm):
             "jd_source": "JD 입력 방식",
             "jd_text": "JD 내용",
             "jd_file": "JD 파일",
-            "status": "상태",
         }
 
     def __init__(self, *args, organization=None, **kwargs):
@@ -430,3 +428,37 @@ class PostingSiteForm(forms.ModelForm):
             "url": "URL",
             "notes": "메모",
         }
+
+
+# ---------------------------------------------------------------------------
+# P11: Approval forms
+# ---------------------------------------------------------------------------
+
+DECISION_CHOICES = [
+    ("승인", "승인"),
+    ("합류", "합류"),
+    ("메시지", "메시지"),
+    ("반려", "반려"),
+]
+
+
+class ApprovalDecisionForm(forms.Form):
+    """관리자 승인 판단 폼."""
+
+    decision = forms.ChoiceField(
+        choices=DECISION_CHOICES,
+        widget=forms.Select(attrs={"class": INPUT_CSS}),
+        label="판단",
+    )
+    response_text = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                "class": INPUT_CSS,
+                "rows": 3,
+                "placeholder": "메시지 또는 반려 사유",
+            }
+        ),
+        label="메시지",
+        required=False,
+    )
+    merge_target = forms.UUIDField(required=False)

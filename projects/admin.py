@@ -54,8 +54,16 @@ class OfferAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectApproval)
 class ProjectApprovalAdmin(admin.ModelAdmin):
-    list_display = ("project", "requested_by", "status", "decided_by", "decided_at")
-    list_filter = ("status",)
+    list_display = (
+        "project",
+        "requested_by",
+        "conflict_type",
+        "conflict_score",
+        "status",
+        "decided_by",
+        "decided_at",
+    )
+    list_filter = ("status", "conflict_type")
 
 
 @admin.register(ProjectContext)

@@ -166,7 +166,6 @@ class TestProjectCRUD:
                 "client": str(client_obj.pk),
                 "title": "New Project",
                 "jd_text": "Looking for engineers",
-                "status": "new",
             },
         )
         assert resp.status_code == 302  # redirect to detail
@@ -183,7 +182,6 @@ class TestProjectCRUD:
             {
                 "client": str(client_obj.pk),
                 "title": "Auto Assign Test",
-                "status": "new",
             },
         )
         project = Project.objects.get(title="Auto Assign Test")
@@ -202,13 +200,11 @@ class TestProjectCRUD:
             {
                 "client": str(client_obj.pk),
                 "title": "Updated Title",
-                "status": "interviewing",
             },
         )
         assert resp.status_code == 302
         project_obj.refresh_from_db()
         assert project_obj.title == "Updated Title"
-        assert project_obj.status == "interviewing"
 
     @pytest.mark.django_db
     def test_delete_project(self, auth_client, project_obj):
@@ -445,7 +441,6 @@ class TestJDFileUpload:
             {
                 "client": str(client_obj.pk),
                 "title": "JD Upload Test",
-                "status": "new",
                 "jd_file": jd_file,
             },
         )

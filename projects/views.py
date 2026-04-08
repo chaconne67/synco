@@ -32,10 +32,13 @@ from .models import (
     OutputLanguage,
     PostingSite,
     Project,
+    ProjectApproval,
     ProjectStatus,
     Submission,
     SubmissionDraft,
 )
+
+from accounts.models import Membership
 
 PAGE_SIZE = 20
 
@@ -166,10 +169,18 @@ def status_update(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
+    # Block any status change for pending_approval projects
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
+
     data = json.loads(request.body)
     new_status = data.get("status")
 
     if new_status not in ProjectStatus.values:
+        return JsonResponse({"error": "invalid status"}, status=400)
+
+    # Block transition TO pending_approval
+    if new_status == ProjectStatus.PENDING_APPROVAL:
         return JsonResponse({"error": "invalid status"}, status=400)
 
     project.status = new_status
@@ -178,19 +189,86 @@ def status_update(request, pk):
 
 
 @login_required
+@require_http_methods(["POST"])
+def project_check_collision(request):
+    """HTMX endpoint: check for collision when client + title are provided."""
+    org = _get_org(request)
+    client_id = request.POST.get("client_id")
+    title = request.POST.get("title", "").strip()
+
+    if not client_id or not title:
+        return HttpResponse("")
+
+    from projects.services.collision import detect_collisions
+
+    collisions = detect_collisions(client_id, title, org)
+
+    high_collisions = [c for c in collisions if c["conflict_type"] == "높은중복"]
+    medium_collisions = [c for c in collisions if c["conflict_type"] == "참고정보"]
+
+    return render(
+        request,
+        "projects/partials/collision_warning.html",
+        {
+            "high_collisions": high_collisions,
+            "medium_collisions": medium_collisions,
+            "has_blocking_collision": len(high_collisions) > 0,
+        },
+    )
+
+
+@login_required
 def project_create(request):
-    """Create a new project. GET=form, POST=save."""
+    """Create a new project. GET=form, POST=save with collision detection."""
     org = _get_org(request)
 
     if request.method == "POST":
         form = ProjectForm(request.POST, request.FILES, organization=org)
         if form.is_valid():
-            project = form.save(commit=False)
-            project.organization = org
-            project.created_by = request.user
-            project.save()
-            project.assigned_consultants.add(request.user)
-            return redirect("projects:project_detail", pk=project.pk)
+            from django.contrib import messages as django_messages
+            from django.db import transaction
+
+            from projects.services.collision import detect_collisions
+
+            client_id = form.cleaned_data["client"].pk
+            title = form.cleaned_data["title"]
+            collisions = detect_collisions(client_id, title, org)
+
+            high_collisions = [
+                c for c in collisions if c["conflict_type"] == "높은중복"
+            ]
+
+            with transaction.atomic():
+                project = form.save(commit=False)
+                project.organization = org
+                project.created_by = request.user
+
+                if high_collisions:
+                    # Collision detected -> pending_approval
+                    project.status = ProjectStatus.PENDING_APPROVAL
+                    project.save()
+                    project.assigned_consultants.add(request.user)
+
+                    top_collision = high_collisions[0]
+                    ProjectApproval.objects.create(
+                        project=project,
+                        requested_by=request.user,
+                        conflict_project=top_collision["project"],
+                        conflict_score=top_collision["score"],
+                        conflict_type=top_collision["conflict_type"],
+                        message=request.POST.get("approval_message", ""),
+                    )
+                    django_messages.success(
+                        request,
+                        f"'{project.title}' 프로젝트의 승인 요청이 제출되었습니다. "
+                        "관리자 승인 후 활성화됩니다.",
+                    )
+                    return redirect("projects:project_list")
+                else:
+                    # No blocking collision -> normal create
+                    project.save()
+                    project.assigned_consultants.add(request.user)
+                    return redirect("projects:project_detail", pk=project.pk)
     else:
         form = ProjectForm(organization=org)
 
@@ -236,6 +314,9 @@ def project_update(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
+
     if request.method == "POST":
         form = ProjectForm(
             request.POST, request.FILES, instance=project, organization=org
@@ -261,6 +342,9 @@ def project_delete(request, pk):
 
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
 
     # Check for related contacts or submissions
     has_contacts = project.contacts.exists()
@@ -751,6 +835,9 @@ def contact_create(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
+
     if request.method == "POST":
         form = ContactForm(request.POST, organization=org)
         if form.is_valid():
@@ -954,6 +1041,9 @@ def submission_create(request, pk):
     """추천 서류 등록."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
 
     if request.method == "POST":
         form = SubmissionForm(
@@ -1454,6 +1544,9 @@ def interview_create(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
+
     if request.method == "POST":
         form = InterviewForm(request.POST, project=project)
         if form.is_valid():
@@ -1638,6 +1731,9 @@ def offer_create(request, pk):
     """오퍼 등록."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if project.status == ProjectStatus.PENDING_APPROVAL:
+        return HttpResponse(status=403)
 
     if request.method == "POST":
         form = OfferForm(request.POST, project=project)
@@ -2034,3 +2130,142 @@ def posting_site_delete(request, pk, site_pk):
         status=204,
         headers={"HX-Trigger": "postingSiteChanged"},
     )
+
+
+# ---------------------------------------------------------------------------
+# P11: Approval workflow views
+# ---------------------------------------------------------------------------
+
+
+def _is_owner(request):
+    """Check if the current user has OWNER role in their organization."""
+    try:
+        return request.user.membership.role == Membership.Role.OWNER
+    except Membership.DoesNotExist:
+        return False
+
+
+@login_required
+def approval_queue(request):
+    """OWNER-only: list pending approval requests."""
+    org = _get_org(request)
+
+    if not _is_owner(request):
+        return HttpResponse(status=403)
+
+    approvals = (
+        ProjectApproval.objects.filter(
+            project__organization=org,
+            status=ProjectApproval.Status.PENDING,
+        )
+        .select_related(
+            "project",
+            "project__client",
+            "requested_by",
+            "conflict_project",
+            "conflict_project__client",
+        )
+        .order_by("-created_at")
+    )
+
+    # For each approval, compute merge target candidates
+    for appr in approvals:
+        if appr.project:
+            appr.merge_candidates = (
+                Project.objects.filter(
+                    client=appr.project.client,
+                    organization=org,
+                )
+                .exclude(
+                    status__in=[
+                        "closed_success",
+                        "closed_fail",
+                        "closed_cancel",
+                        "pending_approval",
+                    ],
+                )
+                .exclude(
+                    pk=appr.project_id,
+                )
+            )
+        else:
+            appr.merge_candidates = Project.objects.none()
+
+    return render(
+        request,
+        "projects/approval_queue.html",
+        {"approvals": approvals, "approval_count": approvals.count()},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def approval_decide(request, appr_pk):
+    """OWNER-only: decide on an approval request."""
+    org = _get_org(request)
+
+    if not _is_owner(request):
+        return HttpResponse(status=403)
+
+    from .forms import ApprovalDecisionForm
+    from .services.approval import (
+        InvalidApprovalTransition,
+        approve_project,
+        merge_project,
+        reject_project,
+        send_admin_message,
+    )
+
+    approval = get_object_or_404(
+        ProjectApproval,
+        pk=appr_pk,
+        project__organization=org,
+    )
+
+    form = ApprovalDecisionForm(request.POST)
+    if not form.is_valid():
+        return redirect("projects:approval_queue")
+
+    decision = form.cleaned_data["decision"]
+    response_text = form.cleaned_data.get("response_text", "")
+    merge_target_id = form.cleaned_data.get("merge_target")
+
+    try:
+        if decision == "승인":
+            approve_project(approval, request.user)
+        elif decision == "합류":
+            merge_target = None
+            if merge_target_id:
+                merge_target = get_object_or_404(
+                    Project, pk=merge_target_id, organization=org
+                )
+            merge_project(approval, request.user, merge_target=merge_target)
+        elif decision == "메시지":
+            send_admin_message(approval, request.user, response_text)
+        elif decision == "반려":
+            reject_project(approval, request.user, response_text=response_text)
+    except InvalidApprovalTransition:
+        pass  # Already handled -- redirect back to queue
+
+    return redirect("projects:approval_queue")
+
+
+@login_required
+@require_http_methods(["POST"])
+def approval_cancel(request, pk):
+    """Requester cancels their approval request."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    approval = get_object_or_404(
+        ProjectApproval,
+        project=project,
+        requested_by=request.user,
+        status=ProjectApproval.Status.PENDING,
+    )
+
+    from .services.approval import cancel_approval
+
+    cancel_approval(approval)
+
+    return redirect("projects:project_list")

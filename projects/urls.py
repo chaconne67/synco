@@ -6,6 +6,12 @@ app_name = "projects"
 
 urlpatterns = [
     path("", views.project_list, name="project_list"),
+    # P11: Collision check (must be before "new/" to avoid URL conflicts)
+    path(
+        "new/check-collision/",
+        views.project_check_collision,
+        name="project_check_collision",
+    ),
     path("new/", views.project_create, name="project_create"),
     path("<uuid:pk>/", views.project_detail, name="project_detail"),
     path("<uuid:pk>/edit/", views.project_update, name="project_update"),
@@ -237,5 +243,21 @@ urlpatterns = [
         "<uuid:pk>/posting/sites/<uuid:site_pk>/delete/",
         views.posting_site_delete,
         name="posting_site_delete",
+    ),
+    # P11: Approval workflow
+    path(
+        "<uuid:pk>/approval/cancel/",
+        views.approval_cancel,
+        name="approval_cancel",
+    ),
+    path(
+        "approvals/",
+        views.approval_queue,
+        name="approval_queue",
+    ),
+    path(
+        "approvals/<uuid:appr_pk>/decide/",
+        views.approval_decide,
+        name="approval_decide",
     ),
 ]

@@ -52,10 +52,26 @@
                 {{ project.days_elapsed }}일 경과
               </span>
             </div>
+            {% if project.status == "pending_approval" %}
+            <div class="flex items-center gap-2 mt-1">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[12px] font-medium bg-yellow-100 text-yellow-800">
+                승인 대기중
+              </span>
+            </div>
+            {% endif %}
           </div>
-          <svg class="w-5 h-5 text-gray-300 shrink-0 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
+          <div class="flex items-center gap-2 shrink-0 ml-3">
+            {% if project.status == "pending_approval" %}
+            <form method="post" action="{% url 'projects:approval_cancel' pk=project.pk %}" onclick="event.stopPropagation(); event.preventDefault();">
+              {% csrf_token %}
+              <button type="submit" class="text-[12px] text-red-500 hover:text-red-700 underline"
+                      onclick="event.stopPropagation(); if(!confirm('승인 요청을 취소하시겠습니까?')) return false; this.form.submit();">취소</button>
+            </form>
+            {% endif %}
+            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
         </div>
       </a>
       {% endfor %}
