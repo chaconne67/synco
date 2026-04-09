@@ -108,6 +108,36 @@ def check_duplicate(project, candidate):
     return result
 
 
+def create_contact(*, project, candidate, consultant, channel, result, notes=""):
+    """Create a contact record with business rule validation.
+
+    Shared by web views and Telegram handlers.
+    """
+    dup = check_duplicate(project, candidate)
+    if dup["blocked"]:
+        return {"ok": False, "error": dup["warnings"][0], "contact": None}
+
+    contact = Contact.objects.create(
+        project=project,
+        candidate=candidate,
+        consultant=consultant,
+        channel=channel,
+        result=result,
+        contacted_at=timezone.now(),
+        notes=notes,
+    )
+
+    # Release overlapping RESERVED locks
+    Contact.objects.filter(
+        project=project,
+        candidate=candidate,
+        result=Contact.Result.RESERVED,
+        locked_until__gt=timezone.now(),
+    ).update(locked_until=timezone.now())
+
+    return {"ok": True, "error": None, "contact": contact, "warnings": dup["warnings"]}
+
+
 def reserve_candidates(project, candidate_ids, consultant):
     """
     후보자들을 컨택 예정 등록(잠금).
