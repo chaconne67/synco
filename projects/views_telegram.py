@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -27,6 +27,7 @@ DEDUP_TTL = 300  # 5 minutes
 def _safe_send(chat_id: str, text: str) -> None:
     """Send a Telegram message, swallowing exceptions."""
     from projects.services.notification import _send_telegram_message
+
     try:
         _send_telegram_message(chat_id, text)
     except Exception:
@@ -64,9 +65,7 @@ def _process_update(data: dict) -> None:
         action = parsed["action"]
 
         # Find notification by short_id (UUID hex prefix)
-        notifications = Notification.objects.filter(
-            id__startswith=short_id
-        )
+        notifications = Notification.objects.filter(id__startswith=short_id)
         if notifications.count() != 1:
             logger.warning("Cannot resolve notification for short_id: %s", short_id)
             return
@@ -84,17 +83,24 @@ def _process_update(data: dict) -> None:
                 )
                 user, _ = verify_telegram_user_access(chat_id, approval.project)
                 handle_approval_callback(
-                    notification=notification, action=action, user=user,
+                    notification=notification,
+                    action=action,
+                    user=user,
                 )
             elif notif_action == "contact_record":
                 from projects.models import Project
+
                 project = Project.objects.get(pk=cb["project_id"])
                 user, _ = verify_telegram_user_access(chat_id, project)
                 handle_contact_callback(
-                    notification=notification, action=action, user=user,
+                    notification=notification,
+                    action=action,
+                    user=user,
                 )
         except Exception:
-            logger.exception("Error handling callback for notification %s", notification.pk)
+            logger.exception(
+                "Error handling callback for notification %s", notification.pk
+            )
         return
 
     # Handle text message
@@ -118,11 +124,14 @@ def _handle_text_message(chat_id: str, text: str) -> None:
     try:
         binding = TelegramBinding.objects.get(chat_id=chat_id, is_active=True)
     except TelegramBinding.DoesNotExist:
-        _safe_send(chat_id, "텔레그램 연동이 필요합니다. 웹 앱에서 연동을 진행해주세요.")
+        _safe_send(
+            chat_id, "텔레그램 연동이 필요합니다. 웹 앱에서 연동을 진행해주세요."
+        )
         return
 
     user = binding.user
     from accounts.models import Membership
+
     try:
         membership = Membership.objects.select_related("organization").get(user=user)
         org = membership.organization
@@ -132,10 +141,15 @@ def _handle_text_message(chat_id: str, text: str) -> None:
 
     # A3: Check for awaiting_text_input state
     from projects.models import Notification
-    pending = Notification.objects.filter(
-        recipient=user,
-        callback_data__contains={"awaiting_text_input": True},
-    ).order_by("-created_at").first()
+
+    pending = (
+        Notification.objects.filter(
+            recipient=user,
+            callback_data__contains={"awaiting_text_input": True},
+        )
+        .order_by("-created_at")
+        .first()
+    )
     if pending:
         _handle_awaiting_text(pending, text, chat_id)
         return
@@ -143,6 +157,7 @@ def _handle_text_message(chat_id: str, text: str) -> None:
     # Try P14 intent parser (graceful fallback)
     try:
         from projects.services.voice.intent_parser import parse_intent
+
         result = parse_intent(text, context={"user": user, "organization": org})
         _handle_parsed_intent(chat_id, result, user, org)
     except ImportError:
@@ -165,6 +180,7 @@ def _handle_awaiting_text(notification, text: str, chat_id: str) -> None:
             notification.callback_data["awaiting_text_input"] = False
             notification.save(update_fields=["callback_data"])
             from projects.services.notification import update_telegram_message
+
             update_telegram_message(notification, f"💬 메시지 전송 완료: {text[:50]}")
         except Exception:
             logger.exception("Error sending admin message")
@@ -188,9 +204,15 @@ def _handle_parsed_intent(chat_id: str, result, user, org) -> None:
 def _handle_start_command(chat_id: str, code: str) -> None:
     """Handle /start <code> command for binding verification (A9: brute force defense)."""
     # A9: Find verification by code, decouple from attempt tracking
-    verification = TelegramVerification.objects.filter(
-        code=code, consumed=False, expires_at__gt=timezone.now(),
-    ).select_related("user").first()
+    verification = (
+        TelegramVerification.objects.filter(
+            code=code,
+            consumed=False,
+            expires_at__gt=timezone.now(),
+        )
+        .select_related("user")
+        .first()
+    )
 
     if not verification:
         _safe_send(chat_id, "인증 코드가 만료되었거나 존재하지 않습니다.")
@@ -257,7 +279,8 @@ def telegram_bind(request):
 
         # Invalidate previous codes
         TelegramVerification.objects.filter(
-            user=user, consumed=False,
+            user=user,
+            consumed=False,
         ).update(consumed=True)
 
         # A10: Generate code with collision check
@@ -265,16 +288,22 @@ def telegram_bind(request):
         for _ in range(3):
             candidate_code = "".join(random.choices(string.digits, k=6))
             collision = TelegramVerification.objects.filter(
-                code=candidate_code, consumed=False, expires_at__gt=timezone.now(),
+                code=candidate_code,
+                consumed=False,
+                expires_at__gt=timezone.now(),
             ).exists()
             if not collision:
                 code = candidate_code
                 break
 
         if code is None:
-            return render(request, template, {"error": "코드 생성에 실패했습니다. 다시 시도해주세요."})
+            return render(
+                request,
+                template,
+                {"error": "코드 생성에 실패했습니다. 다시 시도해주세요."},
+            )
 
-        verification = TelegramVerification.objects.create(
+        TelegramVerification.objects.create(
             user=user,
             code=code,
             expires_at=timezone.now() + timedelta(minutes=5),
@@ -286,11 +315,15 @@ def telegram_bind(request):
         except TelegramBinding.DoesNotExist:
             is_bound = False
 
-        return render(request, template, {
-            "code": code,
-            "is_bound": is_bound,
-            "expires_minutes": 5,
-        })
+        return render(
+            request,
+            template,
+            {
+                "code": code,
+                "is_bound": is_bound,
+                "expires_minutes": 5,
+            },
+        )
 
     # GET
     try:
@@ -301,10 +334,14 @@ def telegram_bind(request):
         is_bound = False
         verified_at = None
 
-    return render(request, template, {
-        "is_bound": is_bound,
-        "verified_at": verified_at,
-    })
+    return render(
+        request,
+        template,
+        {
+            "is_bound": is_bound,
+            "verified_at": verified_at,
+        },
+    )
 
 
 @login_required
@@ -319,10 +356,14 @@ def telegram_unbind(request):
     except TelegramBinding.DoesNotExist:
         pass
 
-    return render(request, template, {
-        "is_bound": False,
-        "message": "텔레그램 연동이 해제되었습니다.",
-    })
+    return render(
+        request,
+        template,
+        {
+            "is_bound": False,
+            "message": "텔레그램 연동이 해제되었습니다.",
+        },
+    )
 
 
 @login_required
@@ -330,28 +371,39 @@ def telegram_unbind(request):
 def telegram_test_send(request):
     """POST /telegram/test/ — Send a test message."""
     from projects.services.notification import _send_telegram_message
+
     template = "accounts/telegram_bind.html"
 
     try:
-        binding = TelegramBinding.objects.get(
-            user=request.user, is_active=True
-        )
+        binding = TelegramBinding.objects.get(user=request.user, is_active=True)
     except TelegramBinding.DoesNotExist:
-        return render(request, template, {
-            "is_bound": False,
-            "error": "텔레그램이 연결되어 있지 않습니다.",
-        })
+        return render(
+            request,
+            template,
+            {
+                "is_bound": False,
+                "error": "텔레그램이 연결되어 있지 않습니다.",
+            },
+        )
 
     try:
         _send_telegram_message(binding.chat_id, "🤖 synco 테스트 메시지입니다!")
-        return render(request, template, {
-            "is_bound": True,
-            "verified_at": binding.verified_at,
-            "message": "테스트 메시지가 전송되었습니다.",
-        })
+        return render(
+            request,
+            template,
+            {
+                "is_bound": True,
+                "verified_at": binding.verified_at,
+                "message": "테스트 메시지가 전송되었습니다.",
+            },
+        )
     except Exception:
-        return render(request, template, {
-            "is_bound": True,
-            "verified_at": binding.verified_at,
-            "error": "메시지 전송에 실패했습니다.",
-        })
+        return render(
+            request,
+            template,
+            {
+                "is_bound": True,
+                "verified_at": binding.verified_at,
+                "error": "메시지 전송에 실패했습니다.",
+            },
+        )

@@ -46,8 +46,10 @@ def client_obj(org):
 @pytest.fixture
 def project(org, client_obj, user):
     return Project.objects.create(
-        client=client_obj, organization=org,
-        title="Test Project", created_by=user,
+        client=client_obj,
+        organization=org,
+        title="Test Project",
+        created_by=user,
     )
 
 
@@ -61,21 +63,23 @@ class TestSendReminders:
     def test_recontact_reminder(self, mock_send, binding, project, candidate, user):
         mock_send.return_value = True
         Contact.objects.create(
-            project=project, candidate=candidate, consultant=user,
+            project=project,
+            candidate=candidate,
+            consultant=user,
             result=Contact.Result.RESERVED,
             next_contact_date=date.today(),
             locked_until=timezone.now() + timedelta(days=1),
         )
         call_command("send_reminders")
-        assert Notification.objects.filter(
-            type=Notification.Type.REMINDER
-        ).exists()
+        assert Notification.objects.filter(type=Notification.Type.REMINDER).exists()
 
     @patch("projects.services.notification.send_notification")
     def test_lock_expiry_reminder(self, mock_send, binding, project, candidate, user):
         mock_send.return_value = True
         Contact.objects.create(
-            project=project, candidate=candidate, consultant=user,
+            project=project,
+            candidate=candidate,
+            consultant=user,
             result=Contact.Result.RESERVED,
             locked_until=timezone.now() + timedelta(days=1),
         )
@@ -85,10 +89,14 @@ class TestSendReminders:
         ).exists()
 
     @patch("projects.services.notification.send_notification")
-    def test_submission_review_reminder(self, mock_send, binding, project, candidate, user):
+    def test_submission_review_reminder(
+        self, mock_send, binding, project, candidate, user
+    ):
         mock_send.return_value = True
         Submission.objects.create(
-            project=project, candidate=candidate, consultant=user,
+            project=project,
+            candidate=candidate,
+            consultant=user,
             status=Submission.Status.SUBMITTED,
             submitted_at=timezone.now() - timedelta(days=3),
         )
@@ -98,14 +106,19 @@ class TestSendReminders:
         ).exists()
 
     @patch("projects.services.notification.send_notification")
-    def test_interview_tomorrow_reminder(self, mock_send, binding, project, candidate, user):
+    def test_interview_tomorrow_reminder(
+        self, mock_send, binding, project, candidate, user
+    ):
         mock_send.return_value = True
         sub = Submission.objects.create(
-            project=project, candidate=candidate, consultant=user,
+            project=project,
+            candidate=candidate,
+            consultant=user,
             status=Submission.Status.PASSED,
         )
         Interview.objects.create(
-            submission=sub, round=1,
+            submission=sub,
+            round=1,
             scheduled_at=timezone.now() + timedelta(days=1),
             type=Interview.Type.IN_PERSON,
         )

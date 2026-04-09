@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 
-from django.utils import timezone
 
 from accounts.models import User
 from projects.models import Contact, Notification, ProjectApproval
@@ -17,7 +16,6 @@ from projects.services.approval import (
     approve_project,
     merge_project,
     reject_project,
-    send_admin_message,
 )
 from projects.services.contact import create_contact
 
@@ -98,24 +96,34 @@ def handle_approval_callback(
 
         if action == "approve":
             approve_project(approval, user)
-            _update_notification_message(notification, f"✅ 승인 완료 — {project_title}")
+            _update_notification_message(
+                notification, f"✅ 승인 완료 — {project_title}"
+            )
             return {"ok": True, "result": "approved"}
 
         elif action == "reject":
             reject_project(approval, user)
-            _update_notification_message(notification, f"❌ 반려 완료 — {project_title}")
+            _update_notification_message(
+                notification, f"❌ 반려 완료 — {project_title}"
+            )
             return {"ok": True, "result": "rejected"}
 
         elif action == "join":
             merge_project(approval, user)
-            _update_notification_message(notification, f"🔗 합류 완료 — {project_title}")
+            _update_notification_message(
+                notification, f"🔗 합류 완료 — {project_title}"
+            )
             return {"ok": True, "result": "joined"}
 
         elif action == "message":
             # A3: Message action with awaiting_text_input state
             notification.callback_data["awaiting_text_input"] = True
             notification.save(update_fields=["callback_data"])
-            return {"ok": True, "result": "awaiting_message", "prompt": "메시지를 입력해주세요."}
+            return {
+                "ok": True,
+                "result": "awaiting_message",
+                "prompt": "메시지를 입력해주세요.",
+            }
 
         else:
             return {"ok": False, "error": f"알 수 없는 액션: {action}"}
@@ -168,14 +176,18 @@ def handle_contact_callback(
             "parent_notification_id": str(notification.pk),
         }
         text = format_contact_step(
-            candidate_name=candidate.name, step="result", channel=channel,
+            candidate_name=candidate.name,
+            step="result",
+            channel=channel,
         )
         # A4: Create new notification FIRST, then use its pk for keyboard
-        next_notif = _send_next_step(
+        _send_next_step(
             recipient=user,
             callback_data=next_cb,
             text=text,
-            reply_markup=build_contact_result_keyboard(str(notification.pk).replace("-", "")[:8]),
+            reply_markup=build_contact_result_keyboard(
+                str(notification.pk).replace("-", "")[:8]
+            ),
         )
         return {"ok": True, "next_step": 2}
 
@@ -195,11 +207,13 @@ def handle_contact_callback(
             channel=channel,
             result=result_val,
         )
-        next_notif = _send_next_step(
+        _send_next_step(
             recipient=user,
             callback_data=next_cb,
             text=text,
-            reply_markup=build_contact_save_keyboard(str(notification.pk).replace("-", "")[:8]),
+            reply_markup=build_contact_save_keyboard(
+                str(notification.pk).replace("-", "")[:8]
+            ),
         )
         return {"ok": True, "next_step": 3}
 

@@ -1,7 +1,7 @@
 """P15: Notification service tests."""
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import patch
 from django.utils import timezone
 
 from accounts.models import Membership, Organization, TelegramBinding, User
@@ -62,9 +62,7 @@ class TestSendNotification:
 
     @patch("projects.services.notification._send_telegram_message")
     def test_send_inactive_binding(self, mock_send, user, notification):
-        TelegramBinding.objects.create(
-            user=user, chat_id="12345", is_active=False
-        )
+        TelegramBinding.objects.create(user=user, chat_id="12345", is_active=False)
         result = send_notification(notification)
         assert result is False
         mock_send.assert_not_called()
@@ -83,12 +81,16 @@ class TestSendBulk:
     def test_bulk_send(self, mock_send, binding, user):
         mock_send.return_value = "msg_1"
         n1 = Notification.objects.create(
-            recipient=user, type=Notification.Type.NEWS,
-            title="News 1", body="Body 1",
+            recipient=user,
+            type=Notification.Type.NEWS,
+            title="News 1",
+            body="Body 1",
         )
         n2 = Notification.objects.create(
-            recipient=user, type=Notification.Type.NEWS,
-            title="News 2", body="Body 2",
+            recipient=user,
+            type=Notification.Type.NEWS,
+            title="News 2",
+            body="Body 2",
         )
         count = send_bulk_notifications([n1, n2])
         assert count == 2
@@ -107,9 +109,7 @@ class TestUpdateMessage:
     @patch("projects.services.notification._edit_telegram_message")
     def test_update_chat_id_mismatch(self, mock_edit, user, notification):
         """Rebind scenario: chat_id changed → skip update."""
-        TelegramBinding.objects.create(
-            user=user, chat_id="99999", is_active=True
-        )
+        TelegramBinding.objects.create(user=user, chat_id="99999", is_active=True)
         notification.telegram_message_id = "msg_123"
         notification.telegram_chat_id = "12345"  # Old chat_id
         notification.save()

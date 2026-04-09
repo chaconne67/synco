@@ -26,9 +26,7 @@ def validate_webhook_secret(request) -> bool:
     return header == configured_secret
 
 
-def verify_telegram_user_access(
-    chat_id: str, obj
-) -> tuple[User, Organization]:
+def verify_telegram_user_access(chat_id: str, obj) -> tuple[User, Organization]:
     """Verify that the Telegram chat_id maps to a user with access to obj.
 
     Args:

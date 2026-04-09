@@ -1,7 +1,6 @@
 """P15: Telegram keyboard and formatter tests."""
 
 import uuid
-import pytest
 from projects.telegram.keyboards import (
     build_approval_keyboard,
     build_contact_channel_keyboard,
@@ -101,19 +100,26 @@ class TestFormatters:
         assert "연락 방법" in text
 
     def test_format_contact_step_result(self):
-        text = format_contact_step(candidate_name="홍길동", step="result", channel="전화")
+        text = format_contact_step(
+            candidate_name="홍길동", step="result", channel="전화"
+        )
         assert "결과" in text
 
     def test_format_contact_step_confirm(self):
         text = format_contact_step(
-            candidate_name="홍길동", step="confirm", channel="전화", result="관심",
+            candidate_name="홍길동",
+            step="confirm",
+            channel="전화",
+            result="관심",
         )
         assert "홍길동" in text
         assert "전화" in text
         assert "관심" in text
 
     def test_format_reminder(self):
-        text = format_reminder(reminder_type="recontact", details="홍길동 - Rayence 프로젝트")
+        text = format_reminder(
+            reminder_type="recontact", details="홍길동 - Rayence 프로젝트"
+        )
         assert "홍길동" in text
 
     def test_format_todo_list(self):

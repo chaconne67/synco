@@ -2,8 +2,7 @@
 
 import uuid
 import pytest
-from unittest.mock import patch, MagicMock
-from django.utils import timezone
+from unittest.mock import patch
 
 from accounts.models import Membership, Organization, TelegramBinding, User
 from clients.models import Client
@@ -16,8 +15,6 @@ from projects.models import (
 from projects.telegram.handlers import (
     handle_approval_callback,
     handle_contact_callback,
-    CHANNEL_MAP,
-    RESULT_MAP,
 )
 
 
@@ -55,15 +52,18 @@ def client_obj(org):
 @pytest.fixture
 def project(org, client_obj, user_consultant):
     return Project.objects.create(
-        client=client_obj, organization=org,
-        title="Test Position", created_by=user_consultant,
+        client=client_obj,
+        organization=org,
+        title="Test Position",
+        created_by=user_consultant,
     )
 
 
 @pytest.fixture
 def pending_approval(project, user_consultant, user_owner):
     return ProjectApproval.objects.create(
-        project=project, requested_by=user_consultant,
+        project=project,
+        requested_by=user_consultant,
         conflict_project=None,
     )
 
@@ -119,7 +119,9 @@ class TestApprovalCallback:
             callback_data={"action": "approval", "approval_id": str(uuid.uuid4())},
         )
         result = handle_approval_callback(
-            notification=notif, action="approve", user=user_owner,
+            notification=notif,
+            action="approve",
+            user=user_owner,
         )
         assert result["ok"] is False
 
@@ -128,6 +130,7 @@ class TestContactCallback:
     @patch("projects.telegram.handlers._send_next_step")
     def test_channel_selection(self, mock_send, binding, user_owner, project):
         from candidates.models import Candidate
+
         candidate = Candidate.objects.create(
             name="홍길동", owned_by=binding.user.membership.organization
         )
@@ -154,6 +157,7 @@ class TestContactCallback:
     @patch("projects.telegram.handlers._send_next_step")
     def test_result_selection(self, mock_send, binding, user_owner, project):
         from candidates.models import Candidate
+
         candidate = Candidate.objects.create(
             name="홍길동", owned_by=binding.user.membership.organization
         )
@@ -181,6 +185,7 @@ class TestContactCallback:
     @patch("projects.telegram.handlers._send_next_step")
     def test_save_creates_contact(self, mock_send, binding, user_owner, project):
         from candidates.models import Candidate
+
         candidate = Candidate.objects.create(
             name="홍길동", owned_by=binding.user.membership.organization
         )
@@ -204,6 +209,4 @@ class TestContactCallback:
             user=user_owner,
         )
         assert result["ok"] is True
-        assert Contact.objects.filter(
-            project=project, candidate=candidate
-        ).exists()
+        assert Contact.objects.filter(project=project, candidate=candidate).exists()

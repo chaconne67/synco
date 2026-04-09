@@ -1,7 +1,6 @@
 """P15: Telegram view tests."""
 
 import json
-import uuid
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -16,7 +15,6 @@ from accounts.models import (
     TelegramVerification,
     User,
 )
-from projects.models import Notification
 
 
 @pytest.fixture
@@ -97,12 +95,14 @@ class TestWebhookView:
         c = TestClient()
         payload = json.dumps({"update_id": 456})
         c.post(
-            "/telegram/webhook/", data=payload,
+            "/telegram/webhook/",
+            data=payload,
             content_type="application/json",
             HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret",
         )
         c.post(
-            "/telegram/webhook/", data=payload,
+            "/telegram/webhook/",
+            data=payload,
             content_type="application/json",
             HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret",
         )
@@ -123,7 +123,8 @@ class TestBindView:
 
     def test_bind_post_invalidates_previous_codes(self, auth_client, user):
         TelegramVerification.objects.create(
-            user=user, code="111111",
+            user=user,
+            code="111111",
             expires_at=timezone.now() + timedelta(minutes=5),
         )
         auth_client.post("/telegram/bind/")

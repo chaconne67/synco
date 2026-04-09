@@ -34,8 +34,6 @@ class Command(BaseCommand):
         success = asyncio.run(_setup())
 
         if success:
-            self.stdout.write(
-                self.style.SUCCESS(f"Webhook registered: {webhook_url}")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Webhook registered: {webhook_url}"))
         else:
             raise CommandError("Failed to register webhook")

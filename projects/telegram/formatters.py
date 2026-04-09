@@ -34,16 +34,9 @@ def format_contact_step(
 ) -> str:
     """Format contact recording step message."""
     if step == "channel":
-        return (
-            f"🤖 {candidate_name} 컨택 결과를 기록합니다.\n\n"
-            f"  연락 방법은?"
-        )
+        return f"🤖 {candidate_name} 컨택 결과를 기록합니다.\n\n  연락 방법은?"
     elif step == "result":
-        return (
-            f"🤖 {candidate_name} 컨택 기록 중\n"
-            f"  채널: {channel}\n\n"
-            f"  결과는?"
-        )
+        return f"🤖 {candidate_name} 컨택 기록 중\n  채널: {channel}\n\n  결과는?"
     elif step == "confirm":
         return (
             f"🤖 컨택 기록 저장:\n"

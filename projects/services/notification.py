@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from django.conf import settings
 
 from accounts.models import TelegramBinding
 from projects.models import Notification
@@ -96,9 +95,7 @@ def send_notification(
         )
         return True
     except Exception:
-        logger.exception(
-            "Failed to send Telegram notification %s", notification.pk
-        )
+        logger.exception("Failed to send Telegram notification %s", notification.pk)
         return False
 
 

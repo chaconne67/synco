@@ -4,7 +4,13 @@ import pytest
 from datetime import timedelta
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, TelegramBinding, TelegramVerification, User
+from accounts.models import (
+    Membership,
+    Organization,
+    TelegramBinding,
+    TelegramVerification,
+    User,
+)
 from projects.models import Notification
 
 

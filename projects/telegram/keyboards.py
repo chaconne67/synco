@@ -12,7 +12,9 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 def _cb(short_id: str, action: str) -> str:
     """Build callback_data string. Asserts 64-byte limit."""
     data = f"n:{short_id}:{action}"
-    assert len(data.encode("utf-8")) <= 64, f"callback_data too long: {len(data.encode('utf-8'))} bytes"
+    assert len(data.encode("utf-8")) <= 64, (
+        f"callback_data too long: {len(data.encode('utf-8'))} bytes"
+    )
     return data
 
 
@@ -29,48 +31,74 @@ def parse_callback_data(data: str) -> dict | None:
 
 def build_approval_keyboard(short_id: str) -> InlineKeyboardMarkup:
     """Build approval request keyboard with 4 action buttons."""
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("✅ 승인", callback_data=_cb(short_id, "approve")),
-            InlineKeyboardButton("🔗 합류", callback_data=_cb(short_id, "join")),
-        ],
-        [
-            InlineKeyboardButton("💬 메시지", callback_data=_cb(short_id, "message")),
-            InlineKeyboardButton("❌ 반려", callback_data=_cb(short_id, "reject")),
-        ],
-    ])
+            [
+                InlineKeyboardButton("✅ 승인", callback_data=_cb(short_id, "approve")),
+                InlineKeyboardButton("🔗 합류", callback_data=_cb(short_id, "join")),
+            ],
+            [
+                InlineKeyboardButton(
+                    "💬 메시지", callback_data=_cb(short_id, "message")
+                ),
+                InlineKeyboardButton("❌ 반려", callback_data=_cb(short_id, "reject")),
+            ],
+        ]
+    )
 
 
 def build_contact_channel_keyboard(short_id: str) -> InlineKeyboardMarkup:
     """Build contact channel selection keyboard."""
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("📞 전화", callback_data=_cb(short_id, "ch_phone")),
-            InlineKeyboardButton("💬 카톡", callback_data=_cb(short_id, "ch_kakao")),
-            InlineKeyboardButton("📧 이메일", callback_data=_cb(short_id, "ch_email")),
-        ],
-    ])
+            [
+                InlineKeyboardButton(
+                    "📞 전화", callback_data=_cb(short_id, "ch_phone")
+                ),
+                InlineKeyboardButton(
+                    "💬 카톡", callback_data=_cb(short_id, "ch_kakao")
+                ),
+                InlineKeyboardButton(
+                    "📧 이메일", callback_data=_cb(short_id, "ch_email")
+                ),
+            ],
+        ]
+    )
 
 
 def build_contact_result_keyboard(short_id: str) -> InlineKeyboardMarkup:
     """Build contact result selection keyboard."""
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("😊 관심있음", callback_data=_cb(short_id, "rs_interest")),
-            InlineKeyboardButton("😐 미응답", callback_data=_cb(short_id, "rs_noresp")),
-        ],
-        [
-            InlineKeyboardButton("🤔 보류", callback_data=_cb(short_id, "rs_hold")),
-            InlineKeyboardButton("❌ 거절", callback_data=_cb(short_id, "rs_reject")),
-        ],
-    ])
+            [
+                InlineKeyboardButton(
+                    "😊 관심있음", callback_data=_cb(short_id, "rs_interest")
+                ),
+                InlineKeyboardButton(
+                    "😐 미응답", callback_data=_cb(short_id, "rs_noresp")
+                ),
+            ],
+            [
+                InlineKeyboardButton("🤔 보류", callback_data=_cb(short_id, "rs_hold")),
+                InlineKeyboardButton(
+                    "❌ 거절", callback_data=_cb(short_id, "rs_reject")
+                ),
+            ],
+        ]
+    )
 
 
 def build_contact_save_keyboard(short_id: str) -> InlineKeyboardMarkup:
     """Build contact save (skip memo) keyboard."""
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("💾 저장 — 메모 없이", callback_data=_cb(short_id, "save"))],
-    ])
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "💾 저장 — 메모 없이", callback_data=_cb(short_id, "save")
+                )
+            ],
+        ]
+    )
 
 
 def build_disambiguation_keyboard(
@@ -85,7 +113,7 @@ def build_disambiguation_keyboard(
         label = f"{i + 1}. {c['name']} - {c['detail']}"
         if len(label) > 40:
             label = label[:37] + "..."
-        buttons.append([
-            InlineKeyboardButton(label, callback_data=_cb(short_id, f"sel_{i}"))
-        ])
+        buttons.append(
+            [InlineKeyboardButton(label, callback_data=_cb(short_id, f"sel_{i}"))]
+        )
     return InlineKeyboardMarkup(buttons)

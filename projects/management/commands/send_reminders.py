@@ -92,7 +92,9 @@ class Command(BaseCommand):
         tomorrow_interviews = Interview.objects.filter(
             scheduled_at__date=tomorrow,
             result=Interview.Result.PENDING,
-        ).select_related("submission__consultant", "submission__candidate", "submission__project")
+        ).select_related(
+            "submission__consultant", "submission__candidate", "submission__project"
+        )
 
         for interview in tomorrow_interviews:
             consultant = interview.submission.consultant
@@ -113,6 +115,4 @@ class Command(BaseCommand):
             if send_notification(notif, text=text):
                 total_sent += 1
 
-        self.stdout.write(
-            self.style.SUCCESS(f"Sent {total_sent} reminder(s)")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Sent {total_sent} reminder(s)"))

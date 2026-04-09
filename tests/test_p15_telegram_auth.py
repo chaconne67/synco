@@ -23,9 +23,7 @@ def user(db, org):
 
 @pytest.fixture
 def binding(user):
-    return TelegramBinding.objects.create(
-        user=user, chat_id="12345", is_active=True
-    )
+    return TelegramBinding.objects.create(user=user, chat_id="12345", is_active=True)
 
 
 class TestWebhookSecret:
@@ -71,8 +69,10 @@ class TestWebhookSecret:
 class TestVerifyUserAccess:
     def test_valid_access(self, binding, org):
         from clients.models import Client
+
         client = Client.objects.create(name="Acme", organization=org)
         from projects.models import Project
+
         project = Project.objects.create(
             client=client, organization=org, title="Test", created_by=binding.user
         )
