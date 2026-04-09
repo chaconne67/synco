@@ -1,0 +1,65 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+{% block title %}텔레그램 연동{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto py-8">
+  <h2 class="text-xl font-bold mb-6">텔레그램 연동 설정</h2>
+
+  {% if message %}
+  <div class="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+    {{ message }}
+  </div>
+  {% endif %}
+
+  {% if error %}
+  <div class="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  {% if code %}
+  <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+    <p class="text-sm text-gray-600 mb-2">텔레그램 Bot에 아래 코드를 보내주세요:</p>
+    <p class="text-3xl font-mono font-bold text-center tracking-widest my-4">{{ code }}</p>
+    <p class="text-xs text-gray-500 text-center">
+      /start {{ code }} — {{ expires_minutes }}분 내 입력
+    </p>
+  </div>
+  {% endif %}
+
+  {% if is_bound %}
+  <div class="mb-4 p-3 bg-green-50 rounded-lg">
+    <p class="text-sm text-green-700">
+      ✅ 텔레그램이 연결되어 있습니다.
+      {% if verified_at %}
+      <span class="text-xs text-gray-500">({{ verified_at|date:"Y-m-d H:i" }})</span>
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="flex gap-3">
+    <form method="post" action="{% url 'telegram:test' %}" class="flex-1">
+      {% csrf_token %}
+      <button type="submit"
+        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+        테스트 메시지 보내기
+      </button>
+    </form>
+    <form method="post" action="{% url 'telegram:unbind' %}" class="flex-1">
+      {% csrf_token %}
+      <button type="submit"
+        class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+        연동 해제
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <form method="post" action="{% url 'telegram:bind' %}">
+    {% csrf_token %}
+    <button type="submit"
+      class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+      텔레그램 연결하기
+    </button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

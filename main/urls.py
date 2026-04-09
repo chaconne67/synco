@@ -19,6 +19,7 @@ urlpatterns = [
     path("reference/", include("clients.urls_reference")),
     path("voice/", include("projects.urls_voice")),
     path("projects/", include("projects.urls")),
+    path("telegram/", include("projects.urls_telegram")),
 ]
 
 if settings.DEBUG:
