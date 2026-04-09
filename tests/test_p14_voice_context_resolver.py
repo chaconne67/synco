@@ -2,7 +2,6 @@
 import pytest
 
 from accounts.models import Membership, Organization, User
-from candidates.models import Candidate
 from clients.models import Client
 from projects.models import Project
 from projects.services.voice.context_resolver import resolve_context

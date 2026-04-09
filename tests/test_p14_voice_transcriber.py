@@ -2,7 +2,6 @@
 import io
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from projects.services.voice.transcriber import transcribe, TranscribeMode
 
