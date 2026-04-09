@@ -1,0 +1,6 @@
+이 세션의 작업이 완료되었습니다.
+
+**세션 결과:**
+- p14-voice-agent 담금질 완료 (설계 1R: 15이슈 전수용 / 구현 1R: 12이슈 전수용)
+- forge-progress.json 업데이트 + git commit (`f65350d`)
+- 다음 세션 spawn (PID: 3405171) → p15-telegram-integration 담금질 예정
