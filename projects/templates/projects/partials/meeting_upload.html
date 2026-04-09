@@ -1,0 +1,28 @@
+<div id="meeting-upload-panel" class="p-4">
+  <h4 class="text-sm font-medium text-gray-900 mb-3">미팅 녹음 업로드</h4>
+  <form id="meeting-upload-form" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">프로젝트</label>
+        <select name="project_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required>
+          <option value="">선택</option>
+          {% for p in projects %}<option value="{{ p.pk }}">{{ p.title }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">후보자</label>
+        <select name="candidate_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required>
+          <option value="">선택</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">녹음 파일 (mp3, m4a, wav, webm / 최대 100MB)</label>
+        <input type="file" name="audio" accept=".mp3,.m4a,.wav,.webm" class="w-full text-sm" required />
+      </div>
+      <button type="submit" class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+        업로드 및 분석 시작
+      </button>
+    </div>
+  </form>
+</div>

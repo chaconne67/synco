@@ -1,0 +1,25 @@
+<div id="voice-modal" class="fixed inset-0 z-[60] hidden" role="dialog" aria-modal="true">
+  <div class="absolute inset-0 bg-black/30" onclick="window.VoiceAgent.close()"></div>
+  <div class="absolute bottom-24 right-6 w-96 max-h-[70vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between border-b px-4 py-3">
+      <h3 class="text-sm font-semibold text-gray-900">음성 에이전트</h3>
+      <button onclick="window.VoiceAgent.close()" class="text-gray-400 hover:text-gray-600">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="voice-messages" class="flex-1 overflow-y-auto p-4 space-y-3">
+      <div class="text-sm text-gray-500 text-center">무엇을 도와드릴까요?</div>
+    </div>
+    <div class="border-t p-3">
+      <div class="flex items-center gap-2">
+        <input id="voice-text-input" type="text" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="텍스트로 입력하거나 마이크를 누르세요" onkeydown="if(event.key==='Enter')window.VoiceAgent.sendText()" />
+        <button id="voice-mic-btn" type="button" class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-600 transition-colors" onclick="window.VoiceAgent.toggleRecording()" aria-label="음성 녹음">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+        </button>
+        <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" onclick="window.VoiceAgent.sendText()" aria-label="전송">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
