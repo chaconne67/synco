@@ -476,6 +476,7 @@ class Notification(BaseModel):
     body = models.TextField()
     action_url = models.URLField(blank=True)
     telegram_message_id = models.CharField(max_length=100, blank=True)
+    telegram_chat_id = models.CharField(max_length=100, blank=True, default="")
     status = models.CharField(
         max_length=20,
         choices=Status.choices,

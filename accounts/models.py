@@ -87,6 +87,38 @@ class TelegramBinding(BaseModel):
     )
     chat_id = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.user} - {self.chat_id}"
+
+
+class TelegramVerification(BaseModel):
+    """텔레그램 인증 코드."""
+
+    MAX_ATTEMPTS = 5
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="telegram_verifications",
+    )
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    consumed = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def is_expired(self) -> bool:
+        from django.utils import timezone
+        return self.consumed or self.expires_at <= timezone.now()
+
+    @property
+    def is_blocked(self) -> bool:
+        return self.attempts >= self.MAX_ATTEMPTS
+
+    def __str__(self) -> str:
+        return f"{self.user} - {self.code} (expired={self.is_expired})"
