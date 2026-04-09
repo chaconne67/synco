@@ -38,7 +38,7 @@
     {
       "slug": "p15-telegram-integration",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": null,
       "verification_result": null,
