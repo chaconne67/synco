@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "impl_only",
-  "last_pid": 3372442,
+  "last_pid": 3405171,
   "execution_order": ["p14-voice-agent", "p15-telegram-integration"],
   "redteam_config": {
     "models": ["codex", "agent"],
@@ -37,17 +37,26 @@
     },
     {
       "slug": "p15-telegram-integration",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": null,
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
-      "artifacts": [],
-      "committed": false,
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md",
+        "debate/design-rulings.md",
+        "debate/impl-rulings.md",
+        "debate/debate-log.json"
+      ],
+      "committed": true,
       "depends_on": ["p14-voice-agent"],
-      "debate_summary": null
+      "debate_summary": {
+        "design": {"rounds": 1, "issues": 18, "accepted": 17, "rebutted": 0, "partial": 1, "escalated": 0},
+        "impl": {"rounds": 1, "issues": 12, "accepted": 12, "rebutted": 0, "escalated": 0}
+      }
     }
   ],
   "decisions": [

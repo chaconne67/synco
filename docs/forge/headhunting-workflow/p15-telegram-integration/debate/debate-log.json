@@ -1,0 +1,61 @@
+{
+  "topic": "p15-telegram-integration",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {"id": "D-R1-01", "severity": "CRITICAL", "title": "URL 설계가 현재 라우팅 구조와 불일치", "attack": "projects.urls에 넣으면 /projects/telegram/...이 되므로 불일치", "action": "accepted", "response": "독립 include 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-02", "severity": "CRITICAL", "title": "TelegramBinding에 verified_at 없음", "attack": "실제 모델에 없음", "action": "accepted", "response": "마이그레이션 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-03", "severity": "CRITICAL", "title": "인증 코드 저장소 미정의", "attack": "저장, TTL, 방어 전무", "action": "accepted", "response": "TelegramVerification 모델 신설", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-04", "severity": "CRITICAL", "title": "웹훅 CSRF 미명시", "attack": "외부 POST 403", "action": "accepted", "response": "csrf_exempt + secret token", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-05", "severity": "MAJOR", "title": "웹훅 진위 검증 없음", "attack": "임의 POST 가능", "action": "accepted", "response": "secret token 헤더 검증", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-06", "severity": "MAJOR", "title": "AppConfig.ready() 부작용", "attack": "startup 시 외부 API", "action": "accepted", "response": "management command 분리", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-07", "severity": "CRITICAL", "title": "설정/의존성 호환 불가", "attack": "env(), SITE_URL, 패키지 없음", "action": "accepted", "response": "os.environ.get() + 의존성 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-08", "severity": "MAJOR", "title": "비즈니스 규칙 우회", "attack": "핸들러가 서비스 우회", "action": "accepted", "response": "thin wrapper 강제", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-09", "severity": "MAJOR", "title": "권한 검증 누락", "attack": "사용자 권한 미검증", "action": "accepted", "response": "verify_telegram_user_access 정의", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-10", "severity": "CRITICAL", "title": "callback_data 64바이트 초과", "attack": "예시 JSON 초과", "action": "accepted", "response": "n:{short_id}:{action} 형식", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-11", "severity": "MAJOR", "title": "다단계 상태 관리 부적합", "attack": "동시 진행 시 충돌", "action": "accepted", "response": "1 Notification = 1 step", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-12", "severity": "CRITICAL", "title": "P14 intent_parser 불일치", "attack": "현재 코드에 없음", "action": "partial", "response": "P14 이후 존재. 구체적 참조 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-13", "severity": "MAJOR", "title": "엔티티 중복 해소 없음", "attack": "동명이인 잘못 조작", "action": "accepted", "response": "entity_resolver 적용", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-14", "severity": "MAJOR", "title": "리마인더 ORM 미매핑", "attack": "불명확한 조건", "action": "accepted", "response": "정확한 ORM 조건 명시", "evidence_type": "code_reference", "resolved": true},
+            {"id": "D-R1-15", "severity": "MAJOR", "title": "스케줄러 배포 미연결", "attack": "cron 주체 미정의", "action": "accepted", "response": "호스트 cron + deploy.sh 반영", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-16", "severity": "MAJOR", "title": "메시지 갱신 rebind 미고려", "attack": "chat_id 스냅샷 없음", "action": "accepted", "response": "telegram_chat_id 필드 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-17", "severity": "MAJOR", "title": "idempotency 없음", "attack": "중복 방어 미정의", "action": "accepted", "response": "update_id 캐시 dedup", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "D-R1-18", "severity": "MAJOR", "title": "테스트 happy path 위주", "attack": "실패 케이스 없음", "action": "accepted", "response": "보안/실패 케이스 추가", "evidence_type": "logical_reasoning", "resolved": true}
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1, "issues": 18, "accepted": 17, "rebutted": 0, "partial": 1, "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {"id": "I-R1-01", "severity": "CRITICAL", "title": "승인 알림 트리거 연결 누락", "attack": "project_create에서 승인 알림 발송 단계 없음", "action": "accepted", "response": "views.py에 Notification 생성 + send_notification 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-02", "severity": "CRITICAL", "title": "텍스트 업무 요청 미구현", "attack": "설계서 범위인데 future task로 미뤄짐", "action": "accepted", "response": "텍스트 핸들러 + P14 graceful fallback 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-03", "severity": "CRITICAL", "title": "message 액션 미완결", "attack": "버튼 후 send_admin_message 호출 경로 없음", "action": "accepted", "response": "awaiting_text_input 상태 관리 추가", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-04", "severity": "CRITICAL", "title": "다단계 short_id 오류", "attack": "새 Notification이 아닌 부모 short_id 사용", "action": "accepted", "response": "새 Notification pk로 키보드 생성하도록 순서 변경", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-05", "severity": "CRITICAL", "title": "컨택 저장 직접 ORM 호출", "attack": "설계서 금지인데 Contact.objects.create() 직접 호출", "action": "accepted", "response": "create_contact() 서비스 함수 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-06", "severity": "CRITICAL", "title": "삭제된 project.title 참조", "attack": "reject/join 후 project 삭제됨", "action": "accepted", "response": "서비스 호출 전 지역 변수로 저장", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-07", "severity": "CRITICAL", "title": "템플릿 base.html 미존재", "attack": "common/base.html이 실제 베이스", "action": "accepted", "response": "common/base.html + htmx 패턴 사용", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-08", "severity": "MAJOR", "title": "승인 콜백 권한 검증 우회", "attack": "dict 전달로 organization 검증 스킵", "action": "accepted", "response": "approval.project를 전달하도록 수정", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-09", "severity": "MAJOR", "title": "brute force 방어 불완전", "attack": "틀린 코드 입력 시 attempts 미증가", "action": "accepted", "response": "실패 시도도 추적하도록 로직 재설계", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-10", "severity": "MAJOR", "title": "인증 코드 충돌 위험", "attack": "6자리 코드 동시 발급 시 충돌", "action": "accepted", "response": "활성 코드 충돌 검사 + 재시도", "evidence_type": "logical_reasoning", "resolved": true},
+            {"id": "I-R1-11", "severity": "MAJOR", "title": "callback_query_id dedup 누락", "attack": "설계서 요구인데 구현 없음", "action": "accepted", "response": "callback_query.id 기반 cache dedup 추가", "evidence_type": "code_reference", "resolved": true},
+            {"id": "I-R1-12", "severity": "MAJOR", "title": "배포 반영 단계 누락", "attack": "deploy.sh, .env.prod, cron, webhook 절차 없음", "action": "accepted", "response": "배포 반영 단계 추가", "evidence_type": "code_reference", "resolved": true}
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1, "issues": 12, "accepted": 12, "rebutted": 0, "escalated": 0
+      }
+    }
+  }
+}
