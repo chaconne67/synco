@@ -529,3 +529,56 @@ class PostingSite(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.project} - {self.get_site_display()}"
+
+
+class MeetingRecord(BaseModel):
+    """미팅 녹음 분석 레코드."""
+
+    class Status(models.TextChoices):
+        UPLOADED = "uploaded", "업로드됨"
+        TRANSCRIBING = "transcribing", "전사 중"
+        ANALYZING = "analyzing", "분석 중"
+        READY = "ready", "분석 완료"
+        APPLIED = "applied", "반영 완료"
+        FAILED = "failed", "실패"
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="meeting_records",
+    )
+    candidate = models.ForeignKey(
+        "candidates.Candidate",
+        on_delete=models.CASCADE,
+        related_name="meeting_records",
+    )
+    audio_file = models.FileField(upload_to="meetings/audio/")
+    transcript = models.TextField(blank=True)
+    analysis_json = models.JSONField(default=dict, blank=True)
+    edited_json = models.JSONField(default=dict, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.UPLOADED,
+    )
+    error_message = models.TextField(blank=True)
+    applied_at = models.DateTimeField(null=True, blank=True)
+    applied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="applied_meeting_records",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_meeting_records",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Meeting: {self.candidate} ({self.status})"
