@@ -71,11 +71,15 @@ def review_list(request):
     status_filter = request.GET.get("status", "needs_review")
     rec_status_filter = request.GET.get("rec_status", "")
 
-    candidates = Candidate.objects.filter(
-        validation_status=status_filter,
-    ).select_related("primary_category").prefetch_related(
-        "careers",
-        _self_consistency_prefetch(),
+    candidates = (
+        Candidate.objects.filter(
+            validation_status=status_filter,
+        )
+        .select_related("primary_category")
+        .prefetch_related(
+            "careers",
+            _self_consistency_prefetch(),
+        )
     )
 
     if rec_status_filter:
@@ -115,7 +119,9 @@ def review_list(request):
 @login_required
 def review_detail(request, pk):
     candidate = get_object_or_404(
-        Candidate.objects.select_related("primary_category", "current_resume").prefetch_related(
+        Candidate.objects.select_related(
+            "primary_category", "current_resume"
+        ).prefetch_related(
             "careers",
             _self_consistency_prefetch(),
         ),
@@ -134,7 +140,10 @@ def review_detail(request, pk):
     logs = candidate.extraction_logs.all()[:10]
 
     # Compute field confidences (same as candidate_detail)
-    from data_extraction.services.validation import compute_field_confidences, compute_overall_confidence
+    from data_extraction.services.validation import (
+        compute_field_confidences,
+        compute_overall_confidence,
+    )
 
     extracted_snapshot = {
         "name": candidate.name,
@@ -296,6 +305,7 @@ SEARCH_PAGE_SIZE = 20
 def candidate_list(request):
     """Main search page: candidate list + category tabs + floating chatbot."""
     category_filter = request.GET.get("category")
+    rec_status_filter = request.GET.get("rec_status", "")
     try:
         page = int(request.GET.get("page", 1))
     except (ValueError, TypeError):
@@ -333,6 +343,13 @@ def candidate_list(request):
             .distinct()
             .order_by("-updated_at")
         )
+        # Apply recommendation_status filter (GET param or session)
+        if rec_status_filter:
+            qs = qs.filter(recommendation_status=rec_status_filter)
+        elif session and has_active_filters(filters):
+            rec_statuses = filters.get("recommendation_status", [])
+            if rec_statuses:
+                qs = qs.filter(recommendation_status__in=rec_statuses)
         total = qs.count()
         offset = (page - 1) * SEARCH_PAGE_SIZE
         page_candidates = qs[offset : offset + SEARCH_PAGE_SIZE]
@@ -358,6 +375,8 @@ def candidate_list(request):
             )
             .order_by("-updated_at")
         )
+        if rec_status_filter:
+            qs = qs.filter(recommendation_status=rec_status_filter)
         total = qs.count()
         offset = (page - 1) * SEARCH_PAGE_SIZE
         page_candidates = qs[offset : offset + SEARCH_PAGE_SIZE]
@@ -400,6 +419,7 @@ def candidate_list(request):
             "has_more": has_more,
             "session": session,
             "last_turn": last_turn,
+            "rec_status_filter": rec_status_filter,
         },
     )
 
@@ -408,7 +428,9 @@ def candidate_list(request):
 def candidate_detail(request, pk):
     """Candidate detail page."""
     candidate = get_object_or_404(
-        Candidate.objects.select_related("primary_category", "current_resume").prefetch_related(
+        Candidate.objects.select_related(
+            "primary_category", "current_resume"
+        ).prefetch_related(
             "careers",
             _self_consistency_prefetch(),
         ),
@@ -425,7 +447,10 @@ def candidate_detail(request, pk):
     )
 
     # Compute field confidences in real-time from current candidate data
-    from data_extraction.services.validation import compute_field_confidences, compute_overall_confidence
+    from data_extraction.services.validation import (
+        compute_field_confidences,
+        compute_overall_confidence,
+    )
 
     extracted_snapshot = {
         "name": candidate.name,
@@ -472,6 +497,8 @@ def candidate_detail(request, pk):
         **etc_ctx,
     }
 
+    comments = candidate.comments.select_related("author").all()
+
     template = (
         "candidates/partials/candidate_detail_content.html"
         if request.htmx
@@ -491,6 +518,8 @@ def candidate_detail(request, pk):
             "category_scores": category_scores,
             "live_score": live_score,
             "hallucinated_fields": hallucinated_fields,
+            "comments": comments,
+            "reason_codes": REASON_CODES,
             **extra_context,
         },
     )

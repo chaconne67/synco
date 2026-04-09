@@ -5,31 +5,43 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0021_candidate_owned_by'),
-        ('projects', '0003_p06_contact_reserved_nullable'),
+        ("candidates", "0021_candidate_owned_by"),
+        ("projects", "0003_p06_contact_reserved_nullable"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='submission',
-            name='client_feedback_at',
+            model_name="submission",
+            name="client_feedback_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='submission',
-            name='notes',
+            model_name="submission",
+            name="notes",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='submission',
-            name='template',
-            field=models.CharField(blank=True, choices=[('xd_ko', '엑스다임 국문'), ('xd_ko_en', '엑스다임 국영문'), ('xd_en', '엑스다임 영문'), ('custom', '고객사 커스텀')], default='', max_length=20),
+            model_name="submission",
+            name="template",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("xd_ko", "엑스다임 국문"),
+                    ("xd_ko_en", "엑스다임 국영문"),
+                    ("xd_en", "엑스다임 영문"),
+                    ("custom", "고객사 커스텀"),
+                ],
+                default="",
+                max_length=20,
+            ),
         ),
         migrations.AddConstraint(
-            model_name='submission',
-            constraint=models.UniqueConstraint(fields=('project', 'candidate'), name='unique_submission_per_project_candidate'),
+            model_name="submission",
+            constraint=models.UniqueConstraint(
+                fields=("project", "candidate"),
+                name="unique_submission_per_project_candidate",
+            ),
         ),
     ]

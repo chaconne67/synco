@@ -6,10 +6,21 @@ import logging
 import os
 
 from data_extraction.services.filters import apply_regex_field_filters
-from data_extraction.services.extraction.gemini import extract_candidate_data
 from data_extraction.services.validation import validate_extraction
 
 logger = logging.getLogger(__name__)
+
+
+def _get_extract_fn(provider: str):
+    """Return the extract_candidate_data function for the given provider."""
+    if provider == "openai":
+        from data_extraction.services.extraction.openai import extract_candidate_data
+
+        return extract_candidate_data
+    from data_extraction.services.extraction.gemini import extract_candidate_data
+
+    return extract_candidate_data
+
 
 def run_extraction_with_retry(
     raw_text: str,
@@ -20,6 +31,7 @@ def run_extraction_with_retry(
     *,
     use_integrity_pipeline: bool = False,
     previous_data: dict | None = None,
+    provider: str = "gemini",
 ) -> dict:
     """Run extraction with rule-based validation.
 
@@ -52,8 +64,13 @@ def run_extraction_with_retry(
             "extracted": None,
             "diagnosis": {
                 "verdict": "fail",
-                "issues": [{"field": "raw_text", "severity": "error",
-                            "message": f"Text quality: {quality}"}],
+                "issues": [
+                    {
+                        "field": "raw_text",
+                        "severity": "error",
+                        "message": f"Text quality: {quality}",
+                    }
+                ],
                 "field_scores": {},
                 "overall_score": 0.0,
             },
@@ -66,10 +83,15 @@ def run_extraction_with_retry(
     if use_integrity_pipeline:
         file_name = os.path.basename(file_path) if file_path else None
         return _run_integrity_pipeline(
-            raw_text, previous_data=previous_data, file_name=file_name,
+            raw_text,
+            previous_data=previous_data,
+            file_name=file_name,
+            provider=provider,
         )
 
-    return _run_legacy_pipeline(raw_text, filename_meta, file_reference_date)
+    return _run_legacy_pipeline(
+        raw_text, filename_meta, file_reference_date, provider=provider
+    )
 
 
 def _run_integrity_pipeline(
@@ -77,11 +99,18 @@ def _run_integrity_pipeline(
     *,
     previous_data: dict | None = None,
     file_name: str | None = None,
+    provider: str = "gemini",
 ) -> dict:
     """New integrity pipeline: faithful extraction → grouping → normalization → cross-analysis."""
-    from data_extraction.services.extraction.integrity import run_integrity_pipeline
+    from data_extraction.services.extraction.integrity import (
+        run_integrity_pipeline,
+        set_provider,
+    )
 
-    result = run_integrity_pipeline(raw_text, previous_data=previous_data, file_name=file_name)
+    set_provider(provider)
+    result = run_integrity_pipeline(
+        raw_text, previous_data=previous_data, file_name=file_name
+    )
 
     if result is None:
         logger.warning("Integrity pipeline returned None")
@@ -104,6 +133,7 @@ def _run_integrity_pipeline(
 
     # Compute field-quality-based confidences (integrity pipeline doesn't get them from LLM)
     from data_extraction.services.validation import compute_field_confidences
+
     field_scores, category_scores = compute_field_confidences(result, {})
     result["field_confidences"] = field_scores
 
@@ -112,9 +142,7 @@ def _run_integrity_pipeline(
         "diagnosis": _build_integrity_diagnosis(flags, field_scores),
         "attempts": 1 + retries,
         "retry_action": (
-            "human_review"
-            if any(f.get("severity") == "RED" for f in flags)
-            else "none"
+            "human_review" if any(f.get("severity") == "RED" for f in flags) else "none"
         ),
         "raw_text_used": raw_text,
         "integrity_flags": flags,
@@ -125,9 +153,12 @@ def _run_legacy_pipeline(
     raw_text: str,
     filename_meta: dict,
     file_reference_date: str | None,
+    *,
+    provider: str = "gemini",
 ) -> dict:
     """Legacy single-call extraction pipeline."""
-    extracted = extract_candidate_data(
+    extract_fn = _get_extract_fn(provider)
+    extracted = extract_fn(
         raw_text,
         file_reference_date=file_reference_date,
     )
@@ -150,7 +181,9 @@ def _run_legacy_pipeline(
 
     rule_result = validate_extraction(extracted, filename_meta)
     diagnosis = {
-        "verdict": "pass" if rule_result["validation_status"] == "auto_confirmed" else "fail",
+        "verdict": "pass"
+        if rule_result["validation_status"] == "auto_confirmed"
+        else "fail",
         "issues": rule_result["issues"],
         "field_scores": rule_result["field_confidences"],
         "overall_score": rule_result["confidence_score"],
@@ -237,10 +270,7 @@ def _build_integrity_diagnosis(flags: list[dict], field_scores: dict) -> dict:
 
     return {
         "verdict": verdict,
-        "issues": [
-            {"severity": f["severity"], "message": f["detail"]}
-            for f in flags
-        ],
+        "issues": [{"severity": f["severity"], "message": f["detail"]} for f in flags],
         "field_scores": field_scores,
         "overall_score": round(score, 3),
     }

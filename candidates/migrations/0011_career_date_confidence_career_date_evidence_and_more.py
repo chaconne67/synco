@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0010_add_resume_reference_date_fields'),
+        ("candidates", "0010_add_resume_reference_date_fields"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='career',
-            name='date_confidence',
+            model_name="career",
+            name="date_confidence",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='career',
-            name='date_evidence',
+            model_name="career",
+            name="date_evidence",
             field=models.CharField(blank=True, max_length=500),
         ),
         migrations.AddField(
-            model_name='career',
-            name='duration_text',
+            model_name="career",
+            name="duration_text",
             field=models.CharField(blank=True, max_length=50),
         ),
         migrations.AddField(
-            model_name='career',
-            name='end_date_inferred',
+            model_name="career",
+            name="end_date_inferred",
             field=models.CharField(blank=True, max_length=30),
         ),
     ]

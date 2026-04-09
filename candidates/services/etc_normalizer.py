@@ -218,9 +218,7 @@ def build_etc_context(candidate) -> dict:
             + career_split["trainings"]
         ),
         "awards_data": (
-            career_split["awards"]
-            + edu_split["awards"]
-            + skills_split["awards"]
+            career_split["awards"] + edu_split["awards"] + skills_split["awards"]
         ),
         "patents_data": career_split["patents"],
         "projects_data": career_split["projects"],

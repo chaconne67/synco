@@ -4,30 +4,37 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0001_initial'),
+        ("projects", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='project',
-            name='jd_analysis',
+            model_name="project",
+            name="jd_analysis",
             field=models.JSONField(blank=True, default=dict),
         ),
         migrations.AddField(
-            model_name='project',
-            name='jd_drive_file_id',
+            model_name="project",
+            name="jd_drive_file_id",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AddField(
-            model_name='project',
-            name='jd_raw_text',
+            model_name="project",
+            name="jd_raw_text",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='project',
-            name='jd_source',
-            field=models.CharField(blank=True, choices=[('upload', '파일 업로드'), ('drive', 'Google Drive'), ('text', '텍스트 입력')], max_length=20),
+            model_name="project",
+            name="jd_source",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("upload", "파일 업로드"),
+                    ("drive", "Google Drive"),
+                    ("text", "텍스트 입력"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

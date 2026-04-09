@@ -4,14 +4,13 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0013_add_candidate_current_resume'),
+        ("candidates", "0013_add_candidate_current_resume"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='candidate',
-            index=models.Index(fields=['email'], name='idx_candidate_email'),
+            model_name="candidate",
+            index=models.Index(fields=["email"], name="idx_candidate_email"),
         ),
     ]

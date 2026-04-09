@@ -40,14 +40,43 @@ UNIVERSITY_GROUPS: dict[str, list[str]] = {
     "중경외시": ["중앙대", "경희대", "한국외대", "��울시립대"],
     "건동홍숙이": ["건국대", "동국대", "홍익��", "숙명여대", "이화여대"],
     "국숭세단": ["국민대", "숭실대", "세종대", "단국대"],
-    "과기특": ["KAIST", "한국과학기술원", "POSTECH", "포항공과대", "UNIST", "GIST", "DGIST"],
-    "지거국": ["부산대", "경북대", "전남대", "전북대", "충남대", "충북대", "강원대", "제주대"],
-    "이공계명문": ["KAIST", "한국과학기술원", "POSTECH", "포항공과대", "서울대", "UNIST", "GIST"],
+    "과기특": [
+        "KAIST",
+        "한국과학기술원",
+        "POSTECH",
+        "포항공과대",
+        "UNIST",
+        "GIST",
+        "DGIST",
+    ],
+    "지거국": [
+        "부산대",
+        "경북대",
+        "전남대",
+        "전북대",
+        "충남대",
+        "충북대",
+        "강원대",
+        "제주대",
+    ],
+    "이공계명문": [
+        "KAIST",
+        "한국과학기술원",
+        "POSTECH",
+        "포항공과대",
+        "서울대",
+        "UNIST",
+        "GIST",
+    ],
 }
 
 # 복합 그룹 (기본 그룹 조합)
 UNIVERSITY_GROUPS["명문대"] = sorted(
-    set(UNIVERSITY_GROUPS["SKY"] + UNIVERSITY_GROUPS["서성한"] + UNIVERSITY_GROUPS["과기특"])
+    set(
+        UNIVERSITY_GROUPS["SKY"]
+        + UNIVERSITY_GROUPS["서성한"]
+        + UNIVERSITY_GROUPS["과기특"]
+    )
 )
 UNIVERSITY_GROUPS["인서울"] = sorted(
     set(
@@ -117,7 +146,7 @@ FILTER_SCHEMA_TEMPLATE = """
 - position 상위값: {position_values}
 - language 상위값: {language_values}
 - skill_keywords: 기술 스택 키워드 (영문 공식명으로 변환). 예: 사용자가 '파이썬'이라고 하면 'Python'으로 변환
-- recommendation_status: 추천 상태 필터. ["recommended", "not_recommended", "on_hold", "pending"] 중 해당 값 리스트. "추천만" → ["recommended"]. "비추천 제외" → ["recommended", "on_hold", "pending"]. 빈 리스트 = 전체.
+- recommendation_status: 헤드헌터가 인터뷰 후 수동 판정한 추천 상태 (recommended=채용 추천 적합, not_recommended=위조/부적합 의심, on_hold=추가 검토 필요, pending=미판정). {recommendation_values} 중 해당 값 리스트. "추천만" → ["recommended"]. "비추천 제외" → ["recommended", "on_hold", "pending"]. 빈 리스트 = 전체.
 - school_groups: 대학 그룹명. 사용 가능: SKY(서울대/연세대/고려대), 서성한(서강대/성균관대/한양대), 중경외시(중앙대/경희대/한국외대/서울시립대), 건동홍숙이(건국대/동국대/홍익대/숙명여대/이화여대), 국숭세단(국민대/숭실대/세종대/단국대), 과기특(KAIST/POSTECH/UNIST/GIST/DGIST), 지거국(부산대~제주대), 인서울(서울 주요 대학 전체), 명문대(SKY+서성한+과기특), 이공계명문(KAIST/POSTECH/서울대/UNIST/GIST). 개별 학교명은 school_keywords 사용.
 """
 
@@ -130,6 +159,7 @@ def _top_values(values, limit: int = 8) -> str:
 def _build_filter_schema() -> str:
     from candidates.models import Candidate, Career, Category, Education, LanguageSkill
 
+    rec_values = [c.value for c in Candidate.RecommendationStatus]
     return FILTER_SCHEMA_TEMPLATE.format(
         category_values=", ".join(
             c.name for c in Category.objects.all().order_by("name")
@@ -140,6 +170,7 @@ def _build_filter_schema() -> str:
         language_values=_top_values(
             LanguageSkill.objects.values_list("language", flat=True)
         ),
+        recommendation_values=str(rec_values),
     )
 
 
@@ -302,12 +333,8 @@ def normalize_filter_spec(filters: dict | None) -> dict:
     normalized["certification_keywords"] = _clean_text_list(
         filters.get("certification_keywords")
     )
-    normalized["language_keywords"] = _clean_text_list(
-        filters.get("language_keywords")
-    )
-    normalized["position_keywords"] = _clean_text_list(
-        filters.get("position_keywords")
-    )
+    normalized["language_keywords"] = _clean_text_list(filters.get("language_keywords"))
+    normalized["position_keywords"] = _clean_text_list(filters.get("position_keywords"))
     if "skill_keywords" in filters:
         val = filters["skill_keywords"]
         if isinstance(val, str):
@@ -316,20 +343,16 @@ def normalize_filter_spec(filters: dict | None) -> dict:
             normalized["skill_keywords"] = _clean_text_list(val)
         else:
             normalized["skill_keywords"] = []
-    normalized["min_experience_years"] = _clean_int(
-        filters.get("min_experience_years")
-    )
-    normalized["max_experience_years"] = _clean_int(
-        filters.get("max_experience_years")
-    )
+    normalized["min_experience_years"] = _clean_int(filters.get("min_experience_years"))
+    normalized["max_experience_years"] = _clean_int(filters.get("max_experience_years"))
     normalized["birth_year_from"] = _clean_int(filters.get("birth_year_from"))
     normalized["birth_year_to"] = _clean_int(filters.get("birth_year_to"))
-    normalized["is_abroad_education"] = _clean_bool(
-        filters.get("is_abroad_education")
-    )
+    normalized["is_abroad_education"] = _clean_bool(filters.get("is_abroad_education"))
 
     # recommendation_status: list of valid values
-    valid_rec = {"recommended", "not_recommended", "on_hold", "pending"}
+    from candidates.models import Candidate as _Cand
+
+    valid_rec = {c.value for c in _Cand.RecommendationStatus}
     raw_rec = filters.get("recommendation_status", [])
     if isinstance(raw_rec, str):
         raw_rec = [raw_rec]
@@ -350,7 +373,9 @@ def has_active_filters(filters: dict | None) -> bool:
     return False
 
 
-def _apply_keyword_filters(qs: QuerySet, field_groups: list[tuple[str, ...]], keywords: list[str]) -> QuerySet:
+def _apply_keyword_filters(
+    qs: QuerySet, field_groups: list[tuple[str, ...]], keywords: list[str]
+) -> QuerySet:
     for keyword in keywords:
         group_query = Q()
         for group in field_groups:
@@ -449,7 +474,13 @@ def build_search_queryset(filters: dict | None) -> QuerySet:
     )
     qs = _apply_keyword_filters(
         qs,
-        [("language_skills__language", "language_skills__test_name", "language_skills__level")],
+        [
+            (
+                "language_skills__language",
+                "language_skills__test_name",
+                "language_skills__level",
+            )
+        ],
         normalized["language_keywords"],
     )
     qs = _apply_keyword_filters(
@@ -462,8 +493,7 @@ def build_search_queryset(filters: dict | None) -> QuerySet:
     if skill_keywords:
         for kw in skill_keywords:
             qs = qs.filter(
-                Q(skills__contains=[kw])
-                | Q(skills__contains=[{"name": kw}])
+                Q(skills__contains=[kw]) | Q(skills__contains=[{"name": kw}])
             )
 
     if normalized["keyword"]:

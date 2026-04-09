@@ -1,7 +1,5 @@
 """Tests for resume fraud detection rules."""
 
-import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +11,17 @@ from data_extraction.services.extraction.integrity import (
     _check_career_deleted,
 )
 
+REQUIRED_FLAG_KEYS = {"type", "severity", "field", "detail", "reasoning"}
+
+
+def assert_flag_format(flag: dict) -> None:
+    """Assert that a flag dict contains all required keys."""
+    missing = REQUIRED_FLAG_KEYS - flag.keys()
+    assert not missing, f"Flag missing keys {missing}: {flag}"
+    assert flag["severity"] in ("RED", "YELLOW", "BLUE"), (
+        f"Invalid severity: {flag['severity']}"
+    )
+
 
 # ===========================================================================
 # check_education_gaps
@@ -22,52 +31,106 @@ from data_extraction.services.extraction.integrity import (
 class TestEducationGaps:
     def test_grad_only_no_undergrad(self):
         educations = [
-            {"institution": "서울대학교", "degree": "석사", "major": "컴퓨터공학", "start_year": 2018, "end_year": 2020},
+            {
+                "institution": "서울대학교",
+                "degree": "석사",
+                "major": "컴퓨터공학",
+                "start_year": 2018,
+                "end_year": 2020,
+            },
         ]
         flags = check_education_gaps(educations)
         types = [f["type"] for f in flags]
         assert "EDUCATION_GAP" in types
         assert any("학부" in f["detail"] for f in flags)
+        for f in flags:
+            assert_flag_format(f)
+            assert f["severity"] == "YELLOW"
 
     def test_grad_and_undergrad_no_flag(self):
         educations = [
-            {"institution": "서울대학교", "degree": "석사", "major": "컴퓨터공학", "start_year": 2018, "end_year": 2020},
-            {"institution": "고려대학교", "degree": "학사", "major": "컴퓨터공학", "start_year": 2014, "end_year": 2018},
+            {
+                "institution": "서울대학교",
+                "degree": "석사",
+                "major": "컴퓨터공학",
+                "start_year": 2018,
+                "end_year": 2020,
+            },
+            {
+                "institution": "고려대학교",
+                "degree": "학사",
+                "major": "컴퓨터공학",
+                "start_year": 2014,
+                "end_year": 2018,
+            },
         ]
         flags = check_education_gaps(educations)
         assert not any("학부" in f.get("detail", "") for f in flags)
 
     def test_undergrad_only_no_flag(self):
         educations = [
-            {"institution": "연세대학교", "degree": "학사", "major": "경영학", "start_year": 2010, "end_year": 2014},
+            {
+                "institution": "연세대학교",
+                "degree": "학사",
+                "major": "경영학",
+                "start_year": 2010,
+                "end_year": 2014,
+            },
         ]
         flags = check_education_gaps(educations)
         assert not any("학부" in f.get("detail", "") for f in flags)
 
     def test_missing_start_year(self):
         educations = [
-            {"institution": "한양대학교", "degree": "학사", "major": "기계공학", "start_year": None, "end_year": 2014},
+            {
+                "institution": "한양대학교",
+                "degree": "학사",
+                "major": "기계공학",
+                "start_year": None,
+                "end_year": 2014,
+            },
         ]
         flags = check_education_gaps(educations)
         assert any("입학년도" in f["detail"] for f in flags)
+        for f in flags:
+            assert_flag_format(f)
+            assert f["severity"] == "YELLOW"
 
     def test_both_years_present_no_flag(self):
         educations = [
-            {"institution": "한양대학교", "degree": "학사", "major": "기계공학", "start_year": 2010, "end_year": 2014},
+            {
+                "institution": "한양대학교",
+                "degree": "학사",
+                "major": "기계공학",
+                "start_year": 2010,
+                "end_year": 2014,
+            },
         ]
         flags = check_education_gaps(educations)
         assert len(flags) == 0
 
     def test_english_degree_keywords(self):
         educations = [
-            {"institution": "MIT", "degree": "Ph.D.", "major": "CS", "start_year": 2015, "end_year": 2020},
+            {
+                "institution": "MIT",
+                "degree": "Ph.D.",
+                "major": "CS",
+                "start_year": 2015,
+                "end_year": 2020,
+            },
         ]
         flags = check_education_gaps(educations)
         assert any("학부" in f["detail"] for f in flags)
 
     def test_mba_without_undergrad(self):
         educations = [
-            {"institution": "서울대학교", "degree": "MBA", "major": "경영학", "start_year": 2020, "end_year": 2022},
+            {
+                "institution": "서울대학교",
+                "degree": "MBA",
+                "major": "경영학",
+                "start_year": 2020,
+                "end_year": 2022,
+            },
         ]
         flags = check_education_gaps(educations)
         assert any("학부" in f["detail"] for f in flags)
@@ -117,19 +180,28 @@ class TestCampusMatch:
         ]
         flags = check_campus_match(educations)
         assert len(flags) == 1
+        assert_flag_format(flags[0])
         assert flags[0]["type"] == "CAMPUS_MISSING"
         assert flags[0]["severity"] == "YELLOW"
 
     def test_campus_keyword_present_no_flag(self):
         educations = [
-            {"institution": "고려대학교 안암캠퍼스", "degree": "학사", "major": "경영학"},
+            {
+                "institution": "고려대학교 안암캠퍼스",
+                "degree": "학사",
+                "major": "경영학",
+            },
         ]
         flags = check_campus_match(educations)
         assert len(flags) == 0
 
     def test_sejong_campus_keyword_no_flag(self):
         educations = [
-            {"institution": "고려대학교 세종캠퍼스", "degree": "학사", "major": "경영학"},
+            {
+                "institution": "고려대학교 세종캠퍼스",
+                "degree": "학사",
+                "major": "경영학",
+            },
         ]
         flags = check_campus_match(educations)
         assert len(flags) == 0
@@ -140,6 +212,7 @@ class TestCampusMatch:
         ]
         flags = check_campus_match(educations)
         assert len(flags) == 1
+        assert_flag_format(flags[0])
         assert flags[0]["type"] == "CAMPUS_DEPARTMENT_MATCH"
         assert flags[0]["severity"] == "RED"
 
@@ -163,7 +236,9 @@ class TestCampusMatch:
             "data_extraction.services.extraction.integrity._load_multi_campus_data",
             return_value={},
         ):
-            flags = check_campus_match([{"institution": "고려대학교", "degree": "학사"}])
+            flags = check_campus_match(
+                [{"institution": "고려대학교", "degree": "학사"}]
+            )
             assert len(flags) == 0
 
 
@@ -179,8 +254,10 @@ class TestBirthYearConsistency:
     def test_different_year_red(self):
         flags = check_birth_year_consistency(1975, 1974)
         assert len(flags) == 1
+        assert_flag_format(flags[0])
         assert flags[0]["type"] == "BIRTH_YEAR_MISMATCH"
         assert flags[0]["severity"] == "RED"
+        assert flags[0]["field"] == "birth_year"
         assert "1974" in flags[0]["detail"]
         assert "1975" in flags[0]["detail"]
 
@@ -203,16 +280,27 @@ class TestCareerDeletedEnhanced:
     def test_single_short_delete_yellow(self):
         """Single short career deletion stays YELLOW."""
         careers = [
-            {"company": "ABC Corp", "start_date": "2020-01", "end_date": "2021-06", "position": "대리"},
+            {
+                "company": "ABC Corp",
+                "start_date": "2020-01",
+                "end_date": "2021-06",
+                "position": "대리",
+            },
         ]
         flags = _check_career_deleted(careers)
         assert len(flags) == 1
+        assert_flag_format(flags[0])
         assert flags[0]["severity"] == "YELLOW"
 
     def test_single_long_delete_red(self):
         """Single long career deletion (>24 months) is RED."""
         careers = [
-            {"company": "ABC Corp", "start_date": "2018-01", "end_date": "2021-06", "position": "과장"},
+            {
+                "company": "ABC Corp",
+                "start_date": "2018-01",
+                "end_date": "2021-06",
+                "position": "과장",
+            },
         ]
         flags = _check_career_deleted(careers)
         assert len(flags) == 1
@@ -221,11 +309,23 @@ class TestCareerDeletedEnhanced:
     def test_two_deletes_all_red(self):
         """Two or more deletions upgrade ALL to RED."""
         careers = [
-            {"company": "ABC Corp", "start_date": "2020-01", "end_date": "2021-01", "position": "사원"},
-            {"company": "DEF Inc", "start_date": "2021-02", "end_date": "2022-01", "position": "대리"},
+            {
+                "company": "ABC Corp",
+                "start_date": "2020-01",
+                "end_date": "2021-01",
+                "position": "사원",
+            },
+            {
+                "company": "DEF Inc",
+                "start_date": "2021-02",
+                "end_date": "2022-01",
+                "position": "대리",
+            },
         ]
         flags = _check_career_deleted(careers)
         assert len(flags) == 2
+        for f in flags:
+            assert_flag_format(f)
         assert all(f["severity"] == "RED" for f in flags)
         assert all("2건 이상" in f["reasoning"] for f in flags)
 

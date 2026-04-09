@@ -26,9 +26,7 @@ def test_filters_dates_and_gender():
                 "end_date_inferred": "2021/08 추정",
             }
         ],
-        "certifications": [
-            {"acquired_date": "2018년 5월 취득"}
-        ],
+        "certifications": [{"acquired_date": "2018년 5월 취득"}],
     }
 
     normalized = apply_regex_field_filters(extracted)

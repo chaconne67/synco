@@ -4,34 +4,36 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0005_p08_submission_draft'),
+        ("projects", "0005_p08_submission_draft"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='interview',
-            name='location',
+            model_name="interview",
+            name="location",
             field=models.CharField(blank=True, max_length=500),
         ),
         migrations.AddField(
-            model_name='interview',
-            name='notes',
+            model_name="interview",
+            name="notes",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='offer',
-            name='decided_at',
+            model_name="offer",
+            name="decided_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='offer',
-            name='notes',
+            model_name="offer",
+            name="notes",
             field=models.TextField(blank=True),
         ),
         migrations.AddConstraint(
-            model_name='interview',
-            constraint=models.UniqueConstraint(fields=('submission', 'round'), name='unique_interview_per_submission_round'),
+            model_name="interview",
+            constraint=models.UniqueConstraint(
+                fields=("submission", "round"),
+                name="unique_interview_per_submission_round",
+            ),
         ),
     ]

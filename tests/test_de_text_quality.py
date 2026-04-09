@@ -18,7 +18,10 @@ class TestClassifyTextQuality:
         assert classify_text_quality("짧은 텍스트") == "too_short"
 
     def test_normal_resume(self):
-        text = "김철수\n서울시 강남구\n이메일: test@test.com\n경력사항\n삼성전자 2020-2024 개발팀 " * 5
+        text = (
+            "김철수\n서울시 강남구\n이메일: test@test.com\n경력사항\n삼성전자 2020-2024 개발팀 "
+            * 5
+        )
         assert classify_text_quality(text) == "ok"
 
     def test_garbled_special_chars(self):

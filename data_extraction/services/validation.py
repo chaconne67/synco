@@ -183,7 +183,9 @@ def compute_field_confidences(
         fc["birth_year"] = 0.0
     elif 1940 <= birth_year <= 2005:
         parsed_year = filename_parsed.get("birth_year")
-        fc["birth_year"] = 1.0 if (parsed_year is None or parsed_year == birth_year) else 0.7
+        fc["birth_year"] = (
+            1.0 if (parsed_year is None or parsed_year == birth_year) else 0.7
+        )
     else:
         fc["birth_year"] = 0.3
 
@@ -208,10 +210,14 @@ def compute_field_confidences(
     fc["address"] = 1.0 if (extracted.get("address") or "").strip() else 0.0
 
     # current_company
-    fc["current_company"] = 1.0 if (extracted.get("current_company") or "").strip() else 0.0
+    fc["current_company"] = (
+        1.0 if (extracted.get("current_company") or "").strip() else 0.0
+    )
 
     # current_position
-    fc["current_position"] = 1.0 if (extracted.get("current_position") or "").strip() else 0.0
+    fc["current_position"] = (
+        1.0 if (extracted.get("current_position") or "").strip() else 0.0
+    )
 
     # summary
     fc["summary"] = 1.0 if (extracted.get("summary") or "").strip() else 0.0
@@ -315,9 +321,13 @@ def validate_extraction(extracted: dict, filename_parsed: dict) -> dict:
     cross_issues = validate_cross_check(filename_parsed, extracted)
     all_issues = rule_issues + cross_issues
 
-    field_scores, category_scores = compute_field_confidences(extracted, filename_parsed)
+    field_scores, category_scores = compute_field_confidences(
+        extracted, filename_parsed
+    )
 
-    score, status = compute_overall_confidence(category_scores, all_issues, field_scores)
+    score, status = compute_overall_confidence(
+        category_scores, all_issues, field_scores
+    )
 
     return {
         "confidence_score": score,

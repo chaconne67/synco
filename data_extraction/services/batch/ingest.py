@@ -21,10 +21,7 @@ def ingest_job_results(job: GeminiBatchJob, *, workers: int = 1) -> dict:
         raise RuntimeError(f"Result file not found: {result_path}")
 
     entries = []
-    items_by_key = {
-        item.request_key: item
-        for item in job.items.all()
-    }
+    items_by_key = {item.request_key: item for item in job.items.all()}
 
     with result_path.open(encoding="utf-8") as handle:
         for raw_line in handle:
@@ -82,7 +79,9 @@ def ingest_job_results(job: GeminiBatchJob, *, workers: int = 1) -> dict:
     }
 
 
-def _handle_result_payload(*, key_to_item: dict[str, GeminiBatchItem], parsed: dict) -> str:
+def _handle_result_payload(
+    *, key_to_item: dict[str, GeminiBatchItem], parsed: dict
+) -> str:
     close_old_connections()
     try:
         key = parsed.get("key")
@@ -101,6 +100,7 @@ def _handle_result_payload(*, key_to_item: dict[str, GeminiBatchItem], parsed: d
             item.save(
                 update_fields=["response_json", "status", "error_message", "updated_at"]
             )
+            _save_placeholder_for_item(item, item.error_message)
             return "failed"
 
         response_text = extract_text_response(parsed)
@@ -110,6 +110,7 @@ def _handle_result_payload(*, key_to_item: dict[str, GeminiBatchItem], parsed: d
             item.save(
                 update_fields=["response_json", "status", "error_message", "updated_at"]
             )
+            _save_placeholder_for_item(item, item.error_message)
             return "failed"
 
         candidate = _ingest_item_response(item, response_text)
@@ -126,12 +127,19 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
         item.status = GeminiBatchItem.Status.FAILED
         item.error_message = "Failed to parse JSON extraction output"
         item.save(update_fields=["status", "error_message", "updated_at"])
+        _save_placeholder_for_item(
+            item,
+            item.error_message,
+            include_raw_text=True,
+        )
         return None
     extracted = apply_regex_field_filters(extracted)
 
     rule_result = validate_extraction(extracted, item.filename_meta or {})
     diagnosis = {
-        "verdict": "pass" if rule_result["validation_status"] == "auto_confirmed" else "fail",
+        "verdict": "pass"
+        if rule_result["validation_status"] == "auto_confirmed"
+        else "fail",
         "issues": rule_result["issues"],
         "field_scores": rule_result["field_confidences"],
         "overall_score": rule_result["confidence_score"],
@@ -198,29 +206,42 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
 
 
 def _load_extracted_json(response_text: str) -> dict | None:
-    raw = response_text.strip()
-    if not raw:
-        return None
+    from data_extraction.services.extraction.sanitizers import parse_llm_json
+
+    return parse_llm_json(response_text)
+
+
+def _save_placeholder_for_item(
+    item: GeminiBatchItem,
+    error_msg: str,
+    *,
+    include_raw_text: bool = False,
+) -> None:
+    """Create placeholder Candidate + Resume for a failed batch item."""
+    from data_extraction.services.save import save_failed_resume, save_text_only_resume
+
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        # Try parsing first JSON object (Gemini sometimes appends extra data)
-        try:
-            decoder = json.JSONDecoder()
-            data, _ = decoder.raw_decode(raw)
-        except (json.JSONDecodeError, ValueError):
-            # Fallback for pre-structured-output fenced code block results
-            if "```" in raw:
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-                try:
-                    data = json.loads(raw.strip())
-                except json.JSONDecodeError:
-                    return None
-            else:
-                return None
-    # Gemini sometimes wraps response in a list: [{...}]
-    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
-        data = data[0]
-    return data if isinstance(data, dict) else None
+        raw_text = ""
+        if include_raw_text and item.raw_text_path:
+            try:
+                raw_text = Path(item.raw_text_path).read_text(encoding="utf-8")
+            except Exception:
+                pass
+
+        if raw_text.strip():
+            save_text_only_resume(
+                item.primary_file,
+                item.category_name,
+                raw_text=raw_text,
+                error_msg=error_msg,
+                filename_meta=item.filename_meta,
+            )
+        else:
+            save_failed_resume(
+                item.primary_file,
+                item.category_name,
+                error_msg,
+                filename_meta=item.filename_meta,
+            )
+    except Exception:
+        pass

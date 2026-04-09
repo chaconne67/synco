@@ -83,10 +83,7 @@ def _same_role(current: dict, other: dict) -> bool:
     return (
         current["department_key"]
         and current["department_key"] == other["department_key"]
-    ) or (
-        current["position_key"]
-        and current["position_key"] == other["position_key"]
-    )
+    ) or (current["position_key"] and current["position_key"] == other["position_key"])
 
 
 def _classify_overlap_case(current: dict, other: dict, overlap_months: int) -> dict:
@@ -229,7 +226,9 @@ def _career_records(candidate: Candidate) -> list[dict]:
         elif raw_end is not None:
             if _month_index(*raw_end) > current_month_index:
                 record["future_end"] = True
-                record["future_end_months"] = _month_index(*raw_end) - current_month_index
+                record["future_end_months"] = (
+                    _month_index(*raw_end) - current_month_index
+                )
                 end = (today.year, today.month)
             else:
                 end = raw_end
@@ -270,9 +269,9 @@ def check_career_overlaps(candidate: Candidate) -> list[dict]:
         for other in intervals[idx + 1 :]:
             if other["start_index"] > current["end_index"]:
                 break
-            overlap_months = min(current["end_index"], other["end_index"]) - other[
-                "start_index"
-            ] + 1
+            overlap_months = (
+                min(current["end_index"], other["end_index"]) - other["start_index"] + 1
+            )
             if overlap_months <= 1:
                 continue
             context = _classify_overlap_case(current, other, overlap_months)
@@ -309,7 +308,10 @@ def check_career_overlaps(candidate: Candidate) -> list[dict]:
     if not overlaps:
         return []
 
-    first = min(overlaps, key=lambda item: (_severity_rank(item["severity"]), -item["overlap_months"]))
+    first = min(
+        overlaps,
+        key=lambda item: (_severity_rank(item["severity"]), -item["overlap_months"]),
+    )
     if first["reason"] == "same_company_same_role_overlap":
         detail = (
             f"{first['career_a']['company']} 내 동일하거나 유사한 역할의 경력 기간이 "
@@ -411,7 +413,9 @@ def check_future_dates(candidate: Candidate) -> list[dict]:
         severity = "YELLOW"
         exception_reason = "significant_future_date"
     elif any(
-        item["date_field"] == "end_date" and item["is_current"] and item["months_ahead"] <= 6
+        item["date_field"] == "end_date"
+        and item["is_current"]
+        and item["months_ahead"] <= 6
         for item in future_items
     ):
         severity = "BLUE"
@@ -560,7 +564,9 @@ def check_education_age(candidate: Candidate) -> list[dict]:
     if not mismatches:
         return []
 
-    first = min(mismatches, key=lambda item: (_severity_rank(item["severity"]), item["age"]))
+    first = min(
+        mismatches, key=lambda item: (_severity_rank(item["severity"]), item["age"])
+    )
     alert = _build_alert(
         alert_type="AGE_MISMATCH",
         severity=first["severity"],

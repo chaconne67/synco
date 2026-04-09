@@ -88,7 +88,9 @@ class TestIdentifyByPhone:
         assert result.candidate == existing_candidate
         assert result.match_reason == "phone"
 
-    def test_match_by_phone_prefers_primary_number_from_multiple_values(self, existing_candidate):
+    def test_match_by_phone_prefers_primary_number_from_multiple_values(
+        self, existing_candidate
+    ):
         from candidates.services.candidate_identity import identify_candidate
 
         extracted = {
@@ -132,7 +134,9 @@ class TestIdentifyPreviousResume:
 
 class TestComparisonContext:
     def test_builds_previous_data_from_matched_candidate(self, db, category):
-        from candidates.services.candidate_identity import build_candidate_comparison_context
+        from candidates.services.candidate_identity import (
+            build_candidate_comparison_context,
+        )
 
         candidate = Candidate.objects.create(
             name="김철수",

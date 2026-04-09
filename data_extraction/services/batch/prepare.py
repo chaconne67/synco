@@ -92,6 +92,19 @@ def prepare_drive_job(
                         filename_meta=group["parsed"],
                         error_message=str(exc),
                     )
+                    # Create placeholder Candidate + Resume so the file
+                    # is visible in the candidate list even if batch prep fails
+                    from data_extraction.services.save import save_failed_resume
+
+                    try:
+                        save_failed_resume(
+                            primary,
+                            current_folder,
+                            f"Batch prepare failed: {exc}",
+                            filename_meta=group["parsed"],
+                        )
+                    except Exception:
+                        pass
 
     request_path = request_file_path(str(job.id))
     prepared_count = 0

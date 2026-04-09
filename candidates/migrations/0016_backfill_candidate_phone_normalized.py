@@ -27,7 +27,9 @@ def _select_primary_phone(phone: str) -> str:
 
     def priority(value: str) -> tuple[int, int]:
         digits = re.sub(r"\D", "", value)
-        is_korean = digits.startswith(("010", "011", "016", "017", "018", "019", "8210"))
+        is_korean = digits.startswith(
+            ("010", "011", "016", "017", "018", "019", "8210")
+        )
         return (0 if is_korean else 1, len(value))
 
     return sorted(candidates, key=priority)[0]
@@ -61,9 +63,11 @@ def clear_phone_normalized(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0015_candidate_phone_normalized_alter_candidate_address_and_more'),
+        (
+            "candidates",
+            "0015_candidate_phone_normalized_alter_candidate_address_and_more",
+        ),
     ]
 
     operations = [

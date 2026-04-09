@@ -140,25 +140,49 @@ class TestValidateExtraction:
 
 class TestCriticalFieldGate:
     def test_name_missing_forces_failed(self):
-        field_scores = {"name": 0.0, "email": 1.0, "phone": 1.0, "careers": 1.0, "educations": 1.0}
+        field_scores = {
+            "name": 0.0,
+            "email": 1.0,
+            "phone": 1.0,
+            "careers": 1.0,
+            "educations": 1.0,
+        }
         category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 0.5}
         score, status = compute_overall_confidence(category_scores, [], field_scores)
         assert status == "failed"
 
     def test_no_email_no_phone_blocks_auto_confirmed(self):
-        field_scores = {"name": 1.0, "email": 0.0, "phone": 0.0, "careers": 1.0, "educations": 1.0}
+        field_scores = {
+            "name": 1.0,
+            "email": 0.0,
+            "phone": 0.0,
+            "careers": 1.0,
+            "educations": 1.0,
+        }
         category_scores = {"인적사항": 0.33, "학력": 1.0, "경력": 1.0, "능력": 1.0}
         score, status = compute_overall_confidence(category_scores, [], field_scores)
         assert status != "auto_confirmed"
 
     def test_email_present_allows_auto_confirmed(self):
-        field_scores = {"name": 1.0, "email": 1.0, "phone": 0.0, "careers": 1.0, "educations": 1.0}
+        field_scores = {
+            "name": 1.0,
+            "email": 1.0,
+            "phone": 0.0,
+            "careers": 1.0,
+            "educations": 1.0,
+        }
         category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 1.0}
         score, status = compute_overall_confidence(category_scores, [], field_scores)
         assert status == "auto_confirmed"
 
     def test_phone_present_allows_auto_confirmed(self):
-        field_scores = {"name": 1.0, "email": 0.0, "phone": 1.0, "careers": 1.0, "educations": 1.0}
+        field_scores = {
+            "name": 1.0,
+            "email": 0.0,
+            "phone": 1.0,
+            "careers": 1.0,
+            "educations": 1.0,
+        }
         category_scores = {"인적사항": 0.67, "학력": 1.0, "경력": 1.0, "능력": 1.0}
         score, status = compute_overall_confidence(category_scores, [], field_scores)
         assert status == "auto_confirmed"

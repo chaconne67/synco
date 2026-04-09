@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0011_career_date_confidence_career_date_evidence_and_more'),
+        ("candidates", "0011_career_date_confidence_career_date_evidence_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='career',
-            name='inferred_capabilities',
-            field=models.TextField(blank=True, help_text='AI가 직책/부서/경력 수준을 바탕으로 추정한 수행 가능 역량'),
+            model_name="career",
+            name="inferred_capabilities",
+            field=models.TextField(
+                blank=True,
+                help_text="AI가 직책/부서/경력 수준을 바탕으로 추정한 수행 가능 역량",
+            ),
         ),
     ]

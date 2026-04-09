@@ -8,7 +8,9 @@ from candidates.services.discrepancy import scan_candidate_discrepancies
 
 @pytest.mark.django_db
 def test_scan_candidate_discrepancies_creates_overlap_and_future_alerts(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="김후보", total_experience_years=4)
     Career.objects.create(
         candidate=candidate,
@@ -35,7 +37,9 @@ def test_scan_candidate_discrepancies_creates_overlap_and_future_alerts(monkeypa
 
 @pytest.mark.django_db
 def test_scan_candidate_discrepancies_ignores_one_month_overlap(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="한달중복", total_experience_years=4)
     Career.objects.create(
         candidate=candidate,
@@ -57,7 +61,9 @@ def test_scan_candidate_discrepancies_ignores_one_month_overlap(monkeypatch):
 
 @pytest.mark.django_db
 def test_scan_candidate_discrepancies_ignores_same_company_overlap(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="부서이동", total_experience_years=10)
     Career.objects.create(
         candidate=candidate,
@@ -82,8 +88,12 @@ def test_scan_candidate_discrepancies_ignores_same_company_overlap(monkeypatch):
 
 
 @pytest.mark.django_db
-def test_scan_candidate_discrepancies_marks_same_role_same_company_overlap_as_reference(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+def test_scan_candidate_discrepancies_marks_same_role_same_company_overlap_as_reference(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="중복기재", total_experience_years=10)
     Career.objects.create(
         candidate=candidate,
@@ -106,12 +116,18 @@ def test_scan_candidate_discrepancies_marks_same_role_same_company_overlap_as_re
 
     overlap = next(alert for alert in report.alerts if alert["type"] == "OVERLAP")
     assert overlap["severity"] == "BLUE"
-    assert overlap["evidence"]["examples"][0]["reason"] == "same_company_same_role_overlap"
+    assert (
+        overlap["evidence"]["examples"][0]["reason"] == "same_company_same_role_overlap"
+    )
 
 
 @pytest.mark.django_db
-def test_scan_candidate_discrepancies_downgrades_short_cross_company_overlap(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+def test_scan_candidate_discrepancies_downgrades_short_cross_company_overlap(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="짧은이직중복", total_experience_years=10)
     Career.objects.create(
         candidate=candidate,
@@ -130,7 +146,10 @@ def test_scan_candidate_discrepancies_downgrades_short_cross_company_overlap(mon
 
     overlap = next(alert for alert in report.alerts if alert["type"] == "OVERLAP")
     assert overlap["severity"] == "BLUE"
-    assert overlap["evidence"]["examples"][0]["reason"] == "short_cross_company_transition_overlap"
+    assert (
+        overlap["evidence"]["examples"][0]["reason"]
+        == "short_cross_company_transition_overlap"
+    )
 
 
 @pytest.mark.django_db
@@ -185,7 +204,9 @@ def test_scan_candidate_discrepancies_marks_early_undergraduate_entry_as_referen
 
     report = scan_candidate_discrepancies(candidate)
 
-    age_alert = next(alert for alert in report.alerts if alert["type"] == "AGE_MISMATCH")
+    age_alert = next(
+        alert for alert in report.alerts if alert["type"] == "AGE_MISMATCH"
+    )
     assert age_alert["severity"] == "BLUE"
     assert "대학교 입학 시점" in age_alert["detail"]
 
@@ -203,13 +224,17 @@ def test_scan_candidate_discrepancies_keeps_strong_education_age_mismatch_as_war
 
     report = scan_candidate_discrepancies(candidate)
 
-    age_alert = next(alert for alert in report.alerts if alert["type"] == "AGE_MISMATCH")
+    age_alert = next(
+        alert for alert in report.alerts if alert["type"] == "AGE_MISMATCH"
+    )
     assert age_alert["severity"] == "YELLOW"
 
 
 @pytest.mark.django_db
 def test_scan_discrepancies_command_creates_report(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="커맨드대상", total_experience_years=1)
     Career.objects.create(
         candidate=candidate,
@@ -226,8 +251,12 @@ def test_scan_discrepancies_command_creates_report(monkeypatch):
 
 
 @pytest.mark.django_db
-def test_scan_candidate_discrepancies_downgrades_small_future_date_to_reference(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+def test_scan_candidate_discrepancies_downgrades_small_future_date_to_reference(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="작은미래")
     Career.objects.create(
         candidate=candidate,
@@ -238,14 +267,18 @@ def test_scan_candidate_discrepancies_downgrades_small_future_date_to_reference(
 
     report = scan_candidate_discrepancies(candidate)
 
-    future_alert = next(alert for alert in report.alerts if alert["type"] == "FUTURE_DATE")
+    future_alert = next(
+        alert for alert in report.alerts if alert["type"] == "FUTURE_DATE"
+    )
     assert future_alert["severity"] == "BLUE"
     assert future_alert["evidence"]["applied_exception"] == "near_future_date"
 
 
 @pytest.mark.django_db
 def test_scan_candidate_discrepancies_applies_career_confidence_gate(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(
         name="낮은신뢰도경력",
         field_confidences={"careers": 0.4},
@@ -287,14 +320,20 @@ def test_scan_candidate_discrepancies_applies_education_confidence_gate():
 
     report = scan_candidate_discrepancies(candidate)
 
-    age_alert = next(alert for alert in report.alerts if alert["type"] == "AGE_MISMATCH")
+    age_alert = next(
+        alert for alert in report.alerts if alert["type"] == "AGE_MISMATCH"
+    )
     assert age_alert["severity"] == "BLUE"
     assert age_alert["confidence_gate"]["downgraded"] is True
 
 
 @pytest.mark.django_db
-def test_scan_candidate_discrepancies_uses_resume_reference_date_for_experience_total(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+def test_scan_candidate_discrepancies_uses_resume_reference_date_for_experience_total(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(
         name="기준일후보",
         total_experience_years=10,
@@ -322,7 +361,9 @@ def test_scan_candidate_discrepancies_uses_resume_reference_date_for_experience_
 
 @pytest.mark.django_db
 def test_scan_candidate_discrepancies_ignores_small_experience_gap(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="작은차이", total_experience_years=10)
     Career.objects.create(
         candidate=candidate,
@@ -341,7 +382,9 @@ def test_scan_candidate_discrepancies_ignores_small_experience_gap(monkeypatch):
 def test_scan_candidate_discrepancies_downgrades_experience_mismatch_when_latest_career_missing_end_date(
     monkeypatch,
 ):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="종료일누락", total_experience_years=22)
     Career.objects.create(
         candidate=candidate,
@@ -365,7 +408,9 @@ def test_scan_candidate_discrepancies_downgrades_experience_mismatch_when_latest
 
     report = scan_candidate_discrepancies(candidate)
 
-    mismatch = next(alert for alert in report.alerts if alert["type"] == "EXPERIENCE_MISMATCH")
+    mismatch = next(
+        alert for alert in report.alerts if alert["type"] == "EXPERIENCE_MISMATCH"
+    )
     assert mismatch["severity"] == "YELLOW"
     assert mismatch["evidence"]["applied_exception"] == "latest_career_missing_end_date"
     assert mismatch["evidence"]["exception_context"]["company"] == "최근회사"
@@ -373,8 +418,12 @@ def test_scan_candidate_discrepancies_downgrades_experience_mismatch_when_latest
 
 
 @pytest.mark.django_db
-def test_scan_candidate_discrepancies_uses_warning_for_boundary_experience_gap(monkeypatch):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+def test_scan_candidate_discrepancies_uses_warning_for_boundary_experience_gap(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="경계차이", total_experience_years=9)
     Career.objects.create(
         candidate=candidate,
@@ -398,7 +447,9 @@ def test_scan_candidate_discrepancies_uses_warning_for_boundary_experience_gap(m
 
     report = scan_candidate_discrepancies(candidate)
 
-    mismatch = next(alert for alert in report.alerts if alert["type"] == "EXPERIENCE_MISMATCH")
+    mismatch = next(
+        alert for alert in report.alerts if alert["type"] == "EXPERIENCE_MISMATCH"
+    )
     assert mismatch["severity"] == "YELLOW"
 
 
@@ -406,7 +457,9 @@ def test_scan_candidate_discrepancies_uses_warning_for_boundary_experience_gap(m
 def test_scan_candidate_discrepancies_downgrades_experience_mismatch_when_ignored_careers_exist(
     monkeypatch,
 ):
-    monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    monkeypatch.setattr(
+        timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+    )
     candidate = Candidate.objects.create(name="누락경력반영", total_experience_years=12)
     Career.objects.create(
         candidate=candidate,
@@ -429,7 +482,12 @@ def test_scan_candidate_discrepancies_downgrades_experience_mismatch_when_ignore
 
     report = scan_candidate_discrepancies(candidate)
 
-    mismatch = next(alert for alert in report.alerts if alert["type"] == "EXPERIENCE_MISMATCH")
+    mismatch = next(
+        alert for alert in report.alerts if alert["type"] == "EXPERIENCE_MISMATCH"
+    )
     assert mismatch["severity"] == "YELLOW"
-    assert mismatch["evidence"]["applied_exception"] == "ignored_career_in_total_experience"
+    assert (
+        mismatch["evidence"]["applied_exception"]
+        == "ignored_career_in_total_experience"
+    )
     assert "계산에서 제외" in mismatch["detail"]

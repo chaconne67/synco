@@ -4,25 +4,44 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0002_add_jd_analysis_fields'),
+        ("projects", "0002_add_jd_analysis_fields"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contact',
-            name='channel',
-            field=models.CharField(blank=True, choices=[('전화', '전화'), ('문자', '문자'), ('카톡', '카톡'), ('이메일', '이메일'), ('LinkedIn', 'LinkedIn')], max_length=20),
+            model_name="contact",
+            name="channel",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("전화", "전화"),
+                    ("문자", "문자"),
+                    ("카톡", "카톡"),
+                    ("이메일", "이메일"),
+                    ("LinkedIn", "LinkedIn"),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='contacted_at',
+            model_name="contact",
+            name="contacted_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='result',
-            field=models.CharField(choices=[('응답', '응답'), ('미응답', '미응답'), ('거절', '거절'), ('관심', '관심'), ('보류', '보류'), ('예정', '예정')], max_length=20),
+            model_name="contact",
+            name="result",
+            field=models.CharField(
+                choices=[
+                    ("응답", "응답"),
+                    ("미응답", "미응답"),
+                    ("거절", "거절"),
+                    ("관심", "관심"),
+                    ("보류", "보류"),
+                    ("예정", "예정"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

@@ -7,7 +7,7 @@ from data_extraction.services.pipeline import (
 
 
 @patch("data_extraction.services.pipeline.validate_extraction")
-@patch("data_extraction.services.pipeline.extract_candidate_data")
+@patch("data_extraction.services.extraction.gemini.extract_candidate_data")
 def test_pass_on_first_attempt(mock_extract, mock_validate):
     mock_extract.return_value = {"name": "홍길동", "careers": []}
     mock_validate.return_value = {
@@ -29,7 +29,7 @@ def test_pass_on_first_attempt(mock_extract, mock_validate):
 
 
 @patch("data_extraction.services.pipeline.validate_extraction")
-@patch("data_extraction.services.pipeline.extract_candidate_data")
+@patch("data_extraction.services.extraction.gemini.extract_candidate_data")
 def test_fail_triggers_human_review(mock_extract, mock_validate):
     mock_extract.return_value = {"name": "홍길동", "careers": []}
     mock_validate.return_value = {
@@ -51,7 +51,7 @@ def test_fail_triggers_human_review(mock_extract, mock_validate):
     assert result["attempts"] == 1
 
 
-@patch("data_extraction.services.pipeline.extract_candidate_data")
+@patch("data_extraction.services.extraction.gemini.extract_candidate_data")
 def test_extraction_returns_none(mock_extract):
     mock_extract.return_value = None
     result = run_extraction_with_retry(
@@ -66,7 +66,7 @@ def test_extraction_returns_none(mock_extract):
 
 
 @patch("data_extraction.services.pipeline.validate_extraction")
-@patch("data_extraction.services.pipeline.extract_candidate_data")
+@patch("data_extraction.services.extraction.gemini.extract_candidate_data")
 def test_returns_raw_text_used(mock_extract, mock_validate):
     mock_extract.return_value = {"name": "테스트"}
     mock_validate.return_value = {
@@ -81,7 +81,7 @@ def test_returns_raw_text_used(mock_extract, mock_validate):
 
 
 @patch("data_extraction.services.pipeline.validate_extraction")
-@patch("data_extraction.services.pipeline.extract_candidate_data")
+@patch("data_extraction.services.extraction.gemini.extract_candidate_data")
 def test_applies_regex_filters_before_validation(mock_extract, mock_validate):
     mock_extract.return_value = {
         "name": "테스트",
@@ -98,7 +98,9 @@ def test_applies_regex_filters_before_validation(mock_extract, mock_validate):
         "issues": [],
     }
 
-    result = run_extraction_with_retry("원본텍스트 이력서 내용 " * 10, "/tmp/t.docx", "HR", {})
+    result = run_extraction_with_retry(
+        "원본텍스트 이력서 내용 " * 10, "/tmp/t.docx", "HR", {}
+    )
 
     assert result["extracted"]["phone"] == "+82-10-9034-5062"
     assert result["extracted"]["resume_reference_date"] == "2025-12"

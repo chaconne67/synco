@@ -39,9 +39,7 @@ def finalize_draft(draft) -> None:
             f"{json.dumps(draft.consultation_summary, ensure_ascii=False, indent=2)}"
         )
     if draft.consultation_input:
-        prompt_parts.append(
-            f"## 상담 원문 (참고용)\n{draft.consultation_input}"
-        )
+        prompt_parts.append(f"## 상담 원문 (참고용)\n{draft.consultation_input}")
 
     api_key = getattr(settings, "GEMINI_API_KEY", "")
     if not api_key:
@@ -52,8 +50,7 @@ def finalize_draft(draft) -> None:
         model=GEMINI_MODEL,
         contents=(
             "아래 초안과 상담 내용을 병합하여 "
-            "최종 추천 서류 데이터를 완성하세요.\n\n"
-            + "\n\n".join(prompt_parts)
+            "최종 추천 서류 데이터를 완성하세요.\n\n" + "\n\n".join(prompt_parts)
         ),
         config=genai.types.GenerateContentConfig(
             system_instruction=FINALIZE_SYSTEM_PROMPT,

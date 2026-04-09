@@ -111,7 +111,7 @@ class TestStep2Prompts:
 
 
 class TestStep1Extract:
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_returns_raw_data_on_success(self, mock_call):
         mock_call.return_value = {
             "name": "테스트",
@@ -122,16 +122,20 @@ class TestStep1Extract:
         assert result["name"] == "테스트"
         assert len(result["careers"]) == 1
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_returns_none_on_failure(self, mock_call):
         mock_call.return_value = None
         result = extract_raw_data("이력서 텍스트")
         assert result is None
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_retries_with_feedback(self, mock_call):
         mock_call.side_effect = [
-            {"name": "테스트", "careers": [{"company": "A사", "source_section": "경력란"}], "educations": []},
+            {
+                "name": "테스트",
+                "careers": [{"company": "A사", "source_section": "경력란"}],
+                "educations": [],
+            },
         ]
         result = extract_raw_data(
             "이력서 텍스트",
@@ -147,59 +151,100 @@ class TestStep1Extract:
 
 
 class TestNormalizeCareerGroup:
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_multiple_careers_returned(self, mock_call):
         mock_call.return_value = {
             "careers": [
-                {"company": "A사", "start_date": "2022-01", "end_date": None, "is_current": True, "order": 0},
-                {"company": "B사", "start_date": "2020-01", "end_date": "2021-12", "is_current": False, "order": 1},
+                {
+                    "company": "A사",
+                    "start_date": "2022-01",
+                    "end_date": None,
+                    "is_current": True,
+                    "order": 0,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2020-01",
+                    "end_date": "2021-12",
+                    "is_current": False,
+                    "order": 1,
+                },
             ],
             "flags": [],
         }
         entries = [
-            {"company": "A사", "start_date": "2022.01", "end_date": "현재", "source_section": "경력란"},
-            {"company": "B사", "start_date": "2020.01", "end_date": "2021.12", "source_section": "경력란"},
+            {
+                "company": "A사",
+                "start_date": "2022.01",
+                "end_date": "현재",
+                "source_section": "경력란",
+            },
+            {
+                "company": "B사",
+                "start_date": "2020.01",
+                "end_date": "2021.12",
+                "source_section": "경력란",
+            },
         ]
         result = normalize_career_group(entries, "전체 경력")
         assert len(result["careers"]) == 2
         assert result["flags"] == []
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_date_conflict_detected(self, mock_call):
         mock_call.return_value = {
             "careers": [
-                {"company": "카모스테크", "start_date": "1999-02", "end_date": "2003-07", "is_current": False, "order": 0},
+                {
+                    "company": "카모스테크",
+                    "start_date": "1999-02",
+                    "end_date": "2003-07",
+                    "is_current": False,
+                    "order": 0,
+                },
             ],
-            "flags": [{
-                "type": "DATE_CONFLICT",
-                "severity": "RED",
-                "field": "careers.start_date",
-                "detail": "시작일 7년 차이",
-                "chosen": "1999-02",
-                "alternative": "1992-02",
-                "reasoning": "다수의 섹션이 1999년, 1개 섹션만 1992년",
-            }],
+            "flags": [
+                {
+                    "type": "DATE_CONFLICT",
+                    "severity": "RED",
+                    "field": "careers.start_date",
+                    "detail": "시작일 7년 차이",
+                    "chosen": "1999-02",
+                    "alternative": "1992-02",
+                    "reasoning": "다수의 섹션이 1999년, 1개 섹션만 1992년",
+                }
+            ],
         }
         entries = [
             {"company": "카모스테크", "start_date": "1999.2", "source_section": "국문"},
-            {"company": "カモステック", "start_date": "1992.2", "source_section": "일문"},
+            {
+                "company": "カモステック",
+                "start_date": "1992.2",
+                "source_section": "일문",
+            },
         ]
         result = normalize_career_group(entries, "전체 경력")
         assert len(result["flags"]) == 1
         assert result["flags"][0]["type"] == "DATE_CONFLICT"
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_single_career_fallback(self, mock_call):
         mock_call.return_value = {
-            "career": {"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "is_current": False},
+            "career": {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": "2022-06",
+                "is_current": False,
+            },
             "flags": [],
         }
-        entries = [{"company": "A사", "start_date": "2020.01", "source_section": "경력란"}]
+        entries = [
+            {"company": "A사", "start_date": "2020.01", "source_section": "경력란"}
+        ]
         result = normalize_career_group(entries, "전체 경력")
         assert "careers" in result
         assert len(result["careers"]) == 1
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_gemini_failure_returns_none(self, mock_call):
         mock_call.return_value = None
         result = normalize_career_group([], "전체 경력")
@@ -207,26 +252,65 @@ class TestNormalizeCareerGroup:
 
 
 class TestNormalizeEducationGroup:
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_short_degree_detected(self, mock_call):
         mock_call.return_value = {
-            "educations": [{"institution": "X대", "degree": "학사", "start_year": 2020, "end_year": 2022}],
-            "flags": [{"type": "SHORT_DEGREE", "severity": "YELLOW", "field": "educations",
-                        "detail": "4년제 2년 재학", "chosen": None, "alternative": None,
-                        "reasoning": "편입 가능성 확인 필요"}],
+            "educations": [
+                {
+                    "institution": "X대",
+                    "degree": "학사",
+                    "start_year": 2020,
+                    "end_year": 2022,
+                }
+            ],
+            "flags": [
+                {
+                    "type": "SHORT_DEGREE",
+                    "severity": "YELLOW",
+                    "field": "educations",
+                    "detail": "4년제 2년 재학",
+                    "chosen": None,
+                    "alternative": None,
+                    "reasoning": "편입 가능성 확인 필요",
+                }
+            ],
         }
-        entries = [{"institution": "X대", "degree": "학사", "start_year": 2020, "end_year": 2022, "source_section": "학력란"}]
+        entries = [
+            {
+                "institution": "X대",
+                "degree": "학사",
+                "start_year": 2020,
+                "end_year": 2022,
+                "source_section": "학력란",
+            }
+        ]
         result = normalize_education_group(entries)
         assert len(result["flags"]) == 1
         assert result["flags"][0]["type"] == "SHORT_DEGREE"
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_dropout_no_flag(self, mock_call):
         mock_call.return_value = {
-            "educations": [{"institution": "Y대", "degree": "중퇴", "start_year": 2018, "end_year": 2020, "is_abroad": False}],
+            "educations": [
+                {
+                    "institution": "Y대",
+                    "degree": "중퇴",
+                    "start_year": 2018,
+                    "end_year": 2020,
+                    "is_abroad": False,
+                }
+            ],
             "flags": [],
         }
-        entries = [{"institution": "Y대", "degree": "중퇴", "start_year": 2018, "end_year": 2020, "source_section": "학력란"}]
+        entries = [
+            {
+                "institution": "Y대",
+                "degree": "중퇴",
+                "start_year": 2018,
+                "end_year": 2020,
+                "source_section": "학력란",
+            }
+        ]
         result = normalize_education_group(entries)
         assert result["flags"] == []
 
@@ -234,7 +318,7 @@ class TestNormalizeEducationGroup:
         result = normalize_education_group([])
         assert result == {"educations": [], "flags": []}
 
-    @patch("data_extraction.services.extraction.integrity._call_gemini")
+    @patch("data_extraction.services.extraction.integrity._call_llm")
     def test_gemini_failure_returns_none(self, mock_call):
         mock_call.return_value = None
         entries = [{"institution": "Z대", "degree": "학사", "source_section": "학력란"}]
@@ -266,22 +350,52 @@ class TestNormalizeSkills:
 class TestPeriodOverlaps:
     def test_no_overlap_sequential(self):
         careers = [
-            {"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "is_current": False},
-            {"company": "B사", "start_date": "2022-07", "end_date": "2024-01", "is_current": False},
+            {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": "2022-06",
+                "is_current": False,
+            },
+            {
+                "company": "B사",
+                "start_date": "2022-07",
+                "end_date": "2024-01",
+                "is_current": False,
+            },
         ]
         assert check_period_overlaps(careers) == []
 
     def test_short_overlap_normal(self):
         careers = [
-            {"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "is_current": False},
-            {"company": "B사", "start_date": "2022-05", "end_date": "2024-01", "is_current": False},
+            {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": "2022-06",
+                "is_current": False,
+            },
+            {
+                "company": "B사",
+                "start_date": "2022-05",
+                "end_date": "2024-01",
+                "is_current": False,
+            },
         ]
         assert check_period_overlaps(careers) == []
 
     def test_long_overlap_flagged(self):
         careers = [
-            {"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "is_current": False},
-            {"company": "B사", "start_date": "2021-01", "end_date": "2024-01", "is_current": False},
+            {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": "2022-06",
+                "is_current": False,
+            },
+            {
+                "company": "B사",
+                "start_date": "2021-01",
+                "end_date": "2024-01",
+                "is_current": False,
+            },
         ]
         result = check_period_overlaps(careers)
         assert len(result) == 1
@@ -290,52 +404,124 @@ class TestPeriodOverlaps:
 
     def test_current_career_uses_today(self):
         careers = [
-            {"company": "A사", "start_date": "2020-01", "end_date": None, "is_current": True},
-            {"company": "B사", "start_date": "2023-01", "end_date": "2024-01", "is_current": False},
+            {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": None,
+                "is_current": True,
+            },
+            {
+                "company": "B사",
+                "start_date": "2023-01",
+                "end_date": "2024-01",
+                "is_current": False,
+            },
         ]
         result = check_period_overlaps(careers)
         assert len(result) >= 1
 
     def test_affiliated_group_excluded(self):
         careers = [
-            {"company": "삼성카드", "start_date": "2002-08", "end_date": "2006-05", "is_current": False},
-            {"company": "삼성그룹 T/F", "start_date": "2004-03", "end_date": "2005-03", "is_current": False},
+            {
+                "company": "삼성카드",
+                "start_date": "2002-08",
+                "end_date": "2006-05",
+                "is_current": False,
+            },
+            {
+                "company": "삼성그룹 T/F",
+                "start_date": "2004-03",
+                "end_date": "2005-03",
+                "is_current": False,
+            },
         ]
-        affiliated = [{"canonical_name": "삼성", "entry_indices": [0, 1], "relationship": "affiliated_group"}]
+        affiliated = [
+            {
+                "canonical_name": "삼성",
+                "entry_indices": [0, 1],
+                "relationship": "affiliated_group",
+            }
+        ]
         assert check_period_overlaps(careers, affiliated_groups=affiliated) == []
 
     def test_repeated_overlaps_red(self):
         careers = [
-            {"company": "A사", "start_date": "1994-02", "end_date": "1995-11", "is_current": False},
-            {"company": "B사", "start_date": "1995-01", "end_date": "1997-10", "is_current": False},
-            {"company": "C사", "start_date": "1996-10", "end_date": "2000-03", "is_current": False},
+            {
+                "company": "A사",
+                "start_date": "1994-02",
+                "end_date": "1995-11",
+                "is_current": False,
+            },
+            {
+                "company": "B사",
+                "start_date": "1995-01",
+                "end_date": "1997-10",
+                "is_current": False,
+            },
+            {
+                "company": "C사",
+                "start_date": "1996-10",
+                "end_date": "2000-03",
+                "is_current": False,
+            },
         ]
         result = check_period_overlaps(careers)
         assert any(f["severity"] == "RED" for f in result)
 
     def test_no_end_date_not_current_skipped(self):
         careers = [
-            {"company": "A사", "start_date": "2020-01", "end_date": None, "is_current": False},
-            {"company": "B사", "start_date": "2020-06", "end_date": "2022-01", "is_current": False},
+            {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": None,
+                "is_current": False,
+            },
+            {
+                "company": "B사",
+                "start_date": "2020-06",
+                "end_date": "2022-01",
+                "is_current": False,
+            },
         ]
         assert check_period_overlaps(careers) == []
 
 
 class TestCareerEducationOverlap:
     def test_no_overlap(self):
-        careers = [{"company": "A사", "start_date": "2020-01", "end_date": "2024-01", "is_current": False}]
+        careers = [
+            {
+                "company": "A사",
+                "start_date": "2020-01",
+                "end_date": "2024-01",
+                "is_current": False,
+            }
+        ]
         educations = [{"institution": "서울대", "start_year": 2014, "end_year": 2018}]
         assert check_career_education_overlap(careers, educations) == []
 
     def test_long_overlap_flagged(self):
-        careers = [{"company": "A사", "start_date": "2016-01", "end_date": "2020-01", "is_current": False}]
+        careers = [
+            {
+                "company": "A사",
+                "start_date": "2016-01",
+                "end_date": "2020-01",
+                "is_current": False,
+            }
+        ]
         educations = [{"institution": "서울대", "start_year": 2014, "end_year": 2018}]
         result = check_career_education_overlap(careers, educations)
         assert len(result) == 1
         assert result[0]["type"] == "CAREER_EDUCATION_OVERLAP"
 
     def test_short_overlap_normal(self):
-        careers = [{"company": "A사", "start_date": "2017-09", "end_date": "2020-01", "is_current": False}]
+        careers = [
+            {
+                "company": "A사",
+                "start_date": "2017-09",
+                "end_date": "2020-01",
+                "is_current": False,
+            }
+        ]
         educations = [{"institution": "서울대", "start_year": 2014, "end_year": 2018}]
         assert check_career_education_overlap(careers, educations) == []
 
@@ -358,23 +544,37 @@ class TestNormalizeCompany:
         assert _normalize_company("Apple Corp.") == "apple"
 
     def test_case_insensitive(self):
-        assert _normalize_company("Samsung Electronics") == _normalize_company("samsung electronics")
+        assert _normalize_company("Samsung Electronics") == _normalize_company(
+            "samsung electronics"
+        )
 
     def test_whitespace_normalization(self):
         assert _normalize_company("  삼성  전자  ") == "삼성 전자"
 
     def test_korean_suffix_variants_match(self):
-        assert _normalize_company("㈜현대자동차") == _normalize_company("(주)현대자동차")
+        assert _normalize_company("㈜현대자동차") == _normalize_company(
+            "(주)현대자동차"
+        )
 
 
 class TestCrossVersionNoChanges:
     def test_identical_data_no_flags(self):
         data = {
             "careers": [
-                {"company": "삼성전자", "start_date": "2020-01", "end_date": "2023-06", "position": "과장"},
+                {
+                    "company": "삼성전자",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": "과장",
+                },
             ],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         assert compare_versions(data, data) == []
@@ -388,14 +588,29 @@ class TestCareerDeleted:
     def test_short_career_deleted_yellow(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2022-01", "end_date": "2023-06", "position": None},
-                {"company": "B사", "start_date": "2020-01", "end_date": "2021-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2022-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2020-01",
+                    "end_date": "2021-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2022-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2022-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -408,14 +623,29 @@ class TestCareerDeleted:
     def test_long_career_deleted_red(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2022-01", "end_date": "2023-06", "position": None},
-                {"company": "B사", "start_date": "2018-01", "end_date": "2021-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2022-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2018-01",
+                    "end_date": "2021-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2022-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2022-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -427,13 +657,23 @@ class TestCareerDeleted:
     def test_deleted_career_fuzzy_match(self):
         previous = {
             "careers": [
-                {"company": "㈜삼성전자", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "㈜삼성전자",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "(주)삼성전자", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "(주)삼성전자",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -445,13 +685,23 @@ class TestCareerPeriodChanged:
     def test_minor_date_change_no_flag(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-03", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-03",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -461,13 +711,23 @@ class TestCareerPeriodChanged:
     def test_significant_start_change_yellow(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2019-06", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2019-06",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -480,13 +740,23 @@ class TestCareerPeriodChanged:
     def test_significant_end_change_yellow(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-01", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-01",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-12", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-12",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -498,15 +768,35 @@ class TestCareerPeriodChanged:
     def test_multiple_careers_changed_red(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "position": None},
-                {"company": "B사", "start_date": "2018-01", "end_date": "2019-12", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2022-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2018-01",
+                    "end_date": "2019-12",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2019-01", "end_date": "2023-06", "position": None},
-                {"company": "B사", "start_date": "2017-01", "end_date": "2020-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2019-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2017-01",
+                    "end_date": "2020-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -518,13 +808,23 @@ class TestCareerPeriodChanged:
     def test_period_changed_with_suffix_variation(self):
         previous = {
             "careers": [
-                {"company": "주식회사 카카오", "start_date": "2020-01", "end_date": "2022-06", "position": None},
+                {
+                    "company": "주식회사 카카오",
+                    "start_date": "2020-01",
+                    "end_date": "2022-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "카카오", "start_date": "2019-01", "end_date": "2022-06", "position": None},
+                {
+                    "company": "카카오",
+                    "start_date": "2019-01",
+                    "end_date": "2022-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -537,14 +837,29 @@ class TestCareerAddedRetroactively:
     def test_new_past_career_yellow(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
-                {"company": "Z사", "start_date": "2017-01", "end_date": "2019-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "Z사",
+                    "start_date": "2017-01",
+                    "end_date": "2019-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -557,14 +872,29 @@ class TestCareerAddedRetroactively:
     def test_new_recent_career_no_flag(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
-                {"company": "B사", "start_date": "2023-07", "end_date": "2024-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2023-07",
+                    "end_date": "2024-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -574,14 +904,29 @@ class TestCareerAddedRetroactively:
     def test_new_career_no_end_date_no_flag(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
-                {"company": "B사", "start_date": "2023-07", "end_date": None, "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2023-07",
+                    "end_date": None,
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -594,13 +939,23 @@ class TestEducationChanged:
         previous = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         current = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 석사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 석사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         flags = compare_versions(current, previous)
@@ -614,13 +969,23 @@ class TestEducationChanged:
         previous = {
             "careers": [],
             "educations": [
-                {"institution": "고려대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "고려대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         current = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         flags = compare_versions(current, previous)
@@ -634,7 +999,12 @@ class TestEducationChanged:
         data = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         assert compare_versions(data, data) == []
@@ -643,14 +1013,29 @@ class TestEducationChanged:
         previous = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         current = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
-                {"institution": "MIT", "degree": "MBA", "start_year": 2019, "end_year": 2021},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
+                {
+                    "institution": "MIT",
+                    "degree": "MBA",
+                    "start_year": 2019,
+                    "end_year": 2021,
+                },
             ],
         }
         flags = compare_versions(current, previous)
@@ -660,13 +1045,23 @@ class TestEducationChanged:
         previous = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": None, "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": None,
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         current = {
             "careers": [],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2014, "end_year": 2018},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
             ],
         }
         flags = compare_versions(current, previous)
@@ -677,20 +1072,50 @@ class TestCrossVersionComprehensive:
     def test_multiple_flag_types_combined(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": "과장"},
-                {"company": "B사", "start_date": "2017-01", "end_date": "2019-12", "position": "대리"},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": "과장",
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2017-01",
+                    "end_date": "2019-12",
+                    "position": "대리",
+                },
             ],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 학사", "start_year": 2012, "end_year": 2016},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 학사",
+                    "start_year": 2012,
+                    "end_year": 2016,
+                },
             ],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2019-07", "end_date": "2023-06", "position": "과장"},
-                {"company": "C사", "start_date": "2015-01", "end_date": "2016-12", "position": "사원"},
+                {
+                    "company": "A사",
+                    "start_date": "2019-07",
+                    "end_date": "2023-06",
+                    "position": "과장",
+                },
+                {
+                    "company": "C사",
+                    "start_date": "2015-01",
+                    "end_date": "2016-12",
+                    "position": "사원",
+                },
             ],
             "educations": [
-                {"institution": "서울대학교", "degree": "경영학 석사", "start_year": 2012, "end_year": 2016},
+                {
+                    "institution": "서울대학교",
+                    "degree": "경영학 석사",
+                    "start_year": 2012,
+                    "end_year": 2016,
+                },
             ],
         }
         flags = compare_versions(current, previous)
@@ -703,32 +1128,65 @@ class TestCrossVersionComprehensive:
     def test_flag_format_complete(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
-                {"company": "B사", "start_date": "2017-01", "end_date": "2019-12", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
+                {
+                    "company": "B사",
+                    "start_date": "2017-01",
+                    "end_date": "2019-12",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         flags = compare_versions(current, previous)
-        required_keys = {"type", "severity", "field", "detail", "chosen", "alternative", "reasoning"}
+        required_keys = {
+            "type",
+            "severity",
+            "field",
+            "detail",
+            "chosen",
+            "alternative",
+            "reasoning",
+        }
         for flag in flags:
             assert set(flag.keys()) == required_keys
 
     def test_exactly_3_month_diff_not_flagged(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
         current = {
             "careers": [
-                {"company": "A사", "start_date": "2020-04", "end_date": "2023-06", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-04",
+                    "end_date": "2023-06",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -738,7 +1196,12 @@ class TestCrossVersionComprehensive:
     def test_exactly_24_month_career_deleted_yellow(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2022-01", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2022-01",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -750,7 +1213,12 @@ class TestCrossVersionComprehensive:
     def test_25_month_career_deleted_red(self):
         previous = {
             "careers": [
-                {"company": "A사", "start_date": "2020-01", "end_date": "2022-02", "position": None},
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2022-02",
+                    "position": None,
+                },
             ],
             "educations": [],
         }
@@ -1038,11 +1506,15 @@ class TestValidateStep2:
         }
         issues = validate_step2(normalized)
         errors = [i for i in issues if i["severity"] == "error"]
-        assert any("start_date" in e["message"] and "YYYY-MM" in e["message"] for e in errors)
+        assert any(
+            "start_date" in e["message"] and "YYYY-MM" in e["message"] for e in errors
+        )
 
     def test_invalid_end_date_format(self):
         normalized = {
-            "careers": [{"company": "A사", "start_date": "2020-01", "end_date": "June 2022"}],
+            "careers": [
+                {"company": "A사", "start_date": "2020-01", "end_date": "June 2022"}
+            ],
             "flags": [],
         }
         issues = validate_step2(normalized)
@@ -1118,6 +1590,32 @@ class TestValidateStep2:
 # ===========================================================================
 
 
+MOCK_RAW_DATA_IS_CURRENT = {
+    "name": "테스트",
+    "name_en": None,
+    "birth_year": 1990,
+    "gender": None,
+    "email": "test@test.com",
+    "phone": "010-1234-5678",
+    "address": None,
+    "total_experience_years": 5,
+    "resume_reference_date": None,
+    "careers": [
+        {
+            "company": "X사",
+            "start_date": "2020.01",
+            "end_date": "2023.06",
+            "is_current": True,
+            "source_section": "경력란",
+            "duration_text": None,
+            "duties": None,
+        },
+    ],
+    "educations": [],
+    "certifications": [],
+    "language_skills": [],
+}
+
 MOCK_RAW_DATA = {
     "name": "테스트",
     "name_en": None,
@@ -1129,12 +1627,27 @@ MOCK_RAW_DATA = {
     "total_experience_years": 5,
     "resume_reference_date": None,
     "careers": [
-        {"company": "A사", "start_date": "2020.01", "end_date": "2022.06",
-         "is_current": False, "source_section": "경력란", "duration_text": None, "duties": None},
+        {
+            "company": "A사",
+            "start_date": "2020.01",
+            "end_date": "2022.06",
+            "is_current": False,
+            "source_section": "경력란",
+            "duration_text": None,
+            "duties": None,
+        },
     ],
     "educations": [
-        {"institution": "서울대", "degree": "학사", "major": "컴퓨터", "start_year": 2010,
-         "end_year": 2014, "is_abroad": False, "status": "졸업", "source_section": "학력란"},
+        {
+            "institution": "서울대",
+            "degree": "학사",
+            "major": "컴퓨터",
+            "start_year": 2010,
+            "end_year": 2014,
+            "is_abroad": False,
+            "status": "졸업",
+            "source_section": "학력란",
+        },
     ],
     "certifications": [],
     "language_skills": [],
@@ -1142,15 +1655,27 @@ MOCK_RAW_DATA = {
 
 MOCK_CAREER_RESULT = {
     "careers": [
-        {"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "is_current": False, "order": 0},
+        {
+            "company": "A사",
+            "start_date": "2020-01",
+            "end_date": "2022-06",
+            "is_current": False,
+            "order": 0,
+        },
     ],
     "flags": [],
 }
 
 MOCK_EDU_RESULT = {
     "educations": [
-        {"institution": "서울대", "degree": "학사", "major": "컴퓨터",
-         "start_year": 2010, "end_year": 2014, "is_abroad": False},
+        {
+            "institution": "서울대",
+            "degree": "학사",
+            "major": "컴퓨터",
+            "start_year": 2010,
+            "end_year": 2014,
+            "is_abroad": False,
+        },
     ],
     "flags": [],
 }
@@ -1184,9 +1709,26 @@ class TestPipelineSuccess:
         mock_v1.return_value = []
         mock_s1.return_value = MOCK_RAW_DATA
         mock_s2c.return_value = {
-            "careers": [{"company": "A사", "start_date": "2020-01", "end_date": "2022-06", "is_current": False, "order": 0}],
-            "flags": [{"type": "DATE_CONFLICT", "severity": "RED", "field": "start_date",
-                        "detail": "test", "chosen": "a", "alternative": "b", "reasoning": "test"}],
+            "careers": [
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": "2022-06",
+                    "is_current": False,
+                    "order": 0,
+                }
+            ],
+            "flags": [
+                {
+                    "type": "DATE_CONFLICT",
+                    "severity": "RED",
+                    "field": "start_date",
+                    "detail": "test",
+                    "chosen": "a",
+                    "alternative": "b",
+                    "reasoning": "test",
+                }
+            ],
         }
         mock_s2e.return_value = MOCK_EDU_RESULT
 
@@ -1239,5 +1781,142 @@ class TestPipelineCrossVersion:
         }
         result = run_integrity_pipeline("텍스트", previous_data=previous)
         assert result is not None
-        cv_flags = [f for f in result["integrity_flags"] if f["type"] == "CAREER_DELETED"]
+        cv_flags = [
+            f for f in result["integrity_flags"] if f["type"] == "CAREER_DELETED"
+        ]
         assert len(cv_flags) >= 1
+
+
+class TestAutoCorrectIsCurrentEndDate:
+    """is_current=True with end_date should be auto-corrected to is_current=False."""
+
+    @patch("data_extraction.services.extraction.integrity.normalize_education_group")
+    @patch("data_extraction.services.extraction.integrity.normalize_career_group")
+    @patch("data_extraction.services.extraction.integrity.extract_raw_data")
+    @patch("data_extraction.services.extraction.integrity.validate_step1")
+    def test_is_current_corrected_when_end_date_present(
+        self, mock_v1, mock_s1, mock_s2c, mock_s2e
+    ):
+        mock_v1.return_value = []
+        mock_s1.return_value = MOCK_RAW_DATA_IS_CURRENT
+        mock_s2c.return_value = {
+            "careers": [
+                {
+                    "company": "X사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "is_current": True,
+                    "order": 0,
+                },
+            ],
+            "flags": [
+                {
+                    "type": "DATE_CONFLICT",
+                    "severity": "YELLOW",
+                    "field": "is_current",
+                    "detail": "X사: is_current가 true이지만 end_date가 존재",
+                    "chosen": "true",
+                    "alternative": "false",
+                    "reasoning": "모순",
+                },
+            ],
+        }
+        mock_s2e.return_value = MOCK_EDU_RESULT
+
+        result = run_integrity_pipeline("텍스트")
+        assert result is not None
+
+        # Career should be auto-corrected
+        career = result["careers"][0]
+        assert career["is_current"] is False
+
+        # The contradiction flag should be removed
+        is_current_flags = [
+            f
+            for f in result["integrity_flags"]
+            if "is_current" in (f.get("field") or "")
+            or "is_current" in (f.get("detail") or "")
+        ]
+        assert len(is_current_flags) == 0
+
+    @patch("data_extraction.services.extraction.integrity.normalize_education_group")
+    @patch("data_extraction.services.extraction.integrity.normalize_career_group")
+    @patch("data_extraction.services.extraction.integrity.extract_raw_data")
+    @patch("data_extraction.services.extraction.integrity.validate_step1")
+    def test_no_correction_when_no_end_date(self, mock_v1, mock_s1, mock_s2c, mock_s2e):
+        mock_v1.return_value = []
+        mock_s1.return_value = MOCK_RAW_DATA
+        mock_s2c.return_value = {
+            "careers": [
+                {
+                    "company": "A사",
+                    "start_date": "2020-01",
+                    "end_date": None,
+                    "is_current": True,
+                    "order": 0,
+                },
+            ],
+            "flags": [],
+        }
+        mock_s2e.return_value = MOCK_EDU_RESULT
+
+        result = run_integrity_pipeline("텍스트")
+        assert result is not None
+
+        # No end_date → is_current should stay True
+        career = result["careers"][0]
+        assert career["is_current"] is True
+
+    @patch("data_extraction.services.extraction.integrity.normalize_education_group")
+    @patch("data_extraction.services.extraction.integrity.normalize_career_group")
+    @patch("data_extraction.services.extraction.integrity.extract_raw_data")
+    @patch("data_extraction.services.extraction.integrity.validate_step1")
+    def test_unrelated_flags_preserved(self, mock_v1, mock_s1, mock_s2c, mock_s2e):
+        mock_v1.return_value = []
+        mock_s1.return_value = MOCK_RAW_DATA_IS_CURRENT
+        mock_s2c.return_value = {
+            "careers": [
+                {
+                    "company": "X사",
+                    "start_date": "2020-01",
+                    "end_date": "2023-06",
+                    "is_current": True,
+                    "order": 0,
+                },
+            ],
+            "flags": [
+                {
+                    "type": "DATE_CONFLICT",
+                    "severity": "YELLOW",
+                    "field": "is_current",
+                    "detail": "X사: is_current가 true이지만 end_date가 존재",
+                    "chosen": "true",
+                    "alternative": "false",
+                    "reasoning": "모순",
+                },
+                {
+                    "type": "DATE_CONFLICT",
+                    "severity": "YELLOW",
+                    "field": "start_date",
+                    "detail": "X사의 시작일이 불명확함",
+                    "chosen": "2020-01",
+                    "alternative": "2019-12",
+                    "reasoning": "추정",
+                },
+            ],
+        }
+        mock_s2e.return_value = MOCK_EDU_RESULT
+
+        result = run_integrity_pipeline("텍스트")
+        assert result is not None
+
+        # is_current flag removed, but start_date flag preserved
+        remaining_flags = result["integrity_flags"]
+        is_current_flags = [
+            f for f in remaining_flags if "is_current" in (f.get("field") or "")
+        ]
+        start_date_flags = [
+            f for f in remaining_flags if "start_date" in (f.get("field") or "")
+        ]
+        assert len(is_current_flags) == 0
+        assert len(start_date_flags) == 1

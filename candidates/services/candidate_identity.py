@@ -55,7 +55,9 @@ def select_primary_phone(phone: str) -> str:
 
     def priority(value: str) -> tuple[int, int]:
         digits = re.sub(r"\D", "", value)
-        is_korean = digits.startswith(("010", "011", "016", "017", "018", "019", "8210"))
+        is_korean = digits.startswith(
+            ("010", "011", "016", "017", "018", "019", "8210")
+        )
         fits_model = len(value) <= 30
         return (
             0 if is_korean else 1,
@@ -147,7 +149,8 @@ def _latest_parsed_resume(candidate: Candidate) -> Resume | None:
     """Return the most recent parsed resume for cross-version comparison."""
     if (
         candidate.current_resume
-        and candidate.current_resume.processing_status == Resume.ProcessingStatus.STRUCTURED
+        and candidate.current_resume.processing_status
+        == Resume.ProcessingStatus.STRUCTURED
     ):
         return candidate.current_resume
 

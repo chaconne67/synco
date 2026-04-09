@@ -44,6 +44,9 @@ def _build_whisper_prompt() -> str:
     from django.db import connection
 
     parts = ["후보자 검색 음성 명령입니다."]
+    parts.append(
+        "SKY, 인서울, 서성한, 중경외시, 건동홍숙이, 국숭세단, 과기특, 지거국, 명문대, 이공계명문"
+    )
 
     try:
         with connection.cursor() as cursor:

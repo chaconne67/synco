@@ -4,11 +4,12 @@ Main extraction module -- parses Korean resumes into structured JSON
 using the same prompt/schema as the legacy Sonnet pipeline.
 """
 
-import json
 import logging
 
 from django.conf import settings
 from google import genai
+
+from data_extraction.services.extraction.sanitizers import parse_llm_json
 
 from data_extraction.services.extraction.prompts import (
     EXTRACTION_SYSTEM_PROMPT,
@@ -66,15 +67,7 @@ def extract_candidate_data(
                 ),
             )
 
-            try:
-                result = json.loads(response.text)
-            except json.JSONDecodeError:
-                decoder = json.JSONDecoder()
-                result, _ = decoder.raw_decode(response.text.strip())
-
-            # Gemini sometimes wraps response in a list: [{...}]
-            if isinstance(result, list) and len(result) == 1 and isinstance(result[0], dict):
-                result = result[0]
+            result = parse_llm_json(response.text)
 
             if not isinstance(result, dict) or "name" not in result:
                 logger.warning(

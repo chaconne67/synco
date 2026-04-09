@@ -220,10 +220,10 @@ class Command(BaseCommand):
             self.stdout.write(f"  {field}: {stats[field]}")
 
         if dry_run:
-            self.stdout.write(
-                self.style.WARNING("\n(DRY RUN - no changes saved)")
-            )
+            self.stdout.write(self.style.WARNING("\n(DRY RUN - no changes saved)"))
         else:
             self.stdout.write(
-                self.style.SUCCESS(f"\nBackfill complete. {updated_count} candidates updated.")
+                self.style.SUCCESS(
+                    f"\nBackfill complete. {updated_count} candidates updated."
+                )
             )

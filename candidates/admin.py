@@ -60,7 +60,14 @@ class CandidateAdmin(admin.ModelAdmin):
         "primary_category",
     ]
     list_filter = ["status", "validation_status", "source"]
-    search_fields = ["name", "name_en", "current_company", "email", "phone", "phone_normalized"]
+    search_fields = [
+        "name",
+        "name_en",
+        "current_company",
+        "email",
+        "phone",
+        "phone_normalized",
+    ]
     readonly_fields = [
         "skills",
         "personal_etc",

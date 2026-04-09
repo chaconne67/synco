@@ -161,9 +161,7 @@ def convert_to_word(draft) -> None:
         raise RuntimeError("최종 정리 데이터가 없습니다.")
 
     # 마스킹 적용
-    masked_data = _apply_masking(
-        data, draft.masking_config or DEFAULT_MASKING_CONFIG
-    )
+    masked_data = _apply_masking(data, draft.masking_config or DEFAULT_MASKING_CONFIG)
 
     # Word 문서 생성
     doc = _build_document(masked_data)

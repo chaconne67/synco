@@ -77,7 +77,11 @@ def _normalize_date_to_ym(date_str: str) -> str | None:
 # ===========================================================================
 
 _CAREER_CARRY_FIELDS = [
-    "reason_left", "achievements", "salary", "duration_text", "company_en",
+    "reason_left",
+    "achievements",
+    "salary",
+    "duration_text",
+    "company_en",
 ]
 
 
@@ -149,12 +153,27 @@ def _get_client() -> genai.Client:
     return genai.Client(api_key=api_key)
 
 
-def _call_gemini(system: str, prompt: str, max_tokens: int = 6000) -> dict | None:
-    """Call Gemini and parse JSON response.
+# Module-level provider setting, controlled by pipeline.py
+_provider: str = "gemini"
+
+
+def set_provider(provider: str) -> None:
+    """Set the LLM provider for this module ('gemini' or 'openai')."""
+    global _provider
+    _provider = provider
+
+
+def _call_llm(system: str, prompt: str, max_tokens: int = 6000) -> dict | None:
+    """Call LLM (Gemini or OpenAI) and parse JSON response.
 
     Uses sanitizers.parse_llm_json for robust JSON recovery from
     malformed responses (control chars, extra braces, truncation, etc.).
     """
+    if _provider == "openai":
+        from data_extraction.services.extraction.openai import call_openai
+
+        return call_openai(system, prompt, max_tokens)
+
     from data_extraction.services.extraction.sanitizers import parse_llm_json
 
     client = _get_client()
@@ -201,11 +220,15 @@ def extract_raw_data(
     prompt = build_step1_prompt(resume_text, feedback=feedback, file_name=file_name)
 
     for attempt in range(max_retries):
-        result = _call_gemini(STEP1_SYSTEM_PROMPT, prompt)
+        result = _call_llm(STEP1_SYSTEM_PROMPT, prompt)
         if result and "name" in result:
             return result
         if attempt < max_retries - 1:
-            logger.warning("Step 1 extraction attempt %d/%d failed, retrying...", attempt + 1, max_retries)
+            logger.warning(
+                "Step 1 extraction attempt %d/%d failed, retrying...",
+                attempt + 1,
+                max_retries,
+            )
 
     return None
 
@@ -236,7 +259,7 @@ def normalize_career_group(
         "JSON만 출력하세요."
     )
 
-    result = _call_gemini(CAREER_SYSTEM_PROMPT, prompt, max_tokens=4000)
+    result = _call_llm(CAREER_SYSTEM_PROMPT, prompt, max_tokens=4000)
     if not result or "careers" not in result:
         # fallback: single career format
         if result and "career" in result:
@@ -271,7 +294,7 @@ def normalize_education_group(
         "JSON만 출력하세요."
     )
 
-    result = _call_gemini(EDUCATION_SYSTEM_PROMPT, prompt, max_tokens=2000)
+    result = _call_llm(EDUCATION_SYSTEM_PROMPT, prompt, max_tokens=2000)
     if not result or "educations" not in result:
         logger.warning("Step 2 education normalization failed")
         return None
@@ -353,19 +376,21 @@ def check_period_overlaps(
         else:
             continue
 
-        intervals.append({
-            "index": i,
-            "company": c.get("company", ""),
-            "start": _month_index(*start),
-            "end": end_idx,
-            "period": f"{c.get('start_date', '')}~{end_str or '현재'}",
-        })
+        intervals.append(
+            {
+                "index": i,
+                "company": c.get("company", ""),
+                "start": _month_index(*start),
+                "end": end_idx,
+                "period": f"{c.get('start_date', '')}~{end_str or '현재'}",
+            }
+        )
 
     intervals.sort(key=lambda x: x["start"])
 
     raw_overlaps = []
     for i, a in enumerate(intervals):
-        for b in intervals[i + 1:]:
+        for b in intervals[i + 1 :]:
             if b["start"] > a["end"]:
                 break
             overlap = min(a["end"], b["end"]) - b["start"]
@@ -375,13 +400,15 @@ def check_period_overlaps(
                 continue
             if overlap <= SHORT_OVERLAP_THRESHOLD:
                 continue
-            raw_overlaps.append({
-                "company_a": a["company"],
-                "period_a": a["period"],
-                "company_b": b["company"],
-                "period_b": b["period"],
-                "overlap_months": overlap,
-            })
+            raw_overlaps.append(
+                {
+                    "company_a": a["company"],
+                    "period_a": a["period"],
+                    "company_b": b["company"],
+                    "period_b": b["period"],
+                    "overlap_months": overlap,
+                }
+            )
 
     if not raw_overlaps:
         return []
@@ -390,22 +417,25 @@ def check_period_overlaps(
     flags = []
     for o in raw_overlaps:
         severity = "RED" if has_repeated else "YELLOW"
-        flags.append({
-            "type": "PERIOD_OVERLAP",
-            "severity": severity,
-            "field": "careers",
-            "detail": (
-                f"{o['company_a']}({o['period_a']})와 "
-                f"{o['company_b']}({o['period_b']}) "
-                f"재직 기간이 {o['overlap_months']}개월 중복됨"
-            ),
-            "chosen": None,
-            "alternative": None,
-            "reasoning": (
-                "반복적인 장기 중복 패턴" if has_repeated
-                else "이직 인수인계를 넘어서는 장기 중복"
-            ),
-        })
+        flags.append(
+            {
+                "type": "PERIOD_OVERLAP",
+                "severity": severity,
+                "field": "careers",
+                "detail": (
+                    f"{o['company_a']}({o['period_a']})와 "
+                    f"{o['company_b']}({o['period_b']}) "
+                    f"재직 기간이 {o['overlap_months']}개월 중복됨"
+                ),
+                "chosen": None,
+                "alternative": None,
+                "reasoning": (
+                    "반복적인 장기 중복 패턴"
+                    if has_repeated
+                    else "이직 인수인계를 넘어서는 장기 중복"
+                ),
+            }
+        )
 
     return flags
 
@@ -433,11 +463,13 @@ def check_career_education_overlap(
             end_idx = today_idx
         else:
             continue
-        career_intervals.append({
-            "company": c.get("company", ""),
-            "start": _month_index(*start),
-            "end": end_idx,
-        })
+        career_intervals.append(
+            {
+                "company": c.get("company", ""),
+                "start": _month_index(*start),
+                "end": end_idx,
+            }
+        )
 
     flags = []
     for edu in educations:
@@ -458,18 +490,20 @@ def check_career_education_overlap(
             if overlap <= 6:  # 6 months or less is normal (graduation + job start)
                 continue
 
-            flags.append({
-                "type": "CAREER_EDUCATION_OVERLAP",
-                "severity": "YELLOW",
-                "field": "careers+educations",
-                "detail": (
-                    f"{ci['company']} 재직 기간과 {institution} 재학 기간이 "
-                    f"{overlap}개월 겹침"
-                ),
-                "chosen": None,
-                "alternative": None,
-                "reasoning": "정규직 재직과 재학이 장기간 겹치는 경우 확인 필요",
-            })
+            flags.append(
+                {
+                    "type": "CAREER_EDUCATION_OVERLAP",
+                    "severity": "YELLOW",
+                    "field": "careers+educations",
+                    "detail": (
+                        f"{ci['company']} 재직 기간과 {institution} 재학 기간이 "
+                        f"{overlap}개월 겹침"
+                    ),
+                    "chosen": None,
+                    "alternative": None,
+                    "reasoning": "정규직 재직과 재학이 장기간 겹치는 경우 확인 필요",
+                }
+            )
 
     return flags
 
@@ -479,14 +513,36 @@ def check_career_education_overlap(
 # ===========================================================================
 
 _GRAD_KEYWORDS = {
-    "석사", "박사", "mba", "master", "doctor", "ph.d", "ph.d.",
-    "m.s.", "m.a.", "m.b.a.", "m.eng.", "공학석사", "이학석사",
-    "경영학석사", "공학박사", "이학박사",
+    "석사",
+    "박사",
+    "mba",
+    "master",
+    "doctor",
+    "ph.d",
+    "ph.d.",
+    "m.s.",
+    "m.a.",
+    "m.b.a.",
+    "m.eng.",
+    "공학석사",
+    "이학석사",
+    "경영학석사",
+    "공학박사",
+    "이학박사",
 }
 
 _UNDERGRAD_KEYWORDS = {
-    "학사", "bachelor", "b.s.", "b.a.", "b.eng.", "학부",
-    "공학사", "이학사", "경영학사", "문학사", "법학사",
+    "학사",
+    "bachelor",
+    "b.s.",
+    "b.a.",
+    "b.eng.",
+    "학부",
+    "공학사",
+    "이학사",
+    "경영학사",
+    "문학사",
+    "법학사",
 }
 
 
@@ -507,26 +563,30 @@ def check_education_gaps(educations: list[dict]) -> list[dict]:
         # Missing start_year
         if edu.get("end_year") and not edu.get("start_year"):
             institution = edu.get("institution", "")
-            flags.append({
+            flags.append(
+                {
+                    "type": "EDUCATION_GAP",
+                    "severity": "YELLOW",
+                    "field": "educations",
+                    "detail": f"{institution} 입학년도가 누락됨 (졸업년도만 기재)",
+                    "chosen": None,
+                    "alternative": None,
+                    "reasoning": "편입 이력을 숨기기 위해 입학년도를 생략하는 경우가 있음",
+                }
+            )
+
+    if has_grad and not has_undergrad:
+        flags.append(
+            {
                 "type": "EDUCATION_GAP",
                 "severity": "YELLOW",
                 "field": "educations",
-                "detail": f"{institution} 입학년도가 누락됨 (졸업년도만 기재)",
+                "detail": "대학원(석사/박사) 학력만 있고 학부(학사) 학력이 없음",
                 "chosen": None,
                 "alternative": None,
-                "reasoning": "편입 이력을 숨기기 위해 입학년도를 생략하는 경우가 있음",
-            })
-
-    if has_grad and not has_undergrad:
-        flags.append({
-            "type": "EDUCATION_GAP",
-            "severity": "YELLOW",
-            "field": "educations",
-            "detail": "대학원(석사/박사) 학력만 있고 학부(학사) 학력이 없음",
-            "chosen": None,
-            "alternative": None,
-            "reasoning": "학부 학력이 대학원보다 낮아 의도적으로 생략한 경우가 있음",
-        })
+                "reasoning": "학부 학력이 대학원보다 낮아 의도적으로 생략한 경우가 있음",
+            }
+        )
 
     return flags
 
@@ -606,39 +666,40 @@ def check_campus_match(educations: list[dict]) -> list[dict]:
 
         if major_campus and major_campus != main_campus and detected_campus is None:
             # Department only exists at non-main campus but no campus specified
-            flags.append({
-                "type": "CAMPUS_DEPARTMENT_MATCH",
-                "severity": "RED",
-                "field": "educations",
-                "detail": (
-                    f"{uni_name} {major} — "
-                    f"해당 학과는 {major_campus}캠퍼스에만 존재"
-                ),
-                "chosen": None,
-                "alternative": None,
-                "reasoning": (
-                    f"캠퍼스를 밝히지 않았으나, {major} 학과는 "
-                    f"{major_campus}캠퍼스에만 개설되어 있음"
-                ),
-            })
+            flags.append(
+                {
+                    "type": "CAMPUS_DEPARTMENT_MATCH",
+                    "severity": "RED",
+                    "field": "educations",
+                    "detail": (
+                        f"{uni_name} {major} — "
+                        f"해당 학과는 {major_campus}캠퍼스에만 존재"
+                    ),
+                    "chosen": None,
+                    "alternative": None,
+                    "reasoning": (
+                        f"캠퍼스를 밝히지 않았으나, {major} 학과는 "
+                        f"{major_campus}캠퍼스에만 개설되어 있음"
+                    ),
+                }
+            )
         elif detected_campus is None:
             # Multi-campus university but no campus identifiable
             campuses = list(campus_keywords.keys())
-            flags.append({
-                "type": "CAMPUS_MISSING",
-                "severity": "YELLOW",
-                "field": "educations",
-                "detail": (
-                    f"{uni_name} 캠퍼스 확인 필요 "
-                    f"({'/'.join(campuses)})"
-                ),
-                "chosen": None,
-                "alternative": None,
-                "reasoning": (
-                    "멀티캠퍼스 대학인데 캠퍼스 정보가 없음. "
-                    "지방 캠퍼스일 가능성 확인 필요"
-                ),
-            })
+            flags.append(
+                {
+                    "type": "CAMPUS_MISSING",
+                    "severity": "YELLOW",
+                    "field": "educations",
+                    "detail": (f"{uni_name} 캠퍼스 확인 필요 ({'/'.join(campuses)})"),
+                    "chosen": None,
+                    "alternative": None,
+                    "reasoning": (
+                        "멀티캠퍼스 대학인데 캠퍼스 정보가 없음. "
+                        "지방 캠퍼스일 가능성 확인 필요"
+                    ),
+                }
+            )
 
     return flags
 
@@ -653,18 +714,20 @@ def check_birth_year_consistency(
     if current_birth_year == previous_birth_year:
         return []
 
-    return [{
-        "type": "BIRTH_YEAR_MISMATCH",
-        "severity": "RED",
-        "field": "birth_year",
-        "detail": (
-            f"출생연도가 이전 이력서({previous_birth_year}년)와 "
-            f"현재({current_birth_year}년)에서 다름. 호적 기준 확인 필요"
-        ),
-        "chosen": str(current_birth_year),
-        "alternative": str(previous_birth_year),
-        "reasoning": "나이를 줄이기 위해 출생연도를 변경하는 경우가 있음. 호적 등록 기준으로 확인 필요",
-    }]
+    return [
+        {
+            "type": "BIRTH_YEAR_MISMATCH",
+            "severity": "RED",
+            "field": "birth_year",
+            "detail": (
+                f"출생연도가 이전 이력서({previous_birth_year}년)와 "
+                f"현재({current_birth_year}년)에서 다름. 호적 기준 확인 필요"
+            ),
+            "chosen": str(current_birth_year),
+            "alternative": str(previous_birth_year),
+            "reasoning": "나이를 줄이기 위해 출생연도를 변경하는 경우가 있음. 호적 등록 기준으로 확인 필요",
+        }
+    ]
 
 
 # ===========================================================================
@@ -770,25 +833,29 @@ def _check_career_deleted(unmatched_previous: list[dict]) -> list[dict]:
         company = career.get("company", "?")
         period = f"{career.get('start_date', '?')}~{career.get('end_date') or '?'}"
 
-        flags.append({
-            "type": "CAREER_DELETED",
-            "severity": severity,
-            "field": "careers",
-            "detail": f"{company}({period}) 경력이 삭제됨",
-            "chosen": None,
-            "alternative": f"{company}({period})",
-            "reasoning": (
-                f"{duration}개월 이상 장기 경력 삭제 — 의도적 은폐 가능성"
-                if severity == "RED"
-                else "단기 경력 삭제 — 정리 목적일 수 있음"
-            ),
-        })
+        flags.append(
+            {
+                "type": "CAREER_DELETED",
+                "severity": severity,
+                "field": "careers",
+                "detail": f"{company}({period}) 경력이 삭제됨",
+                "chosen": None,
+                "alternative": f"{company}({period})",
+                "reasoning": (
+                    f"{duration}개월 이상 장기 경력 삭제 — 의도적 은폐 가능성"
+                    if severity == "RED"
+                    else "단기 경력 삭제 — 정리 목적일 수 있음"
+                ),
+            }
+        )
 
     # Upgrade all to RED if 2+ careers deleted simultaneously
     if len(flags) >= 2:
         for flag in flags:
             flag["severity"] = "RED"
-            flag["reasoning"] = "2건 이상의 경력이 동시 삭제됨 — 의도적 은폐 가능성 높음"
+            flag["reasoning"] = (
+                "2건 이상의 경력이 동시 삭제됨 — 의도적 은폐 가능성 높음"
+            )
 
     return flags
 
@@ -827,22 +894,24 @@ def _check_career_period_changed(
         if end_diff > 0:
             diff_parts.append(f"종료일 {end_diff}개월 차이")
 
-        flags.append({
-            "type": "CAREER_PERIOD_CHANGED",
-            "severity": severity,
-            "field": "careers",
-            "detail": (
-                f"{company} 재직 기간 변경: {prev_period} → {cur_period} "
-                f"({', '.join(diff_parts)})"
-            ),
-            "chosen": cur_period,
-            "alternative": prev_period,
-            "reasoning": (
-                "복수 경력의 기간이 동시 변경됨 — 조작 가능성 높음"
-                if severity == "RED"
-                else "재직 기간이 유의미하게 변경됨 — 경력 부풀리기 가능성"
-            ),
-        })
+        flags.append(
+            {
+                "type": "CAREER_PERIOD_CHANGED",
+                "severity": severity,
+                "field": "careers",
+                "detail": (
+                    f"{company} 재직 기간 변경: {prev_period} → {cur_period} "
+                    f"({', '.join(diff_parts)})"
+                ),
+                "chosen": cur_period,
+                "alternative": prev_period,
+                "reasoning": (
+                    "복수 경력의 기간이 동시 변경됨 — 조작 가능성 높음"
+                    if severity == "RED"
+                    else "재직 기간이 유의미하게 변경됨 — 경력 부풀리기 가능성"
+                ),
+            }
+        )
     return flags
 
 
@@ -861,15 +930,17 @@ def _check_career_added_retroactively(
         if end is not None and end < latest_end:
             company = career.get("company", "?")
             period = f"{career.get('start_date', '?')}~{career.get('end_date') or '?'}"
-            flags.append({
-                "type": "CAREER_ADDED_RETROACTIVELY",
-                "severity": "YELLOW",
-                "field": "careers",
-                "detail": f"{company}({period}) 경력이 소급 추가됨",
-                "chosen": f"{company}({period})",
-                "alternative": None,
-                "reasoning": "이전 이력서에 없던 과거 경력이 추가됨 — 경력 날조 가능성",
-            })
+            flags.append(
+                {
+                    "type": "CAREER_ADDED_RETROACTIVELY",
+                    "severity": "YELLOW",
+                    "field": "careers",
+                    "detail": f"{company}({period}) 경력이 소급 추가됨",
+                    "chosen": f"{company}({period})",
+                    "alternative": None,
+                    "reasoning": "이전 이력서에 없던 과거 경력이 추가됨 — 경력 날조 가능성",
+                }
+            )
     return flags
 
 
@@ -902,15 +973,17 @@ def _check_education_changed(
 
             if cur_deg and prev_deg and cur_deg != prev_deg:
                 institution = cur_list[i].get("institution", "?")
-                flags.append({
-                    "type": "EDUCATION_CHANGED",
-                    "severity": "RED",
-                    "field": "educations",
-                    "detail": f"{institution} 학위 변경: {prev_deg} → {cur_deg}",
-                    "chosen": cur_deg,
-                    "alternative": prev_deg,
-                    "reasoning": "학위 변경은 정당한 사유가 거의 없음 — 학력 위조 가능성",
-                })
+                flags.append(
+                    {
+                        "type": "EDUCATION_CHANGED",
+                        "severity": "RED",
+                        "field": "educations",
+                        "detail": f"{institution} 학위 변경: {prev_deg} → {cur_deg}",
+                        "chosen": cur_deg,
+                        "alternative": prev_deg,
+                        "reasoning": "학위 변경은 정당한 사유가 거의 없음 — 학력 위조 가능성",
+                    }
+                )
 
     # Check institution changes: previous institution completely gone, new one appeared
     removed = set(prev_by_inst.keys()) - set(cur_by_inst.keys())
@@ -922,18 +995,20 @@ def _check_education_changed(
             for add_key in added:
                 rem_edu = prev_by_inst[rem_key][0]
                 add_edu = cur_by_inst[add_key][0]
-                flags.append({
-                    "type": "EDUCATION_CHANGED",
-                    "severity": "RED",
-                    "field": "educations",
-                    "detail": (
-                        f"교육기관 변경: {rem_edu.get('institution', '?')} → "
-                        f"{add_edu.get('institution', '?')}"
-                    ),
-                    "chosen": add_edu.get("institution", "?"),
-                    "alternative": rem_edu.get("institution", "?"),
-                    "reasoning": "교육기관 자체가 변경됨 — 학력 위조 가능성",
-                })
+                flags.append(
+                    {
+                        "type": "EDUCATION_CHANGED",
+                        "severity": "RED",
+                        "field": "educations",
+                        "detail": (
+                            f"교육기관 변경: {rem_edu.get('institution', '?')} → "
+                            f"{add_edu.get('institution', '?')}"
+                        ),
+                        "chosen": add_edu.get("institution", "?"),
+                        "alternative": rem_edu.get("institution", "?"),
+                        "reasoning": "교육기관 자체가 변경됨 — 학력 위조 가능성",
+                    }
+                )
 
     return flags
 
@@ -958,12 +1033,8 @@ def compare_versions(current: dict, previous: dict) -> list[dict]:
     flags: list[dict] = []
     flags.extend(_check_career_deleted(unmatched_prev))
     flags.extend(_check_career_period_changed(matched))
-    flags.extend(
-        _check_career_added_retroactively(unmatched_cur, previous_careers)
-    )
-    flags.extend(
-        _check_education_changed(current_educations, previous_educations)
-    )
+    flags.extend(_check_career_added_retroactively(unmatched_cur, previous_careers))
+    flags.extend(_check_education_changed(current_educations, previous_educations))
 
     return flags
 
@@ -1037,7 +1108,9 @@ def run_integrity_pipeline(
     # Step 1 validation + retry
     step1_issues = validate_step1(raw_data, resume_text)
     if any(i["severity"] == "warning" for i in step1_issues):
-        feedback = ". ".join(i["message"] for i in step1_issues if i["severity"] == "warning")
+        feedback = ". ".join(
+            i["message"] for i in step1_issues if i["severity"] == "warning"
+        )
         logger.info("Step 1 validation issues, retrying: %s", feedback)
         retry = extract_raw_data(resume_text, feedback=feedback, file_name=file_name)
         if retry and "name" in retry:
@@ -1059,7 +1132,9 @@ def run_integrity_pipeline(
         # Validate
         issues = validate_step2(result, raw_careers=careers_raw)
         if any(i["severity"] == "error" for i in issues):
-            feedback = ". ".join(i["message"] for i in issues if i["severity"] == "error")
+            feedback = ". ".join(
+                i["message"] for i in issues if i["severity"] == "error"
+            )
             retry = normalize_career_group(careers_raw, "전체 경력", feedback=feedback)
             if retry:
                 return retry
@@ -1108,7 +1183,8 @@ def run_integrity_pipeline(
     # Remove AI flags that were about the contradiction we just auto-corrected
     if autocorrected_companies:
         all_flags = [
-            f for f in all_flags
+            f
+            for f in all_flags
             if not _is_current_end_date_flag(f, autocorrected_companies)
         ]
 
@@ -1142,38 +1218,40 @@ def run_integrity_pipeline(
     all_flags.extend(campus_flags)
 
     # -- Assemble result --
-    return apply_regex_field_filters({
-        "name": raw_data.get("name"),
-        "name_en": raw_data.get("name_en"),
-        "birth_year": raw_data.get("birth_year"),
-        "gender": raw_data.get("gender"),
-        "email": raw_data.get("email"),
-        "phone": raw_data.get("phone"),
-        "address": raw_data.get("address"),
-        "current_company": raw_data.get("current_company") or "",
-        "current_position": raw_data.get("current_position") or "",
-        "total_experience_years": raw_data.get("total_experience_years"),
-        "resume_reference_date": raw_data.get("resume_reference_date"),
-        "core_competencies": raw_data.get("core_competencies", []),
-        "summary": raw_data.get("summary") or "",
-        "careers": normalized_careers,
-        "educations": normalized_educations,
-        "certifications": skills.get("certifications", []),
-        "language_skills": skills.get("language_skills", []),
-        "skills": raw_data.get("skills", []),
-        "personal_etc": raw_data.get("personal_etc", []),
-        "education_etc": raw_data.get("education_etc", []),
-        "career_etc": raw_data.get("career_etc", []),
-        "skills_etc": raw_data.get("skills_etc", []),
-        "integrity_flags": all_flags,
-        "field_confidences": {},
-        "pipeline_meta": {
-            "step1_items": len(careers_raw) + len(educations_raw),
-            "retries": retries,
-            # Carry-forward audit trail: Step 1 raw data preserved here.
-            # NOTE: This is a temporary preservation strategy. Long-term direction
-            # is to restructure raw_extracted_json as {step1, step2, final}.
-            "step1_careers_raw": careers_raw,
-            "step1_educations_raw": educations_raw,
-        },
-    })
+    return apply_regex_field_filters(
+        {
+            "name": raw_data.get("name"),
+            "name_en": raw_data.get("name_en"),
+            "birth_year": raw_data.get("birth_year"),
+            "gender": raw_data.get("gender"),
+            "email": raw_data.get("email"),
+            "phone": raw_data.get("phone"),
+            "address": raw_data.get("address"),
+            "current_company": raw_data.get("current_company") or "",
+            "current_position": raw_data.get("current_position") or "",
+            "total_experience_years": raw_data.get("total_experience_years"),
+            "resume_reference_date": raw_data.get("resume_reference_date"),
+            "core_competencies": raw_data.get("core_competencies", []),
+            "summary": raw_data.get("summary") or "",
+            "careers": normalized_careers,
+            "educations": normalized_educations,
+            "certifications": skills.get("certifications", []),
+            "language_skills": skills.get("language_skills", []),
+            "skills": raw_data.get("skills", []),
+            "personal_etc": raw_data.get("personal_etc", []),
+            "education_etc": raw_data.get("education_etc", []),
+            "career_etc": raw_data.get("career_etc", []),
+            "skills_etc": raw_data.get("skills_etc", []),
+            "integrity_flags": all_flags,
+            "field_confidences": {},
+            "pipeline_meta": {
+                "step1_items": len(careers_raw) + len(educations_raw),
+                "retries": retries,
+                # Carry-forward audit trail: Step 1 raw data preserved here.
+                # NOTE: This is a temporary preservation strategy. Long-term direction
+                # is to restructure raw_extracted_json as {step1, step2, final}.
+                "step1_careers_raw": careers_raw,
+                "step1_educations_raw": educations_raw,
+            },
+        }
+    )

@@ -13,6 +13,7 @@
     <div class="flex-1">
       <div class="flex items-center gap-3">
         <h1 class="text-heading text-gray-900">{{ candidate.name }}</h1>
+        <span id="recommendation-badge">{% include "candidates/partials/_recommendation_badge.html" %}</span>
         {% if primary_resume and primary_resume.drive_file_id %}
         <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view"
            target="_blank" rel="noopener"
@@ -589,6 +590,14 @@
     </details>
   </section>
   {% endif %}
+
+  <!-- Comment section -->
+  <div class="mt-6 space-y-4">
+    {% include "candidates/partials/_comment_section.html" %}
+    <div id="comment-list">
+      {% include "candidates/partials/_comment_list.html" %}
+    </div>
+  </div>
 
   <!-- 원본 텍스트 (검수 필요 시 표시) -->
   {% if candidate.validation_status == "needs_review" or candidate.validation_status == "failed" %}

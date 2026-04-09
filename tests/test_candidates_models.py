@@ -117,7 +117,9 @@ class TestCandidate:
 
     @pytest.mark.django_db
     def test_total_experience_display_uses_merged_career_periods(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         candidate = Candidate.objects.create(name="경력합산", total_experience_years=8)
         Career.objects.create(
             candidate=candidate,
@@ -145,8 +147,12 @@ class TestCandidate:
         assert candidate.has_experience_discrepancy is True
 
     @pytest.mark.django_db
-    def test_experience_notice_uses_resume_reference_date_before_flagging_discrepancy(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    def test_experience_notice_uses_resume_reference_date_before_flagging_discrepancy(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         candidate = Candidate.objects.create(
             name="기준일반영",
             total_experience_years=10,
@@ -175,8 +181,12 @@ class TestCandidate:
         assert candidate.experience_notice_text == ""
 
     @pytest.mark.django_db
-    def test_experience_notice_can_infer_reference_date_from_current_career(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    def test_experience_notice_can_infer_reference_date_from_current_career(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         candidate = Candidate.objects.create(
             name="추정기준일",
             total_experience_years=10,
@@ -195,7 +205,10 @@ class TestCandidate:
             is_current=True,
         )
 
-        assert candidate.effective_resume_reference_source == Candidate.ResumeReferenceDateSource.INFERRED
+        assert (
+            candidate.effective_resume_reference_source
+            == Candidate.ResumeReferenceDateSource.INFERRED
+        )
         assert candidate.effective_resume_reference_date_display == "2021.12"
         assert candidate.has_experience_discrepancy is False
         # info-level notice removed — both values now shown inline in 총 경력 field
@@ -204,7 +217,9 @@ class TestCandidate:
 
     @pytest.mark.django_db
     def test_total_experience_caps_future_end_dates(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         candidate = Candidate.objects.create(name="미래날짜")
         Career.objects.create(
             candidate=candidate,
@@ -219,7 +234,9 @@ class TestCandidate:
 
     @pytest.mark.django_db
     def test_total_experience_falls_back_to_extracted_years_without_valid_careers(self):
-        candidate = Candidate.objects.create(name="추출값만존재", total_experience_years=11)
+        candidate = Candidate.objects.create(
+            name="추출값만존재", total_experience_years=11
+        )
         Career.objects.create(
             candidate=candidate,
             company="불완전경력",
@@ -254,8 +271,9 @@ class TestCandidate:
         assert candidate.computed_total_experience_months == 19
         assert candidate.duration_adjusted_career_count == 1
         assert candidate.ignored_career_count == 0
-        assert "기간 정보가 있는 경력 1건은 종료일을 보정해 총 경력 계산에 반영했습니다." in (
-            candidate.experience_review_notice_items[0]["detail"]
+        assert (
+            "기간 정보가 있는 경력 1건은 종료일을 보정해 총 경력 계산에 반영했습니다."
+            in (candidate.experience_review_notice_items[0]["detail"])
         )
 
     @pytest.mark.django_db
@@ -280,8 +298,12 @@ class TestCandidate:
         assert candidate.duration_adjusted_career_count == 1
 
     @pytest.mark.django_db
-    def test_experience_review_notice_items_use_reference_severity_for_info_cases(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    def test_experience_review_notice_items_use_reference_severity_for_info_cases(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         candidate = Candidate.objects.create(
             name="안내용후보",
             total_experience_years=10,
@@ -302,12 +324,18 @@ class TestCandidate:
 
         items = candidate.experience_review_notice_items
         # info-level experience notice removed — shown inline in 총 경력 field
-        experience_ref_items = [i for i in items if i.get("type") == "EXPERIENCE_REFERENCE_NOTICE"]
+        experience_ref_items = [
+            i for i in items if i.get("type") == "EXPERIENCE_REFERENCE_NOTICE"
+        ]
         assert experience_ref_items == []
 
     @pytest.mark.django_db
-    def test_review_notice_items_merge_report_and_experience_fallback(self, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+    def test_review_notice_items_merge_report_and_experience_fallback(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         candidate = Candidate.objects.create(name="통합노출", total_experience_years=8)
         Career.objects.create(
             candidate=candidate,
@@ -479,7 +507,9 @@ class TestCareer:
 
     @pytest.mark.django_db
     def test_duration_display_for_current_job(self, candidate, monkeypatch):
-        monkeypatch.setattr(timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date())
+        monkeypatch.setattr(
+            timezone, "localdate", lambda: timezone.datetime(2026, 4, 3).date()
+        )
         career = Career.objects.create(
             candidate=candidate,
             company="현재회사",

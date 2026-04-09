@@ -458,7 +458,7 @@ EXTRACTION_SYSTEM_PROMPT = (
     "### skills vs core_competencies 구분\n\n"
     "skills에는 이력서 전체에서 언급된 특정 기술·도구·시스템의 고유명사를 추출하세요.\n"
     "이 데이터는 후보자 검색 시 기술 키워드 매칭에 사용됩니다.\n"
-    "구체적 명칭이 대상이고, 일반적 역량 서술(\"의사소통 능력\", \"리더십\")은 core_competencies에 넣으세요.\n\n"
+    '구체적 명칭이 대상이고, 일반적 역량 서술("의사소통 능력", "리더십")은 core_competencies에 넣으세요.\n\n'
     "구분 원칙: 그 단어로 검색했을 때 해당 기술을 가진 사람만 나와야 하면 skills, "
     "다수의 사람에게 해당하는 일반적 역량이면 core_competencies.\n\n"
     "### skills description 생성 원칙\n\n"
@@ -472,9 +472,9 @@ EXTRACTION_SYSTEM_PROMPT = (
     '예) {"name": "MBO", "description": "목표 관리 제도(Management By Objectives)"} — 약어, 맥락상 경영 분야\n'
     '예) {"name": "ISO 9001", "description": "품질경영시스템 국제표준"} — 약어는 아니지만 비전문가에겐 불명확\n\n'
     "### skills 표기 정규화\n\n"
-    "- 영문 공식 명칭을 우선 사용하세요: \"파이썬\" → \"Python\", \"오라클\" → \"Oracle\"\n"
-    "- 공식 표기를 따르세요: \"MSSQL\" → \"MS SQL Server\", \"C++\" (O), \"씨플플\" (X)\n"
-    "- 약어가 널리 쓰이면 약어를 사용하세요: \"SAP\", \"PMP\", \"ISO 9001\"\n"
+    '- 영문 공식 명칭을 우선 사용하세요: "파이썬" → "Python", "오라클" → "Oracle"\n'
+    '- 공식 표기를 따르세요: "MSSQL" → "MS SQL Server", "C++" (O), "씨플플" (X)\n'
+    '- 약어가 널리 쓰이면 약어를 사용하세요: "SAP", "PMP", "ISO 9001"\n'
     "- 한글만 존재하는 고유명사는 한글 그대로\n\n"
     "### etc[] 필드 사용 원칙\n\n"
     "이력서의 모든 정보는 4개 카테고리 중 하나에 반드시 속합니다:\n"
@@ -500,7 +500,7 @@ EXTRACTION_SYSTEM_PROMPT = (
     "- duties: 반드시 한국어로 번역\n"
     "- achievements: 반드시 한국어로 번역\n"
     "- core_competencies: 반드시 한국어로 번역 "
-    "(예: \"Inventory planning\" → \"재고 관리\"). 단, 고유명사(SAP, ERP 등)는 원문 유지\n"
+    '(예: "Inventory planning" → "재고 관리"). 단, 고유명사(SAP, ERP 등)는 원문 유지\n'
     "- etc[] 항목의 type과 description: 한국어로 번역"
 )
 

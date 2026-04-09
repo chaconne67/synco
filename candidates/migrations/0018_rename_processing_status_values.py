@@ -5,27 +5,46 @@ from django.db import migrations, models
 
 def rename_status_values_forward(apps, schema_editor):
     Resume = apps.get_model("candidates", "Resume")
-    Resume.objects.filter(processing_status="parsed").update(processing_status="structured")
-    Resume.objects.filter(processing_status="extracted").update(processing_status="text_only")
+    Resume.objects.filter(processing_status="parsed").update(
+        processing_status="structured"
+    )
+    Resume.objects.filter(processing_status="extracted").update(
+        processing_status="text_only"
+    )
 
 
 def rename_status_values_reverse(apps, schema_editor):
     Resume = apps.get_model("candidates", "Resume")
-    Resume.objects.filter(processing_status="structured").update(processing_status="parsed")
-    Resume.objects.filter(processing_status="text_only").update(processing_status="extracted")
+    Resume.objects.filter(processing_status="structured").update(
+        processing_status="parsed"
+    )
+    Resume.objects.filter(processing_status="text_only").update(
+        processing_status="extracted"
+    )
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0016_backfill_candidate_phone_normalized'),
+        ("candidates", "0016_backfill_candidate_phone_normalized"),
     ]
 
     operations = [
-        migrations.RunPython(rename_status_values_forward, rename_status_values_reverse),
+        migrations.RunPython(
+            rename_status_values_forward, rename_status_values_reverse
+        ),
         migrations.AlterField(
-            model_name='resume',
-            name='processing_status',
-            field=models.CharField(choices=[('pending', '대기'), ('downloaded', '다운로드 완료'), ('text_only', '텍스트만 저장'), ('structured', '구조화 완료'), ('failed', '실패')], default='pending', max_length=15),
+            model_name="resume",
+            name="processing_status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "대기"),
+                    ("downloaded", "다운로드 완료"),
+                    ("text_only", "텍스트만 저장"),
+                    ("structured", "구조화 완료"),
+                    ("failed", "실패"),
+                ],
+                default="pending",
+                max_length=15,
+            ),
         ),
     ]

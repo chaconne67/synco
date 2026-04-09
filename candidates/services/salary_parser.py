@@ -69,7 +69,11 @@ def normalize_salary(raw: dict) -> dict:
         Dict with keys: current_salary_int, desired_salary_int, salary_detail.
     """
     if not raw:
-        return {"current_salary_int": None, "desired_salary_int": None, "salary_detail": {}}
+        return {
+            "current_salary_int": None,
+            "desired_salary_int": None,
+            "salary_detail": {},
+        }
 
     result = {
         "current_salary_int": None,

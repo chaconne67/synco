@@ -200,7 +200,10 @@ def test_candidate_detail_page_shows_experience_review_section_without_report(
     assert resp.status_code == 200
     assert "검토 사항" in body
     assert "참고 1건" in body
-    assert "날짜와 기간 정보가 모두 부족한 경력 1건은 총 경력 계산에서 제외했습니다." in body
+    assert (
+        "날짜와 기간 정보가 모두 부족한 경력 1건은 총 경력 계산에서 제외했습니다."
+        in body
+    )
 
 
 @pytest.mark.django_db
@@ -371,7 +374,9 @@ def test_login_required(client):
 
 
 @pytest.mark.django_db
-def test_candidate_list_reapplies_structured_session_filters(auth_client, user, category):
+def test_candidate_list_reapplies_structured_session_filters(
+    auth_client, user, category
+):
     matching = Candidate.objects.create(
         name="강솔찬",
         current_company="현대엠시트",
@@ -438,3 +443,64 @@ def test_search_chat_saves_structured_filters(mock_parse, auth_client):
     session = SearchSession.objects.get()
     assert session.current_filters["category"] == "Accounting"
     assert session.current_filters["company_keywords"] == ["삼성"]
+
+
+@pytest.mark.django_db
+def test_candidate_detail_shows_error_message_for_failed_resume(auth_client, category):
+    """Failed placeholder candidate shows error_message and Drive link on detail page."""
+    candidate = Candidate.objects.create(
+        name="실패후보",
+        primary_category=category,
+        validation_status=Candidate.ValidationStatus.NEEDS_REVIEW,
+    )
+    candidate.categories.add(category)
+    resume = Resume.objects.create(
+        candidate=candidate,
+        file_name="failed.pdf",
+        drive_file_id="fail_ui_001",
+        drive_folder="Accounting",
+        is_primary=True,
+        version=1,
+        processing_status=Resume.ProcessingStatus.FAILED,
+        error_message="Download failed: 404 Not Found",
+    )
+    candidate.current_resume = resume
+    candidate.save(update_fields=["current_resume"])
+
+    resp = auth_client.get(f"/candidates/{candidate.pk}/")
+    body = resp.content.decode()
+
+    assert resp.status_code == 200
+    assert "데이터 추출 실패" in body
+    assert "Download failed: 404 Not Found" in body
+    assert "fail_ui_001" in body  # Drive link present
+
+
+@pytest.mark.django_db
+def test_candidate_detail_shows_drive_link_for_placeholder(auth_client, category):
+    """Placeholder candidate detail page still shows the Drive link."""
+    candidate = Candidate.objects.create(
+        name="placeholder.pdf",
+        primary_category=category,
+        validation_status=Candidate.ValidationStatus.NEEDS_REVIEW,
+    )
+    candidate.categories.add(category)
+    resume = Resume.objects.create(
+        candidate=candidate,
+        file_name="placeholder.pdf",
+        drive_file_id="drive_link_test",
+        drive_folder="Accounting",
+        is_primary=True,
+        version=1,
+        processing_status=Resume.ProcessingStatus.FAILED,
+        error_message="Text quality: garbled",
+    )
+    candidate.current_resume = resume
+    candidate.save(update_fields=["current_resume"])
+
+    resp = auth_client.get(f"/candidates/{candidate.pk}/")
+    body = resp.content.decode()
+
+    assert resp.status_code == 200
+    assert "drive_link_test" in body
+    assert "이력서 원본 보기" in body

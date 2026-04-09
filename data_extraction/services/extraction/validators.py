@@ -41,57 +41,63 @@ def validate_step1(raw_data: dict, resume_text: str) -> list[dict]:
     """
     issues: list[dict] = []
     careers: list[dict] = raw_data.get("careers", [])
-    source_sections = {c.get("source_section", "") for c in careers if c.get("source_section")}
+    source_sections = {
+        c.get("source_section", "") for c in careers if c.get("source_section")
+    }
 
     # --- source_section diversity ---
     if len(careers) > 1 and len(source_sections) == 1:
-        issues.append({
-            "severity": "warning",
-            "message": (
-                f"All {len(careers)} careers share the same source_section "
-                f"'{next(iter(source_sections))}'; other resume sections may have been missed"
-            ),
-        })
+        issues.append(
+            {
+                "severity": "warning",
+                "message": (
+                    f"All {len(careers)} careers share the same source_section "
+                    f"'{next(iter(source_sections))}'; other resume sections may have been missed"
+                ),
+            }
+        )
 
     # --- Japanese coverage ---
     if _JAPANESE_RE.search(resume_text):
-        has_jp_section = any(
-            _JAPANESE_RE.search(s) for s in source_sections
-        )
+        has_jp_section = any(_JAPANESE_RE.search(s) for s in source_sections)
         if not has_jp_section:
-            issues.append({
-                "severity": "warning",
-                "message": (
-                    "Resume contains Japanese text (katakana/hiragana) "
-                    "but no source_section references Japanese content"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": (
+                        "Resume contains Japanese text (katakana/hiragana) "
+                        "but no source_section references Japanese content"
+                    ),
+                }
+            )
 
     # --- English coverage ---
     if _ENGLISH_WORD_RE.search(resume_text):
-        has_en_section = any(
-            _ENGLISH_WORD_RE.search(s) for s in source_sections
-        )
+        has_en_section = any(_ENGLISH_WORD_RE.search(s) for s in source_sections)
         if not has_en_section:
-            issues.append({
-                "severity": "warning",
-                "message": (
-                    "Resume contains significant English text "
-                    "but no source_section references English content"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": (
+                        "Resume contains significant English text "
+                        "but no source_section references English content"
+                    ),
+                }
+            )
 
     # --- duration_text capture ---
     if _DURATION_PAREN_RE.search(resume_text):
         has_duration = any(c.get("duration_text") for c in careers)
         if not has_duration:
-            issues.append({
-                "severity": "warning",
-                "message": (
-                    "Resume contains parenthetical duration patterns "
-                    "but no career has duration_text filled"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": (
+                        "Resume contains parenthetical duration patterns "
+                        "but no career has duration_text filled"
+                    ),
+                }
+            )
 
     return issues
 
@@ -123,13 +129,15 @@ def validate_step1_5(
         ungrouped = total_careers - len(grouped_indices)
         ratio = ungrouped / total_careers
         if ratio > 0.5:
-            issues.append({
-                "severity": "warning",
-                "message": (
-                    f"{ungrouped}/{total_careers} careers "
-                    f"({ratio:.0%}) are ungrouped; grouping may be incomplete"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": (
+                        f"{ungrouped}/{total_careers} careers "
+                        f"({ratio:.0%}) are ungrouped; grouping may be incomplete"
+                    ),
+                }
+            )
 
     return issues
 
@@ -162,46 +170,56 @@ def validate_step2(
 
         # --- required fields ---
         if not company:
-            issues.append({
-                "severity": "error",
-                "message": f"Career #{i}: missing required field 'company'",
-            })
+            issues.append(
+                {
+                    "severity": "error",
+                    "message": f"Career #{i}: missing required field 'company'",
+                }
+            )
         if not start_date:
-            issues.append({
-                "severity": "error",
-                "message": f"Career #{i}: missing required field 'start_date'",
-            })
+            issues.append(
+                {
+                    "severity": "error",
+                    "message": f"Career #{i}: missing required field 'start_date'",
+                }
+            )
 
         # --- date format ---
         if start_date and not _DATE_YM_RE.match(start_date):
-            issues.append({
-                "severity": "error",
-                "message": (
-                    f"Career #{i}: start_date '{start_date}' "
-                    f"does not match YYYY-MM format"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "error",
+                    "message": (
+                        f"Career #{i}: start_date '{start_date}' "
+                        f"does not match YYYY-MM format"
+                    ),
+                }
+            )
 
         end_date = career.get("end_date")
         if end_date and not _DATE_YM_RE.match(end_date):
-            issues.append({
-                "severity": "error",
-                "message": (
-                    f"Career #{i}: end_date '{end_date}' "
-                    f"does not match YYYY-MM format"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "error",
+                    "message": (
+                        f"Career #{i}: end_date '{end_date}' "
+                        f"does not match YYYY-MM format"
+                    ),
+                }
+            )
 
     # --- flag consistency ---
     for i, flag in enumerate(flags):
         if flag.get("severity") and not flag.get("reasoning"):
-            issues.append({
-                "severity": "warning",
-                "message": (
-                    f"Flag #{i} has severity '{flag['severity']}' "
-                    f"but no reasoning provided"
-                ),
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": (
+                        f"Flag #{i} has severity '{flag['severity']}' "
+                        f"but no reasoning provided"
+                    ),
+                }
+            )
 
     # --- carry-forward field drop detection ---
     if raw_careers is not None:
@@ -209,11 +227,13 @@ def validate_step2(
             step1_has = any(c.get(field) for c in raw_careers)
             step2_has = any(c.get(field) for c in careers)
             if step1_has and not step2_has:
-                issues.append({
-                    "severity": "warning",
-                    "message": (
-                        f"Step 1 had '{field}' data but Step 2 dropped all of it"
-                    ),
-                })
+                issues.append(
+                    {
+                        "severity": "warning",
+                        "message": (
+                            f"Step 1 had '{field}' data but Step 2 dropped all of it"
+                        ),
+                    }
+                )
 
     return issues

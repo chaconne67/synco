@@ -5,15 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0012_add_career_inferred_capabilities'),
+        ("candidates", "0012_add_career_inferred_capabilities"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='candidate',
-            name='current_resume',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='current_for_candidate', to='candidates.resume'),
+            model_name="candidate",
+            name="current_resume",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="current_for_candidate",
+                to="candidates.resume",
+            ),
         ),
     ]

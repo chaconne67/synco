@@ -1,6 +1,6 @@
 # synco
 
-AI CRM & 비즈니스 매칭 플랫폼. FC(보험설계사)가 CEO 인맥을 관리하고, AI 브리핑으로 영업 기회를 발견하는 서비스.
+AI 헤드헌팅 플랫폼. 이력서를 자동 파싱·구조화하고, 후보자를 검색·검수하는 채용 담당자용 서비스.
 
 ## 개발 환경
 
@@ -11,7 +11,7 @@ AI CRM & 비즈니스 매칭 플랫폼. FC(보험설계사)가 CEO 인맥을 관
 
 - **Backend:** Django 5.2 (Python 3.13+) + PostgreSQL
 - **Frontend:** HTMX + Django Templates + Tailwind CSS (Pretendard font)
-- **AI:** Claude API (프로토타입용)
+- **AI:** Gemini API (이력서 추출/정규화)
 - **Package Manager:** uv
 
 ## 활성 앱

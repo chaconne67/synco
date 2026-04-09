@@ -39,8 +39,8 @@
       </button>
       <div id="tab-scroller" class="px-4 py-2.5 overflow-x-auto hide-scrollbar">
         <div class="flex gap-2 whitespace-nowrap pr-6">
-          <a href="/candidates/"
-             hx-get="/candidates/"
+          <a href="/candidates/{% if session %}?session_id={{ session.pk }}{% endif %}"
+             hx-get="/candidates/{% if session %}?session_id={{ session.pk }}{% endif %}"
              hx-target="#main-content"
              hx-push-url="true"
              class="flex-shrink-0 inline-block px-3 py-2.5 rounded-full text-sm font-medium transition
@@ -48,8 +48,8 @@
             전체
           </a>
           {% for cat in categories %}
-          <a href="/candidates/?category={{ cat.name }}"
-             hx-get="/candidates/?category={{ cat.name }}"
+          <a href="/candidates/?category={{ cat.name }}{% if session %}&session_id={{ session.pk }}{% endif %}"
+             hx-get="/candidates/?category={{ cat.name }}{% if session %}&session_id={{ session.pk }}{% endif %}"
              hx-target="#main-content"
              hx-push-url="true"
              class="flex-shrink-0 inline-block px-3 py-2.5 rounded-full text-sm font-medium transition
@@ -59,6 +59,46 @@
           {% endfor %}
         </div>
       </div>
+    </div>
+    <!-- Recommendation status filter -->
+    <div class="flex gap-2 px-4 pb-2 overflow-x-auto hide-scrollbar">
+      {% with rec=rec_status_filter %}
+      <a href="/candidates/{% if session %}?session_id={{ session.pk }}{% endif %}{% if active_category %}{% if session %}&{% else %}?{% endif %}category={{ active_category }}{% endif %}"
+         hx-get="/candidates/{% if session %}?session_id={{ session.pk }}{% endif %}{% if active_category %}{% if session %}&{% else %}?{% endif %}category={{ active_category }}{% endif %}"
+         hx-target="#main-content" hx-push-url="true"
+         class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+           {% if not rec %}bg-gray-700 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        전체
+      </a>
+      <a href="/candidates/?rec_status=pending{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-get="/candidates/?rec_status=pending{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-target="#main-content" hx-push-url="true"
+         class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+           {% if rec == 'pending' %}bg-gray-700 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        미결정
+      </a>
+      <a href="/candidates/?rec_status=recommended{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-get="/candidates/?rec_status=recommended{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-target="#main-content" hx-push-url="true"
+         class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+           {% if rec == 'recommended' %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        추천
+      </a>
+      <a href="/candidates/?rec_status=not_recommended{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-get="/candidates/?rec_status=not_recommended{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-target="#main-content" hx-push-url="true"
+         class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+           {% if rec == 'not_recommended' %}bg-red-600 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        비추천
+      </a>
+      <a href="/candidates/?rec_status=on_hold{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-get="/candidates/?rec_status=on_hold{% if session %}&session_id={{ session.pk }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         hx-target="#main-content" hx-push-url="true"
+         class="whitespace-nowrap px-3 py-1.5 rounded-full text-[13px] font-medium transition
+           {% if rec == 'on_hold' %}bg-yellow-600 text-white{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200{% endif %}">
+        보류
+      </a>
+      {% endwith %}
     </div>
   </div>
 

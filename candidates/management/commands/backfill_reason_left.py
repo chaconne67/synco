@@ -36,7 +36,9 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING("=== DRY RUN ==="))
 
-        candidates = Candidate.objects.exclude(career_etc=[]).exclude(career_etc__isnull=True)
+        candidates = Candidate.objects.exclude(career_etc=[]).exclude(
+            career_etc__isnull=True
+        )
         total_migrated = 0
         total_unmatched = 0
         total_candidates = 0
@@ -48,7 +50,10 @@ class Command(BaseCommand):
             changed = False
 
             for item in etc_items:
-                if _canonicalize(item, _CAREER_ETC_ALIASES, _CAREER_ETC_KEYWORDS) != "퇴사사유":
+                if (
+                    _canonicalize(item, _CAREER_ETC_ALIASES, _CAREER_ETC_KEYWORDS)
+                    != "퇴사사유"
+                ):
                     remaining.append(item)
                     continue
 
@@ -73,7 +78,9 @@ class Command(BaseCommand):
                 # 2nd: company-only match (only when exactly one Career)
                 if not matched_career and etc_company:
                     company_matches = [
-                        c for c in careers if _normalize_company(c.company) == etc_company
+                        c
+                        for c in careers
+                        if _normalize_company(c.company) == etc_company
                     ]
                     if len(company_matches) == 1:
                         matched_career = company_matches[0]
@@ -83,7 +90,7 @@ class Command(BaseCommand):
                     if dry_run:
                         self.stdout.write(
                             f"  [{candidate.name}] {matched_career.company} "
-                            f"← \"{description[:60]}...\""
+                            f'← "{description[:60]}..."'
                         )
                     else:
                         matched_career.reason_left = description
@@ -92,7 +99,10 @@ class Command(BaseCommand):
                     total_migrated += 1
                 else:
                     remaining.append(item)
-                    if _canonicalize(item, _CAREER_ETC_ALIASES, _CAREER_ETC_KEYWORDS) == "퇴사사유":
+                    if (
+                        _canonicalize(item, _CAREER_ETC_ALIASES, _CAREER_ETC_KEYWORDS)
+                        == "퇴사사유"
+                    ):
                         total_unmatched += 1
                         if dry_run:
                             self.stdout.write(

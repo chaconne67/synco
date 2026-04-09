@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>synco - AI 헤드헌팅 워크플로우 플랫폼</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @page { size: 1280px 720px; margin: 0; }
+  body { font-family: 'Noto Sans CJK KR', 'Noto Sans KR', sans-serif; color: #111827; background: #fff; line-height: 1.6; font-size: 15px; }
+
+  .slide {
+    width: 1280px; height: 720px;
+    padding: 40px 56px 32px;
+    position: relative; overflow: hidden;
+    page-break-after: always;
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  /* footer */
+  .foot { position: absolute; bottom: 14px; left: 56px; right: 56px; display: flex; justify-content: space-between; font-size: 11px; color: #D1D5DB; }
+
+  /* cover */
+  .cover {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2563EB 50%, #3B82F6 100%);
+    color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    padding: 0;
+  }
+  .cover .logo { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
+  .cover .logo span { color: #F59E0B; }
+  .cover .sub { font-size: 26px; font-weight: 600; margin-top: 8px; opacity: .95; }
+  .cover .bar { width: 64px; height: 3px; background: #F59E0B; margin: 20px auto; border-radius: 2px; }
+  .cover .tag { font-size: 16px; opacity: .75; line-height: 1.6; }
+  .cover .meta { font-size: 13px; opacity: .5; margin-top: 36px; }
+
+  /* headings */
+  .num { font-size: 12px; font-weight: 700; color: #2563EB; letter-spacing: 2px; margin-bottom: 4px; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .desc { font-size: 16px; color: #6B7280; margin-bottom: 20px; }
+
+  /* grid */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  .g23 { display: grid; grid-template-columns: 2fr 3fr; gap: 28px; }
+  .g32 { display: grid; grid-template-columns: 3fr 2fr; gap: 28px; }
+
+  /* card */
+  .c { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px; }
+  .c.blue { background: #DBEAFE; border-color: #93C5FD; }
+  .c.yellow { background: #FEF3C7; border-color: #FCD34D; }
+  .c.green { background: #D1FAE5; border-color: #6EE7B7; }
+  .c.red { background: #FEE2E2; border-color: #FCA5A5; }
+  .c-icon { font-size: 24px; margin-bottom: 6px; }
+  .c-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+  .c-text { font-size: 14px; color: #374151; line-height: 1.55; }
+
+  /* badge */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .badge.b { background: #DBEAFE; color: #1D4ED8; }
+  .badge.g { background: #D1FAE5; color: #065F46; }
+  .badge.y { background: #FEF3C7; color: #92400E; }
+  .badge.r { background: #FEE2E2; color: #991B1B; }
+
+  /* highlight */
+  .hl { background: linear-gradient(135deg,#DBEAFE,#EFF6FF); border-left: 4px solid #2563EB; border-radius: 0 10px 10px 0; padding: 14px 18px; margin-top: 16px; }
+  .hl b { font-size: 15px; }
+  .hl p { font-size: 14px; color: #374151; margin-top: 4px; }
+
+  /* pipeline */
+  .pipe { display: flex; align-items: center; gap: 4px; margin-bottom: 20px; }
+  .pipe-s { flex: 1; text-align: center; padding: 10px 4px; }
+  .pipe-s .n { width: 30px; height: 30px; border-radius: 50%; background: #2563EB; color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px; }
+  .pipe-s .l { font-size: 14px; font-weight: 600; }
+  .pipe-s .d { font-size: 12px; color: #6B7280; }
+  .pipe-a { color: #D1D5DB; font-size: 16px; }
+
+  /* kanban */
+  .kb { display: flex; gap: 10px; }
+  .kb-col { flex: 1; }
+  .kb-h { font-size: 13px; font-weight: 700; color: #6B7280; padding: 6px 0; border-bottom: 2px solid #E5E7EB; margin-bottom: 6px; }
+  .kb-c { background: #fff; border: 1px solid #E5E7EB; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-size: 13px; }
+  .kb-c b { color: #111827; }
+  .kb-c .m { color: #6B7280; font-size: 11px; margin-top: 2px; }
+
+  /* chat */
+  .chat-r { display: flex; gap: 8px; margin-bottom: 8px; }
+  .chat-r.u { flex-direction: row-reverse; }
+  .chat-av { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .chat-av.bot { background: #DBEAFE; }
+  .chat-av.hu { background: #FEF3C7; }
+  .chat-b { padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.45; max-width: 340px; }
+  .chat-r.bot .chat-b { background: #F3F4F6; }
+  .chat-r.u .chat-b { background: #2563EB; color: #fff; }
+  .chat-btns { display: flex; gap: 4px; margin-top: 6px; }
+  .chat-btn { background: #2563EB; color: #fff; border-radius: 4px; padding: 3px 10px; font-size: 11px; }
+  .chat-btn.sec { background: #fff; color: #111; border: 1px solid #D1D5DB; }
+
+  /* telegram */
+  .tg { background: #E3F2FD; border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.5; max-width: 380px; margin-bottom: 8px; }
+  .tg-btns { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+  .tg-btn { background: #fff; border: 1px solid #90CAF9; border-radius: 6px; padding: 6px 12px; font-size: 13px; text-align: center; }
+
+  /* table */
+  .tb { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tb th { background: #F3F4F6; padding: 9px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid #E5E7EB; }
+  .tb td { padding: 8px 14px; border-bottom: 1px solid #F3F4F6; }
+
+  /* stat */
+  .stat { text-align: center; padding: 16px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB; }
+  .stat-n { font-size: 36px; font-weight: 800; color: #2563EB; }
+  .stat-l { font-size: 14px; color: #6B7280; margin-top: 2px; }
+
+  /* screen mock */
+  .scr { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+  .scr-h { background: #F3F4F6; padding: 7px 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #E5E7EB; }
+  .scr-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .scr-h span { font-size: 11px; color: #6B7280; margin-left: 6px; }
+  .scr-b { padding: 14px; }
+
+  ul.ck { list-style: none; padding: 0; }
+  ul.ck li { padding: 5px 0; font-size: 15px; display: flex; gap: 6px; }
+  ul.ck li::before { content: '✓'; color: #10B981; font-weight: 700; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: COVER -->
+<div class="slide cover">
+  <div class="logo">syn<span>co</span></div>
+  <div class="sub">AI 헤드헌팅 워크플로우 플랫폼</div>
+  <div class="bar"></div>
+  <div class="tag">의뢰 접수부터 합격까지, 프로젝트 전체 라이프사이클을<br>AI 에이전트와 보이스 인터페이스로 관리하는 차세대 채용 시스템</div>
+  <div class="meta">xdime × synco &nbsp;|&nbsp; 2026년 4월</div>
+</div>
+
+<!-- SLIDE 2: 문제 정의 -->
+<div class="slide">
+  <div class="num">01</div>
+  <h1>현재 업무의 문제점</h1>
+  <div class="desc">헤드헌팅 프로세스에서 반복되는 비효율을 해결합니다</div>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="c red">
+      <div class="c-icon">🔄</div>
+      <div class="c-title">중복 컨택 위험</div>
+      <div class="c-text">같은 후보자에게 여러 컨설턴트가 동시에 연락. 특히 프리랜서 간에는 서로의 프로젝트를 알 수 없어 중복 빈번.</div>
+    </div>
+    <div class="c red">
+      <div class="c-icon">📄</div>
+      <div class="c-title">서류 작성 병목</div>
+      <div class="c-text">고객사 양식에 맞게 수작업 변환. 오탈자, 폰트, 날짜 표기 등 서식 통일에 시간 과다 소요.</div>
+    </div>
+    <div class="c red">
+      <div class="c-icon">📊</div>
+      <div class="c-title">진행 상황 파악 어려움</div>
+      <div class="c-text">어떤 프로젝트가 어느 단계인지, 오늘 무엇을 해야 하는지 한눈에 볼 수 없어 현황 파악에 시간 소요.</div>
+    </div>
+    <div class="c red">
+      <div class="c-icon">🔍</div>
+      <div class="c-title">후보자 검색 한계</div>
+      <div class="c-text">엑셀, 파일 폴더, 개인 기억에 의존. JD 조건에 맞는 후보자를 빠르게 추출하기 어렵고 데이터 분산.</div>
+    </div>
+  </div>
+  <div class="hl">
+    <b>synco가 해결하는 것</b>
+    <p>프로젝트를 중심축으로 모든 업무를 하나의 시스템에서 관리하고, AI가 반복 작업을 자동화하며, 보이스와 텔레그램으로 언제 어디서든 업무를 처리합니다.</p>
+  </div>
+  <div class="foot"><span>synco</span><span>2 / 16</span></div>
+</div>
+
+<!-- SLIDE 3: 프로젝트 중심 구조 -->
+<div class="slide">
+  <div class="num">02</div>
+  <h1>프로젝트 중심 구조</h1>
+  <div class="desc">의뢰(프로젝트)가 주인공, 후보자는 재료, 고객사는 소비자</div>
+  <div class="pipe">
+    <div class="pipe-s"><div class="n">1</div><div class="l">의뢰 접수</div><div class="d">고객사 + JD</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">2</div><div class="l">공지·서칭</div><div class="d">자동 생성 + AI</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">3</div><div class="l">컨택</div><div class="d">중복 방지</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">4</div><div class="l">추천</div><div class="d">AI 서류 생성</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">5</div><div class="l">면접</div><div class="d">일정·결과</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">6</div><div class="l">합격·조율</div><div class="d">오퍼 관리</div></div>
+  </div>
+  <div class="g32">
+    <div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px;">프로젝트 = 업무의 컨트롤 타워</div>
+      <ul class="ck">
+        <li>고객사로부터 의뢰를 받으면 <b>프로젝트</b>가 생성됩니다</li>
+        <li>프로젝트 안에서 서칭~오퍼까지 전 과정 진행</li>
+        <li>각 단계의 상태가 자동으로 업데이트</li>
+        <li>같은 후보자가 여러 프로젝트에서 활용 가능</li>
+        <li>컨설턴트는 자기 프로젝트만 보이고 충돌 시에만 공개</li>
+      </ul>
+    </div>
+    <div class="c blue" style="text-align:center;padding:24px;">
+      <div style="font-size:36px;margin-bottom:8px;">📋</div>
+      <div style="font-size:18px;font-weight:700;">Rayence · 품질기획팀장</div>
+      <div class="badge b" style="margin:8px 0;">서칭중 · D+12</div>
+      <div style="text-align:left;font-size:12px;margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #93C5FD;"><span>담당</span><b>전병권</b></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #93C5FD;"><span>컨택</span><b>3명</b></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #93C5FD;"><span>추천</span><b>1명</b></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;"><span>면접</span><b>0명</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>3 / 16</span></div>
+</div>
+
+<!-- SLIDE 4: 칸반 보드 -->
+<div class="slide">
+  <div class="num">03</div>
+  <h1>프로젝트 보드 — 칸반</h1>
+  <div class="desc">전체 파이프라인을 한눈에, 드래그앤드롭으로 상태 전환</div>
+  <div class="scr">
+    <div class="scr-h">
+      <div class="scr-dot" style="background:#EF4444;"></div>
+      <div class="scr-dot" style="background:#F59E0B;"></div>
+      <div class="scr-dot" style="background:#10B981;"></div>
+      <span>프로젝트 보드 — 내 담당</span>
+    </div>
+    <div class="scr-b">
+      <div class="kb">
+        <div class="kb-col">
+          <div class="kb-h">신규 (2)</div>
+          <div class="kb-c"><b>LG전자</b><br>경영기획<div class="m">전병권 · D+2</div></div>
+          <div class="kb-c"><b>바이엘코리아</b><br>임상연구<div class="m">김소연 · D+1</div></div>
+        </div>
+        <div class="kb-col">
+          <div class="kb-h" style="border-color:#2563EB;">서칭중 (3)</div>
+          <div class="kb-c" style="border-left:3px solid #2563EB;"><b>Rayence</b><br>품질기획팀장<div class="m">전병권 · 컨택 3 · D+12</div></div>
+          <div class="kb-c"><b>한화솔루션스</b><br>안전환경<div class="m">박준혁 · 컨택 1 · D+8</div></div>
+          <div class="kb-c"><b>아모레퍼시픽</b><br>해외마케팅<div class="m">전병권 · D+5</div></div>
+        </div>
+        <div class="kb-col">
+          <div class="kb-h" style="border-color:#F59E0B;">추천진행 (2)</div>
+          <div class="kb-c"><b>현대모비스</b><br>SW개발<div class="m">김소연 · 추천 2 · D+18</div></div>
+          <div class="kb-c"><b>CJ제일제당</b><br>마케팅<div class="m">박준혁 · 추천 3 · D+20</div></div>
+        </div>
+        <div class="kb-col">
+          <div class="kb-h" style="border-color:#10B981;">면접진행 (1)</div>
+          <div class="kb-c"><b>삼성SDI</b><br>해외영업<div class="m">김소연 · 면접 2차 · D+25</div></div>
+        </div>
+        <div class="kb-col">
+          <div class="kb-h" style="border-color:#8B5CF6;">오퍼 (1)</div>
+          <div class="kb-c"><b>SK하이닉스</b><br>공정엔지니어<div class="m">전병권 · 협상중 · D+41</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>4 / 16</span></div>
+</div>
+
+<!-- SLIDE 5: 멀티뷰 -->
+<div class="slide">
+  <div class="num">03</div>
+  <h1>노션 스타일 멀티뷰</h1>
+  <div class="desc">같은 데이터를 4가지 관점으로 전환 — 모든 뷰는 같은 필터를 공유</div>
+  <div class="g4">
+    <div class="c" style="text-align:center;padding:24px;">
+      <div style="font-size:36px;margin-bottom:8px;">▣</div>
+      <div class="c-title">보드 (칸반)</div>
+      <div class="c-text">라이프사이클별 칼럼. 파이프라인 전체 흐름과 병목을 한눈에 파악. 드래그앤드롭으로 상태 전환.</div>
+    </div>
+    <div class="c" style="text-align:center;padding:24px;">
+      <div style="font-size:36px;margin-bottom:8px;">≡</div>
+      <div class="c-title">리스트 (액션)</div>
+      <div class="c-text">긴급도 자동 분류 + "다음 액션" 표시. 출근하면 리스트 보고 오늘 할 일 파악.</div>
+    </div>
+    <div class="c" style="text-align:center;padding:24px;">
+      <div style="font-size:36px;margin-bottom:8px;">⊞</div>
+      <div class="c-title">테이블</div>
+      <div class="c-text">스프레드시트형. 컬럼별 정렬·필터. 팀 미팅에서 전체 현황 리뷰할 때 유용.</div>
+    </div>
+    <div class="c" style="text-align:center;padding:24px;">
+      <div style="font-size:36px;margin-bottom:8px;">📅</div>
+      <div class="c-title">캘린더</div>
+      <div class="c-text">면접일, 재컨택 예정일, 출근 예정일 등. 월간/주간 토글.</div>
+    </div>
+  </div>
+  <div class="hl">
+    <b>관점에 따라 다각도로 업무 파악</b>
+    <p>보드로 파이프라인 흐름, 리스트로 오늘 할 일, 테이블로 데이터 비교, 캘린더로 일정 — 뷰 전환만으로 전환됩니다.</p>
+  </div>
+  <div class="foot"><span>synco</span><span>5 / 16</span></div>
+</div>
+
+<!-- SLIDE 6: 대화형 에이전트 -->
+<div class="slide">
+  <div class="num">04</div>
+  <h1>AI 에이전트 — 대화로 업무 처리</h1>
+  <div class="desc">폼을 채우지 않습니다. 말하면 에이전트가 처리합니다.</div>
+  <div class="g2">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#2563EB;margin-bottom:10px;">프로젝트 등록 예시</div>
+      <div class="chat-r u"><div class="chat-av hu">👤</div><div class="chat-b">🎙️ "프로젝트 등록할거야"</div></div>
+      <div class="chat-r bot"><div class="chat-av bot">🤖</div><div class="chat-b">고객사는 어느 회사인가요?</div></div>
+      <div class="chat-r u"><div class="chat-av hu">👤</div><div class="chat-b">🎙️ "레이언스"</div></div>
+      <div class="chat-r bot"><div class="chat-av bot">🤖</div><div class="chat-b">레이언스는 신규 고객사입니다.<br>웹에서 기업 정보를 검색할까요?</div></div>
+      <div class="chat-r u"><div class="chat-av hu">👤</div><div class="chat-b">🎙️ "응"</div></div>
+      <div class="chat-r bot"><div class="chat-av bot">🤖</div><div class="chat-b"><b>레이언스 (Rayence)</b><br>의료기기 | 코스닥 | 경기 화성 | 매출 2,800억<br>맞나요? 포지션을 알려주세요.</div></div>
+      <div class="chat-r u"><div class="chat-av hu">👤</div><div class="chat-b">🎙️ "품질기획팀장. JD 올릴게"</div></div>
+      <div class="chat-r bot"><div class="chat-av bot">🤖</div><div class="chat-b">✅ JD 분석 완료.<br>고객사: 레이언스 | 포지션: 품질기획팀장<br>경력 15년+ | 인서울 | 품질경영기사<div class="chat-btns"><div class="chat-btn">✅ 등록</div><div class="chat-btn sec">✏️ 수정</div></div></div></div>
+    </div>
+    <div>
+      <div class="c blue" style="margin-bottom:14px;">
+        <div class="c-title">대화가 기본, 폼은 보조</div>
+        <div class="c-text">모든 입력은 음성 또는 텍스트 대화로 시작합니다. 에이전트가 필요한 정보를 하나씩 물어보고, 확인 후 저장합니다.</div>
+      </div>
+      <div class="c" style="margin-bottom:14px;">
+        <div class="c-title">🧠 컨텍스트 인식</div>
+        <div class="c-text">현재 프로젝트, 최근 작업 기반으로 의도 파악. "홍길동한테 전화했어"라고 하면 현재 프로젝트의 홍길동으로 자동 연결.</div>
+      </div>
+      <div class="c" style="margin-bottom:14px;">
+        <div class="c-title">🔄 다음 액션 제안</div>
+        <div class="c-text">등록 후 "바로 서칭 시작할까요?", 컨택 후 "추천 서류 작성할까요?" 등 자연스러운 안내.</div>
+      </div>
+      <div class="c">
+        <div class="c-title">⏸️ 업무 연속성</div>
+        <div class="c-text">작업 중단 후 돌아오면 "아까 하던 거 이어서 할까요?" — 어디까지 했는지 자동 기억.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>6 / 16</span></div>
+</div>
+
+<!-- SLIDE 7: 중복 방지 - 프로젝트 -->
+<div class="slide">
+  <div class="num">05</div>
+  <h1>중복 컨택 완벽 차단 — 프로젝트 레벨</h1>
+  <div class="desc">프리랜서 운영 환경에서도 같은 고객사 의뢰 중복을 원천 방지합니다</div>
+  <div class="g2">
+    <div>
+      <div class="c yellow" style="margin-bottom:14px;">
+        <div class="c-title">🛡️ 프로젝트 등록 시 충돌 감지</div>
+        <div class="c-text">같은 고객사에 유사 포지션이 이미 진행 중이면 <b>관리자 승인 없이 등록 불가</b>.<br>프리랜서가 모르고 중복 등록하는 것을 차단합니다.</div>
+      </div>
+      <div class="c" style="margin-bottom:14px;">
+        <div class="c-title">가시성 정책: 충돌 시에만 공개</div>
+        <div class="c-text">평소에는 자기 프로젝트만 보입니다. 충돌 감지 시에만 "유사 프로젝트 존재 (담당: OOO)" 수준의 정보가 표시됩니다.</div>
+      </div>
+      <table class="tb">
+        <tr><th>매칭 조건</th><th>판정</th></tr>
+        <tr><td>같은 고객사 + 포지션 유사</td><td><span class="badge r">승인 필수</span></td></tr>
+        <tr><td>같은 고객사 + 포지션 다름</td><td><span class="badge y">승인 필수</span></td></tr>
+        <tr><td>다른 고객사</td><td><span class="badge g">바로 등록</span></td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">텔레그램 관리자 승인</div>
+      <div class="tg">
+        <b>🤖 [synco] 프로젝트 등록 승인 요청</b><br><br>
+        전병권 → Rayence 품질기획팀장<br>
+        <span style="color:#EF4444;">충돌: 김소연의 "Rayence 품질기획파트장" (서칭중)</span><br><br>
+        <em>"인사팀 이부장으로부터 직접 의뢰 받았습니다."</em>
+        <div class="tg-btns">
+          <div class="tg-btn" style="background:#E8F5E9;">✅ 승인 — 다른 프로젝트</div>
+          <div class="tg-btn">🔗 합류 — 기존 프로젝트에 배정</div>
+          <div class="tg-btn">💬 메시지 보내기</div>
+          <div class="tg-btn" style="background:#FFEBEE;">❌ 반려</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>7 / 16</span></div>
+</div>
+
+<!-- SLIDE 8: 중복 방지 - 후보자 -->
+<div class="slide">
+  <div class="num">05</div>
+  <h1>중복 컨택 완벽 차단 — 후보자 레벨</h1>
+  <div class="desc">같은 프로젝트 내 선착순 잠금, 다른 프로젝트면 허용 + 알림</div>
+  <div class="g2">
+    <div>
+      <table class="tb" style="margin-bottom:16px;">
+        <tr><th>상황</th><th>정책</th></tr>
+        <tr><td>같은 프로젝트 + 같은 후보자 (이미 컨택됨)</td><td><span class="badge r">차단</span></td></tr>
+        <tr><td>같은 프로젝트 + 같은 후보자 (컨택 예정 등록)</td><td><span class="badge y">7일 잠금</span></td></tr>
+        <tr><td>다른 프로젝트 + 같은 후보자</td><td><span class="badge g">허용 + 알림</span></td></tr>
+      </table>
+      <div class="c" style="margin-bottom:12px;">
+        <div class="c-title">컨택 예정 등록 → 선착순 잠금</div>
+        <div class="c-text">서칭 탭에서 후보자 선택 → "컨택 예정 등록" → 7일간 잠금. 기간 내 미컨택 시 자동 해제. 프로젝트 리드가 수동 해제 가능.</div>
+      </div>
+      <div class="c blue">
+        <div class="c-title">전체 흐름</div>
+        <div class="c-text">서칭 → 후보자 선택 → <b>컨택 예정 등록</b> (잠금) → 실제 컨택 → <b>컨택 결과 기록</b></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">서칭 탭에서 충돌 표시</div>
+      <div class="scr">
+        <div class="scr-h"><div class="scr-dot" style="background:#EF4444;"></div><div class="scr-dot" style="background:#F59E0B;"></div><div class="scr-dot" style="background:#10B981;"></div><span>서칭 — Rayence 품질기획</span></div>
+        <div class="scr-b" style="font-size:12px;">
+          <div style="padding:8px;border:1px solid #E5E7EB;border-radius:6px;margin-bottom:6px;">
+            ☑ <b>홍길동</b> &nbsp; 16년 &nbsp; 메디톡스 품질부장<br>
+            <span style="font-size:11px;">├ 🔒 이 프로젝트: 전병권 컨택 예정 (04/06)</span><br>
+            <span style="font-size:11px;color:#6B7280;">└ ℹ️ 프로젝트Y: 김소연 04/01 컨택 (관심 있음)</span>
+          </div>
+          <div style="padding:8px;border:1px solid #E5E7EB;border-radius:6px;margin-bottom:6px;">
+            ☑ <b>김영희</b> &nbsp; 14년 &nbsp; 오스템 QA팀장<br>
+            <span style="font-size:11px;color:#6B7280;">└ (컨택 이력 없음)</span>
+          </div>
+          <div style="padding:8px;border:1px solid #E5E7EB;border-radius:6px;background:#FEF2F2;">
+            ☐ <b>박철수</b> &nbsp; 18년 &nbsp; 삼성메디슨 &nbsp; <span class="badge r">노터치</span><br>
+            <span style="font-size:11px;">└ 🔒 이 프로젝트: 박준혁 컨택 예정 (04/05)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>8 / 16</span></div>
+</div>
+
+<!-- SLIDE 9: AI 서류 생성 -->
+<div class="slide">
+  <div class="num">06</div>
+  <h1>AI 제출 서류 자동 생성</h1>
+  <div class="desc">클릭 한 번으로 초안, 녹음 파일로 상담 내용 자동 반영, 마스킹 변환까지</div>
+  <div class="pipe" style="margin-bottom:16px;">
+    <div class="pipe-s"><div class="n">1</div><div class="l">AI 초안</div><div class="d">DB→양식 매핑</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">2</div><div class="l">상담 보완</div><div class="d">텍스트/녹음</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">3</div><div class="l">AI 정리</div><div class="d">완성본</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">4</div><div class="l">검토</div><div class="d">컨설턴트</div></div>
+    <div class="pipe-a">→</div>
+    <div class="pipe-s"><div class="n">5</div><div class="l">제출 변환</div><div class="d">마스킹+포맷</div></div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="c" style="margin-bottom:12px;">
+        <div class="c-title">📄 AI가 자동으로 하는 것</div>
+        <ul class="ck">
+          <li>이력서 데이터 → 엑스다임 양식 매핑</li>
+          <li>오탈자·문법 교정, 서식 통일</li>
+          <li>경력 기간 자동 계산</li>
+          <li>회사 소개 항목 자동 작성</li>
+          <li>국영문 양식 시 영문명 병기</li>
+        </ul>
+      </div>
+      <div class="c blue">
+        <div class="c-title">🎙️ 녹음 → 서류 반영</div>
+        <div class="c-text">상담 녹음 업로드 → Whisper 딕테이션 → AI 항목별 정리 → 이직 사유, 희망 연봉, 입사 가능일 자동 구조화</div>
+      </div>
+    </div>
+    <div>
+      <div class="c yellow">
+        <div class="c-title">🔐 제출용 변환 — 자동 마스킹</div>
+        <table class="tb" style="margin:8px 0;">
+          <tr><td>연봉 정보</td><td><span class="badge r">제거</span></td></tr>
+          <tr><td>생년월일</td><td><span class="badge y">연령대만 표시</span></td></tr>
+          <tr><td>연락처</td><td><span class="badge r">제거</span></td></tr>
+          <tr><td>현 회사명</td><td><span class="badge b">선택적 익명</span></td></tr>
+        </table>
+        <div class="c-text" style="margin-top:8px;"><b>출력:</b> Word / PDF &nbsp;|&nbsp; 국문 / 영문 / 국영문</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>9 / 16</span></div>
+</div>
+
+<!-- SLIDE 10: 텔레그램 -->
+<div class="slide">
+  <div class="num">07</div>
+  <h1>텔레그램으로 업무 처리</h1>
+  <div class="desc">이동 중에도 알림 확인, 승인, 컨택 기록 — 버튼 하나로</div>
+  <div class="g2">
+    <div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">알림 + 버튼 처리</div>
+      <div class="tg">
+        <b>🤖 [synco] 📬 새 지원자 2명</b><br>Rayence 품질기획 건<br><br>
+        1. 박영수 | 15년 | 오스템 품질부장 ✅ 적합도: 높음<br>
+        2. 김민지 | 8년 | 바텍 QA팀 ⚠️ 경력 부족
+        <div class="tg-btns">
+          <div class="tg-btn" style="background:#E8F5E9;">📞 박영수 컨택 예정 등록</div>
+          <div class="tg-btn">⏸️ 김민지 보류</div>
+          <div class="tg-btn">👁️ 상세 보기 (웹)</div>
+        </div>
+      </div>
+      <div class="tg">
+        <b>🤖 홍길동 컨택 결과 기록</b><br><br>연락 방법은?
+        <div style="display:flex;gap:4px;margin-top:6px;">
+          <div class="tg-btn" style="flex:1;background:#E3F2FD;">📞 전화</div>
+          <div class="tg-btn" style="flex:1;">💬 카톡</div>
+          <div class="tg-btn" style="flex:1;">📧 이메일</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">텍스트로 업무 요청</div>
+      <div class="tg" style="background:#FFF3E0;"><b>👤</b> 오늘 할 일 뭐야</div>
+      <div class="tg"><b>🤖</b> 오늘의 액션 3건:<br>1. 📞 홍길동 재컨택 (Rayence)<br>2. 📄 이순신 서류 검토 (CJ)<br>3. 📋 LG전자 서칭 시작</div>
+      <div class="tg" style="background:#FFF3E0;"><b>👤</b> 홍길동한테 전화했는데 관심 있대</div>
+      <div class="tg"><b>🤖</b> Rayence 품질기획 건이죠?<br>홍길동 | 전화 | 관심 있음
+        <div style="display:flex;gap:4px;margin-top:6px;">
+          <div class="tg-btn" style="flex:1;background:#E8F5E9;">💾 저장</div>
+          <div class="tg-btn" style="flex:1;">✏️ 수정</div>
+        </div>
+      </div>
+      <div class="hl" style="margin-top:12px;">
+        <b>웹 앱 vs 텔레그램</b>
+        <p>간단한 확인·승인 → 텔레그램<br>서류 편집·칸반 보드 → 웹 앱</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>10 / 16</span></div>
+</div>
+
+<!-- SLIDE 11: 자동 생성 -->
+<div class="slide">
+  <div class="num">08</div>
+  <h1>시스템이 알아서 준비합니다</h1>
+  <div class="desc">AI가 선제적으로 문서를 생성하고, 사용자는 승인만 합니다</div>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="c green">
+      <div class="c-title">📋 프로젝트 등록하면</div>
+      <div class="c-text">→ 잡포털 <b>공지 초안</b> 자동 생성 (회사명 비노출)<br>→ JD 조건으로 <b>후보자 자동 서칭</b> (상위 10명)<br>→ 텔레그램: "공지/후보자 준비됨"</div>
+    </div>
+    <div class="c green">
+      <div class="c-title">😊 컨택 "관심 있음"이면</div>
+      <div class="c-text">→ <b>제출 서류 AI 초안</b> 자동 생성<br>→ 후보자 DB + 엑스다임 양식 매핑 완료<br>→ 텔레그램: "서류 초안 검토 요청"</div>
+    </div>
+    <div class="c green">
+      <div class="c-title">📤 서류 제출 완료하면</div>
+      <div class="c-text">→ 고객사 <b>팔로업 리마인더</b> 자동 예약 (3일 후)<br>→ 텔레그램: "고객사 피드백 확인 시점"</div>
+    </div>
+    <div class="c green">
+      <div class="c-title">🎉 면접 합격하면</div>
+      <div class="c-text">→ <b>오퍼 템플릿</b> 자동 생성 (연봉 범위, 포지션)<br>→ 텔레그램: "오퍼 초안 준비됨"</div>
+    </div>
+  </div>
+  <div class="c" style="display:flex;align-items:center;gap:16px;">
+    <div style="font-size:32px;">⏸️</div>
+    <div>
+      <div class="c-title">업무 연속성 보장</div>
+      <div class="c-text">전화, 다른 프로젝트 처리로 작업이 중단되어도 걱정 없습니다. 돌아오면 에이전트가 "아까 하던 거 이어서 할까요?"라고 물어봅니다. 어디까지 했는지 자동 기억.</div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>11 / 16</span></div>
+</div>
+
+<!-- SLIDE 12: 대시보드 -->
+<div class="slide">
+  <div class="num">09</div>
+  <h1>대시보드 — 오늘의 업무 한눈에</h1>
+  <div class="desc">로그인하면 바로 보이는 오늘 할 일과 전체 현황</div>
+  <div class="scr">
+    <div class="scr-h"><div class="scr-dot" style="background:#EF4444;"></div><div class="scr-dot" style="background:#F59E0B;"></div><div class="scr-dot" style="background:#10B981;"></div><span>대시보드 — 전병권님</span></div>
+    <div class="scr-b">
+      <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#EF4444;margin-bottom:8px;">🔴 오늘의 액션</div>
+          <div style="background:#FEF2F2;border-radius:6px;padding:7px 12px;margin-bottom:4px;font-size:11px;">📞 <b>홍길동</b> 재컨택 (Rayence 품질기획) <span style="float:right;color:#6B7280;">오늘</span></div>
+          <div style="background:#FEF2F2;border-radius:6px;padding:7px 12px;margin-bottom:4px;font-size:11px;">📄 <b>이순신</b> 서류 AI정리 완료 → 검토 <span style="float:right;color:#6B7280;">대기 1일</span></div>
+          <div style="background:#FEF2F2;border-radius:6px;padding:7px 12px;margin-bottom:12px;font-size:11px;">📋 <b>LG전자</b> 경영기획 — 서칭 시작 <span style="float:right;color:#6B7280;">D+2</span></div>
+          <div style="font-size:13px;font-weight:700;color:#F59E0B;margin-bottom:8px;">🟡 이번 주</div>
+          <div style="background:#FFFBEB;border-radius:6px;padding:7px 12px;margin-bottom:4px;font-size:11px;">🗓️ 삼성SDI 홍길동 <b>2차 면접</b> <span style="float:right;">04/12</span></div>
+          <div style="background:#FFFBEB;border-radius:6px;padding:7px 12px;font-size:11px;">⏳ SK하이닉스 오퍼 회신 대기 <span style="float:right;">D+41</span></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;">📊 내 파이프라인</div>
+          <div style="display:flex;gap:4px;margin-bottom:10px;font-size:10px;text-align:center;">
+            <div style="flex:1;background:#F3F4F6;border-radius:6px;padding:6px 2px;"><div style="font-size:16px;font-weight:800;color:#2563EB;">1</div>신규</div>
+            <div style="flex:1;background:#DBEAFE;border-radius:6px;padding:6px 2px;"><div style="font-size:16px;font-weight:800;color:#2563EB;">2</div>서칭</div>
+            <div style="flex:1;background:#FEF3C7;border-radius:6px;padding:6px 2px;"><div style="font-size:16px;font-weight:800;color:#92400E;">1</div>추천</div>
+            <div style="flex:1;background:#D1FAE5;border-radius:6px;padding:6px 2px;"><div style="font-size:16px;font-weight:800;color:#065F46;">1</div>면접</div>
+            <div style="flex:1;background:#EDE9FE;border-radius:6px;padding:6px 2px;"><div style="font-size:16px;font-weight:800;color:#5B21B6;">1</div>오퍼</div>
+          </div>
+          <div style="background:#F9FAFB;border-radius:6px;padding:8px;font-size:11px;margin-bottom:12px;">진행 중: <b>6건</b> | 이번 달 클로즈: <b>1건</b></div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🕐 최근 활동</div>
+          <div style="font-size:10px;color:#6B7280;line-height:1.8;">10분 전 홍길동 컨택 기록 추가<br>2시간 전 LG전자 프로젝트 등록<br>어제 이순신 서류 AI 초안 생성</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>12 / 16</span></div>
+</div>
+
+<!-- SLIDE 13: 레퍼런스 -->
+<div class="slide">
+  <div class="num">10</div>
+  <h1>풍부한 레퍼런스 데이터</h1>
+  <div class="desc">대학 랭킹, 자격증 800종, 기업 DB로 서칭 필터 정확도를 높입니다</div>
+  <div class="g3" style="margin-bottom:16px;">
+    <div class="c">
+      <div class="c-title">🎓 대학 랭킹</div>
+      <div class="c-text"><b>국내 7개 티어:</b> SKY → 서성한 → 중경외시 → 건동홍 → 인서울 → 이공계명문 → 지방거점<br><br><b>해외:</b> 미국·영국·일본 주요 대학</div>
+    </div>
+    <div class="c">
+      <div class="c-title">📜 자격증 ~800종</div>
+      <div class="c-text">회계·법률·기술·IT·의료·무역·건설·식품·어학<br><br><b>별칭 매칭:</b><br>"CPA" = "공인회계사" = "KICPA"</div>
+    </div>
+    <div class="c">
+      <div class="c-title">🏢 기업 DB</div>
+      <div class="c-text"><b>초기:</b> KOSPI/KOSDAQ 상장사<br><br><b>점진적:</b> 프로젝트 등록 시 신규 기업 → 웹 검색 → 자동 채움</div>
+    </div>
+  </div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:8px;">후보자 서칭 예시 — Rayence 품질기획팀장</div>
+  <table class="tb">
+    <tr><th>이름</th><th>경력</th><th>현 회사</th><th>학력</th><th>자격증</th><th>적합도</th></tr>
+    <tr><td><b>홍길동</b></td><td>16년</td><td>메디톡스 품질부장</td><td>성균관대 (서성한)</td><td>품질경영기사, ISO 심사원</td><td><span class="badge g">높음</span></td></tr>
+    <tr><td><b>김영희</b></td><td>14년</td><td>오스템 QA팀장</td><td>한양대 (서성한)</td><td>품질경영기사</td><td><span class="badge g">높음</span></td></tr>
+    <tr><td><b>박철수</b></td><td>18년</td><td>삼성메디슨</td><td>서울대 (SKY)</td><td>6시그마 BB</td><td><span class="badge g">높음</span></td></tr>
+    <tr><td><b>이정민</b></td><td>10년</td><td>바텍 QA</td><td>중앙대 (중경외시)</td><td>품질경영기사</td><td><span class="badge y">보통</span></td></tr>
+  </table>
+  <div class="foot"><span>synco</span><span>13 / 16</span></div>
+</div>
+
+<!-- SLIDE 14: 부가 기능 -->
+<div class="slide">
+  <div class="num">11</div>
+  <h1>부가 기능</h1>
+  <div class="desc">업계 뉴스 자동 수집, 이메일 이력서 자동 처리</div>
+  <div class="g2">
+    <div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px;">📰 뉴스피드</div>
+      <div class="c" style="margin-bottom:12px;">
+        <div style="font-size:11px;color:#2563EB;font-weight:600;margin-bottom:4px;">📌 내 프로젝트 관련</div>
+        <div style="font-size:12px;font-weight:700;">삼성전자, 하반기 경력직 대규모 채용 예고</div>
+        <div style="font-size:11px;color:#6B7280;">매일경제 | 2시간 전 | 🏷️ 삼성SDI 건 참고</div>
+        <div style="border-top:1px solid #E5E7EB;margin-top:8px;padding-top:8px;">
+          <div style="font-size:12px;font-weight:700;">CJ그룹 임원인사 단행</div>
+          <div style="font-size:11px;color:#6B7280;">조선일보 | 어제</div>
+        </div>
+      </div>
+      <ul class="ck" style="font-size:12px;">
+        <li>채용·인사 뉴스 매일 자동 수집 + AI 요약</li>
+        <li>진행 중 프로젝트와 관련도 매칭</li>
+        <li>텔레그램으로 매일 뉴스 요약 발송</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px;">📧 이메일 이력서 자동 처리</div>
+      <div class="c" style="margin-bottom:12px;">
+        <div style="font-size:12px;line-height:1.8;">
+          📨 이메일 수신<br>
+          <span style="margin-left:16px;">↓ 첨부파일 자동 추출 (PDF, Word, HWP)</span><br>
+          <span style="margin-left:16px;">↓ 프로젝트 자동 매칭</span><br>
+          <span style="margin-left:16px;">↓ AI 이력서 파싱 → DB 등록</span><br>
+          🔔 컨설턴트에게 텔레그램 알림
+        </div>
+      </div>
+      <div class="c blue">
+        <div class="c-title">단계적 확장</div>
+        <div class="c-text"><b>1단계:</b> 드래그앤드롭 수동 업로드<br><b>2단계:</b> Gmail API 자동 모니터링</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>synco</span><span>14 / 16</span></div>
+</div>
+
+<!-- SLIDE 15: 기대 효과 -->
+<div class="slide">
+  <div class="num">12</div>
+  <h1>기대 효과</h1>
+  <div class="desc">도입 전후 업무 변화</div>
+  <div class="g4" style="margin-bottom:20px;">
+    <div class="stat"><div class="stat-n">80%</div><div class="stat-l">서류 작성 시간 절감</div></div>
+    <div class="stat"><div class="stat-n">0건</div><div class="stat-l">중복 컨택 사고</div></div>
+    <div class="stat"><div class="stat-n">3배</div><div class="stat-l">서칭 속도 향상</div></div>
+    <div class="stat"><div class="stat-n">24h</div><div class="stat-l">텔레그램 항시 업무</div></div>
+  </div>
+  <table class="tb">
+    <tr><th style="width:22%;">업무</th><th style="width:36%;">Before</th><th style="width:36%;">After (synco)</th></tr>
+    <tr><td><b>프로젝트 현황</b></td><td>엑셀·메모·기억에 의존</td><td>칸반 보드에서 한눈에 파악</td></tr>
+    <tr><td><b>후보자 서칭</b></td><td>잡포털 수동 검색, 시간 소요</td><td>JD 입력하면 AI가 자동 추출</td></tr>
+    <tr><td><b>컨택 관리</b></td><td>중복 위험, 이력 추적 불가</td><td>자동 잠금 + 이력 완전 추적</td></tr>
+    <tr><td><b>서류 작성</b></td><td>수작업 2~3시간</td><td>AI 초안 + 녹음 반영 30분</td></tr>
+    <tr><td><b>업무 입력</b></td><td>PC 앞에서 폼 채우기</td><td>음성 + 텔레그램 어디서든</td></tr>
+    <tr><td><b>관리자</b></td><td>일일이 확인·전화</td><td>대시보드 + 텔레그램 승인</td></tr>
+  </table>
+  <div class="foot"><span>synco</span><span>15 / 16</span></div>
+</div>
+
+<!-- SLIDE 16: 마무리 -->
+<div class="slide cover">
+  <div class="logo" style="font-size:44px;">syn<span>co</span></div>
+  <div class="bar"></div>
+  <div class="sub" style="font-size:22px;">헤드헌팅의 모든 순간을<br>하나의 플랫폼에서</div>
+  <div style="margin-top:36px;display:flex;gap:20px;font-size:14px;opacity:.9;">
+    <div>🎙️ 보이스로 시작</div><div>|</div>
+    <div>🤖 AI가 자동 처리</div><div>|</div>
+    <div>📱 텔레그램으로 확인</div>
+  </div>
+  <div style="margin-top:48px;opacity:.4;font-size:13px;">xdime × synco<br>문의: contact@xdime.co.kr</div>
+</div>
+
+</body>
+</html>

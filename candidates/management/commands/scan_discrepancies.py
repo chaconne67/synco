@@ -10,7 +10,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument("--all", action="store_true", help="Scan all candidates")
-        group.add_argument("--candidate-id", type=str, help="Scan a single candidate UUID")
+        group.add_argument(
+            "--candidate-id", type=str, help="Scan a single candidate UUID"
+        )
         parser.add_argument(
             "--limit",
             type=int,

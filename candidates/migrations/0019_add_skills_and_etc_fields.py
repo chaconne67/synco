@@ -4,35 +4,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0018_rename_processing_status_values'),
+        ("candidates", "0018_rename_processing_status_values"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='candidate',
-            name='career_etc',
-            field=models.JSONField(blank=True, default=list, help_text='[{type, name, company, role, start_date, end_date, technologies[], description}]'),
+            model_name="candidate",
+            name="career_etc",
+            field=models.JSONField(
+                blank=True,
+                default=list,
+                help_text="[{type, name, company, role, start_date, end_date, technologies[], description}]",
+            ),
         ),
         migrations.AddField(
-            model_name='candidate',
-            name='education_etc',
-            field=models.JSONField(blank=True, default=list, help_text='[{type, title, institution, date, description}]'),
+            model_name="candidate",
+            name="education_etc",
+            field=models.JSONField(
+                blank=True,
+                default=list,
+                help_text="[{type, title, institution, date, description}]",
+            ),
         ),
         migrations.AddField(
-            model_name='candidate',
-            name='personal_etc',
-            field=models.JSONField(blank=True, default=list, help_text='[{type, description}]'),
+            model_name="candidate",
+            name="personal_etc",
+            field=models.JSONField(
+                blank=True, default=list, help_text="[{type, description}]"
+            ),
         ),
         migrations.AddField(
-            model_name='candidate',
-            name='skills',
-            field=models.JSONField(blank=True, default=list, help_text='["Python", "Oracle", "SAP", ...]'),
+            model_name="candidate",
+            name="skills",
+            field=models.JSONField(
+                blank=True, default=list, help_text='["Python", "Oracle", "SAP", ...]'
+            ),
         ),
         migrations.AddField(
-            model_name='candidate',
-            name='skills_etc',
-            field=models.JSONField(blank=True, default=list, help_text='[{type, title, description, date}]'),
+            model_name="candidate",
+            name="skills_etc",
+            field=models.JSONField(
+                blank=True, default=list, help_text="[{type, title, description, date}]"
+            ),
         ),
     ]

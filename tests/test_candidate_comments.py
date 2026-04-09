@@ -1,5 +1,7 @@
 """Tests for candidate comment system."""
 
+from unittest.mock import patch
+
 import pytest
 from django.test import Client
 
@@ -9,6 +11,7 @@ from candidates.models import Candidate, CandidateComment, REASON_CODES
 @pytest.fixture
 def user(db):
     from django.contrib.auth import get_user_model
+
     User = get_user_model()
     return User.objects.create_user(username="tester", password="testpass123")
 
@@ -125,3 +128,43 @@ class TestReasonCodes:
             reason_codes=[],
         )
         assert comment.reason_labels == []
+
+
+class TestStatusIndependence:
+    """D3.3: recommendation_status changes must not affect validation_status."""
+
+    def test_comment_does_not_change_validation_status(self, client, candidate):
+        """Changing recommendation_status leaves validation_status unchanged."""
+        original_validation = candidate.validation_status
+
+        client.post(
+            f"/candidates/{candidate.pk}/comments/",
+            {"recommendation_status": "not_recommended", "content": "test"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        candidate.refresh_from_db()
+        assert candidate.recommendation_status == "not_recommended"
+        assert candidate.validation_status == original_validation
+
+
+class TestTransactionAtomicity:
+    """D3.4: comment creation + status update must be atomic."""
+
+    def test_rollback_on_save_failure(self, client, candidate):
+        """If candidate.save() fails, comment should not be created."""
+        original_status = candidate.recommendation_status
+
+        with patch.object(Candidate, "save", side_effect=Exception("DB error")):
+            try:
+                client.post(
+                    f"/candidates/{candidate.pk}/comments/",
+                    {"recommendation_status": "recommended", "content": "test"},
+                    HTTP_HX_REQUEST="true",
+                )
+            except Exception:
+                pass
+
+        assert CandidateComment.objects.filter(candidate=candidate).count() == 0
+        candidate.refresh_from_db()
+        assert candidate.recommendation_status == original_status

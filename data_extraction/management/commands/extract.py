@@ -119,6 +119,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Show batch job status",
         )
+        parser.add_argument(
+            "--provider",
+            type=str,
+            choices=["gemini", "openai"],
+            default="gemini",
+            help="LLM provider for extraction (default: gemini)",
+        )
 
     def handle(self, *args, **options):
         self._validate_options(options)
@@ -173,8 +180,14 @@ class Command(BaseCommand):
         self.use_integrity = options.get("integrity", False)
         self.force = options.get("force", False)
         self.shuffle = options.get("shuffle", False)
+        self.provider = options.get("provider", "gemini")
 
-        self.stdout.write(f"\n=== Extract {'(DRY RUN)' if dry_run else ''} ===")
+        provider_label = (
+            f" [provider: {self.provider}]" if self.provider != "gemini" else ""
+        )
+        self.stdout.write(
+            f"\n=== Extract {'(DRY RUN)' if dry_run else ''}{provider_label} ==="
+        )
 
         start_time = time.time()
 
@@ -202,9 +215,18 @@ class Command(BaseCommand):
         if not folders:
             self.stdout.write("No folders found.")
             self._print_summary(
-                {"total_files": 0, "total_groups": 0, "skipped": 0,
-                 "new_groups": [], "existing_ids": set(), "affected_folders": set()},
-                0, 0, time.time() - start_time, phase1_sec,
+                {
+                    "total_files": 0,
+                    "total_groups": 0,
+                    "skipped": 0,
+                    "new_groups": [],
+                    "existing_ids": set(),
+                    "affected_folders": set(),
+                },
+                0,
+                0,
+                time.time() - start_time,
+                phase1_sec,
             )
             return
 
@@ -232,16 +254,26 @@ class Command(BaseCommand):
         if dry_run:
             self._dry_run_report(work_items["new_groups"])
             self._print_summary(
-                work_items, 0, 0, time.time() - start_time,
-                phase1_sec, phase2_sec, phase3_sec,
+                work_items,
+                0,
+                0,
+                time.time() - start_time,
+                phase1_sec,
+                phase2_sec,
+                phase3_sec,
             )
             return
 
         if not work_items["new_groups"]:
             self.stdout.write("Nothing new to process.")
             self._print_summary(
-                work_items, 0, 0, time.time() - start_time,
-                phase1_sec, phase2_sec, phase3_sec,
+                work_items,
+                0,
+                0,
+                time.time() - start_time,
+                phase1_sec,
+                phase2_sec,
+                phase3_sec,
             )
             return
 
@@ -266,8 +298,14 @@ class Command(BaseCommand):
                 pass
 
         self._print_summary(
-            work_items, succeeded, failed, time.time() - start_time,
-            phase1_sec, phase2_sec, phase3_sec, phase4_sec,
+            work_items,
+            succeeded,
+            failed,
+            time.time() - start_time,
+            phase1_sec,
+            phase2_sec,
+            phase3_sec,
+            phase4_sec,
         )
 
     def _collect_work_items(
@@ -299,6 +337,7 @@ class Command(BaseCommand):
             ]
             if getattr(self, "shuffle", False):
                 import random
+
                 random.shuffle(normalized)
             if limit:
                 normalized = normalized[:limit]
@@ -316,14 +355,17 @@ class Command(BaseCommand):
         # Single bulk DB query
         existing_ids = set(
             Resume.objects.filter(drive_file_id__in=all_file_ids).values_list(
-                "drive_file_id", flat=True,
+                "drive_file_id",
+                flat=True,
             )
         )
 
         # Filter new groups
         for folder_name, groups in folder_groups.items():
             for g in groups:
-                if g["primary"]["file_id"] in existing_ids and not getattr(self, "force", False):
+                if g["primary"]["file_id"] in existing_ids and not getattr(
+                    self, "force", False
+                ):
                     total_skipped += 1
                 else:
                     g["_folder_name"] = folder_name
@@ -354,7 +396,8 @@ class Command(BaseCommand):
         categories = {}
         for name in folder_names:
             categories[name], _ = Category.objects.get_or_create(
-                name=name, defaults={"name_ko": ""},
+                name=name,
+                defaults={"name_ko": ""},
             )
 
         with ThreadPoolExecutor(max_workers=workers) as executor:
@@ -426,97 +469,157 @@ class Command(BaseCommand):
         parsed = group["parsed"]
         service = get_drive_service()
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Step 1: Download primary file
-            dest_path = os.path.join(tmpdir, primary["file_name"])
-            download_file(service, primary["file_id"], dest_path)
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                # Step 1: Download primary file
+                try:
+                    dest_path = os.path.join(tmpdir, primary["file_name"])
+                    download_file(service, primary["file_id"], dest_path)
+                except Exception as e:
+                    self._save_failed_resume(
+                        primary,
+                        folder_name,
+                        f"Download failed: {e}",
+                        filename_meta=parsed,
+                    )
+                    return False
 
-            # Step 2: Extract text + preprocess
-            raw_text = extract_text(dest_path)
-            raw_text = preprocess_resume_text(raw_text)
+                # Step 2: Extract text + preprocess
+                try:
+                    raw_text = extract_text(dest_path)
+                    raw_text = preprocess_resume_text(raw_text)
+                except Exception as e:
+                    self._save_failed_resume(
+                        primary,
+                        folder_name,
+                        f"Text extraction failed: {e}",
+                        filename_meta=parsed,
+                    )
+                    return False
 
-            from data_extraction.services.text import classify_text_quality
+                from data_extraction.services.text import classify_text_quality
 
-            quality = classify_text_quality(raw_text)
-            if quality != "ok":
-                self._save_failed_resume(primary, folder_name, f"Text quality: {quality}")
-                return False
+                quality = classify_text_quality(raw_text)
+                if quality != "ok":
+                    self._save_failed_resume(
+                        primary,
+                        folder_name,
+                        f"Text quality: {quality}",
+                        filename_meta=parsed,
+                    )
+                    return False
 
-            # Step 3: Extract + Validate + Retry
-            pipeline_result = run_extraction_with_retry(
-                raw_text=raw_text,
-                file_path=dest_path,
-                category=folder_name,
-                filename_meta=parsed,
-                file_reference_date=primary.get("modified_time"),
-                use_integrity_pipeline=self.use_integrity,
-            )
+                # Step 3: Extract + Validate + Retry
+                pipeline_result = run_extraction_with_retry(
+                    raw_text=raw_text,
+                    file_path=dest_path,
+                    category=folder_name,
+                    filename_meta=parsed,
+                    file_reference_date=primary.get("modified_time"),
+                    use_integrity_pipeline=self.use_integrity,
+                    provider=self.provider,
+                )
 
-            extracted = pipeline_result["extracted"]
-            if not extracted:
-                self._save_text_only_resume(
+                extracted = pipeline_result["extracted"]
+                if not extracted:
+                    self._save_text_only_resume(
+                        primary,
+                        folder_name,
+                        raw_text=raw_text,
+                        error_msg="Extraction failed after retries; stored raw text only",
+                        filename_meta=parsed,
+                    )
+                    return False
+
+                raw_text = pipeline_result["raw_text_used"]
+
+                if not extracted.get("name"):
+                    extracted["name"] = parsed.get("name") or primary["file_name"]
+
+                comparison_context = None
+                if extracted:
+                    from candidates.services.candidate_identity import (
+                        build_candidate_comparison_context,
+                    )
+
+                    comparison_context = build_candidate_comparison_context(extracted)
+                    if (
+                        self.use_integrity
+                        and comparison_context
+                        and comparison_context.previous_data
+                    ):
+                        from data_extraction.services.pipeline import (
+                            apply_cross_version_comparison,
+                        )
+
+                        pipeline_result = apply_cross_version_comparison(
+                            pipeline_result,
+                            comparison_context.previous_data,
+                        )
+
+                # Step 4: Save to DB
+                from data_extraction.services.save import save_pipeline_result
+
+                candidate = save_pipeline_result(
+                    pipeline_result=pipeline_result,
+                    raw_text=raw_text,
+                    category=category,
+                    primary_file=primary,
+                    other_files=others,
+                    existing_ids=existing_ids,
+                    comparison_context=comparison_context,
+                    filename_meta=parsed,
+                )
+
+                if not candidate:
+                    return False
+
+            return True
+        except Exception as e:
+            # Last-resort: ensure a record exists even for unexpected errors
+            try:
+                self._save_failed_resume(
                     primary,
                     folder_name,
-                    raw_text=raw_text,
-                    error_msg="Extraction failed after retries; stored raw text only",
+                    f"Unexpected error: {e}",
+                    filename_meta=parsed,
                 )
-                return False
+            except Exception:
+                pass
+            raise
 
-            raw_text = pipeline_result["raw_text_used"]
-
-            if not extracted.get("name"):
-                extracted["name"] = parsed.get("name") or primary["file_name"]
-
-            comparison_context = None
-            if extracted:
-                from candidates.services.candidate_identity import (
-                    build_candidate_comparison_context,
-                )
-
-                comparison_context = build_candidate_comparison_context(extracted)
-                if (
-                    self.use_integrity
-                    and comparison_context
-                    and comparison_context.previous_data
-                ):
-                    from data_extraction.services.pipeline import (
-                        apply_cross_version_comparison,
-                    )
-
-                    pipeline_result = apply_cross_version_comparison(
-                        pipeline_result,
-                        comparison_context.previous_data,
-                    )
-
-            # Step 4: Save to DB
-            from data_extraction.services.save import save_pipeline_result
-
-            candidate = save_pipeline_result(
-                pipeline_result=pipeline_result,
-                raw_text=raw_text,
-                category=category,
-                primary_file=primary,
-                other_files=others,
-                existing_ids=existing_ids,
-                comparison_context=comparison_context,
-            )
-
-            if not candidate:
-                return False
-
-        return True
-
-    def _save_failed_resume(self, file_info: dict, folder_name: str, error_msg: str):
+    def _save_failed_resume(
+        self,
+        file_info: dict,
+        folder_name: str,
+        error_msg: str,
+        *,
+        filename_meta: dict | None = None,
+    ):
         from data_extraction.services.save import save_failed_resume
 
-        save_failed_resume(file_info, folder_name, error_msg)
+        save_failed_resume(
+            file_info, folder_name, error_msg, filename_meta=filename_meta
+        )
 
     def _save_text_only_resume(
-        self, file_info: dict, folder_name: str, *, raw_text: str, error_msg: str,
+        self,
+        file_info: dict,
+        folder_name: str,
+        *,
+        raw_text: str,
+        error_msg: str,
+        filename_meta: dict | None = None,
     ):
         from data_extraction.services.save import save_text_only_resume
 
-        save_text_only_resume(file_info, folder_name, raw_text=raw_text, error_msg=error_msg)
+        save_text_only_resume(
+            file_info,
+            folder_name,
+            raw_text=raw_text,
+            error_msg=error_msg,
+            filename_meta=filename_meta,
+        )
 
     def _dry_run_report(self, groups: list[dict]):
         if not groups:
@@ -537,9 +640,15 @@ class Command(BaseCommand):
             )
 
     def _print_summary(
-        self, work_items: dict, succeeded: int, failed: int, total_sec: float,
-        phase1_sec: float = 0, phase2_sec: float = 0,
-        phase3_sec: float = 0, phase4_sec: float = 0,
+        self,
+        work_items: dict,
+        succeeded: int,
+        failed: int,
+        total_sec: float,
+        phase1_sec: float = 0,
+        phase2_sec: float = 0,
+        phase3_sec: float = 0,
+        phase4_sec: float = 0,
     ):
         self.stdout.write("\n=== Extract Summary ===")
         self.stdout.write(f"Total time: {total_sec:.1f}s")
@@ -665,7 +774,9 @@ class Command(BaseCommand):
         job = self._get_job(options["job_id"])
 
         if not job.gemini_batch_name:
-            raise CommandError(f"Job #{job.id} has no Gemini batch name (run submit first)")
+            raise CommandError(
+                f"Job #{job.id} has no Gemini batch name (run submit first)"
+            )
 
         self.stdout.write(f"\n=== Batch Poll (Job #{job.id}) ===")
 
@@ -681,7 +792,9 @@ class Command(BaseCommand):
             result_path = download_results_for_job(job, remote=remote)
             if result_path:
                 self.stdout.write(f"Result file: {result_path}")
-                self.stdout.write(self.style.SUCCESS("Results downloaded. Run --step ingest next."))
+                self.stdout.write(
+                    self.style.SUCCESS("Results downloaded. Run --step ingest next.")
+                )
             else:
                 self.stdout.write(self.style.WARNING("No result file available yet."))
         elif job.status == job.Status.FAILED:

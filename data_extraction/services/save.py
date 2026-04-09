@@ -35,10 +35,12 @@ def _normalize_skills_for_save(skills: list) -> list[dict]:
         if isinstance(item, str):
             result.append({"name": item, "description": None})
         elif isinstance(item, dict) and "name" in item:
-            result.append({
-                "name": item["name"],
-                "description": item.get("description"),
-            })
+            result.append(
+                {
+                    "name": item["name"],
+                    "description": item.get("description"),
+                }
+            )
     return result
 
 
@@ -51,7 +53,6 @@ def _sanitize_phone(value: str | None) -> str:
     from candidates.services.candidate_identity import select_primary_phone
 
     return _t(select_primary_phone(value or ""), 255)
-
 
 
 def _sanitize_reference_date(value: str | None) -> str:
@@ -95,7 +96,9 @@ def save_pipeline_result(
             )
         else:
             save_failed_resume(
-                primary_file, category.name, "Extraction failed",
+                primary_file,
+                category.name,
+                "Extraction failed",
                 filename_meta=filename_meta,
             )
         return None
@@ -133,32 +136,51 @@ def save_pipeline_result(
     existing_ids = existing_ids or set()
 
     with transaction.atomic():
-        from candidates.services.candidate_identity import build_candidate_comparison_context
+        from candidates.services.candidate_identity import (
+            build_candidate_comparison_context,
+        )
 
-        comparison_context = comparison_context or build_candidate_comparison_context(extracted)
+        comparison_context = comparison_context or build_candidate_comparison_context(
+            extracted
+        )
         matched_candidate = comparison_context.candidate if comparison_context else None
-        compared_resume = comparison_context.compared_resume if comparison_context else None
+        compared_resume = (
+            comparison_context.compared_resume if comparison_context else None
+        )
 
         if matched_candidate:
             logger.info(
                 "Matched existing candidate %s via %s",
-                matched_candidate.id, comparison_context.match_reason,
+                matched_candidate.id,
+                comparison_context.match_reason,
             )
         if matched_candidate:
             candidate = _update_candidate(
-                matched_candidate, extracted, raw_text, validation, category, primary_file,
+                matched_candidate,
+                extracted,
+                raw_text,
+                validation,
+                category,
+                primary_file,
             )
         else:
             candidate = _create_candidate(
-                extracted, raw_text, validation, category, primary_file,
+                extracted,
+                raw_text,
+                validation,
+                category,
+                primary_file,
             )
 
         _rebuild_sub_records(candidate, extracted)
         candidate.resumes.update(is_primary=False)
 
-        max_version = candidate.resumes.aggregate(
-            max_v=models.Max("version"),
-        )["max_v"] or 0
+        max_version = (
+            candidate.resumes.aggregate(
+                max_v=models.Max("version"),
+            )["max_v"]
+            or 0
+        )
         next_version = max_version + 1
 
         primary_resume, _created = Resume.objects.update_or_create(
@@ -224,9 +246,13 @@ def save_pipeline_result(
         integrity_alerts = _convert_flags_to_alerts(integrity_flags)
 
         rule_report = scan_candidate_discrepancies(
-            candidate, source_resume=primary_resume, save=False,
+            candidate,
+            source_resume=primary_resume,
+            save=False,
         )
-        rule_alerts = rule_report.get("alerts", []) if isinstance(rule_report, dict) else []
+        rule_alerts = (
+            rule_report.get("alerts", []) if isinstance(rule_report, dict) else []
+        )
 
         # Normalize type names for dedup (integrity vs rule-based use different names)
         type_aliases = {
@@ -252,7 +278,9 @@ def save_pipeline_result(
                 combined_alerts.append(alert)
 
         combined_alerts.sort(
-            key=lambda a: {"RED": 0, "YELLOW": 1, "BLUE": 2}.get(a.get("severity", ""), 3)
+            key=lambda a: {"RED": 0, "YELLOW": 1, "BLUE": 2}.get(
+                a.get("severity", ""), 3
+            )
         )
 
         DiscrepancyReport.objects.create(
@@ -319,18 +347,20 @@ def _sanitize_flag_detail(text: str) -> str:
 def _convert_flags_to_alerts(flags: list[dict]) -> list[dict]:
     alerts = []
     for flag in flags:
-        alerts.append({
-            "type": flag.get("type", ""),
-            "severity": flag.get("severity", "BLUE"),
-            "field": flag.get("field", ""),
-            "layer": "integrity_pipeline",
-            "detail": _sanitize_flag_detail(flag.get("detail", "")),
-            "evidence": {
-                "chosen": flag.get("chosen"),
-                "alternative": flag.get("alternative"),
-            },
-            "reasoning": flag.get("reasoning", ""),
-        })
+        alerts.append(
+            {
+                "type": flag.get("type", ""),
+                "severity": flag.get("severity", "BLUE"),
+                "field": flag.get("field", ""),
+                "layer": "integrity_pipeline",
+                "detail": _sanitize_flag_detail(flag.get("detail", "")),
+                "evidence": {
+                    "chosen": flag.get("chosen"),
+                    "alternative": flag.get("alternative"),
+                },
+                "reasoning": flag.get("reasoning", ""),
+            }
+        )
     return alerts
 
 
@@ -349,7 +379,8 @@ def save_placeholder_candidate(
     regardless of extraction success or failure.
     """
     category, _ = Category.objects.get_or_create(
-        name=folder_name, defaults={"name_ko": ""},
+        name=folder_name,
+        defaults={"name_ko": ""},
     )
 
     name = ""
@@ -468,8 +499,12 @@ def _update_candidate(
     candidate.email = extracted.get("email") or candidate.email
     candidate.phone = sanitized_phone or candidate.phone
     candidate.address = extracted.get("address") or candidate.address
-    candidate.current_company = extracted.get("current_company") or candidate.current_company
-    candidate.current_position = extracted.get("current_position") or candidate.current_position
+    candidate.current_company = (
+        extracted.get("current_company") or candidate.current_company
+    )
+    candidate.current_position = (
+        extracted.get("current_position") or candidate.current_position
+    )
     candidate.total_experience_years = (
         extracted.get("total_experience_years") or candidate.total_experience_years
     )
@@ -482,7 +517,9 @@ def _update_candidate(
     candidate.resume_reference_date_evidence = (
         resume_reference_evidence or candidate.resume_reference_date_evidence
     )
-    candidate.core_competencies = extracted.get("core_competencies") or candidate.core_competencies
+    candidate.core_competencies = (
+        extracted.get("core_competencies") or candidate.core_competencies
+    )
     candidate.summary = extracted.get("summary") or candidate.summary
     candidate.raw_text = raw_text
     candidate.validation_status = validation["validation_status"]
@@ -490,25 +527,35 @@ def _update_candidate(
     candidate.confidence_score = validation["confidence_score"]
     candidate.field_confidences = validation.get("field_confidences", {})
     candidate.primary_category = category
-    candidate.current_salary = salary_result["current_salary_int"] or candidate.current_salary
-    candidate.desired_salary = salary_result["desired_salary_int"] or candidate.desired_salary
+    candidate.current_salary = (
+        salary_result["current_salary_int"] or candidate.current_salary
+    )
+    candidate.desired_salary = (
+        salary_result["desired_salary_int"] or candidate.desired_salary
+    )
     candidate.salary_detail = salary_result["salary_detail"] or candidate.salary_detail
     candidate.military_service = (
         normalize_military(military) if military else candidate.military_service
     )
-    candidate.self_introduction = normalize_self_intro(
-        extracted.get("self_introduction")
-        or extracted.get("personal_statement")
-        or extracted.get("cover_letter")
-        or extracted.get("objective")
-        or ""
-    ) or candidate.self_introduction
-    candidate.family_info = normalize_family(
-        extracted.get("family_info")
-        or extracted.get("family_background")
-        or extracted.get("marital_status")
-        or {}
-    ) or candidate.family_info
+    candidate.self_introduction = (
+        normalize_self_intro(
+            extracted.get("self_introduction")
+            or extracted.get("personal_statement")
+            or extracted.get("cover_letter")
+            or extracted.get("objective")
+            or ""
+        )
+        or candidate.self_introduction
+    )
+    candidate.family_info = (
+        normalize_family(
+            extracted.get("family_info")
+            or extracted.get("family_background")
+            or extracted.get("marital_status")
+            or {}
+        )
+        or candidate.family_info
+    )
 
     # New extraction fields
     candidate.skills = _normalize_skills_for_save(extracted.get("skills", []))
@@ -518,10 +565,10 @@ def _update_candidate(
     candidate.skills_etc = extracted.get("skills_etc", [])
 
     # Legacy JSONFields cleared — data now lives in *_etc fields
-    candidate.awards = []        # now in skills_etc
-    candidate.patents = []       # now in skills_etc
-    candidate.projects = []      # now in career_etc
-    candidate.trainings = []     # now in education_etc
+    candidate.awards = []  # now in skills_etc
+    candidate.patents = []  # now in skills_etc
+    candidate.projects = []  # now in career_etc
+    candidate.trainings = []  # now in education_etc
     candidate.overseas_experience = []  # now in career_etc
 
     # Don't save here — caller sets current_resume then saves once
@@ -618,10 +665,10 @@ def _create_candidate(
         career_etc=extracted.get("career_etc", []),
         skills_etc=extracted.get("skills_etc", []),
         # Legacy JSONFields cleared — data now lives in *_etc fields
-        awards=[],             # now in skills_etc
-        patents=[],            # now in skills_etc
-        projects=[],           # now in career_etc
-        trainings=[],          # now in education_etc
+        awards=[],  # now in skills_etc
+        patents=[],  # now in skills_etc
+        projects=[],  # now in career_etc
+        trainings=[],  # now in education_etc
         overseas_experience=[],  # now in career_etc
     )
 
