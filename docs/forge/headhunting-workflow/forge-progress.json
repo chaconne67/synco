@@ -1,136 +1,59 @@
 {
   "project": "headhunting-workflow",
-  "total_todos": 6,
-  "created_at": "2026-04-09T12:00:00Z",
+  "total_todos": 2,
+  "created_at": "2026-04-09T13:45:00Z",
   "batch_status": "running",
-  "trigger_id": "trig_01XqeHmqdDMDqJe24JSR6RLu",
+  "execution_mode": "background",
   "scope": "impl_only",
-  "stages": [
+  "last_pid": 3372442,
+  "execution_order": ["p14-voice-agent", "p15-telegram-integration"],
+  "redteam_config": {
+    "models": ["codex", "agent"],
+    "env": "local"
+  },
+  "todos": [
     {
-      "stage": 1,
-      "phase": "tempering",
-      "todos": [
-        {
-          "slug": "p14",
-          "tempering_status": "pending",
-          "impl_status": "pending",
-          "impl_commit": null,
-          "verification_status": null,
-          "verification_result": null,
-          "entry_point": "design",
-          "complexity": "large",
-          "artifacts": [],
-          "committed": false,
-          "depends_on": null,
-          "debate_summary": null
-        },
-        {
-          "slug": "p19",
-          "tempering_status": "pending",
-          "impl_status": "pending",
-          "impl_commit": null,
-          "verification_status": null,
-          "verification_result": null,
-          "entry_point": "design",
-          "complexity": "small",
-          "artifacts": [],
-          "committed": false,
-          "depends_on": null,
-          "debate_summary": null
-        }
+      "slug": "p14-voice-agent",
+      "tempering_status": "completed",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": null,
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "large",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md",
+        "debate/design-rulings.md",
+        "debate/impl-rulings.md",
+        "debate/debate-log.json"
       ],
-      "summary": null
+      "committed": true,
+      "depends_on": null,
+      "debate_summary": {
+        "design": {"rounds": 1, "issues": 15, "accepted": 15, "rebutted": 0, "escalated": 0},
+        "impl": {"rounds": 1, "issues": 12, "accepted": 12, "rebutted": 0, "escalated": 0}
+      }
     },
     {
-      "stage": 2,
-      "phase": "tempering",
-      "todos": [
-        {
-          "slug": "p15",
-          "tempering_status": "pending",
-          "impl_status": "pending",
-          "impl_commit": null,
-          "verification_status": null,
-          "verification_result": null,
-          "entry_point": "design",
-          "complexity": "large",
-          "artifacts": [],
-          "committed": false,
-          "depends_on": null,
-          "debate_summary": null
-        }
-      ],
-      "summary": null
-    },
-    {
-      "stage": 3,
-      "phase": "tempering",
-      "todos": [
-        {
-          "slug": "p16",
-          "tempering_status": "pending",
-          "impl_status": "pending",
-          "impl_commit": null,
-          "verification_status": null,
-          "verification_result": null,
-          "entry_point": "design",
-          "complexity": "large",
-          "artifacts": [],
-          "committed": false,
-          "depends_on": ["p14"],
-          "debate_summary": null
-        }
-      ],
-      "summary": null
-    },
-    {
-      "stage": 4,
-      "phase": "tempering",
-      "todos": [
-        {
-          "slug": "p17",
-          "tempering_status": "pending",
-          "impl_status": "pending",
-          "impl_commit": null,
-          "verification_status": null,
-          "verification_result": null,
-          "entry_point": "design",
-          "complexity": "medium",
-          "artifacts": [],
-          "committed": false,
-          "depends_on": ["p15"],
-          "debate_summary": null
-        }
-      ],
-      "summary": null
-    },
-    {
-      "stage": 5,
-      "phase": "tempering",
-      "todos": [
-        {
-          "slug": "p18",
-          "tempering_status": "pending",
-          "impl_status": "pending",
-          "impl_commit": null,
-          "verification_status": null,
-          "verification_result": null,
-          "entry_point": "design",
-          "complexity": "large",
-          "artifacts": [],
-          "committed": false,
-          "depends_on": null,
-          "debate_summary": null
-        }
-      ],
-      "summary": null
+      "slug": "p15-telegram-integration",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": null,
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "large",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["p14-voice-agent"],
+      "debate_summary": null
     }
   ],
   "decisions": [
     {
-      "stage": 0,
-      "decision": "P14-P18: projects/views.py+urls.py 공유로 순차 강제. P19: 파일 겹침 없어 P14와 병렬. P16→P14, P17→P15 의존.",
-      "timestamp": "2026-04-09T12:00:00Z"
+      "decision": "P15 → P14 의존 (intent_parser 재사용). projects/views.py, urls.py 파일 충돌 → 순차 강제.",
+      "timestamp": "2026-04-09T13:45:00Z"
     }
   ]
 }
