@@ -140,6 +140,11 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 # OpenAI (Whisper API)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
+# Telegram Bot
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+SITE_URL = os.environ.get("SITE_URL", "https://synco.kr")
+TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+
 # Google Drive OAuth files
 GOOGLE_TOKEN_PATH = os.environ.get(
     "GOOGLE_TOKEN_PATH", str(BASE_DIR / ".secrets" / "google_token.json")
@@ -189,6 +194,13 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+}
+
+# Cache (used for Telegram webhook dedup)
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
 }
 
 
