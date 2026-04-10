@@ -34,7 +34,8 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Synco"
+    "default_title": "Synco",
+    "default_icon": "icons/icon48.png"
   },
   "options_ui": {
     "page": "options/options.html",
