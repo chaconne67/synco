@@ -1,0 +1,329 @@
+{
+  "topic": "p17-news-feed",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "CRITICAL",
+              "title": "URL prefix /news/ not registered — routing will 404",
+              "attack": "URLs use /news/ prefix but projects/urls.py is mounted at /projects/. All routes 404.",
+              "action": "accepted",
+              "response": "Create projects/urls_news.py with top-level mount in main/urls.py, following urls_telegram.py pattern.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "CRITICAL",
+              "title": "relevance_projects JSONField breaks data integrity",
+              "attack": "JSON storage: no FK cascade, no reverse query, single score for multi-project relevance.",
+              "action": "accepted",
+              "response": "Replace with NewsArticleRelevance join model. Remove is_pinned, derive from relevance at query time.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "MAJOR",
+              "title": "No organization scoping — multi-tenant data leak",
+              "attack": "NewsSource/NewsArticle lack organization FK. Cross-org data exposure.",
+              "action": "accepted",
+              "response": "Add organization FK to NewsSource. Views filter by user org.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "MAJOR",
+              "title": "Pipeline lacks transactional/idempotent boundaries",
+              "attack": "No transaction.atomic(), no retry state, no idempotency in RSS-Gemini-matching pipeline.",
+              "action": "accepted",
+              "response": "Add summary_status field, get_or_create for articles, atomic for updates, on_commit for Telegram.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "MAJOR",
+              "title": "Cron execution mechanism undefined",
+              "attack": "No crontab, no lock, no env setup, no timezone specified for daily execution.",
+              "action": "accepted",
+              "response": "Add concrete crontab spec with flock, env, timezone, logging.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "MAJOR",
+              "title": "feedparser dependency not in pyproject.toml",
+              "attack": "feedparser not listed in project dependencies. ImportError on deploy.",
+              "action": "accepted",
+              "response": "Add uv add feedparser as first implementation step.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "MAJOR",
+              "title": "Category enum inconsistency between storage, AI output, and UI",
+              "attack": "English DB values vs Korean AI output; ECONOMY missing from UI filter.",
+              "action": "accepted",
+              "response": "Enforce machine enum in summarizer prompt. Add ECONOMY to UI. Document mapping.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "MAJOR",
+              "title": "SSRF risk from user-managed RSS URLs",
+              "attack": "User-supplied URLs fetched by server. No scheme/IP validation.",
+              "action": "rebutted",
+              "response": "Overstated for internal admin tool. Will add basic scheme validation and timeout. Full SSRF protection is over-engineering.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "Telegram delivery lacks recipient selection and dedup",
+              "attack": "All bound users get same global summary. No dedup, no rate limiting.",
+              "action": "accepted",
+              "response": "Select recipients by org + project relevance. Dedupe by (date, recipient, type). Rate-limit sends.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-10",
+              "severity": "MAJOR",
+              "title": "NewsSourceType TextChoices undefined; non-RSS parsing absent",
+              "attack": "No TextChoices for type field. YouTube/blog sources have no parsing path.",
+              "action": "accepted",
+              "response": "Define NewsSourceType TextChoices. MVP: RSS only. YouTube/blog enum values reserved for future.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-11",
+              "severity": "MINOR",
+              "title": "Dot indicator needs user read-state tracking",
+              "attack": "No mechanism to determine 'new' per user for sidebar dot.",
+              "action": "accepted",
+              "response": "Add last_news_seen_at field. Update on page visit.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-12",
+              "severity": "MINOR",
+              "title": "BaseModel inheritance not explicit in model skeletons",
+              "attack": "Spec says UUID PK + TimestampMixin but doesn't show BaseModel inheritance.",
+              "action": "accepted",
+              "response": "Add explicit model class definitions.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-13",
+              "severity": "MINOR",
+              "title": "URL canonicalization for dedup",
+              "attack": "Same article via different URLs (AMP, mobile, tracking) can create duplicates.",
+              "action": "rebutted",
+              "response": "Premature optimization for Korean RSS feeds. feedparser link field provides adequate dedup. Can add later without schema change.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-14",
+              "severity": "MINOR",
+              "title": "is_pinned field semantics ambiguous",
+              "attack": "is_pinned as boolean conflicts with per-user relevance-based pinning.",
+              "action": "accepted",
+              "response": "Remove is_pinned. Derive from relevance join model per D-R1-02 resolution.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-15",
+              "severity": "MINOR",
+              "title": "Auth specification missing for views",
+              "attack": "No @login_required or role requirements documented.",
+              "action": "accepted",
+              "response": "Add @login_required for all views, staff role for source CRUD.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 15,
+        "accepted": 13,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Global URL unique vs org-scoped source",
+              "attack": "First org to fetch URL owns article; other orgs can't see it.",
+              "action": "rebutted",
+              "response": "Global URL uniqueness is correct. Visibility is org-scoped via source FK. Single-org deployment.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "Source deletion cascades to articles",
+              "attack": "Deleting RSS source destroys all article history and relevance rows.",
+              "action": "accepted",
+              "response": "Change to on_delete=SET_NULL + nullable source. Or use soft delete (is_active=False).",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "Fetcher ignores timeout/redirect/size controls",
+              "attack": "feedparser.parse(url) has no timeout, redirect limit, or size cap per design spec.",
+              "action": "accepted",
+              "response": "Use httpx for HTTP fetch with timeout=30s, max_redirects=5, then pass bytes to feedparser.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "Digest ignores project relevance",
+              "attack": "Command sends all org news to all users instead of relevance-filtered digest.",
+              "action": "accepted",
+              "response": "Build digest from NewsArticleRelevance per recipient's assigned projects.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "Dedupe not atomic",
+              "attack": "exists() + create() race condition can cause duplicate digests.",
+              "action": "accepted",
+              "response": "Use get_or_create in transaction.atomic() for Notification dedup.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "No cron installation task",
+              "attack": "Command exists but no deployment task for crontab installation.",
+              "action": "accepted",
+              "response": "Add deployment task with crontab file, env setup, flock, and smoke test.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "Sidebar dot checks all org news",
+              "attack": "Context processor queries all org news instead of user's related news.",
+              "action": "accepted",
+              "response": "Query via NewsArticleRelevance + user's assigned projects.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-08",
+              "severity": "MAJOR",
+              "title": "No stale relevance cleanup in matcher",
+              "attack": "Matcher only adds/updates rows. Stale relevances remain after project closure.",
+              "action": "accepted",
+              "response": "Delete below-threshold and closed-project relevance rows in matcher.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-09",
+              "severity": "MAJOR",
+              "title": "Summarizer has no article content input",
+              "attack": "Fetcher stores only title. Summarizer sends empty content to Gemini.",
+              "action": "accepted",
+              "response": "Store RSS description in raw_content field for summarizer input.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-10",
+              "severity": "MAJOR",
+              "title": "SSRF validation insufficient",
+              "attack": "URL scheme check alone insufficient for SSRF protection.",
+              "action": "rebutted",
+              "response": "Consistent with design D-R1-08 decision. Basic validation for admin-only tool.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-11",
+              "severity": "MAJOR",
+              "title": "_is_staff check too restrictive",
+              "attack": "Only checks owner role. Design says staff/admin.",
+              "action": "accepted",
+              "response": "Match codebase convention: owner role is the staff-equivalent in synco.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-12",
+              "severity": "MAJOR",
+              "title": "Empty related articles header renders",
+              "attack": "Empty section header when user has no assigned projects.",
+              "action": "rebutted",
+              "response": "Template has {% if related_articles %} guard. Section only renders when articles exist.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-13",
+              "severity": "MINOR",
+              "title": "Test assertion too loose for non-staff access",
+              "attack": "Test uses status_code in (302, 403) instead of exact assertion.",
+              "action": "accepted",
+              "response": "Use exact 403 status code assertion.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-14",
+              "severity": "MINOR",
+              "title": "Should use parse_llm_json utility",
+              "attack": "Summarizer uses json.loads() instead of existing parse_llm_json utility.",
+              "action": "accepted",
+              "response": "Use parse_llm_json from data_extraction.services for consistency.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 14,
+        "accepted": 11,
+        "rebutted": 3,
+        "escalated": 0
+      }
+    }
+  }
+}
