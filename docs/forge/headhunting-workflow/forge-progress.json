@@ -63,8 +63,8 @@
     {
       "slug": "p18-email-resume-processing",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "d779c2b",
       "verification_status": null,
       "verification_result": null,
       "entry_point": "design",
