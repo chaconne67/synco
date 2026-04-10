@@ -83,7 +83,7 @@
     {
       "slug": "p19-chrome-extension",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": null,
       "verification_result": null,
