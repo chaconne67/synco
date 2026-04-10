@@ -7,7 +7,6 @@ Usage:
     DJANGO_SETTINGS_MODULE=main.settings uv run python scripts/compare_providers_fair.py
 """
 
-import json
 import os
 import sys
 import time
@@ -18,7 +17,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 django.setup()
 
-from candidates.models import Candidate, Resume
+from candidates.models import Resume
 from data_extraction.services.extraction.gemini import (
     extract_candidate_data as gemini_extract,
 )
@@ -63,7 +62,7 @@ def run():
     print(
         f"  Fair Comparison: Gemini 3.1 Flash Lite vs GPT-5.4 Nano ({len(resumes)} resumes)"
     )
-    print(f"  Pipeline: raw_text → LLM extract → apply_regex_field_filters → compare")
+    print("  Pipeline: raw_text → LLM extract → apply_regex_field_filters → compare")
     print(f"{'=' * 80}\n")
 
     scalar_fields = ["name", "birth_year", "email", "phone"]
@@ -188,7 +187,7 @@ def run():
     print(f"  RESULTS  (both succeeded: {n}/{len(resumes)})")
     print(f"{'=' * 80}")
 
-    print(f"\n  [Time]")
+    print("\n  [Time]")
     print(f"    {'':12s} {'Gemini':>10s} {'GPT-5.4N':>10s}")
     print(f"    {'Total':12s} {gt:>9.1f}s {ot:>9.1f}s")
     print(f"    {'Avg/resume':12s} {gt / n:>9.1f}s {ot / n:>9.1f}s")
@@ -203,7 +202,7 @@ def run():
     )
 
     print(
-        f"\n  [Scalar fields — match when both present (normalized: lowercase, no spaces)]"
+        "\n  [Scalar fields — match when both present (normalized: lowercase, no spaces)]"
     )
     print(f"    {'field':12s} {'match':>8s} {'G filled':>8s} {'O filled':>8s}")
     for f in scalar_fields:
@@ -219,7 +218,7 @@ def run():
     pct = f"{total_match / total_bp * 100:.1f}%" if total_bp else "-"
     print(f"    {'TOTAL':12s} {total_match:>3d}/{total_bp:<3d} {pct:>4s}")
 
-    print(f"\n  [List fields — total items extracted]")
+    print("\n  [List fields — total items extracted]")
     print(f"    {'field':14s} {'Gemini':>8s} {'GPT-5.4N':>8s} {'diff':>8s}")
     for f in list_fields:
         gc = totals["list_gemini"][f]

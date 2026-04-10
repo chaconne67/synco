@@ -9,14 +9,11 @@ Combined from:
 - tests/test_integrity_validators.py
 """
 
-import pytest
 from unittest.mock import patch
 
 from data_extraction.services.extraction.prompts import (
     EXTRACTION_SYSTEM_PROMPT,
-    EXTRACTION_JSON_SCHEMA,
     STEP1_SYSTEM_PROMPT,
-    STEP1_SCHEMA,
     CAREER_SYSTEM_PROMPT,
     EDUCATION_SYSTEM_PROMPT,
     build_extraction_prompt,

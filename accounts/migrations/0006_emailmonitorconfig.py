@@ -7,28 +7,42 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0005_user_last_news_seen_at'),
+        ("accounts", "0005_user_last_news_seen_at"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EmailMonitorConfig',
+            name="EmailMonitorConfig",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('gmail_credentials', models.BinaryField()),
-                ('is_active', models.BooleanField(default=True)),
-                ('filter_labels', models.JSONField(blank=True, default=list)),
-                ('filter_from', models.JSONField(blank=True, default=list)),
-                ('last_checked_at', models.DateTimeField(blank=True, null=True)),
-                ('last_history_id', models.CharField(blank=True, max_length=255)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='email_monitor_config', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("gmail_credentials", models.BinaryField()),
+                ("is_active", models.BooleanField(default=True)),
+                ("filter_labels", models.JSONField(blank=True, default=list)),
+                ("filter_from", models.JSONField(blank=True, default=list)),
+                ("last_checked_at", models.DateTimeField(blank=True, null=True)),
+                ("last_history_id", models.CharField(blank=True, max_length=255)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="email_monitor_config",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

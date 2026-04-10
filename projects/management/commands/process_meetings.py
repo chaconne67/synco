@@ -32,7 +32,9 @@ class Command(BaseCommand):
                 record.refresh_from_db()
                 self.stdout.write(self.style.SUCCESS(f"Done: {record.status}"))
             except MeetingRecord.DoesNotExist:
-                self.stderr.write(self.style.ERROR(f"MeetingRecord {record_id} not found"))
+                self.stderr.write(
+                    self.style.ERROR(f"MeetingRecord {record_id} not found")
+                )
             return
 
         pending = MeetingRecord.objects.filter(

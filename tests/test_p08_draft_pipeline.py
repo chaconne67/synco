@@ -243,27 +243,19 @@ class TestDraftTransitions:
 class TestDraftViewSecurity:
     def test_draft_view_login_required(self, client, project, submission):
         """비로그인 시 draft 뷰 접근 차단."""
-        url = reverse(
-            "projects:submission_draft", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:submission_draft", args=[project.pk, submission.pk])
         response = client.get(url)
         assert response.status_code == 302
 
-    def test_draft_view_org_isolation(
-        self, auth_client2, project, submission
-    ):
+    def test_draft_view_org_isolation(self, auth_client2, project, submission):
         """다른 조직의 submission draft 접근 차단."""
-        url = reverse(
-            "projects:submission_draft", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:submission_draft", args=[project.pk, submission.pk])
         response = auth_client2.get(url)
         assert response.status_code == 404
 
     def test_generate_login_required(self, client, project, submission):
         """비로그인 시 generate 접근 차단."""
-        url = reverse(
-            "projects:draft_generate", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_generate", args=[project.pk, submission.pk])
         response = client.post(url)
         assert response.status_code == 302
 
@@ -280,9 +272,7 @@ class TestDraftViewSecurity:
             "draft_preview",
         ]
         for name in url_names:
-            url = reverse(
-                f"projects:{name}", args=[project.pk, submission.pk]
-            )
+            url = reverse(f"projects:{name}", args=[project.pk, submission.pk])
             assert url is not None
 
 
@@ -290,28 +280,18 @@ class TestDraftViewSecurity:
 
 
 class TestDraftViews:
-    def test_submission_draft_get_or_create(
-        self, auth_client, project, submission
-    ):
+    def test_submission_draft_get_or_create(self, auth_client, project, submission):
         """draft 뷰 진입 시 draft가 없으면 자동 생성."""
-        assert not SubmissionDraft.objects.filter(
-            submission=submission
-        ).exists()
+        assert not SubmissionDraft.objects.filter(submission=submission).exists()
 
-        url = reverse(
-            "projects:submission_draft", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:submission_draft", args=[project.pk, submission.pk])
         response = auth_client.get(url)
         assert response.status_code == 200
         assert SubmissionDraft.objects.filter(submission=submission).exists()
 
-    def test_submission_draft_shows_pending(
-        self, auth_client, project, submission
-    ):
+    def test_submission_draft_shows_pending(self, auth_client, project, submission):
         """pending 상태에서 초안 생성 버튼이 표시."""
-        url = reverse(
-            "projects:submission_draft", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:submission_draft", args=[project.pk, submission.pk])
         response = auth_client.get(url)
         assert response.status_code == 200
         content = response.content.decode()
@@ -322,6 +302,7 @@ class TestDraftViews:
         self, mock_generate, auth_client, project, submission
     ):
         """AI 초안 생성 성공."""
+
         def fake_generate(draft):
             draft.auto_draft_json = {"summary": "테스트 요약"}
             draft.auto_corrections = []
@@ -330,9 +311,7 @@ class TestDraftViews:
 
         mock_generate.side_effect = fake_generate
 
-        url = reverse(
-            "projects:draft_generate", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_generate", args=[project.pk, submission.pk])
         response = auth_client.post(url)
         assert response.status_code == 200
 
@@ -346,26 +325,20 @@ class TestDraftViews:
         """Gemini API 실패 시 에러 표시."""
         mock_generate.side_effect = RuntimeError("API Error")
 
-        url = reverse(
-            "projects:draft_generate", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_generate", args=[project.pk, submission.pk])
         response = auth_client.post(url)
         assert response.status_code == 200
         content = response.content.decode()
         assert "API Error" in content
 
-    def test_consultation_text_input(
-        self, auth_client, project, submission
-    ):
+    def test_consultation_text_input(self, auth_client, project, submission):
         """상담 내용 직접 입력 저장."""
         # Create draft in DRAFT_GENERATED state
         SubmissionDraft.objects.create(
             submission=submission, status=DraftStatus.DRAFT_GENERATED
         )
 
-        url = reverse(
-            "projects:draft_consultation", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_consultation", args=[project.pk, submission.pk])
         response = auth_client.post(
             url, {"consultation_input": "이직 동기: 더 좋은 기회"}
         )
@@ -374,9 +347,7 @@ class TestDraftViews:
         draft = SubmissionDraft.objects.get(submission=submission)
         assert draft.consultation_input == "이직 동기: 더 좋은 기회"
 
-    def test_review_update_content(
-        self, auth_client, project, submission
-    ):
+    def test_review_update_content(self, auth_client, project, submission):
         """검토 단계에서 내용 수정."""
         draft = SubmissionDraft.objects.create(
             submission=submission,
@@ -384,9 +355,7 @@ class TestDraftViews:
             final_content_json={"summary": "원본"},
         )
 
-        url = reverse(
-            "projects:draft_review", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_review", args=[project.pk, submission.pk])
         new_content = json.dumps({"summary": "수정됨"})
         response = auth_client.post(url, {"final_content": new_content})
         assert response.status_code == 200
@@ -395,9 +364,7 @@ class TestDraftViews:
         assert draft.final_content_json["summary"] == "수정됨"
         assert draft.status == DraftStatus.REVIEWED
 
-    def test_review_invalid_json(
-        self, auth_client, project, submission
-    ):
+    def test_review_invalid_json(self, auth_client, project, submission):
         """검토 시 유효하지 않은 JSON 거부."""
         SubmissionDraft.objects.create(
             submission=submission,
@@ -405,37 +372,27 @@ class TestDraftViews:
             final_content_json={"summary": "원본"},
         )
 
-        url = reverse(
-            "projects:draft_review", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_review", args=[project.pk, submission.pk])
         response = auth_client.post(url, {"final_content": "not valid json{"})
         assert response.status_code == 400
 
-    def test_finalize_invalid_status(
-        self, auth_client, project, submission
-    ):
+    def test_finalize_invalid_status(self, auth_client, project, submission):
         """pending 상태에서 finalize 차단."""
         SubmissionDraft.objects.create(
             submission=submission, status=DraftStatus.PENDING
         )
 
-        url = reverse(
-            "projects:draft_finalize", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_finalize", args=[project.pk, submission.pk])
         response = auth_client.post(url)
         assert response.status_code == 400
 
-    def test_convert_before_review_blocked(
-        self, auth_client, project, submission
-    ):
+    def test_convert_before_review_blocked(self, auth_client, project, submission):
         """검토 완료 전 변환 차단."""
         SubmissionDraft.objects.create(
             submission=submission, status=DraftStatus.FINALIZED
         )
 
-        url = reverse(
-            "projects:draft_convert", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_convert", args=[project.pk, submission.pk])
         response = auth_client.post(url)
         assert response.status_code == 400
 
@@ -444,16 +401,12 @@ class TestDraftViews:
 
 
 class TestAudioValidation:
-    def test_audio_invalid_format(
-        self, auth_client, project, submission
-    ):
+    def test_audio_invalid_format(self, auth_client, project, submission):
         """지원하지 않는 오디오 형식 거부."""
         SubmissionDraft.objects.create(
             submission=submission, status=DraftStatus.DRAFT_GENERATED
         )
-        audio = SimpleUploadedFile(
-            "test.txt", b"not audio", content_type="text/plain"
-        )
+        audio = SimpleUploadedFile("test.txt", b"not audio", content_type="text/plain")
         url = reverse(
             "projects:draft_consultation_audio",
             args=[project.pk, submission.pk],
@@ -462,16 +415,12 @@ class TestAudioValidation:
         assert response.status_code == 400
         assert "지원하지 않는" in response.content.decode()
 
-    def test_audio_empty_file(
-        self, auth_client, project, submission
-    ):
+    def test_audio_empty_file(self, auth_client, project, submission):
         """빈 오디오 파일 거부."""
         SubmissionDraft.objects.create(
             submission=submission, status=DraftStatus.DRAFT_GENERATED
         )
-        audio = SimpleUploadedFile(
-            "test.webm", b"", content_type="audio/webm"
-        )
+        audio = SimpleUploadedFile("test.webm", b"", content_type="audio/webm")
         url = reverse(
             "projects:draft_consultation_audio",
             args=[project.pk, submission.pk],
@@ -480,9 +429,7 @@ class TestAudioValidation:
         assert response.status_code == 400
         assert "빈 오디오" in response.content.decode()
 
-    def test_audio_no_file(
-        self, auth_client, project, submission
-    ):
+    def test_audio_no_file(self, auth_client, project, submission):
         """오디오 파일 미첨부 시 거부."""
         SubmissionDraft.objects.create(
             submission=submission, status=DraftStatus.DRAFT_GENERATED
@@ -594,9 +541,7 @@ class TestDraftConverter:
             },
         )
 
-        url = reverse(
-            "projects:draft_convert", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_convert", args=[project.pk, submission.pk])
         response = auth_client.post(url)
         assert response.status_code == 200
 
@@ -624,9 +569,7 @@ class TestSubmitValidation:
         """document_file 있을 때 제출 성공."""
         from projects.services.submission import submit_to_client
 
-        submission.document_file = SimpleUploadedFile(
-            "test.docx", b"fake content"
-        )
+        submission.document_file = SimpleUploadedFile("test.docx", b"fake content")
         submission.save()
         result = submit_to_client(submission)
         assert result.status == Submission.Status.SUBMITTED
@@ -636,34 +579,26 @@ class TestSubmitValidation:
 
 
 class TestDraftPreview:
-    def test_preview_with_final_content(
-        self, auth_client, project, submission
-    ):
+    def test_preview_with_final_content(self, auth_client, project, submission):
         """final_content_json이 있으면 최종 데이터 미리보기."""
         SubmissionDraft.objects.create(
             submission=submission,
             auto_draft_json={"summary": "초안"},
             final_content_json={"summary": "최종"},
         )
-        url = reverse(
-            "projects:draft_preview", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_preview", args=[project.pk, submission.pk])
         response = auth_client.get(url)
         assert response.status_code == 200
         content = response.content.decode()
         assert "최종" in content
 
-    def test_preview_with_auto_draft(
-        self, auth_client, project, submission
-    ):
+    def test_preview_with_auto_draft(self, auth_client, project, submission):
         """final_content_json이 없으면 auto_draft_json 미리보기."""
         SubmissionDraft.objects.create(
             submission=submission,
             auto_draft_json={"summary": "초안 내용"},
             final_content_json={},
         )
-        url = reverse(
-            "projects:draft_preview", args=[project.pk, submission.pk]
-        )
+        url = reverse("projects:draft_preview", args=[project.pk, submission.pk])
         response = auth_client.get(url)
         assert response.status_code == 200

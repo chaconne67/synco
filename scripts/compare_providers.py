@@ -4,7 +4,6 @@ Usage:
     DJANGO_SETTINGS_MODULE=main.settings uv run python scripts/compare_providers.py
 """
 
-import json
 import os
 import sys
 import time
@@ -251,14 +250,14 @@ def run():
     gemini_total_cost = gemini_input_cost + gemini_output_cost
 
     print(f"\n{'=' * 70}")
-    print(f"  SUMMARY")
+    print("  SUMMARY")
     print(f"{'=' * 70}")
-    print(f"\n  [Time]")
+    print("\n  [Time]")
     print(f"    Total:   {total_time:.1f}s")
     print(f"    Average: {avg_time:.1f}s per resume")
     print(f"    Errors:  {errors}/{len(results)}")
 
-    print(f"\n  [Cost estimate per 40 resumes]")
+    print("\n  [Cost estimate per 40 resumes]")
     print(f"    Gemini 3.1 Flash Lite: ~${gemini_total_cost:.4f}")
     print(f"    GPT-5.4 Nano:         ~${est_total_cost:.4f}")
     print(
@@ -267,7 +266,7 @@ def run():
         else ""
     )
 
-    print(f"\n  [Quality — Scalar field agreement (name, birth_year, email, phone)]")
+    print("\n  [Quality — Scalar field agreement (name, birth_year, email, phone)]")
     print(f"    Match rate: {scalar_accuracy:.1f}% ({total_matches}/{total_scalars})")
 
     # Per-field breakdown
@@ -279,7 +278,7 @@ def run():
             f"    {f:12s}: match={f_match}/{len(ok_results)}  gemini={f_g}  openai={f_o}"
         )
 
-    print(f"\n  [Quality — List field counts (OpenAI vs Gemini)]")
+    print("\n  [Quality — List field counts (OpenAI vs Gemini)]")
     print(
         f"    careers:    equal={equal_careers}  more={more_careers}  fewer={fewer_careers}"
     )

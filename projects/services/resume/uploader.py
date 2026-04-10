@@ -1,4 +1,5 @@
 """Resume upload processing service."""
+
 import logging
 import os
 import tempfile

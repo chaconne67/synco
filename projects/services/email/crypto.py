@@ -1,4 +1,5 @@
 """Fernet encryption for Gmail OAuth tokens using HKDF key derivation."""
+
 import base64
 
 from cryptography.fernet import Fernet

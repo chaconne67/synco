@@ -1,4 +1,5 @@
 """Link extracted resume to candidate + create Contact."""
+
 import logging
 
 from django.db import transaction

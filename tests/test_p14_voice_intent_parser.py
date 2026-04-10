@@ -1,4 +1,5 @@
 """P14: Voice intent parser tests."""
+
 from unittest.mock import MagicMock, patch
 
 from projects.services.voice.intent_parser import parse_intent, IntentResult
@@ -14,7 +15,11 @@ def test_parse_contact_record_intent(mock_client_fn):
 
     result = parse_intent(
         text="홍길동 전화했는데 관심 있대",
-        context={"page": "project_detail", "project_id": "some-uuid", "scope": "project"},
+        context={
+            "page": "project_detail",
+            "project_id": "some-uuid",
+            "scope": "project",
+        },
     )
 
     assert isinstance(result, IntentResult)

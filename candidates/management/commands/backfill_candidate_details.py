@@ -212,10 +212,10 @@ class Command(BaseCommand):
                     candidate.save(update_fields=update_fields + ["updated_at"])
 
         # Print summary
-        self.stdout.write(f"\n=== Backfill Summary ===")
+        self.stdout.write("\n=== Backfill Summary ===")
         self.stdout.write(f"Total candidates scanned: {total}")
         self.stdout.write(f"Candidates updated: {updated_count}")
-        self.stdout.write(f"\nPer-field counts:")
+        self.stdout.write("\nPer-field counts:")
         for field in fields_to_process:
             self.stdout.write(f"  {field}: {stats[field]}")
 

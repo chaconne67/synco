@@ -195,9 +195,7 @@ class TestTabOverview:
         assert "담당 컨설턴트" in content
 
     @pytest.mark.django_db
-    def test_funnel_counts(
-        self, auth_client, project_obj, candidate, user_with_org
-    ):
+    def test_funnel_counts(self, auth_client, project_obj, candidate, user_with_org):
         """퍼널 카운트 정확성."""
         Contact.objects.create(
             project=project_obj,
@@ -286,9 +284,7 @@ class TestTabContacts:
         assert "컨택 이력이 없습니다" in content
 
     @pytest.mark.django_db
-    def test_contacts_list(
-        self, auth_client, project_obj, candidate, user_with_org
-    ):
+    def test_contacts_list(self, auth_client, project_obj, candidate, user_with_org):
         Contact.objects.create(
             project=project_obj,
             candidate=candidate,
@@ -314,9 +310,7 @@ class TestTabSubmissions:
         assert "추천 이력이 없습니다" in content
 
     @pytest.mark.django_db
-    def test_submissions_list(
-        self, auth_client, project_obj, candidate, user_with_org
-    ):
+    def test_submissions_list(self, auth_client, project_obj, candidate, user_with_org):
         Submission.objects.create(
             project=project_obj,
             candidate=candidate,

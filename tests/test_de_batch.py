@@ -97,7 +97,7 @@ def test_ingest_job_results_supports_parallel_workers(tmp_path, monkeypatch):
 @pytest.mark.django_db
 def test_ingest_json_parse_failure_creates_placeholder(tmp_path, monkeypatch):
     """When batch ingest fails to parse JSON, a placeholder Candidate+Resume is created."""
-    from candidates.models import Candidate, Resume
+    from candidates.models import Resume
 
     # _handle_result_payload calls close_old_connections() which breaks test DB
     monkeypatch.setattr(
@@ -162,7 +162,7 @@ def test_ingest_json_parse_failure_creates_placeholder(tmp_path, monkeypatch):
 @pytest.mark.django_db
 def test_ingest_error_response_creates_placeholder(tmp_path, monkeypatch):
     """When batch response contains an error, a placeholder Candidate+Resume is created."""
-    from candidates.models import Candidate, Resume
+    from candidates.models import Resume
 
     monkeypatch.setattr(
         "data_extraction.services.batch.ingest.close_old_connections", lambda: None

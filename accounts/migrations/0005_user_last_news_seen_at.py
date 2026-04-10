@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('accounts', '0004_telegrambinding_verified_at_telegramverification'),
+        ("accounts", "0004_telegrambinding_verified_at_telegramverification"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='last_news_seen_at',
+            model_name="user",
+            name="last_news_seen_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

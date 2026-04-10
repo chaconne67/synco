@@ -4,7 +4,6 @@ from candidates.models import (
     Career,
     Category,
     DiscrepancyReport,
-    Education,
     Resume,
     ValidationDiagnosis,
 )

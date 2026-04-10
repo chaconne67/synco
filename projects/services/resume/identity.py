@@ -1,4 +1,5 @@
 """Org-scoped candidate identity matching for resume uploads."""
+
 from accounts.models import Organization
 from candidates.models import Candidate
 from candidates.services.candidate_identity import (

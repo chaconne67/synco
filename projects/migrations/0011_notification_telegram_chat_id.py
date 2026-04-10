@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0010_meetingrecord'),
+        ("projects", "0010_meetingrecord"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='notification',
-            name='telegram_chat_id',
-            field=models.CharField(blank=True, default='', max_length=100),
+            model_name="notification",
+            name="telegram_chat_id",
+            field=models.CharField(blank=True, default="", max_length=100),
         ),
     ]

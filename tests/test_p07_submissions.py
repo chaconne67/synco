@@ -471,9 +471,7 @@ class TestStateTransitions:
     ):
         """작성중 → 제출 전환 + submitted_at 기록."""
         # P08: 제출 시 document_file 필수
-        submission.document_file = SimpleUploadedFile(
-            "test.docx", b"fake content"
-        )
+        submission.document_file = SimpleUploadedFile("test.docx", b"fake content")
         submission.save()
         url = reverse("projects:submission_submit", args=[project.pk, submission.pk])
         resp = auth_client.post(url)
@@ -744,9 +742,7 @@ class TestSubmissionService:
     def test_submit_to_client_success(self, submission, media_root):
         """submit_to_client: 작성중 → 제출."""
         # P08: 제출 시 document_file 필수
-        submission.document_file = SimpleUploadedFile(
-            "test.docx", b"fake content"
-        )
+        submission.document_file = SimpleUploadedFile("test.docx", b"fake content")
         submission.save()
         result = submit_to_client(submission)
         assert result.status == Submission.Status.SUBMITTED

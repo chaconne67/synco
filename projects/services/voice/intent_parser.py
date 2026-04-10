@@ -117,7 +117,10 @@ def parse_intent(
         response = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=[
-                {"role": "user", "parts": [{"text": INTENT_SYSTEM_PROMPT + "\n\n" + user_prompt}]},
+                {
+                    "role": "user",
+                    "parts": [{"text": INTENT_SYSTEM_PROMPT + "\n\n" + user_prompt}],
+                },
             ],
         )
         raw = response.text.strip()

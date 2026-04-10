@@ -1,4 +1,5 @@
 """P14: Voice context resolver tests."""
+
 import pytest
 
 from accounts.models import Membership, Organization, User
@@ -62,7 +63,10 @@ def test_resolve_context_invalid_project(user, org):
     ctx = resolve_context(
         user=user,
         organization=org,
-        context_hint={"page": "project_detail", "project_id": "00000000-0000-0000-0000-000000000000"},
+        context_hint={
+            "page": "project_detail",
+            "project_id": "00000000-0000-0000-0000-000000000000",
+        },
     )
     assert ctx["project_id"] is None
     assert ctx["scope"] == "global"

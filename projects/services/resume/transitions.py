@@ -1,4 +1,5 @@
 """ResumeUpload state machine with enforced transitions."""
+
 from django.db import transaction
 
 from projects.models import ResumeUpload
@@ -27,9 +28,7 @@ def transition_status(
         upload = ResumeUpload.objects.select_for_update().get(pk=upload.pk)
         allowed = ALLOWED_TRANSITIONS.get(upload.status, set())
         if new_status not in allowed:
-            raise ValueError(
-                f"Invalid transition: {upload.status} -> {new_status}"
-            )
+            raise ValueError(f"Invalid transition: {upload.status} -> {new_status}")
         upload.status = new_status
         if error_message:
             upload.error_message = error_message

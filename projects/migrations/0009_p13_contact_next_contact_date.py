@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0008_p11_approval_collision_fields'),
+        ("projects", "0008_p11_approval_collision_fields"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contact',
-            name='next_contact_date',
+            model_name="contact",
+            name="next_contact_date",
             field=models.DateField(blank=True, null=True),
         ),
     ]

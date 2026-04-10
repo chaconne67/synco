@@ -1,5 +1,3 @@
-import pytest
-
 from data_extraction.services.validation import (
     compute_overall_confidence,
     validate_cross_check,

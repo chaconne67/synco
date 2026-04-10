@@ -1,4 +1,5 @@
 """P14: Voice conversation session tests."""
+
 import time
 import uuid
 
@@ -12,6 +13,7 @@ from projects.services.voice.conversation import (
 
 class FakeSession(dict):
     """Mimics Django session interface."""
+
     modified = False
 
     def save(self):

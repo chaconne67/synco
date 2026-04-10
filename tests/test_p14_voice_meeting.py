@@ -1,4 +1,5 @@
 """P14: MeetingRecord model tests."""
+
 import pytest
 from unittest.mock import MagicMock, patch
 

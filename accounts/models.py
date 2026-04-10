@@ -115,6 +115,7 @@ class TelegramVerification(BaseModel):
     @property
     def is_expired(self) -> bool:
         from django.utils import timezone
+
         return self.consumed or self.expires_at <= timezone.now()
 
     @property

@@ -7,34 +7,86 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0021_candidate_owned_by'),
-        ('projects', '0009_p13_contact_next_contact_date'),
+        ("candidates", "0021_candidate_owned_by"),
+        ("projects", "0009_p13_contact_next_contact_date"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MeetingRecord',
+            name="MeetingRecord",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('audio_file', models.FileField(upload_to='meetings/audio/')),
-                ('transcript', models.TextField(blank=True)),
-                ('analysis_json', models.JSONField(blank=True, default=dict)),
-                ('edited_json', models.JSONField(blank=True, default=dict)),
-                ('status', models.CharField(choices=[('uploaded', '업로드됨'), ('transcribing', '전사 중'), ('analyzing', '분석 중'), ('ready', '분석 완료'), ('applied', '반영 완료'), ('failed', '실패')], default='uploaded', max_length=20)),
-                ('error_message', models.TextField(blank=True)),
-                ('applied_at', models.DateTimeField(blank=True, null=True)),
-                ('applied_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='applied_meeting_records', to=settings.AUTH_USER_MODEL)),
-                ('candidate', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='meeting_records', to='candidates.candidate')),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_meeting_records', to=settings.AUTH_USER_MODEL)),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='meeting_records', to='projects.project')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("audio_file", models.FileField(upload_to="meetings/audio/")),
+                ("transcript", models.TextField(blank=True)),
+                ("analysis_json", models.JSONField(blank=True, default=dict)),
+                ("edited_json", models.JSONField(blank=True, default=dict)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("uploaded", "업로드됨"),
+                            ("transcribing", "전사 중"),
+                            ("analyzing", "분석 중"),
+                            ("ready", "분석 완료"),
+                            ("applied", "반영 완료"),
+                            ("failed", "실패"),
+                        ],
+                        default="uploaded",
+                        max_length=20,
+                    ),
+                ),
+                ("error_message", models.TextField(blank=True)),
+                ("applied_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "applied_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="applied_meeting_records",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "candidate",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="meeting_records",
+                        to="candidates.candidate",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_meeting_records",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="meeting_records",
+                        to="projects.project",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

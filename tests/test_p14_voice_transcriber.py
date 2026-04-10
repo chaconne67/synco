@@ -1,4 +1,5 @@
 """P14: Voice transcriber service tests."""
+
 import io
 from unittest.mock import MagicMock, patch
 
@@ -21,7 +22,9 @@ def test_transcribe_command_mode(mock_client_fn):
     assert result == "홍길동 전화했는데 관심 있대"
     call_kwargs = mock_client.audio.transcriptions.create.call_args
     # Prompt should contain business terms, not search terms
-    assert "헤드헌팅 업무" in call_kwargs.kwargs.get("prompt", call_kwargs[1].get("prompt", ""))
+    assert "헤드헌팅 업무" in call_kwargs.kwargs.get(
+        "prompt", call_kwargs[1].get("prompt", "")
+    )
 
 
 @patch("projects.services.voice.transcriber._get_openai_client")
@@ -38,7 +41,9 @@ def test_transcribe_meeting_mode(mock_client_fn):
 
     assert result == "현재 연봉은 8천만원이고 희망 연봉은 1억입니다"
     call_kwargs = mock_client.audio.transcriptions.create.call_args
-    assert "미팅 녹음" in call_kwargs.kwargs.get("prompt", call_kwargs[1].get("prompt", ""))
+    assert "미팅 녹음" in call_kwargs.kwargs.get(
+        "prompt", call_kwargs[1].get("prompt", "")
+    )
 
 
 @patch("projects.services.voice.transcriber._get_openai_client")
