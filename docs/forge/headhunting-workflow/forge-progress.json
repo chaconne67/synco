@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "impl_only",
-  "last_pid": 3628215,
+  "last_pid": 3639644,
   "execution_order": [
     "p16-work-continuity",
     "p17-news-feed",
@@ -42,17 +42,23 @@
     },
     {
       "slug": "p17-news-feed",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": null,
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
-      "artifacts": [],
-      "committed": false,
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
       "depends_on": null,
-      "debate_summary": null
+      "debate_summary": {
+        "design": {"rounds": 1, "issues": 15, "accepted": 13, "rebutted": 2, "escalated": 0},
+        "impl": {"rounds": 1, "issues": 14, "accepted": 11, "rebutted": 3, "escalated": 0}
+      }
     },
     {
       "slug": "p18-email-resume-processing",
