@@ -1,11 +1,17 @@
 import pytest
 from django.db import IntegrityError
 
+from candidates.models import Candidate
 from projects.models import (
     ActionStatus,
     ActionType,
     AutoAction,
+    Contact,
+    Interview,
+    Project,
     ProjectContext,
+    ProjectStatus,
+    Submission,
 )
 from projects.services.auto_actions import (
     ConflictError,
@@ -168,3 +174,219 @@ class TestDismissAction:
         )
         with pytest.raises(ConflictError):
             dismiss_action(action.pk, user)
+
+
+@pytest.mark.django_db
+class TestProjectCreatedSignal:
+    def test_creates_posting_and_search_actions(self, org, client_company, user):
+        """Creating a NEW project triggers 2 AutoActions."""
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Signal Test",
+            status=ProjectStatus.NEW,
+            created_by=user,
+        )
+        actions = AutoAction.objects.filter(project=project)
+        assert actions.count() == 2
+        types = set(actions.values_list("action_type", flat=True))
+        assert types == {ActionType.POSTING_DRAFT, ActionType.CANDIDATE_SEARCH}
+        for action in actions:
+            assert action.status == ActionStatus.PENDING
+            assert action.trigger_event == "project_created"
+
+    def test_no_actions_for_non_new_status(self, org, client_company, user):
+        """Projects created with non-NEW status don't trigger actions."""
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="On Hold",
+            status=ProjectStatus.ON_HOLD,
+            created_by=user,
+        )
+        assert AutoAction.objects.filter(project=project).count() == 0
+
+    def test_idempotent_on_resave(self, org, client_company, user):
+        """Re-saving a project doesn't create duplicate actions."""
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Idempotent Test",
+            status=ProjectStatus.NEW,
+            created_by=user,
+        )
+        assert AutoAction.objects.filter(project=project).count() == 2
+        project.title = "Updated"
+        project.save()
+        assert AutoAction.objects.filter(project=project).count() == 2
+
+
+@pytest.mark.django_db
+class TestContactInterestedSignal:
+    def test_creates_submission_draft_action(self, org, client_company, user):
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Contact Test",
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+        candidate = Candidate.objects.create(name="홍길동", owned_by=org)
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user,
+            channel=Contact.Channel.PHONE,
+            result=Contact.Result.INTERESTED,
+        )
+        actions = AutoAction.objects.filter(
+            project=project,
+            action_type=ActionType.SUBMISSION_DRAFT,
+        )
+        assert actions.count() == 1
+        assert str(candidate.pk) in actions[0].data.get("candidate_id", "")
+
+    def test_no_action_for_non_interested(self, org, client_company, user):
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Contact Test 2",
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+        candidate = Candidate.objects.create(name="김영희", owned_by=org)
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user,
+            channel=Contact.Channel.PHONE,
+            result=Contact.Result.NO_RESPONSE,
+        )
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.SUBMISSION_DRAFT,
+            ).count()
+            == 0
+        )
+
+    def test_idempotent_on_resave(self, org, client_company, user):
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Contact Test 3",
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+        candidate = Candidate.objects.create(name="이철수", owned_by=org)
+        contact = Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user,
+            channel=Contact.Channel.PHONE,
+            result=Contact.Result.INTERESTED,
+        )
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.SUBMISSION_DRAFT,
+            ).count()
+            == 1
+        )
+        contact.notes = "Updated notes"
+        contact.save()
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.SUBMISSION_DRAFT,
+            ).count()
+            == 1
+        )
+
+
+@pytest.mark.django_db
+class TestInterviewPassedSignal:
+    def test_creates_offer_template_action(self, org, client_company, user):
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Interview Test",
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+        candidate = Candidate.objects.create(name="박지성", owned_by=org)
+        submission = Submission.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user,
+        )
+        from django.utils import timezone
+
+        Interview.objects.create(
+            submission=submission,
+            round=1,
+            scheduled_at=timezone.now(),
+            type=Interview.Type.IN_PERSON,
+            result=Interview.Result.PASSED,
+        )
+        actions = AutoAction.objects.filter(
+            project=project,
+            action_type=ActionType.OFFER_TEMPLATE,
+        )
+        assert actions.count() == 1
+
+    def test_no_action_for_non_passed(self, org, client_company, user):
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Interview Test 2",
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+        candidate = Candidate.objects.create(name="최민수", owned_by=org)
+        submission = Submission.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user,
+        )
+        from django.utils import timezone
+
+        Interview.objects.create(
+            submission=submission,
+            round=1,
+            scheduled_at=timezone.now(),
+            type=Interview.Type.IN_PERSON,
+            result=Interview.Result.PENDING,
+        )
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.OFFER_TEMPLATE,
+            ).count()
+            == 0
+        )
+
+
+@pytest.mark.django_db
+class TestSubmissionSubmittedSignal:
+    def test_creates_followup_reminder(self, org, client_company, user):
+        project = Project.objects.create(
+            client=client_company,
+            organization=org,
+            title="Submission Test",
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+        candidate = Candidate.objects.create(name="강감찬", owned_by=org)
+        submission = Submission.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user,
+            status=Submission.Status.SUBMITTED,
+        )
+        actions = AutoAction.objects.filter(
+            project=project,
+            action_type=ActionType.FOLLOWUP_REMINDER,
+        )
+        assert actions.count() == 1
+        assert actions[0].due_at is not None
