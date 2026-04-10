@@ -30,10 +30,13 @@
   {% endif %}
 
   <form {% if is_edit %}
+          data-autosave="contact_update"
           hx-post="{% url 'projects:contact_update' project.pk contact.pk %}"
         {% else %}
+          data-autosave="contact_create"
           hx-post="{% url 'projects:contact_create' project.pk %}"
         {% endif %}
+        data-autosave-action="{{ pending_action|default:'' }}"
         hx-target="#contact-form-area"
         class="space-y-4">
     {% csrf_token %}
