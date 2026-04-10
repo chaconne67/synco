@@ -378,7 +378,7 @@ class TestSubmissionSubmittedSignal:
             created_by=user,
         )
         candidate = Candidate.objects.create(name="강감찬", owned_by=org)
-        submission = Submission.objects.create(
+        Submission.objects.create(
             project=project,
             candidate=candidate,
             consultant=user,

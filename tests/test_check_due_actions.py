@@ -6,7 +6,6 @@ from django.utils import timezone
 
 from candidates.models import Candidate
 from projects.models import (
-    ActionStatus,
     ActionType,
     AutoAction,
     Contact,
@@ -45,10 +44,13 @@ class TestCheckDueActions:
             locked_until=timezone.now() - timedelta(hours=1),
         )
         call_command("check_due_actions")
-        assert AutoAction.objects.filter(
-            project=project,
-            action_type=ActionType.RECONTACT_REMINDER,
-        ).count() == 0
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.RECONTACT_REMINDER,
+            ).count()
+            == 0
+        )
 
     def test_ignores_far_future_locks(self, project, user, org):
         candidate = Candidate.objects.create(name="먼미래", owned_by=org)
@@ -61,10 +63,13 @@ class TestCheckDueActions:
             locked_until=timezone.now() + timedelta(days=5),
         )
         call_command("check_due_actions")
-        assert AutoAction.objects.filter(
-            project=project,
-            action_type=ActionType.RECONTACT_REMINDER,
-        ).count() == 0
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.RECONTACT_REMINDER,
+            ).count()
+            == 0
+        )
 
     def test_idempotent_run(self, project, user, org):
         candidate = Candidate.objects.create(name="멱등", owned_by=org)
@@ -78,14 +83,17 @@ class TestCheckDueActions:
         )
         call_command("check_due_actions")
         call_command("check_due_actions")
-        assert AutoAction.objects.filter(
-            project=project,
-            action_type=ActionType.RECONTACT_REMINDER,
-        ).count() == 1
+        assert (
+            AutoAction.objects.filter(
+                project=project,
+                action_type=ActionType.RECONTACT_REMINDER,
+            ).count()
+            == 1
+        )
 
     def test_processes_due_followup_reminders(self, project, user, org):
         """Due followup reminders create Notification records."""
-        candidate = Candidate.objects.create(name="팔로업", owned_by=org)
+        Candidate.objects.create(name="팔로업", owned_by=org)
         AutoAction.objects.create(
             project=project,
             trigger_event="submission_submitted",
