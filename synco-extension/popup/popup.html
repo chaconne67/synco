@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="popup-header">
+      <h1>Synco</h1>
+      <button id="openSynco" class="btn-link">synco 열기</button>
+    </div>
+
+    <div class="popup-stats">
+      <div class="stat-item">
+        <span class="stat-value" id="todaySaves">0</span>
+        <span class="stat-label">오늘 저장</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="totalCandidates">-</span>
+        <span class="stat-label">총 DB</span>
+      </div>
+    </div>
+
+    <div class="popup-search">
+      <input type="text" id="searchInput" placeholder="이름, 회사, 직급 검색...">
+      <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <div class="popup-recent">
+      <h3>최근 저장</h3>
+      <div id="recentList" class="recent-list"></div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

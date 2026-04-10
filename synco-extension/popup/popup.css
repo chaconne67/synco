@@ -1,0 +1,24 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 360px; font-family: 'Pretendard', -apple-system, sans-serif; font-size: 14px; color: #1f2937; }
+.popup-container { padding: 16px; }
+.popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.popup-header h1 { font-size: 18px; font-weight: 700; color: #2563eb; }
+.btn-link { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 13px; }
+.btn-link:hover { text-decoration: underline; }
+.popup-stats { display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: #f9fafb; border-radius: 8px; }
+.stat-item { flex: 1; text-align: center; }
+.stat-value { display: block; font-size: 20px; font-weight: 700; color: #2563eb; }
+.stat-label { font-size: 12px; color: #6b7280; }
+.popup-search { margin-bottom: 16px; }
+.popup-search input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+.popup-search input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+.search-results { margin-top: 8px; max-height: 200px; overflow-y: auto; }
+.search-item { display: block; padding: 8px; border-radius: 4px; text-decoration: none; color: inherit; }
+.search-item:hover { background: #f3f4f6; }
+.search-item strong { display: block; }
+.search-item span { font-size: 12px; color: #6b7280; }
+.popup-recent h3 { font-size: 13px; color: #6b7280; margin-bottom: 8px; }
+.recent-list { }
+.recent-item { display: block; padding: 6px 0; color: #2563eb; text-decoration: none; font-size: 13px; }
+.recent-item:hover { text-decoration: underline; }
+.empty { color: #9ca3af; font-size: 13px; padding: 8px 0; }

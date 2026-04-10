@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Synco 확장 설정</title>
+  <style>
+    body { font-family: 'Pretendard', sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 24px; margin-bottom: 24px; }
+    .field { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    input[type="text"] { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+    button { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1d4ed8; }
+    .status { margin-top: 8px; font-size: 13px; }
+    .status.success { color: #059669; }
+    .status.error { color: #dc2626; }
+    .parser-toggles { margin-top: 24px; }
+    .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Synco 확장 설정</h1>
+
+  <div class="field">
+    <label for="serverUrl">서버 URL</label>
+    <input type="text" id="serverUrl" placeholder="https://synco.example.com">
+  </div>
+
+  <button id="testBtn">연결 테스트</button>
+  <div id="testStatus" class="status"></div>
+
+  <div class="parser-toggles">
+    <h2>사이트별 파서</h2>
+    <div class="toggle-row">
+      <input type="checkbox" id="linkedin" checked>
+      <label for="linkedin">LinkedIn</label>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="jobkorea" checked>
+      <label for="jobkorea">잡코리아</label>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="saramin" checked>
+      <label for="saramin">사람인</label>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px;">
+    <button id="saveBtn">저장</button>
+    <span id="saveStatus" class="status"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

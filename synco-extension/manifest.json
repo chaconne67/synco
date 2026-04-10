@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Synco - AI 헤드헌팅 어시스턴트",
+  "version": "1.0.0",
+  "description": "LinkedIn, 잡코리아, 사람인에서 후보자 프로필을 synco에 저장합니다.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://*.jobkorea.co.kr/*",
+    "https://*.saramin.co.kr/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/in/*"],
+      "js": ["content/overlay.js", "content/linkedin.js"],
+      "css": ["styles/overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.jobkorea.co.kr/Recruit/GI_Read/*"],
+      "js": ["content/overlay.js", "content/jobkorea.js"],
+      "css": ["styles/overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.saramin.co.kr/zf_user/resume/*"],
+      "js": ["content/overlay.js", "content/saramin.js"],
+      "css": ["styles/overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Synco"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

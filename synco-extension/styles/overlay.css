@@ -1,0 +1,47 @@
+.synco-overlay {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  z-index: 999999;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  font-size: 14px;
+  color: #1f2937;
+}
+.synco-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.synco-logo { font-weight: 700; color: #2563eb; font-size: 16px; }
+.synco-close {
+  background: none; border: none; font-size: 20px; cursor: pointer;
+  color: #9ca3af; line-height: 1;
+}
+.synco-close:hover { color: #1f2937; }
+.synco-body { padding: 16px; }
+.synco-status { margin-bottom: 12px; }
+.synco-status-success { color: #059669; }
+.synco-status-error { color: #dc2626; }
+.synco-status-warning { color: #d97706; }
+.synco-status-info { color: #2563eb; }
+.synco-btn {
+  padding: 8px 16px; border: none; border-radius: 6px;
+  cursor: pointer; font-size: 14px; font-weight: 500;
+}
+.synco-btn-save { background: #2563eb; color: white; }
+.synco-btn-save:hover { background: #1d4ed8; }
+.synco-btn-update { background: #f59e0b; color: white; margin-top: 8px; }
+.synco-btn-update:hover { background: #d97706; }
+.synco-parsed-info { margin-left: 8px; font-size: 13px; color: #6b7280; }
+.synco-link { color: #2563eb; text-decoration: none; }
+.synco-link:hover { text-decoration: underline; }
+.synco-existing { padding: 8px; background: #f9fafb; border-radius: 6px; }
+.synco-diff-item { padding: 4px 0; font-size: 13px; color: #6b7280; }
+.synco-match-item { padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+.synco-match-item:last-child { border-bottom: none; }
