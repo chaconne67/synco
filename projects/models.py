@@ -446,6 +446,12 @@ class ProjectContext(BaseModel):
 
     class Meta:
         ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "consultant"],
+                name="unique_context_per_project_consultant",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"Context: {self.project} - {self.consultant}"
@@ -583,3 +589,65 @@ class MeetingRecord(BaseModel):
 
     def __str__(self) -> str:
         return f"Meeting: {self.candidate} ({self.status})"
+
+
+class ActionType(models.TextChoices):
+    POSTING_DRAFT = "posting_draft", "공지 초안"
+    CANDIDATE_SEARCH = "candidate_search", "후보자 자동 서칭"
+    SUBMISSION_DRAFT = "submission_draft", "제출 서류 초안"
+    OFFER_TEMPLATE = "offer_template", "오퍼 템플릿"
+    FOLLOWUP_REMINDER = "followup_reminder", "팔로업 리마인더"
+    RECONTACT_REMINDER = "recontact_reminder", "재컨택 리마인더"
+
+
+class ActionStatus(models.TextChoices):
+    PENDING = "pending", "대기"
+    APPLIED = "applied", "적용됨"
+    DISMISSED = "dismissed", "무시됨"
+
+
+class AutoAction(BaseModel):
+    """이벤트 기반 자동 생성물."""
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="auto_actions",
+    )
+    trigger_event = models.CharField(max_length=100)
+    action_type = models.CharField(max_length=30, choices=ActionType.choices)
+    title = models.CharField(max_length=300)
+    data = models.JSONField(default=dict, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=ActionStatus.choices,
+        default=ActionStatus.PENDING,
+    )
+    due_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_auto_actions",
+    )
+    applied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="applied_auto_actions",
+    )
+    dismissed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dismissed_auto_actions",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"AutoAction: {self.title} ({self.status})"
