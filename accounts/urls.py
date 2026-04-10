@@ -11,4 +11,9 @@ urlpatterns = [
     path("accounts/logout/", views.logout_view, name="logout"),
     path("terms/", views.terms, name="terms"),
     path("privacy/", views.privacy, name="privacy"),
+    # P18: Gmail integration
+    path("accounts/email/connect/", views.email_connect, name="email_connect"),
+    path("accounts/email/callback/", views.email_oauth_callback, name="email_callback"),
+    path("accounts/email/settings/", views.email_settings, name="email_settings"),
+    path("accounts/email/disconnect/", views.email_disconnect, name="email_disconnect"),
 ]

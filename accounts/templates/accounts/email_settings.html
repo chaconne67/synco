@@ -1,0 +1,7 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}synco - 이메일 설정{% endblock %}
+
+{% block content %}
+  {% include "accounts/partials/email_settings_content.html" %}
+{% endblock %}
