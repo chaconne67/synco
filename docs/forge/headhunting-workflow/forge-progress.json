@@ -315,7 +315,7 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "d779c2b",
-      "verification_status": "pending",
+      "verification_status": "running",
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
