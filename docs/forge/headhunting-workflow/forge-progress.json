@@ -299,8 +299,8 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "bc90ad6",
-      "verification_status": "running",
-      "verification_result": null,
+      "verification_status": "completed",
+      "verification_result": "PASS 30, FAIL 0, REVIEW 0",
       "entry_point": "design",
       "complexity": "large",
       "artifacts": [
