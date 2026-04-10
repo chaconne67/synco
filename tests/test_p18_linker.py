@@ -7,6 +7,7 @@ import pytest
 
 from accounts.models import Membership, Organization, User
 from candidates.models import Candidate
+from candidates.services.candidate_identity import CandidateComparisonContext
 from clients.models import Client
 from projects.models import Contact, Project, ProjectStatus, ResumeUpload
 from projects.services.resume.linker import link_resume_to_candidate
@@ -144,3 +145,81 @@ class TestLinkResumeToCandidate:
         )
         assert contact.consultant == user
         assert contact.result == Contact.Result.INTERESTED
+
+    @patch("projects.services.resume.linker.save_pipeline_result")
+    @patch("projects.services.resume.linker.identify_candidate_for_org")
+    def test_existing_candidate_matched_via_identity(
+        self, mock_identify, mock_save, extracted_upload, user, org
+    ):
+        """Existing candidate matched via org-scoped identity -> linked to that candidate."""
+        existing_candidate = Candidate.objects.create(
+            name="김철수",
+            email="test@example.com",
+            owned_by=org,
+        )
+        # identity matcher returns existing candidate context
+        mock_identify.return_value = CandidateComparisonContext(
+            candidate=existing_candidate,
+            compared_resume=None,
+            match_reason="email",
+            previous_data={},
+        )
+        # save_pipeline_result uses comparison_context to update existing
+        mock_save.return_value = existing_candidate
+
+        result = link_resume_to_candidate(extracted_upload, user=user)
+        result.refresh_from_db()
+
+        assert result.status == ResumeUpload.Status.LINKED
+        assert result.candidate == existing_candidate
+        # identity was called (not skipped like force_new)
+        mock_identify.assert_called_once()
+        # comparison_context was passed to save_pipeline_result
+        call_kwargs = mock_save.call_args
+        assert call_kwargs.kwargs.get("comparison_context") is not None
+
+    @patch("projects.services.resume.linker.save_pipeline_result")
+    @patch(
+        "projects.services.resume.linker.identify_candidate_for_org", return_value=None
+    )
+    def test_concurrent_link_uses_get_or_create_for_contact(
+        self, mock_identify, mock_save, extracted_upload, user, org
+    ):
+        """Concurrent link calls use get_or_create for Contact, preventing duplicates."""
+        candidate = Candidate.objects.create(
+            name="김철수",
+            email="test@example.com",
+            owned_by=org,
+        )
+        mock_save.return_value = candidate
+
+        # First link
+        link_resume_to_candidate(extracted_upload, user=user)
+
+        # Create another upload for same project
+        upload2 = ResumeUpload.objects.create(
+            organization=org,
+            project=extracted_upload.project,
+            file_name="resume2.pdf",
+            file_type=ResumeUpload.FileType.PDF,
+            source=ResumeUpload.Source.MANUAL,
+            status=ResumeUpload.Status.PENDING,
+            upload_batch=uuid.uuid4(),
+            created_by=user,
+            extraction_result={
+                "extracted": {"name": "김철수", "email": "test@example.com"},
+                "raw_text_used": "resume text 2",
+            },
+        )
+        transition_status(upload2, ResumeUpload.Status.EXTRACTING)
+        upload2 = transition_status(upload2, ResumeUpload.Status.EXTRACTED)
+
+        # Second link to same candidate+project — should use get_or_create
+        link_resume_to_candidate(upload2, user=user)
+
+        # Only one Contact for this candidate+project
+        contacts = Contact.objects.filter(
+            project=extracted_upload.project,
+            candidate=candidate,
+        )
+        assert contacts.count() == 1
