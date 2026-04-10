@@ -187,8 +187,8 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "f6ff133",
-      "verification_status": "running",
-      "verification_result": null,
+      "verification_status": "completed",
+      "verification_result": "PASS 32, FAIL 0, REVIEW 0",
       "entry_point": "design",
       "complexity": "medium",
       "artifacts": [
