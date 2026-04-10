@@ -651,3 +651,114 @@ class AutoAction(BaseModel):
 
     def __str__(self) -> str:
         return f"AutoAction: {self.title} ({self.status})"
+
+
+class NewsSourceType(models.TextChoices):
+    RSS = "rss", "RSS/뉴스"
+    YOUTUBE = "youtube", "YouTube"
+    BLOG = "blog", "블로그"
+
+
+class NewsCategory(models.TextChoices):
+    HIRING = "hiring", "채용"
+    HR = "hr", "인사"
+    INDUSTRY = "industry", "업계동향"
+    ECONOMY = "economy", "경제/실업"
+
+
+class SummaryStatus(models.TextChoices):
+    PENDING = "pending", "대기"
+    COMPLETED = "completed", "완료"
+    FAILED = "failed", "실패"
+
+
+class NewsSource(BaseModel):
+    """뉴스 소스 (RSS 피드)."""
+
+    organization = models.ForeignKey(
+        "accounts.Organization",
+        on_delete=models.CASCADE,
+        related_name="news_sources",
+    )
+    name = models.CharField(max_length=200)
+    url = models.URLField()
+    type = models.CharField(
+        max_length=20,
+        choices=NewsSourceType.choices,
+        default=NewsSourceType.RSS,
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=NewsCategory.choices,
+    )
+    is_active = models.BooleanField(default=True)
+    last_fetched_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class NewsArticle(BaseModel):
+    """뉴스 기사."""
+
+    source = models.ForeignKey(
+        NewsSource,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="articles",
+    )
+    title = models.CharField(max_length=500)
+    summary = models.TextField(blank=True)
+    raw_content = models.TextField(blank=True)
+    url = models.URLField(unique=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    tags = models.JSONField(default=list, blank=True)
+    category = models.CharField(
+        max_length=20,
+        choices=NewsCategory.choices,
+        blank=True,
+    )
+    summary_status = models.CharField(
+        max_length=20,
+        choices=SummaryStatus.choices,
+        default=SummaryStatus.PENDING,
+    )
+
+    class Meta:
+        ordering = ["-published_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class NewsArticleRelevance(BaseModel):
+    """기사-프로젝트 관련도 (정규화 조인 모델)."""
+
+    article = models.ForeignKey(
+        NewsArticle,
+        on_delete=models.CASCADE,
+        related_name="relevances",
+    )
+    project = models.ForeignKey(
+        "projects.Project",
+        on_delete=models.CASCADE,
+        related_name="news_relevances",
+    )
+    score = models.FloatField()
+    matched_terms = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ["-score"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["article", "project"],
+                name="unique_article_project_relevance",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.article.title} -> {self.project.title} ({self.score:.2f})"
