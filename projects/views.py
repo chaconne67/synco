@@ -259,7 +259,7 @@ def project_create(request):
                     project.assigned_consultants.add(request.user)
 
                     top_collision = high_collisions[0]
-                    ProjectApproval.objects.create(
+                    approval = ProjectApproval.objects.create(
                         project=project,
                         requested_by=request.user,
                         conflict_project=top_collision["project"],
@@ -267,6 +267,51 @@ def project_create(request):
                         conflict_type=top_collision["conflict_type"],
                         message=request.POST.get("approval_message", ""),
                     )
+
+                    # A1: Send Telegram approval notification to org owners
+                    from projects.models import Notification
+                    from projects.services.notification import send_notification
+                    from projects.telegram.keyboards import build_approval_keyboard
+                    from projects.telegram.formatters import format_approval_request
+
+                    owner_memberships = Membership.objects.filter(
+                        organization=org,
+                        role=Membership.Role.OWNER,
+                    ).select_related("user")
+
+                    for m in owner_memberships:
+                        notif = Notification.objects.create(
+                            recipient=m.user,
+                            type=Notification.Type.APPROVAL_REQUEST,
+                            title=f"프로젝트 승인 요청: {project.title}",
+                            body=(
+                                f"{request.user.get_full_name() or request.user.username}"
+                                f" → {project.title}"
+                            ),
+                            callback_data={
+                                "action": "approval",
+                                "approval_id": str(approval.pk),
+                            },
+                        )
+                        text = format_approval_request(
+                            requester_name=(
+                                request.user.get_full_name()
+                                or request.user.username
+                            ),
+                            project_title=project.title,
+                            conflict_info=(
+                                f"{top_collision['project'].title}"
+                                f" ({top_collision['project'].get_status_display()})"
+                            ),
+                            message=request.POST.get("approval_message", ""),
+                        )
+                        short_id = str(notif.pk).replace("-", "")[:8]
+                        send_notification(
+                            notif,
+                            text=text,
+                            reply_markup=build_approval_keyboard(short_id),
+                        )
+
                     django_messages.success(
                         request,
                         f"'{project.title}' 프로젝트의 승인 요청이 제출되었습니다. "

@@ -68,6 +68,24 @@ def _send_next_step(
     return notif
 
 
+def _update_notification_with_keyboard(
+    notification: Notification, text: str, reply_markup
+) -> None:
+    """Update a sent notification's message with a keyboard (A4 two-phase send).
+
+    Used when we need to create the notification first to get its pk,
+    then build a keyboard referencing that pk.
+    """
+    from projects.services.notification import update_telegram_message
+
+    try:
+        update_telegram_message(notification, text, reply_markup=reply_markup)
+    except Exception:
+        logger.exception(
+            "Failed to update notification %s with keyboard", notification.pk
+        )
+
+
 def handle_approval_callback(
     *,
     notification: Notification,
@@ -180,14 +198,15 @@ def handle_contact_callback(
             step="result",
             channel=channel,
         )
-        # A4: Create new notification FIRST, then use its pk for keyboard
-        _send_next_step(
+        # A4: Create new notification FIRST, then build keyboard with its pk
+        next_notif = _send_next_step(
             recipient=user,
             callback_data=next_cb,
             text=text,
-            reply_markup=build_contact_result_keyboard(
-                str(notification.pk).replace("-", "")[:8]
-            ),
+        )
+        new_short_id = str(next_notif.pk).replace("-", "")[:8]
+        _update_notification_with_keyboard(
+            next_notif, text, build_contact_result_keyboard(new_short_id)
         )
         return {"ok": True, "next_step": 2}
 
@@ -207,13 +226,15 @@ def handle_contact_callback(
             channel=channel,
             result=result_val,
         )
-        _send_next_step(
+        # A4: Create new notification FIRST, then build keyboard with its pk
+        next_notif = _send_next_step(
             recipient=user,
             callback_data=next_cb,
             text=text,
-            reply_markup=build_contact_save_keyboard(
-                str(notification.pk).replace("-", "")[:8]
-            ),
+        )
+        new_short_id = str(next_notif.pk).replace("-", "")[:8]
+        _update_notification_with_keyboard(
+            next_notif, text, build_contact_save_keyboard(new_short_id)
         )
         return {"ok": True, "next_step": 3}
 
