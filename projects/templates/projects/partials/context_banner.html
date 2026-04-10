@@ -1,0 +1,25 @@
+{% if context %}
+<div id="context-banner" class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+  <div class="flex items-start justify-between">
+    <div>
+      <h3 class="text-[14px] font-semibold text-amber-800">중단된 작업</h3>
+      <p class="text-[13px] text-amber-700 mt-1">{{ context.pending_action }}</p>
+      <p class="text-[12px] text-amber-500 mt-0.5">{{ context.updated_at|timesince }} 전 중단</p>
+    </div>
+    <div class="flex items-center gap-2">
+      {% if resume_url %}
+      <button hx-post="{% url 'projects:project_context_resume' project.pk %}"
+              class="px-3 py-1.5 bg-amber-600 text-white text-[13px] rounded-lg hover:bg-amber-700 transition">
+        이어서 하기
+      </button>
+      {% endif %}
+      <button hx-post="{% url 'projects:project_context_discard' project.pk %}"
+              hx-target="#context-banner-wrapper"
+              hx-swap="innerHTML"
+              class="px-3 py-1.5 bg-white text-amber-700 text-[13px] border border-amber-300 rounded-lg hover:bg-amber-50 transition">
+        취소
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}

@@ -260,4 +260,40 @@ urlpatterns = [
         views.approval_decide,
         name="approval_decide",
     ),
+    # P16: Work Continuity
+    path(
+        "<uuid:pk>/context/",
+        views.project_context,
+        name="project_context",
+    ),
+    path(
+        "<uuid:pk>/context/save/",
+        views.project_context_save,
+        name="project_context_save",
+    ),
+    path(
+        "<uuid:pk>/context/resume/",
+        views.project_context_resume,
+        name="project_context_resume",
+    ),
+    path(
+        "<uuid:pk>/context/discard/",
+        views.project_context_discard,
+        name="project_context_discard",
+    ),
+    path(
+        "<uuid:pk>/auto-actions/",
+        views.project_auto_actions,
+        name="project_auto_actions",
+    ),
+    path(
+        "<uuid:pk>/auto-actions/<uuid:action_pk>/apply/",
+        views.auto_action_apply,
+        name="auto_action_apply",
+    ),
+    path(
+        "<uuid:pk>/auto-actions/<uuid:action_pk>/dismiss/",
+        views.auto_action_dismiss,
+        name="auto_action_dismiss",
+    ),
 ]

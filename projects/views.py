@@ -2355,3 +2355,172 @@ def dashboard_team(request):
         "team_summary": get_team_summary(request.user, org),
     }
     return render(request, "projects/partials/dash_admin.html", context)
+
+
+# --- P16: Work Continuity ---
+
+from projects.services.context import (
+    discard_context,
+    get_active_context,
+    get_resume_url,
+    save_context,
+    validate_draft_data,
+)
+from projects.services.auto_actions import (
+    apply_action,
+    dismiss_action,
+    get_pending_actions,
+    ConflictError,
+)
+from .models import AutoAction
+
+
+@login_required
+@require_http_methods(["GET"])
+def project_context(request, pk):
+    """GET: Return active context banner partial."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    ctx = get_active_context(project, request.user)
+    return render(
+        request,
+        "projects/partials/context_banner.html",
+        {
+            "project": project,
+            "context": ctx,
+            "resume_url": get_resume_url(ctx) if ctx else None,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def project_context_save(request, pk):
+    """POST: Save/update context (autosave endpoint)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    content_type = request.content_type or ""
+    if "application/json" in content_type:
+        try:
+            body = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return HttpResponse(status=400)
+    else:
+        raw = request.POST.get("data", request.body.decode("utf-8", errors="replace"))
+        try:
+            body = json.loads(raw)
+        except (json.JSONDecodeError, ValueError):
+            return HttpResponse(status=400)
+
+    last_step = body.get("last_step", "")
+    pending_action = body.get("pending_action", "")
+    draft_data = body.get("draft_data", {})
+
+    if not validate_draft_data(draft_data):
+        return HttpResponse(status=400)
+
+    save_context(
+        project=project,
+        user=request.user,
+        last_step=last_step,
+        pending_action=pending_action,
+        draft_data=draft_data,
+    )
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_http_methods(["POST"])
+def project_context_resume(request, pk):
+    """POST: Resume from context → redirect to target form."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    ctx = get_active_context(project, request.user)
+    if not ctx:
+        return HttpResponse(status=404)
+    resume_url = get_resume_url(ctx)
+    if not resume_url:
+        return HttpResponse(status=404)
+    response = HttpResponse(status=200)
+    response["HX-Redirect"] = resume_url
+    return response
+
+
+@login_required
+@require_http_methods(["POST"])
+def project_context_discard(request, pk):
+    """POST: Discard the active context."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    discard_context(project, request.user)
+    return render(
+        request,
+        "projects/partials/context_banner.html",
+        {
+            "project": project,
+            "context": None,
+            "resume_url": None,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def project_auto_actions(request, pk):
+    """GET: List pending auto-actions."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    actions = get_pending_actions(project)
+    return render(
+        request,
+        "projects/partials/auto_actions_banner.html",
+        {
+            "project": project,
+            "actions": actions,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def auto_action_apply(request, pk, action_pk):
+    """POST: Apply an auto-action."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    action = get_object_or_404(AutoAction, pk=action_pk, project=project)
+    try:
+        apply_action(action.pk, request.user)
+    except ConflictError:
+        return HttpResponse("이미 처리된 액션입니다.", status=409)
+    actions = get_pending_actions(project)
+    return render(
+        request,
+        "projects/partials/auto_actions_banner.html",
+        {
+            "project": project,
+            "actions": actions,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def auto_action_dismiss(request, pk, action_pk):
+    """POST: Dismiss an auto-action."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    action = get_object_or_404(AutoAction, pk=action_pk, project=project)
+    try:
+        dismiss_action(action.pk, request.user)
+    except ConflictError:
+        return HttpResponse("이미 처리된 액션입니다.", status=409)
+    actions = get_pending_actions(project)
+    return render(
+        request,
+        "projects/partials/auto_actions_banner.html",
+        {
+            "project": project,
+            "actions": actions,
+        },
+    )

@@ -1,0 +1,26 @@
+{% if actions %}
+<div id="auto-actions-banner" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+  <h3 class="text-[14px] font-semibold text-blue-800 mb-3">자동 생성 ({{ actions|length }}건)</h3>
+  <div class="space-y-2">
+    {% for action in actions %}
+    <div class="flex items-center justify-between">
+      <span class="text-[13px] text-blue-700">{{ action.title }}</span>
+      <div class="flex items-center gap-2">
+        <button hx-post="{% url 'projects:auto_action_apply' project.pk action.pk %}"
+                hx-target="#auto-actions-wrapper"
+                hx-swap="innerHTML"
+                class="px-2.5 py-1 bg-blue-600 text-white text-[12px] rounded-lg hover:bg-blue-700 transition">
+          확인
+        </button>
+        <button hx-post="{% url 'projects:auto_action_dismiss' project.pk action.pk %}"
+                hx-target="#auto-actions-wrapper"
+                hx-swap="innerHTML"
+                class="px-2.5 py-1 bg-white text-blue-600 text-[12px] border border-blue-300 rounded-lg hover:bg-blue-50 transition">
+          무시
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
