@@ -296,4 +296,46 @@ urlpatterns = [
         views.auto_action_dismiss,
         name="auto_action_dismiss",
     ),
+    # P18: Resume upload (project-scoped)
+    path(
+        "<uuid:pk>/resumes/upload/",
+        views.resume_upload,
+        name="resume_upload",
+    ),
+    path(
+        "<uuid:pk>/resumes/process/",
+        views.resume_process_pending,
+        name="resume_process_pending",
+    ),
+    path(
+        "<uuid:pk>/resumes/status/",
+        views.resume_upload_status,
+        name="resume_upload_status",
+    ),
+    path(
+        "<uuid:pk>/resumes/<uuid:resume_pk>/link/",
+        views.resume_link_candidate,
+        name="resume_link_candidate",
+    ),
+    path(
+        "<uuid:pk>/resumes/<uuid:resume_pk>/discard/",
+        views.resume_discard,
+        name="resume_discard",
+    ),
+    path(
+        "<uuid:pk>/resumes/<uuid:resume_pk>/retry/",
+        views.resume_retry,
+        name="resume_retry",
+    ),
+    # P18: Unassigned resumes (org-scoped)
+    path(
+        "resumes/unassigned/",
+        views.resume_unassigned,
+        name="resume_unassigned",
+    ),
+    path(
+        "resumes/<uuid:resume_pk>/assign/<uuid:project_pk>/",
+        views.resume_assign_project,
+        name="resume_assign_project",
+    ),
 ]

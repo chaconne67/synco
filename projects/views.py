@@ -1,16 +1,24 @@
 import json
 import os
+import uuid
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
 from accounts.models import Organization
 
 from projects.services import posting as posting_service
+from projects.services.resume.linker import link_resume_to_candidate
+from projects.services.resume.transitions import transition_status
+from projects.services.resume.uploader import (
+    FileValidationError,
+    create_upload,
+    process_pending_upload,
+)
 
 from .forms import (
     ContactForm,
@@ -34,6 +42,7 @@ from .models import (
     Project,
     ProjectApproval,
     ProjectStatus,
+    ResumeUpload,
     Submission,
     SubmissionDraft,
 )
@@ -494,6 +503,10 @@ def project_tab_search(request, pk):
 
             item["other_project_contacts"] = other_contacts_map.get(cid, [])
 
+    resume_uploads = ResumeUpload.objects.filter(project=project).exclude(
+        status=ResumeUpload.Status.DISCARDED
+    )
+
     return render(
         request,
         "projects/partials/tab_search.html",
@@ -501,6 +514,7 @@ def project_tab_search(request, pk):
             "project": project,
             "results": results,
             "has_requirements": bool(project.requirements),
+            "resume_uploads": resume_uploads,
         },
     )
 
@@ -2542,5 +2556,229 @@ def auto_action_dismiss(request, pk, action_pk):
         {
             "project": project,
             "actions": actions,
+        },
+    )
+
+
+# ── P18: Resume Upload Views ──────────────────────────────────────────
+
+
+@login_required
+def resume_upload(request, pk):
+    """POST: Upload resume files → create ResumeUpload(pending) per file."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method != "POST":
+        return HttpResponseBadRequest()
+
+    batch_id = uuid.uuid4()
+    uploads = []
+    errors = []
+
+    for f in request.FILES.getlist("files"):
+        try:
+            upload = create_upload(
+                file=f,
+                project=project,
+                organization=org,
+                user=request.user,
+                upload_batch=batch_id,
+            )
+            uploads.append(upload)
+        except FileValidationError as e:
+            errors.append({"file": f.name, "error": str(e)})
+
+    return render(
+        request,
+        "projects/partials/resume_status.html",
+        {
+            "uploads": uploads,
+            "errors": errors,
+            "batch_id": str(batch_id),
+            "project": project,
+        },
+    )
+
+
+@login_required
+def resume_process_pending(request, pk):
+    """POST: Process all pending uploads for batch. Runs extraction synchronously."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    batch_id = request.POST.get("batch_id")
+    if not batch_id:
+        return HttpResponseBadRequest("batch_id required")
+
+    pending = ResumeUpload.objects.filter(
+        project=project,
+        upload_batch=batch_id,
+        status=ResumeUpload.Status.PENDING,
+    )
+    for upload in pending:
+        process_pending_upload(upload)
+
+    uploads = ResumeUpload.objects.filter(
+        project=project,
+        upload_batch=batch_id,
+    )
+    return render(
+        request,
+        "projects/partials/resume_status.html",
+        {
+            "uploads": uploads,
+            "project": project,
+        },
+    )
+
+
+@login_required
+def resume_upload_status(request, pk):
+    """GET: HTMX polling endpoint for upload status."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    batch_id = request.GET.get("batch")
+    uploads = ResumeUpload.objects.filter(
+        project=project,
+        created_by=request.user,
+    )
+    if batch_id:
+        uploads = uploads.filter(upload_batch=batch_id)
+
+    return render(
+        request,
+        "projects/partials/resume_status.html",
+        {
+            "uploads": uploads,
+            "project": project,
+        },
+    )
+
+
+@login_required
+def resume_link_candidate(request, pk, resume_pk):
+    """POST: Link extracted resume to candidate."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    upload = get_object_or_404(
+        ResumeUpload.objects.filter(project=project),
+        pk=resume_pk,
+    )
+    force_new = request.POST.get("force_new") == "true"
+
+    try:
+        link_resume_to_candidate(upload, user=request.user, force_new=force_new)
+    except ValueError as e:
+        return HttpResponseBadRequest(str(e))
+
+    return render(
+        request,
+        "projects/partials/resume_status.html",
+        {
+            "uploads": [upload],
+            "project": project,
+        },
+    )
+
+
+@login_required
+def resume_discard(request, pk, resume_pk):
+    """POST: Discard resume upload + delete physical file."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    upload = get_object_or_404(
+        ResumeUpload.objects.filter(project=project),
+        pk=resume_pk,
+    )
+
+    transition_status(upload, ResumeUpload.Status.DISCARDED)
+    if upload.file:
+        upload.file.delete(save=False)
+
+    return render(
+        request,
+        "projects/partials/resume_status.html",
+        {
+            "uploads": [upload],
+            "project": project,
+        },
+    )
+
+
+@login_required
+def resume_retry(request, pk, resume_pk):
+    """POST: Retry failed extraction (max 3 retries)."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    upload = get_object_or_404(
+        ResumeUpload.objects.filter(project=project),
+        pk=resume_pk,
+    )
+
+    if upload.retry_count >= 3:
+        return HttpResponseBadRequest("재시도 횟수를 초과했습니다.")
+
+    upload.retry_count += 1
+    upload.save(update_fields=["retry_count", "updated_at"])
+    transition_status(upload, ResumeUpload.Status.PENDING)
+    process_pending_upload(upload)
+
+    return render(
+        request,
+        "projects/partials/resume_status.html",
+        {
+            "uploads": [upload],
+            "project": project,
+        },
+    )
+
+
+@login_required
+def resume_unassigned(request):
+    """GET: Org-scoped list of unassigned resume uploads (project=null)."""
+    org = _get_org(request)
+    uploads = ResumeUpload.objects.filter(
+        organization=org,
+        project__isnull=True,
+    ).exclude(status=ResumeUpload.Status.DISCARDED)
+    projects = Project.objects.filter(organization=org).exclude(
+        status=ProjectStatus.CLOSED,
+    )
+
+    return render(
+        request,
+        "projects/resume_unassigned.html",
+        {
+            "uploads": uploads,
+            "projects": projects,
+        },
+    )
+
+
+@login_required
+def resume_assign_project(request, resume_pk, project_pk):
+    """POST: Assign an unassigned resume upload to a project."""
+    org = _get_org(request)
+    upload = get_object_or_404(
+        ResumeUpload.objects.filter(organization=org, project__isnull=True),
+        pk=resume_pk,
+    )
+    project = get_object_or_404(Project, pk=project_pk, organization=org)
+
+    upload.project = project
+    upload.save(update_fields=["project", "updated_at"])
+
+    uploads = ResumeUpload.objects.filter(
+        organization=org,
+        project__isnull=True,
+    ).exclude(status=ResumeUpload.Status.DISCARDED)
+
+    return render(
+        request,
+        "projects/resume_unassigned.html",
+        {
+            "uploads": uploads,
         },
     )

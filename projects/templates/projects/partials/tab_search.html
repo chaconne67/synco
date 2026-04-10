@@ -1,5 +1,137 @@
+{% load static %}
 <div class="space-y-4" hx-trigger="contactChanged from:body" hx-get="{% url 'projects:project_tab_search' project.pk %}" hx-target="#tab-content">
 
+  <!-- P18: Resume upload toggle -->
+  <div class="bg-white rounded-lg border border-gray-100 p-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-[15px] font-semibold text-gray-700">이력서 업로드</h2>
+      <button type="button"
+              onclick="document.getElementById('resume-upload-section').classList.toggle('hidden')"
+              class="text-[13px] px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition">
+        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        이력서 업로드
+      </button>
+    </div>
+
+    <!-- Upload section (hidden by default) -->
+    <div id="resume-upload-section" class="hidden mt-4">
+      {% include "projects/partials/resume_upload.html" %}
+    </div>
+  </div>
+
+  <!-- P18: Uploaded resumes section -->
+  {% if resume_uploads %}
+  <div class="bg-white rounded-lg border border-gray-100 p-4">
+    <h2 class="text-[15px] font-semibold text-gray-700 mb-3">업로드된 이력서 ({{ resume_uploads|length }}건)</h2>
+    <div class="space-y-2">
+      {% for upload in resume_uploads %}
+      <div id="resume-item-{{ upload.pk }}" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+
+        {% if upload.status == "pending" or upload.status == "extracting" %}
+        <div class="w-5 h-5 shrink-0">
+          <svg class="animate-spin w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-medium text-gray-700 truncate">{{ upload.file_name }}</p>
+          <p class="text-[12px] text-gray-400">추출중...</p>
+        </div>
+
+        {% elif upload.status == "extracted" %}
+        <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-medium text-gray-700 truncate">{{ upload.file_name }}</p>
+          <p class="text-[12px] text-green-600">추출 완료</p>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button hx-post="{% url 'projects:resume_link_candidate' project.pk upload.pk %}"
+                  hx-target="#resume-item-{{ upload.pk }}"
+                  hx-swap="outerHTML"
+                  class="text-[12px] px-2.5 py-1 bg-primary text-white rounded-md hover:bg-primary/90 transition">
+            연결
+          </button>
+          <button hx-post="{% url 'projects:resume_discard' project.pk upload.pk %}"
+                  hx-target="#resume-item-{{ upload.pk }}"
+                  hx-swap="outerHTML"
+                  hx-confirm="이 이력서를 폐기하시겠습니까?"
+                  class="text-[12px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition">
+            폐기
+          </button>
+        </div>
+
+        {% elif upload.status == "duplicate" %}
+        <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-medium text-gray-700 truncate">{{ upload.file_name }}</p>
+          <p class="text-[12px] text-amber-600">중복 후보자 발견</p>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button hx-post="{% url 'projects:resume_link_candidate' project.pk upload.pk %}"
+                  hx-target="#resume-item-{{ upload.pk }}"
+                  hx-swap="outerHTML"
+                  class="text-[12px] px-2.5 py-1 bg-primary text-white rounded-md hover:bg-primary/90 transition">
+            연결(병합)
+          </button>
+          <button hx-post="{% url 'projects:resume_link_candidate' project.pk upload.pk %}"
+                  hx-vals='{"force_new": "true"}'
+                  hx-target="#resume-item-{{ upload.pk }}"
+                  hx-swap="outerHTML"
+                  class="text-[12px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition">
+            새로 생성
+          </button>
+          <button hx-post="{% url 'projects:resume_discard' project.pk upload.pk %}"
+                  hx-target="#resume-item-{{ upload.pk }}"
+                  hx-swap="outerHTML"
+                  hx-confirm="이 이력서를 폐기하시겠습니까?"
+                  class="text-[12px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition">
+            폐기
+          </button>
+        </div>
+
+        {% elif upload.status == "failed" %}
+        <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-medium text-gray-700 truncate">{{ upload.file_name }}</p>
+          <p class="text-[12px] text-red-500 truncate">{{ upload.error_message|default:"추출 실패" }}</p>
+        </div>
+        {% if upload.retry_count < 3 %}
+        <button hx-post="{% url 'projects:resume_retry' project.pk upload.pk %}"
+                hx-target="#resume-item-{{ upload.pk }}"
+                hx-swap="outerHTML"
+                class="text-[12px] px-2.5 py-1 bg-amber-50 text-amber-600 rounded-md hover:bg-amber-100 transition shrink-0">
+          재시도 ({{ upload.retry_count }}/3)
+        </button>
+        {% endif %}
+
+        {% elif upload.status == "linked" %}
+        <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-medium text-gray-700 truncate">{{ upload.file_name }}</p>
+          <p class="text-[12px] text-green-600">
+            후보자 연결 완료{% if upload.candidate %} — {{ upload.candidate.name }}{% endif %}
+          </p>
+        </div>
+
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Existing search results section -->
   {% if not has_requirements %}
   <div class="bg-white rounded-lg border border-gray-100 p-8 text-center">
     <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,3 +216,5 @@
   {% endif %}
 
 </div>
+
+<script src="{% static 'js/resume-upload.js' %}"></script>
