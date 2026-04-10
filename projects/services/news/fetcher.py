@@ -34,6 +34,7 @@ def fetch_articles(source: NewsSource) -> tuple[int, int]:
             source.url,
             timeout=30,
             follow_redirects=True,
+            max_redirects=5,
             headers={"User-Agent": "synco-news-fetcher/1.0"},
         )
         response.raise_for_status()
