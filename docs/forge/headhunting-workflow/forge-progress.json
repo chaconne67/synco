@@ -43,8 +43,8 @@
     {
       "slug": "p17-news-feed",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "bc90ad6",
       "verification_status": null,
       "verification_result": null,
       "entry_point": "design",
