@@ -1,0 +1,31 @@
+{% for article in articles %}
+<a href="{{ article.url }}" target="_blank" rel="noopener"
+   class="block bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition mb-3">
+  <div class="flex items-start gap-2">
+    <span class="text-[12px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+      {{ article.get_category_display|default:"기타" }}
+    </span>
+    <h3 class="text-[15px] font-medium text-gray-900 line-clamp-2">{{ article.title }}</h3>
+  </div>
+  {% if article.summary %}
+  <p class="text-[14px] text-gray-600 mt-1 line-clamp-2">{{ article.summary }}</p>
+  {% endif %}
+  <div class="flex items-center gap-3 mt-2 text-[12px] text-gray-400">
+    <span>{{ article.source.name }}</span>
+    {% if article.published_at %}
+    <span>{{ article.published_at|date:"m/d H:i" }}</span>
+    {% endif %}
+    {% if article.tags %}
+    <div class="flex gap-1">
+      {% for tag in article.tags|slice:":3" %}
+      <span class="text-gray-400">#{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</a>
+{% empty %}
+<div class="bg-gray-50 rounded-lg p-8 text-center text-gray-500 text-[15px]">
+  뉴스가 없습니다.
+</div>
+{% endfor %}

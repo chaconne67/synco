@@ -8,6 +8,7 @@ from .models import (
     Contact,
     Interview,
     JDSource,
+    NewsSource,
     Offer,
     PostingSite,
     Project,
@@ -462,3 +463,32 @@ class ApprovalDecisionForm(forms.Form):
         required=False,
     )
     merge_target = forms.UUIDField(required=False)
+
+
+# ---------------------------------------------------------------------------
+# P17: News Source form
+# ---------------------------------------------------------------------------
+
+
+class NewsSourceForm(forms.ModelForm):
+    class Meta:
+        model = NewsSource
+        fields = ["name", "url", "type", "category"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": INPUT_CSS, "placeholder": "소스 이름"}),
+            "url": forms.URLInput(attrs={"class": INPUT_CSS, "placeholder": "https://example.com/feed.xml"}),
+            "type": forms.Select(attrs={"class": INPUT_CSS}),
+            "category": forms.Select(attrs={"class": INPUT_CSS}),
+        }
+        labels = {
+            "name": "소스 이름",
+            "url": "피드 URL",
+            "type": "유형",
+            "category": "카테고리",
+        }
+
+    def clean_url(self):
+        url = self.cleaned_data.get("url", "")
+        if url and not url.startswith(("http://", "https://")):
+            raise forms.ValidationError("http:// 또는 https:// URL만 허용됩니다.")
+        return url

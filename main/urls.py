@@ -20,6 +20,7 @@ urlpatterns = [
     path("voice/", include("projects.urls_voice")),
     path("projects/", include("projects.urls")),
     path("telegram/", include("projects.urls_telegram")),
+    path("news/", include("projects.urls_news")),
 ]
 
 if settings.DEBUG:

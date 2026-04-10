@@ -1,0 +1,65 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}뉴스 소스 관리 — synco{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-heading font-bold">뉴스 소스 관리</h1>
+    <a href="{% url 'news:news_source_create' %}"
+       hx-get="{% url 'news:news_source_create' %}" hx-target="#main-content" hx-push-url="true"
+       class="bg-primary text-white px-4 py-2 rounded-lg text-[15px] font-medium hover:bg-primary-dark transition">
+      소스 추가
+    </a>
+  </div>
+
+  {% if sources %}
+  <div class="space-y-3">
+    {% for source in sources %}
+    <div class="bg-white border border-gray-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-[15px] font-medium text-gray-900">{{ source.name }}</h3>
+          <p class="text-[13px] text-gray-500 mt-0.5">{{ source.url }}</p>
+          <div class="flex items-center gap-2 mt-1 text-[12px]">
+            <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ source.get_type_display }}</span>
+            <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ source.get_category_display }}</span>
+            {% if source.is_active %}
+            <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-600">활성</span>
+            {% else %}
+            <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-600">비활성</span>
+            {% endif %}
+            {% if source.last_fetched_at %}
+            <span class="text-gray-400">최근 수집: {{ source.last_fetched_at|date:"m/d H:i" }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <form method="post" action="{% url 'news:news_source_toggle' source.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="text-[13px] text-gray-500 hover:text-gray-700 px-2 py-1">
+              {% if source.is_active %}비활성화{% else %}활성화{% endif %}
+            </button>
+          </form>
+          <a href="{% url 'news:news_source_update' source.pk %}"
+             hx-get="{% url 'news:news_source_update' source.pk %}" hx-target="#main-content" hx-push-url="true"
+             class="text-[13px] text-primary hover:text-primary-dark px-2 py-1">수정</a>
+          <form method="post" action="{% url 'news:news_source_delete' source.pk %}"
+                onsubmit="return confirm('정말 삭제하시겠습니까?')">
+            {% csrf_token %}
+            <button type="submit" class="text-[13px] text-red-500 hover:text-red-700 px-2 py-1">삭제</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-gray-50 rounded-lg p-8 text-center text-gray-500 text-[15px]">
+    등록된 소스가 없습니다.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
