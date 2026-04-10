@@ -1,0 +1,331 @@
+{
+  "topic": "p16-work-continuity",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "CRITICAL",
+              "title": "Signal handlers use .delay() but no Celery installed",
+              "attack": "Signal code calls .delay() which requires Celery. Project has no Celery installed.",
+              "action": "accepted",
+              "response": "Replace all .delay() with synchronous service calls that create AutoAction(status=pending) only.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "CRITICAL",
+              "title": "Missing context save endpoint in URL design",
+              "attack": "URL table has no POST endpoint for saving draft_data. JS autosave has no target.",
+              "action": "accepted",
+              "response": "Add POST /projects/<pk>/context/save/ endpoint.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "CRITICAL",
+              "title": "beforeunload + HTMX POST unreliable for autosave",
+              "attack": "Browsers cancel async requests during beforeunload. HTMX uses XHR which may be terminated.",
+              "action": "accepted",
+              "response": "Three-tier autosave: periodic debounce (primary) + sendBeacon (unload fallback) + HTMX event (in-app nav).",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "CRITICAL",
+              "title": "Contact/Interview result values use Korean but signals check English",
+              "attack": "Signal checks 'interested'/'pass' but model values are '관심'/'합격'.",
+              "action": "accepted",
+              "response": "Use enum constants Contact.Result.INTERESTED, Interview.Result.PASSED, ProjectStatus.NEW.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "CRITICAL",
+              "title": "Resume logic undefined — no form restoration mechanism",
+              "attack": "draft_data.form string provides no mapping to URL, view, form class, or HTMX partial.",
+              "action": "accepted",
+              "response": "Define FORM_REGISTRY mapping form names to URL names, kwargs, and templates. Resume via HX-Redirect with ?resume=<context_id>.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "CRITICAL",
+              "title": "ProjectContext collision — multiple sources overwrite each other",
+              "attack": "No uniqueness constraint, multiple autosave sources can pile up or overwrite.",
+              "action": "partial",
+              "response": "Add UniqueConstraint(project, consultant) + update_or_create. Single-active-context is intentional for v1.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "CRITICAL",
+              "title": "Time-delayed triggers have no execution mechanism",
+              "attack": "3-day followup and 1-day lock expiry have no cron/command/scheduler.",
+              "action": "accepted",
+              "response": "Add due_at field to AutoAction. Add check_due_actions management command for cron.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "MAJOR",
+              "title": "Synchronous AI calls in post_save signals block HTTP",
+              "attack": "Gemini API with retries inside signal handler blocks user for 10+ seconds.",
+              "action": "accepted",
+              "response": "Signals create AutoAction(status=pending) only. AI generation deferred to user demand or management command.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "No permission/authorization rules",
+              "attack": "No access control on context or auto-action endpoints.",
+              "action": "accepted",
+              "response": "Add organization + consultant matching on all views.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-10",
+              "severity": "MAJOR",
+              "title": "AutoAction missing owner/audit fields",
+              "attack": "No created_by, applied_by, dismissed_by for multi-consultant accountability.",
+              "action": "accepted",
+              "response": "Add created_by, applied_by, dismissed_by FK fields.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-11",
+              "severity": "MAJOR",
+              "title": "No JSON schema validation for draft_data and AutoAction.data",
+              "attack": "PII in unvalidated JSON. No schema per action type.",
+              "action": "partial",
+              "response": "Define expected keys per type in constants dict. Simple Python validation, no jsonschema library.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-12",
+              "severity": "MAJOR",
+              "title": "Signal duplicate firing on every save",
+              "attack": "post_save fires on every .save(), not just state transitions.",
+              "action": "accepted",
+              "response": "Check for existing pending AutoAction before creating. Idempotent creation.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-13",
+              "severity": "MAJOR",
+              "title": "Project status check uses string 'new'",
+              "attack": "Hardcoded string instead of enum constant reference.",
+              "action": "accepted",
+              "response": "Use ProjectStatus.NEW enum reference. Value matches but style is wrong.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-14",
+              "severity": "MAJOR",
+              "title": "AutoAction doesn't use BaseModel (missing updated_at)",
+              "attack": "Manually defined fields instead of extending BaseModel like all other models.",
+              "action": "accepted",
+              "response": "AutoAction extends BaseModel. Remove manual id/created_at.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-15",
+              "severity": "MAJOR",
+              "title": "Apply not atomic — no transaction safety",
+              "attack": "No transaction.atomic() or select_for_update(). Concurrent double-apply possible.",
+              "action": "accepted",
+              "response": "Apply uses transaction.atomic() + select_for_update(). Status precondition: only pending can be applied.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-16",
+              "severity": "MAJOR",
+              "title": "Apply semantics undefined per action type",
+              "attack": "No specification of what 'apply' does for each of 6 action types.",
+              "action": "accepted",
+              "response": "Define apply semantics table: data schema, target model, mutation behavior per type.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-17",
+              "severity": "MAJOR",
+              "title": "Voice resume integration points undefined",
+              "attack": "No specification of which P14 service reads/writes ProjectContext.",
+              "action": "partial",
+              "response": "Define integration points (context_resolver, intent_parser, action_executor). Mark as P14 integration point.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-18",
+              "severity": "MAJOR",
+              "title": "Test criteria missing negative/edge cases",
+              "attack": "Only happy-path tests. No permission, duplicate, concurrent, AI failure tests.",
+              "action": "accepted",
+              "response": "Add negative test criteria: 403, duplicate idempotency, concurrent apply 409, AI failure, invalid data.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-19",
+              "severity": "MINOR",
+              "title": "Artifact list incomplete",
+              "attack": "Only 2 URL patterns listed but 6+ endpoints exist.",
+              "action": "accepted",
+              "response": "List all endpoints in artifacts.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-20",
+              "severity": "MINOR",
+              "title": "No cleanup strategy for stale AutoActions",
+              "attack": "No TTL or cleanup for old dismissed/applied actions.",
+              "action": "accepted",
+              "response": "Filter to pending by default. Use updated_at for audit. No separate cleanup for v1.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 20,
+        "accepted": 17,
+        "rebutted": 0,
+        "partial": 3,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Project fixture triggers signals, polluting tests",
+              "attack": "conftest project with NEW status creates 2 AutoActions via signal after Task 5.",
+              "action": "accepted",
+              "response": "Change fixture to SEARCHING status. Add separate new_project fixture.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "apply_action only flips status, no per-type mutations",
+              "attack": "No type-specific dispatch. Apply is a no-op for all action types.",
+              "action": "accepted",
+              "response": "Add type-specific dispatch handlers inside apply_action.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "CRITICAL",
+              "title": "Resume doesn't pre-fill target forms",
+              "attack": "HX-Redirect works but target views don't read ?resume= param.",
+              "action": "accepted",
+              "response": "Modify contact_create to detect ?resume= and pre-fill form initial.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "CRITICAL",
+              "title": "JS not loaded, forms not annotated",
+              "attack": "Script exists but never included, no data-autosave attributes on forms.",
+              "action": "accepted",
+              "response": "Include JS in template, annotate forms with data-autosave.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "CRITICAL",
+              "title": "sendBeacon CSRF failure",
+              "attack": "sendBeacon cannot set X-CSRFToken header. Requests will be 403.",
+              "action": "accepted",
+              "response": "Use fetch({keepalive:true}) instead of sendBeacon.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "Signal idempotency scoped to pending only",
+              "attack": "After dismiss/apply, re-save creates new pending action.",
+              "action": "accepted",
+              "response": "Remove status from idempotency check.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-09",
+              "severity": "MAJOR",
+              "title": "UniqueConstraint migration needs dedup",
+              "attack": "Migration fails if duplicate contexts exist in DB.",
+              "action": "accepted",
+              "response": "Add RunPython dedup migration.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-12",
+              "severity": "MAJOR",
+              "title": "Due actions stay pending forever",
+              "attack": "Management command creates notifications but never marks actions applied.",
+              "action": "accepted",
+              "response": "Mark actions applied after notification creation.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-15",
+              "severity": "MAJOR",
+              "title": "Missing negative/edge case tests",
+              "attack": "No resume prefill, cross-org, concurrent, form-encoded tests.",
+              "action": "accepted",
+              "response": "Add comprehensive negative test cases.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 19,
+        "accepted": 15,
+        "rebutted": 2,
+        "partial": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
