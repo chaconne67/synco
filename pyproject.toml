@@ -23,6 +23,7 @@ dependencies = [
     "python-docx>=1.1.0",
     "pymupdf>=1.27.2.2",
     "python-telegram-bot>=21.0",
+    "feedparser>=6.0.12",
 ]
 
 [project.optional-dependencies]
