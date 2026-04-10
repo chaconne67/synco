@@ -455,6 +455,29 @@ class TestFileUploadDownload:
             project=project, candidate=candidate
         ).exists()
 
+    def test_upload_exceeds_10mb_rejected(
+        self, auth_client, project, candidate, interested_contact, media_root
+    ):
+        """10MB 초과 파일 거부."""
+        url = reverse("projects:submission_create", args=[project.pk])
+        # Create a file slightly over 10MB
+        big_content = b"x" * (10 * 1024 * 1024 + 1)
+        big_file = SimpleUploadedFile(
+            "big.pdf", big_content, content_type="application/pdf"
+        )
+        resp = auth_client.post(
+            url,
+            {
+                "candidate": str(candidate.pk),
+                "template": "xd_ko",
+                "document_file": big_file,
+            },
+        )
+        assert resp.status_code == 200  # Form re-rendered with errors
+        assert not Submission.objects.filter(
+            project=project, candidate=candidate
+        ).exists()
+
     def test_download_no_file_404(self, auth_client, project, submission):
         """파일 없는 Submission 다운로드 시 404."""
         url = reverse("projects:submission_download", args=[project.pk, submission.pk])
@@ -624,6 +647,33 @@ class TestProjectStatusAutoTransition:
         auth_client.post(
             url,
             {"candidate": str(candidate.pk), "template": "xd_ko"},
+        )
+        project.refresh_from_db()
+        assert project.status == ProjectStatus.RECOMMENDING
+
+    def test_second_submission_no_change(
+        self,
+        auth_client,
+        project,
+        candidate,
+        candidate2,
+        interested_contact,
+        interested_contact2,
+    ):
+        """두 번째 Submission 생성 시 status 유지 (이미 RECOMMENDING)."""
+        # First submission triggers NEW → RECOMMENDING
+        url = reverse("projects:submission_create", args=[project.pk])
+        auth_client.post(
+            url,
+            {"candidate": str(candidate.pk), "template": "xd_ko"},
+        )
+        project.refresh_from_db()
+        assert project.status == ProjectStatus.RECOMMENDING
+
+        # Second submission does not change status
+        auth_client.post(
+            url,
+            {"candidate": str(candidate2.pk), "template": "xd_en"},
         )
         project.refresh_from_db()
         assert project.status == ProjectStatus.RECOMMENDING
