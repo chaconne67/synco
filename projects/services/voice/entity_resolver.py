@@ -29,13 +29,15 @@ def resolve_candidate(
     project: Project | None = None,
 ) -> CandidateResolution:
     """Resolve a candidate name to a UUID within the organization scope."""
-    matches = Candidate.objects.filter(
-        name__icontains=name.strip(),
-        owned_by=organization,
-    ).order_by("name", "-created_at")[:20]
+    matches = list(
+        Candidate.objects.filter(
+            name__icontains=name.strip(),
+            owned_by=organization,
+        ).order_by("name", "-created_at")[:20]
+    )
 
     candidate_list = [
-        {"id": c.pk, "name": c.name, "email": c.email, "phone": c.phone}
+        {"id": str(c.pk), "name": c.name, "email": c.email, "phone": c.phone}
         for c in matches
     ]
 
@@ -44,22 +46,23 @@ def resolve_candidate(
     if len(candidate_list) == 1:
         return CandidateResolution(
             status="resolved",
-            candidate_id=candidate_list[0]["id"],
+            candidate_id=matches[0].pk,
             candidates=candidate_list,
         )
 
     # Multiple matches: try to narrow by project context
     if project:
-        project_candidate_ids = set(
-            Contact.objects.filter(project=project).values_list(
+        project_candidate_ids = {
+            str(cid)
+            for cid in Contact.objects.filter(project=project).values_list(
                 "candidate_id", flat=True
             )
-        )
+        }
         in_project = [c for c in candidate_list if c["id"] in project_candidate_ids]
         if len(in_project) == 1:
             return CandidateResolution(
                 status="resolved",
-                candidate_id=in_project[0]["id"],
+                candidate_id=uuid_mod.UUID(in_project[0]["id"]),
                 candidates=candidate_list,
             )
 

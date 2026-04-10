@@ -177,3 +177,112 @@ def test_confirm_contact_record_releases_reserved(project, candidate, user, org)
         result=Contact.Result.RESERVED,
     ).first()
     assert reserved.locked_until <= timezone.now()
+
+
+# Amendment A12: submission_create rejects non-INTERESTED candidate
+def test_preview_submission_create_rejects_non_interested(
+    project, candidate, user, org
+):
+    result = preview_action(
+        intent="submission_create",
+        entities={"candidate_id": str(candidate.pk)},
+        project=project,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is False
+    assert "관심" in result.get("error", "")
+
+
+# Amendment A12: submission_create rejects duplicate submission
+def test_preview_submission_create_rejects_duplicate(project, candidate, user, org):
+    from projects.models import Submission
+
+    Contact.objects.create(
+        project=project,
+        candidate=candidate,
+        consultant=user,
+        result=Contact.Result.INTERESTED,
+        channel=Contact.Channel.PHONE,
+    )
+    Submission.objects.create(
+        project=project,
+        candidate=candidate,
+        consultant=user,
+    )
+    result = preview_action(
+        intent="submission_create",
+        entities={"candidate_id": str(candidate.pk)},
+        project=project,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is False
+    assert "이미" in result.get("error", "")
+
+
+# Amendment A12: interview_schedule rejects non-PASSED submission
+def test_preview_interview_schedule_rejects_no_passed(project, candidate, user, org):
+    result = preview_action(
+        intent="interview_schedule",
+        entities={"candidate_id": str(candidate.pk)},
+        project=project,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is False
+
+
+# Amendment A12: offer_create rejects non-eligible submission
+def test_preview_offer_create_rejects_no_eligible(project, candidate, user, org):
+    result = preview_action(
+        intent="offer_create",
+        entities={"candidate_id": str(candidate.pk)},
+        project=project,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is False
+
+
+# Amendment A12: todo_query
+def test_preview_todo_query(user, org):
+    result = preview_action(
+        intent="todo_query",
+        entities={},
+        project=None,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is True
+    assert result["intent"] == "todo_query"
+
+
+# Amendment A12: meeting_navigate
+def test_preview_meeting_navigate(user, org):
+    result = preview_action(
+        intent="meeting_navigate",
+        entities={},
+        project=None,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is True
+    assert result["action"] == "show_meeting_panel"
+
+
+# Amendment A12: contact_reserve
+def test_confirm_contact_reserve(project, candidate, user, org):
+    result = confirm_action(
+        intent="contact_reserve",
+        entities={"candidate_ids": [str(candidate.pk)]},
+        project=project,
+        user=user,
+        organization=org,
+    )
+    assert result["ok"] is True
+    assert Contact.objects.filter(
+        project=project,
+        candidate=candidate,
+        result=Contact.Result.RESERVED,
+    ).exists()

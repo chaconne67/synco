@@ -298,6 +298,7 @@
             return;
           }
           self._addMessage("assistant", data.summary || "다음 작업을 수행할까요?");
+          intentData.preview_token = data.preview_token;
           self._addConfirmButtons(intentData);
         })
         .catch(function () {
@@ -342,6 +343,7 @@
         intent: intentData.intent,
         entities: intentData.entities,
         project_id: context.project_id || "",
+        preview_token: intentData.preview_token || "",
       })
         .then(function (data) {
           if (data.url) {

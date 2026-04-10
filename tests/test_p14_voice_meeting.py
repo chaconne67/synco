@@ -239,3 +239,103 @@ def test_apply_meeting_insights_action_items(project, candidate, user):
     ).first()
     assert reserved is not None
     assert "액션 아이템" in reserved.notes
+
+
+# Amendment A12: duration validation (mock ffprobe)
+@patch("projects.services.voice.meeting_analyzer._get_audio_duration")
+def test_validate_meeting_file_duration_too_long(mock_duration):
+    mock_duration.return_value = 130 * 60.0  # 130 minutes > 120 max
+    f = MagicMock()
+    f.name = "meeting.mp3"
+    f.size = 50 * 1024 * 1024
+    f.temporary_file_path.return_value = "/tmp/test.mp3"
+    errors = validate_meeting_file(f)
+    assert any("120" in e for e in errors)
+
+
+# Amendment A12: candidate ownership validation in upload view
+@pytest.mark.django_db
+def test_meeting_upload_invalid_candidate(
+    project, candidate, user, org, settings, tmp_path
+):
+    """Upload with candidate not owned by org returns 404."""
+    import json
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from django.test import Client as TestClient
+
+    settings.STORAGES = {
+        **getattr(settings, "STORAGES", {}),
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {"location": str(tmp_path)},
+        },
+    }
+
+    other_org = Organization.objects.create(name="Other Org")
+    other_candidate = Candidate.objects.create(name="외부인", owned_by=other_org)
+
+    c = TestClient()
+    c.login(username="voice_tester", password="test1234")
+
+    audio = SimpleUploadedFile(
+        "meeting.mp3", b"fake audio data", content_type="audio/mpeg"
+    )
+    resp = c.post(
+        "/voice/meeting-upload/",
+        {
+            "audio": audio,
+            "project_id": str(project.pk),
+            "candidate_id": str(other_candidate.pk),
+        },
+    )
+
+    data = json.loads(resp.content)
+    assert resp.status_code == 404
+    assert "후보자" in data.get("error", "")
+
+
+# Amendment A12: async processing kickoff test
+@pytest.mark.django_db
+@patch("projects.views_voice.analyze_meeting")
+def test_meeting_upload_starts_async_processing(
+    mock_analyze, project, candidate, user, org, settings, tmp_path
+):
+    """Upload triggers async analysis thread."""
+    import json
+    import time
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from django.test import Client as TestClient
+
+    # Configure default storage to use temp dir for file uploads
+    settings.STORAGES = {
+        **getattr(settings, "STORAGES", {}),
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {"location": str(tmp_path)},
+        },
+    }
+
+    c = TestClient()
+    c.login(username="voice_tester", password="test1234")
+
+    audio = SimpleUploadedFile(
+        "meeting.mp3", b"fake audio data", content_type="audio/mpeg"
+    )
+    resp = c.post(
+        "/voice/meeting-upload/",
+        {
+            "audio": audio,
+            "project_id": str(project.pk),
+            "candidate_id": str(candidate.pk),
+        },
+    )
+
+    data = json.loads(resp.content)
+    assert resp.status_code == 200
+    assert data["ok"] is True
+    assert "meeting_id" in data
+    # Give async thread time to call analyze_meeting
+    time.sleep(0.5)
+    assert mock_analyze.called
