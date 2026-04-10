@@ -82,17 +82,23 @@
     },
     {
       "slug": "p19-chrome-extension",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": null,
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
-      "artifacts": [],
-      "committed": false,
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
       "depends_on": null,
-      "debate_summary": null
+      "debate_summary": {
+        "design": {"rounds": 1, "issues": 30, "accepted": 24, "rebutted": 0, "escalated": 0},
+        "impl": {"rounds": 1, "issues": 16, "accepted": 14, "rebutted": 0, "escalated": 0}
+      }
     }
   ],
   "decisions": [

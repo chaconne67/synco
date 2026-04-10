@@ -1,0 +1,499 @@
+{
+  "topic": "p19-chrome-extension",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "CRITICAL",
+              "title": "chrome_extension exceeds Source field max_length",
+              "attack": "\"chrome_extension\" is 16 chars but Candidate.source max_length=15",
+              "action": "accepted",
+              "response": "Use CHROME_EXT = \"chrome_ext\" to fit within current max_length",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "CRITICAL",
+              "title": "/api/ URL namespace doesn't exist in project",
+              "attack": "Spec invents /api/extension/ but main urls.py has no /api/ prefix",
+              "action": "accepted",
+              "response": "Place endpoints under /candidates/extension/ or define new /api/ namespace explicitly",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "CRITICAL",
+              "title": "API token auth system doesn't exist",
+              "attack": "Spec mentions API tokens but project has no token auth system",
+              "action": "accepted",
+              "response": "Remove API token, use session-based auth only with CSRF/cookie handling",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "CRITICAL",
+              "title": "Cross-origin session auth underspecified",
+              "attack": "Extension calling Django needs CSRF/CORS/cookie details specified",
+              "action": "accepted",
+              "response": "Add CSRF strategy, SameSite cookie config, credentials:include to spec",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "CRITICAL",
+              "title": "Multi-tenancy organization scoping missing from all APIs",
+              "attack": "No owned_by org filtering in save/search/duplicate flows",
+              "action": "accepted",
+              "response": "All APIs derive org from request.user, filter/create with owned_by",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "CRITICAL",
+              "title": "Duplicate merge contradicts existing identity policy",
+              "attack": "Spec uses name+company auto-merge but policy is email/phone only",
+              "action": "accepted",
+              "response": "Auto-merge on email/phone/external URL only. Name+company = possible match, needs user confirmation",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "CRITICAL",
+              "title": "No persistence model for external profile URLs",
+              "attack": "No field exists to store LinkedIn URL for duplicate detection",
+              "action": "accepted",
+              "response": "Add external_profile_url field to Candidate with unique constraint per org",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "MAJOR",
+              "title": "api app conflicts with existing app structure",
+              "attack": "New top-level api/ when everything lives in candidates/",
+              "action": "accepted",
+              "response": "Move all extension code under candidates/ (views_extension.py, etc.)",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "New duplicate service instead of extending existing identity service",
+              "attack": "Creates duplicate.py instead of extending candidate_identity.py",
+              "action": "accepted",
+              "response": "Extend candidate_identity.py with identify_candidate_from_extension()",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-10",
+              "severity": "MAJOR",
+              "title": "Search endpoint lacks access control, pagination, rate limits",
+              "attack": "No tenant filtering, pagination, or result limits",
+              "action": "accepted",
+              "response": "Add login_required, org filtering, pagination (20/page), min query length",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-11",
+              "severity": "MAJOR",
+              "title": "Server-updated selectors lack endpoint/schema/versioning",
+              "attack": "No API endpoint, JSON schema, or cache/versioning plan defined",
+              "action": "partial",
+              "response": "Defer to Phase 2. V1 bundles selectors in extension code. Competitors also use extension updates for selectors.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-12",
+              "severity": "MAJOR",
+              "title": "Extension permission model missing from manifest",
+              "attack": "No host_permissions or content_scripts.matches specified",
+              "action": "accepted",
+              "response": "Add exact host patterns for LinkedIn, JobKorea, Saramin, synco server",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-13",
+              "severity": "MAJOR",
+              "title": "No guardrails for LinkedIn TOS compliance",
+              "attack": "No anti-bulk-scraping protections defined",
+              "action": "accepted",
+              "response": "Add explicit user click per save, no auto-save/crawling, per-user throttle, audit log",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-14",
+              "severity": "MAJOR",
+              "title": "Privacy/consent handling deferred despite storing personal data",
+              "attack": "No consent_status tracking at creation time",
+              "action": "partial",
+              "response": "Add consent_status=not_requested at creation + source metadata. Full consent workflow out of scope.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-15",
+              "severity": "MAJOR",
+              "title": "Update pipeline can overwrite curated data",
+              "attack": "No diff review or confirmation before destructive changes",
+              "action": "accepted",
+              "response": "Updates additive by default, show diff, require confirmation for field changes",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-16",
+              "severity": "MAJOR",
+              "title": "Career/Education merge semantics undefined",
+              "attack": "No identity keys, conflict handling, or idempotency rules",
+              "action": "accepted",
+              "response": "Define Career identity=(company, start_date), Education=(institution, degree). New records added, existing not modified without confirmation.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-17",
+              "severity": "MAJOR",
+              "title": "Duplicate-check endpoint leaks candidate existence",
+              "attack": "Enumeration vector without rate limits or tenant scoping",
+              "action": "accepted",
+              "response": "Add org scoping, rate limiting, minimal data response",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-18",
+              "severity": "MAJOR",
+              "title": "No error handling contract for API responses",
+              "attack": "No status codes or response shapes defined",
+              "action": "accepted",
+              "response": "Define standard JSON responses: 200/201/400/401/403/409/500",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-19",
+              "severity": "MAJOR",
+              "title": "Data validation too vague for untrusted scraped data",
+              "attack": "No max lengths, required fields, HTML stripping, payload limits",
+              "action": "accepted",
+              "response": "Define required fields, max lengths, HTML stripping, payload/array limits",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-20",
+              "severity": "MAJOR",
+              "title": "LinkedIn DOM selectors brittle with no fallback",
+              "attack": "Generic selectors, no localization/dynamic page handling",
+              "action": "partial",
+              "response": "Acknowledge fragility, add graceful degradation (partial results + confidence), user reviews before save. Inherent to DOM scraping.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-21",
+              "severity": "MAJOR",
+              "title": "No distinction between profile pages and search result pages",
+              "attack": "Different data completeness per page type not addressed",
+              "action": "accepted",
+              "response": "Define supported page types: LinkedIn /in/* only, JobKorea/Saramin both. Min required fields for save.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-22",
+              "severity": "MAJOR",
+              "title": "No audit trail for sourcing/updating",
+              "attack": "No created_by/updated_by or import event logging",
+              "action": "accepted",
+              "response": "Add extension save event log with user, org, source_site, source_url, timestamp",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-23",
+              "severity": "MAJOR",
+              "title": "No idempotency/concurrency handling",
+              "attack": "Double-clicks or simultaneous saves can create duplicates",
+              "action": "accepted",
+              "response": "Use transaction.atomic() + unique constraint on (owned_by, external_profile_url)",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-24",
+              "severity": "MAJOR",
+              "title": "Popup counters require unspecified APIs",
+              "attack": "최근 저장, 오늘 N명, 총 DB need endpoints or local storage",
+              "action": "partial",
+              "response": "최근 저장/오늘 = local chrome.storage. 총 DB = server endpoint (org-scoped).",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-25",
+              "severity": "MINOR",
+              "title": "Django REST views ambiguous (DRF vs plain JsonResponse)",
+              "attack": "DRF not in project dependencies",
+              "action": "accepted",
+              "response": "Clarify: plain Django views returning JsonResponse, no DRF",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-26",
+              "severity": "MAJOR",
+              "title": "Chrome Web Store deliverable underspecified",
+              "attack": "Distribution mode, privacy policy, permission justification missing",
+              "action": "partial",
+              "response": "Note as unlisted/private for initial release. Privacy policy required. Severity → MINOR (deployment concern, not architecture).",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-27",
+              "severity": "MAJOR",
+              "title": "Remote selector config could become remote code",
+              "attack": "Chrome extension policies restrict remotely hosted code",
+              "action": "accepted",
+              "response": "Merged with Issue 11 — remote selectors deferred to Phase 2, eliminating this risk for v1",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-28",
+              "severity": "MAJOR",
+              "title": "No specification for synco server URL",
+              "attack": "Base URL configuration missing",
+              "action": "accepted",
+              "response": "Add options page with server URL input, build-time default for production",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-29",
+              "severity": "MAJOR",
+              "title": "No observability/debugging for parser failures",
+              "attack": "No diagnostics, logs, or error reporting mechanism",
+              "action": "partial",
+              "response": "Add parse_quality indicator, server-side structured logging, user-friendly errors. Full observability system out of scope.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-30",
+              "severity": "MINOR",
+              "title": "Tests are acceptance-level only",
+              "attack": "No reproducible tests for duplicate logic, tenant scoping, validation",
+              "action": "accepted",
+              "response": "Add Django unit tests for auth, tenant, duplicate, validation, idempotency + parser fixture tests",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 30,
+        "accepted": 24,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "ExtractionLog.actor/details fields don't exist",
+              "attack": "Plan uses actor=user, details={...} but model lacks these fields",
+              "action": "accepted",
+              "response": "Add actor (FK User, SET_NULL) and details (JSONField) to ExtractionLog with migration",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "@login_required returns 302, not JSON 401",
+              "attack": "Extension gets HTML redirect instead of JSON error",
+              "action": "accepted",
+              "response": "Custom extension_login_required decorator returning JsonResponse 401",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "CRITICAL",
+              "title": "Education year fields passed as strings to IntegerField",
+              "attack": "Parser strings like '' or '2020년' crash on DB save",
+              "action": "accepted",
+              "response": "Add parse_int_or_none() helper, apply to year fields",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "CSRF trusted origins wildcard not workable",
+              "attack": "chrome-extension://* doesn't match Django's wildcard semantics",
+              "action": "accepted",
+              "response": "Use @csrf_exempt on extension views + custom auth decorator with session check",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "SameSite=Lax blocks cross-origin cookies",
+              "attack": "Session cookies not sent from extension origin",
+              "action": "accepted",
+              "response": "Document production requirement: SameSite=None; Secure via env settings",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "consent_status default mismatch",
+              "attack": "Model default='' vs spec default='not_requested'",
+              "action": "accepted",
+              "response": "Change model default to 'not_requested'",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "Update mode drops new_careers_confirmed",
+              "attack": "Validator doesn't preserve new_careers_confirmed field",
+              "action": "accepted",
+              "response": "Add to validator with same structure validation as careers",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-08",
+              "severity": "MAJOR",
+              "title": "None becomes literal 'None' string",
+              "attack": "str(None) passes name validation",
+              "action": "accepted",
+              "response": "Add safe_str() helper returning '' for None",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-09",
+              "severity": "MAJOR",
+              "title": "Phone excluded from secondary identifier check",
+              "attack": "Valid name+phone profile rejected despite phone being duplicate key",
+              "action": "accepted",
+              "response": "Include normalized phone (len>=10) in secondary check",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-10",
+              "severity": "MAJOR",
+              "title": "JSON parse and pagination errors return 500",
+              "attack": "No try/except around json.loads() or int() for page",
+              "action": "accepted",
+              "response": "Wrap all JSON parse, validate/clamp page >= 1",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-11",
+              "severity": "MAJOR",
+              "title": "external_profile_url not in update allowed fields",
+              "attack": "Email/phone matched candidate can't gain URL on update",
+              "action": "accepted",
+              "response": "Add to allowed_fields with normalization and IntegrityError handling",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-12",
+              "severity": "MAJOR",
+              "title": "Concurrent email/phone duplicates not protected",
+              "attack": "Only URL has unique constraint, email/phone can race",
+              "action": "partial",
+              "response": "Use select_for_update() in identity check. Unique constraints unsafe for email/phone due to blank values.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-13",
+              "severity": "MAJOR",
+              "title": "Rate limit uses LocMemCache (unreliable multi-worker)",
+              "attack": "Per-process LocMemCache resets counters across workers",
+              "action": "partial",
+              "response": "Use DB-backed counter: ExtractionLog.filter(action=EXTENSION_SAVE, created_at__date=today).count()",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-14",
+              "severity": "MAJOR",
+              "title": "check-duplicate doesn't return diff but client expects it",
+              "attack": "Content script calls dupResult.data.diff but endpoint doesn't compute it",
+              "action": "accepted",
+              "response": "Change client flow: check-duplicate lightweight, save-profile returns diff on update click",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-15",
+              "severity": "MAJOR",
+              "title": "Education merge/update missing",
+              "attack": "Only career diff/update, education ignored",
+              "action": "accepted",
+              "response": "Add education diff using (institution, degree) key and update in _handle_update",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-16",
+              "severity": "MAJOR",
+              "title": "Nested arrays not element-validated",
+              "attack": "List items could be strings/nulls causing AttributeError",
+              "action": "accepted",
+              "response": "Validate each item is dict, skip non-dict, sanitize in serializer",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 16,
+        "accepted": 14,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
