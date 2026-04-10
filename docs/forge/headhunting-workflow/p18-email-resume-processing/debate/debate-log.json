@@ -1,0 +1,419 @@
+{
+  "topic": "p18-email-resume-processing",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "MAJOR",
+              "title": "ResumeUpload missing organization scope",
+              "attack": "Independent uploads (project=null) have no org FK, risking multi-tenant data exposure",
+              "action": "accepted",
+              "response": "Will add organization FK to ResumeUpload, derive from project/user at creation",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "MAJOR",
+              "title": "Models don't specify BaseModel inheritance",
+              "attack": "Spec lists UUID/timestamp fields manually instead of inheriting BaseModel",
+              "action": "accepted",
+              "response": "Both models must inherit BaseModel per project conventions",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "CRITICAL",
+              "title": "Synchronous extraction in POST with polling contradiction",
+              "attack": "POST implies sync extraction but also has polling; no Celery means this blocks HTTP",
+              "action": "accepted",
+              "response": "POST creates pending records only; processing via management command or separate trigger view",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "CRITICAL",
+              "title": "File format support contradicts existing pipeline",
+              "attack": "Spec says pdfplumber when code uses PyMuPDF; says DOCX is new but it already exists",
+              "action": "accepted",
+              "response": "Fix spec to reference existing text.py with PyMuPDF/python-docx; only HWP is new",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "CRITICAL",
+              "title": "HWP dependencies not in pyproject.toml",
+              "attack": "Neither pyhwp nor olefile is installed; deployment will fail",
+              "action": "accepted",
+              "response": "Must add concrete dependency or defer HWP; recommend olefile or explicit deferral",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "MAJOR",
+              "title": "Gmail credential encryption unspecified",
+              "attack": "Says encrypted but no mechanism, key management, or rotation",
+              "action": "accepted",
+              "response": "Specify Fernet encryption with SECRET_KEY-derived key or django-encrypted-model-fields",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "MAJOR",
+              "title": "OAuth refresh token handling incomplete",
+              "attack": "No access_type=offline, no refresh logic, tokens will expire",
+              "action": "accepted",
+              "response": "Add offline access, consent prompt, refresh logic, reconnect flow",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "MAJOR",
+              "title": "Gmail dedup insufficient for multi-attachment messages",
+              "attack": "email_message_id alone can't distinguish multiple attachments from one email",
+              "action": "accepted",
+              "response": "Add email_attachment_id, unique constraint on (message_id, attachment_id, org)",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MAJOR",
+              "title": "Candidate linking not atomic",
+              "attack": "Concurrent uploads of same person can create duplicate candidates",
+              "action": "accepted",
+              "response": "Use transaction.atomic() + select_for_update() following existing save.py pattern",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-10",
+              "severity": "MAJOR",
+              "title": "Identity matching lacks normalization details",
+              "attack": "No normalization rules for email/phone matching",
+              "action": "rebutted",
+              "response": "Existing candidate_identity.py already handles normalization; spec reuses it",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-11",
+              "severity": "CRITICAL",
+              "title": "Project matching by keyword unsafe for multi-tenant",
+              "attack": "Keyword matching can link resume to wrong org's project",
+              "action": "accepted",
+              "response": "Scope to user's org, use UUID for REF, require manual confirm for keyword matches",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-12",
+              "severity": "MAJOR",
+              "title": "File validation missing",
+              "attack": "No size limits, MIME checks, or parser timeouts",
+              "action": "accepted",
+              "response": "Add 20MB max, MIME validation, extension consistency check, parser timeout",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-13",
+              "severity": "MAJOR",
+              "title": "Gmail attachment download lacks size/error handling",
+              "attack": "Oversized attachments and API errors can break cron run",
+              "action": "accepted",
+              "response": "Per-attachment size cap, retry with backoff, skip with logging, never abort batch",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-14",
+              "severity": "MAJOR",
+              "title": "history_id expiration handling underspecified",
+              "attack": "Gmail history IDs expire; polling can fail permanently",
+              "action": "accepted",
+              "response": "Fallback to messages.list with after:last_checked_at filter when history is invalid",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-15",
+              "severity": "MAJOR",
+              "title": "EmailMonitorConfig not scoped to organization",
+              "attack": "User's config may process resumes into wrong tenant",
+              "action": "rebutted",
+              "response": "User belongs to exactly one org via Membership OneToOne; org derivable from user",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-16",
+              "severity": "MAJOR",
+              "title": "extraction_result JSONField for relational data",
+              "attack": "Review/linking decisions stored in JSON breaks integrity",
+              "action": "rebutted",
+              "response": "extraction_result is opaque pipeline output snapshot; relational data uses FK fields",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-17",
+              "severity": "MAJOR",
+              "title": "No spec for adding candidate to project searching list",
+              "attack": "Candidate created but never appears in project workflow",
+              "action": "accepted",
+              "response": "Must define Contact record creation to place candidate in project search results",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-18",
+              "severity": "MAJOR",
+              "title": "URL authorization and tenant scoping absent",
+              "attack": "UUID guessing can expose cross-org data",
+              "action": "accepted",
+              "response": "Every view must filter by organization/project membership/ownership",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-19",
+              "severity": "MAJOR",
+              "title": "State transitions not constrained",
+              "attack": "Failed/discarded records could be re-linked or reprocessed",
+              "action": "accepted",
+              "response": "Define allowed transitions and enforce in service layer under transactions",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-20",
+              "severity": "MINOR",
+              "title": "Polling endpoint underspecified",
+              "attack": "May return all uploads, leaking other users' data",
+              "action": "accepted",
+              "response": "Scope to current user's recent uploads for this project with optional batch_id",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-21",
+              "severity": "MAJOR",
+              "title": "Failure/retry behavior not designed",
+              "attack": "No retry endpoint, limit, error storage, or failure categorization",
+              "action": "accepted",
+              "response": "Add error_message, retry_count (max=3), last_attempted_at, retry URL",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-22",
+              "severity": "MAJOR",
+              "title": "Spec doesn't reference run_extraction_with_retry",
+              "attack": "New implementation may bypass existing integrity pipeline",
+              "action": "accepted",
+              "response": "Explicitly reference run_extraction_with_retry with use_integrity_pipeline=True",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-23",
+              "severity": "MAJOR",
+              "title": "Telegram notification as hard dependency",
+              "attack": "Notification failure can break email processing",
+              "action": "accepted",
+              "response": "Make best-effort, non-blocking; skip if no TelegramBinding, log failures",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-24",
+              "severity": "MINOR",
+              "title": "file_type choices missing DOC",
+              "attack": "Existing DOC support may be excluded",
+              "action": "accepted",
+              "response": "Add doc to file_type choices since text.py already supports it",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-25",
+              "severity": "MAJOR",
+              "title": "FK on_delete behavior unspecified",
+              "attack": "Cascade may erase resume processing history",
+              "action": "accepted",
+              "response": "Specify SET_NULL for project, candidate, created_by FKs",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-26",
+              "severity": "MAJOR",
+              "title": "Gmail cron concurrency not addressed",
+              "attack": "Overlapping cron runs can create duplicate uploads",
+              "action": "accepted",
+              "response": "Add select_for_update() on EmailMonitorConfig at cron run start",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-27",
+              "severity": "MINOR",
+              "title": "OAuth URLs are global not tenant-aware",
+              "attack": "Unclear which org's monitoring is configured in multi-org UI",
+              "action": "rebutted",
+              "response": "OAuth is per-user OneToOne; org implicit via session auth; matches existing URL patterns",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-28",
+              "severity": "MAJOR",
+              "title": "Retention/privacy policy for uploaded files",
+              "attack": "Sensitive resume data may persist after discard/disconnect",
+              "action": "accepted",
+              "response": "Define: discard deletes file, disconnect preserves imports, failed auto-delete after 30d",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 28,
+        "accepted": 24,
+        "rebutted": 4,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Identity matching not org-scoped",
+              "attack": "identify_candidate() queries globally without org filter, causing cross-tenant leakage",
+              "action": "accepted",
+              "response": "Add org-aware wrapper or extend identify_candidate() to accept organization parameter",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "New candidates created without owned_by",
+              "attack": "_create_candidate() in save.py doesn't set owned_by, making candidates invisible in org-scoped search",
+              "action": "accepted",
+              "response": "Set candidate.owned_by = upload.organization after creation in linker",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "Existing-candidate link bypasses resume version persistence",
+              "attack": "Calling _update_candidate() directly skips Resume creation, ExtractionLog, etc.",
+              "action": "accepted",
+              "response": "Use save_pipeline_result() for both paths instead of calling private _update_candidate()",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "Contact alone doesn't place candidate in search tab",
+              "attack": "project_tab_search() builds results from match_candidates() only, not from contacts",
+              "action": "accepted",
+              "response": "Add uploaded resumes section to search tab view or modify view to include uploads",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "project=null email uploads have no management UI",
+              "attack": "Email resumes without REF match become orphaned with no view/assign capability",
+              "action": "accepted",
+              "response": "Add org-scoped unassigned resumes inbox with project assignment flow",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "Duplicate status transition ordering underspecified",
+              "attack": "extracting→duplicate is not in allowed transitions; needs extracting→extracted→duplicate",
+              "action": "accepted",
+              "response": "Make two-step explicit: extracting→extracted, then extracted→duplicate if match found",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "Email dedup pre-insert check is race-prone",
+              "attack": ".exists() check before insert is TOCTOU vulnerable",
+              "action": "accepted",
+              "response": "Use get_or_create() or catch IntegrityError; DB constraint is source of truth",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-08",
+              "severity": "MAJOR",
+              "title": "Crypto uses SHA-256 but spec says HKDF",
+              "attack": "Plan implements SHA-256+base64 but design spec says HKDF; migration pain if changed later",
+              "action": "accepted",
+              "response": "Use HKDF from cryptography.hazmat.primitives.kdf.hkdf with stable salt/info",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-09",
+              "severity": "MAJOR",
+              "title": "Gmail error-handling not detailed in plan",
+              "attack": "Design spec's error table (401/404/429/5xx/oversized/timeout) not reflected in plan",
+              "action": "accepted",
+              "response": "Add explicit error handling code paths for each case in gmail_client.py steps",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-10",
+              "severity": "MAJOR",
+              "title": "Test coverage misses project-specific failure modes",
+              "attack": "No tests for cross-org collision, owned_by, unassigned inbox, search visibility, dedup race",
+              "action": "accepted",
+              "response": "Add specific tests for all identified failure modes",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 10,
+        "accepted": 10,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}

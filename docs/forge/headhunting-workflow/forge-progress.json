@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "impl_only",
-  "last_pid": 3639644,
+  "last_pid": 3653442,
   "execution_order": [
     "p16-work-continuity",
     "p17-news-feed",
@@ -62,17 +62,23 @@
     },
     {
       "slug": "p18-email-resume-processing",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": null,
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
-      "artifacts": [],
-      "committed": false,
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
       "depends_on": null,
-      "debate_summary": null
+      "debate_summary": {
+        "design": {"rounds": 1, "issues": 28, "accepted": 24, "rebutted": 4, "escalated": 0},
+        "impl": {"rounds": 1, "issues": 10, "accepted": 10, "rebutted": 0, "escalated": 0}
+      }
     },
     {
       "slug": "p19-chrome-extension",
