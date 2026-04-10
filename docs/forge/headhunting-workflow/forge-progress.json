@@ -65,8 +65,8 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "d29525e",
-      "verification_status": "running",
-      "verification_result": null,
+      "verification_status": "completed",
+      "verification_result": "PASS 40, FAIL 0, REVIEW 0",
       "entry_point": "impl",
       "complexity": "medium",
       "artifacts": [
