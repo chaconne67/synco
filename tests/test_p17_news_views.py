@@ -5,13 +5,11 @@ from django.test import Client as TestClient
 from django.utils import timezone
 
 from accounts.models import Membership, Organization, User
-from clients.models import Client
 from projects.models import (
     NewsArticle,
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    Project,
     SummaryStatus,
 )
 
@@ -81,13 +79,19 @@ class TestNewsFeed:
 class TestNewsFilter:
     def test_filter_by_category(self, auth_client, source):
         NewsArticle.objects.create(
-            source=source, title="Hiring News", url="https://example.com/h",
-            category=NewsCategory.HIRING, summary_status=SummaryStatus.COMPLETED,
+            source=source,
+            title="Hiring News",
+            url="https://example.com/h",
+            category=NewsCategory.HIRING,
+            summary_status=SummaryStatus.COMPLETED,
             published_at=timezone.now(),
         )
         NewsArticle.objects.create(
-            source=source, title="HR News", url="https://example.com/hr",
-            category=NewsCategory.HR, summary_status=SummaryStatus.COMPLETED,
+            source=source,
+            title="HR News",
+            url="https://example.com/hr",
+            category=NewsCategory.HR,
+            summary_status=SummaryStatus.COMPLETED,
             published_at=timezone.now(),
         )
         resp = auth_client.get("/news/filter/?category=hiring")
@@ -103,12 +107,15 @@ class TestNewsSourceCRUD:
         assert "Test Feed" in resp.content.decode()
 
     def test_source_create(self, auth_client, org):
-        resp = auth_client.post("/news/sources/new/", {
-            "name": "New Source",
-            "url": "https://newssite.com/feed",
-            "type": NewsSourceType.RSS,
-            "category": NewsCategory.INDUSTRY,
-        })
+        resp = auth_client.post(
+            "/news/sources/new/",
+            {
+                "name": "New Source",
+                "url": "https://newssite.com/feed",
+                "type": NewsSourceType.RSS,
+                "category": NewsCategory.INDUSTRY,
+            },
+        )
         assert resp.status_code == 302
         assert NewsSource.objects.filter(name="New Source").exists()
 

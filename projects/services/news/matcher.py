@@ -70,9 +70,7 @@ def match_article(article: NewsArticle) -> int:
         project_id__in=matched_project_ids
     ).delete()
 
-    logger.info(
-        "Matched article '%s' to %d projects", article.title[:50], matched
-    )
+    logger.info("Matched article '%s' to %d projects", article.title[:50], matched)
     return matched
 
 

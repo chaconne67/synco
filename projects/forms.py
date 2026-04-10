@@ -475,8 +475,15 @@ class NewsSourceForm(forms.ModelForm):
         model = NewsSource
         fields = ["name", "url", "type", "category"]
         widgets = {
-            "name": forms.TextInput(attrs={"class": INPUT_CSS, "placeholder": "소스 이름"}),
-            "url": forms.URLInput(attrs={"class": INPUT_CSS, "placeholder": "https://example.com/feed.xml"}),
+            "name": forms.TextInput(
+                attrs={"class": INPUT_CSS, "placeholder": "소스 이름"}
+            ),
+            "url": forms.URLInput(
+                attrs={
+                    "class": INPUT_CSS,
+                    "placeholder": "https://example.com/feed.xml",
+                }
+            ),
             "type": forms.Select(attrs={"class": INPUT_CSS}),
             "category": forms.Select(attrs={"class": INPUT_CSS}),
         }

@@ -94,14 +94,20 @@ def summarize_article(article: NewsArticle) -> bool:
             article.summary_status = SummaryStatus.COMPLETED
             article.save(
                 update_fields=[
-                    "summary", "tags", "category", "summary_status", "updated_at"
+                    "summary",
+                    "tags",
+                    "category",
+                    "summary_status",
+                    "updated_at",
                 ]
             )
 
         return True
 
     except (ValueError, KeyError) as e:
-        logger.error("Failed to parse Gemini response for article %s: %s", article.pk, e)
+        logger.error(
+            "Failed to parse Gemini response for article %s: %s", article.pk, e
+        )
         article.summary_status = SummaryStatus.FAILED
         article.save(update_fields=["summary_status", "updated_at"])
         return False

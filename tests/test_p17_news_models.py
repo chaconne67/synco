@@ -77,11 +77,17 @@ class TestNewsSource:
         assert str(news_source) == "TechCrunch Korea"
 
     def test_source_ordering(self, org):
-        s1 = NewsSource.objects.create(
-            organization=org, name="A", url="https://a.com/feed", category=NewsCategory.HR
+        NewsSource.objects.create(
+            organization=org,
+            name="A",
+            url="https://a.com/feed",
+            category=NewsCategory.HR,
         )
         s2 = NewsSource.objects.create(
-            organization=org, name="B", url="https://b.com/feed", category=NewsCategory.HR
+            organization=org,
+            name="B",
+            url="https://b.com/feed",
+            category=NewsCategory.HR,
         )
         sources = list(NewsSource.objects.all())
         # ordering = ["-created_at"], so s2 (newer) comes first

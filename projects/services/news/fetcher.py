@@ -38,7 +38,11 @@ def fetch_articles(source: NewsSource) -> tuple[int, int]:
         )
         response.raise_for_status()
         if len(response.content) > MAX_RESPONSE_SIZE:
-            logger.warning("Response too large for %s: %d bytes", source.name, len(response.content))
+            logger.warning(
+                "Response too large for %s: %d bytes",
+                source.name,
+                len(response.content),
+            )
             return 0, 0
         feed = feedparser.parse(response.text)
     except httpx.HTTPError:
@@ -84,9 +88,7 @@ def fetch_articles(source: NewsSource) -> tuple[int, int]:
     source.last_fetched_at = timezone.now()
     source.save(update_fields=["last_fetched_at", "updated_at"])
 
-    logger.info(
-        "Fetched %s: %d created, %d skipped", source.name, created, skipped
-    )
+    logger.info("Fetched %s: %d created, %d skipped", source.name, created, skipped)
     return created, skipped
 
 
@@ -94,9 +96,7 @@ def _parse_published(entry) -> datetime | None:
     """Parse published date from feed entry."""
     if hasattr(entry, "published_parsed") and entry.published_parsed:
         try:
-            return datetime.fromtimestamp(
-                timegm(entry.published_parsed), tz=dt_tz.utc
-            )
+            return datetime.fromtimestamp(timegm(entry.published_parsed), tz=dt_tz.utc)
         except (ValueError, OverflowError):
             pass
     return None

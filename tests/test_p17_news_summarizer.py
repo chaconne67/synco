@@ -95,11 +95,15 @@ class TestSummarizeArticle:
 
     @patch("projects.services.news.summarizer._get_gemini_client")
     @patch("projects.services.news.summarizer.parse_llm_json")
-    def test_invalid_category_defaults_to_blank(self, mock_parse_json, mock_client_fn, article):
+    def test_invalid_category_defaults_to_blank(
+        self, mock_parse_json, mock_client_fn, article
+    ):
         mock_client = MagicMock()
         mock_client_fn.return_value = mock_client
         mock_response = MagicMock()
-        mock_response.text = '{"summary": "Summary text", "tags": [], "category": "invalid_category"}'
+        mock_response.text = (
+            '{"summary": "Summary text", "tags": [], "category": "invalid_category"}'
+        )
         mock_client.models.generate_content.return_value = mock_response
         mock_parse_json.return_value = {
             "summary": "Summary text",

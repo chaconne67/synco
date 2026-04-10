@@ -45,7 +45,9 @@ class TestFetchNewsCommand:
     @patch("projects.services.news.fetcher.feedparser.parse")
     @patch("projects.services.news.summarizer._get_gemini_client")
     @patch("projects.services.news.summarizer.parse_llm_json")
-    def test_full_pipeline(self, mock_parse_json, mock_gemini, mock_feedparse, mock_httpx_get, source):
+    def test_full_pipeline(
+        self, mock_parse_json, mock_gemini, mock_feedparse, mock_httpx_get, source
+    ):
         # Setup httpx mock
         mock_resp = MagicMock()
         mock_resp.text = "<rss/>"
@@ -66,7 +68,9 @@ class TestFetchNewsCommand:
         mock_client = MagicMock()
         mock_gemini.return_value = mock_client
         mock_response = MagicMock()
-        mock_response.text = '{"summary": "요약입니다.", "tags": ["테스트"], "category": "hiring"}'
+        mock_response.text = (
+            '{"summary": "요약입니다.", "tags": ["테스트"], "category": "hiring"}'
+        )
         mock_client.models.generate_content.return_value = mock_response
         mock_parse_json.return_value = {
             "summary": "요약입니다.",
@@ -95,7 +99,9 @@ class TestFetchNewsCommand:
     @patch("projects.services.news.fetcher.feedparser.parse")
     @patch("projects.services.news.summarizer._get_gemini_client")
     @patch("projects.services.news.summarizer.parse_llm_json")
-    def test_retries_failed_articles(self, mock_parse_json, mock_gemini, mock_feedparse, mock_httpx_get, source):
+    def test_retries_failed_articles(
+        self, mock_parse_json, mock_gemini, mock_feedparse, mock_httpx_get, source
+    ):
         # Create a failed article
         NewsArticle.objects.create(
             source=source,
@@ -118,7 +124,9 @@ class TestFetchNewsCommand:
         mock_client = MagicMock()
         mock_gemini.return_value = mock_client
         mock_response = MagicMock()
-        mock_response.text = '{"summary": "재시도 성공.", "tags": ["테스트"], "category": "hr"}'
+        mock_response.text = (
+            '{"summary": "재시도 성공.", "tags": ["테스트"], "category": "hr"}'
+        )
         mock_client.models.generate_content.return_value = mock_response
         mock_parse_json.return_value = {
             "summary": "재시도 성공.",

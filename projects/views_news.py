@@ -11,7 +11,6 @@ from accounts.models import Membership, Organization
 from .forms import NewsSourceForm
 from .models import (
     NewsArticle,
-    NewsArticleRelevance,
     NewsCategory,
     NewsSource,
     SummaryStatus,
@@ -47,13 +46,10 @@ def news_feed(request):
     )
 
     # All org news
-    all_articles = (
-        NewsArticle.objects.filter(
-            source__organization=org,
-            summary_status=SummaryStatus.COMPLETED,
-        )
-        .order_by("-published_at")[:50]
-    )
+    all_articles = NewsArticle.objects.filter(
+        source__organization=org,
+        summary_status=SummaryStatus.COMPLETED,
+    ).order_by("-published_at")[:50]
 
     # Update last_news_seen_at
     request.user.last_news_seen_at = timezone.now()

@@ -5,7 +5,13 @@ from datetime import datetime, timezone as dt_tz
 from unittest.mock import patch, MagicMock
 
 from accounts.models import Organization
-from projects.models import NewsArticle, NewsCategory, NewsSource, NewsSourceType, SummaryStatus
+from projects.models import (
+    NewsArticle,
+    NewsCategory,
+    NewsSource,
+    NewsSourceType,
+    SummaryStatus,
+)
 from projects.services.news.fetcher import fetch_articles
 
 

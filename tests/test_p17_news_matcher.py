@@ -1,7 +1,6 @@
 """P17: Project relevance matcher tests."""
 
 import pytest
-from django.utils import timezone
 
 from accounts.models import Membership, Organization, User
 from clients.models import Client
@@ -31,9 +30,7 @@ def user(db, org):
 
 @pytest.fixture
 def client_co(org):
-    return Client.objects.create(
-        name="삼성전자", industry="반도체", organization=org
-    )
+    return Client.objects.create(name="삼성전자", industry="반도체", organization=org)
 
 
 @pytest.fixture

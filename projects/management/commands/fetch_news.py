@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from accounts.models import Organization, TelegramBinding
+from accounts.models import TelegramBinding
 from projects.models import (
     NewsArticle,
     NewsArticleRelevance,
@@ -33,9 +33,7 @@ class Command(BaseCommand):
         self.stdout.write("Fetching news...")
 
         # Phase 1: Fetch RSS articles from all active sources
-        sources = NewsSource.objects.filter(
-            is_active=True, type=NewsSourceType.RSS
-        )
+        sources = NewsSource.objects.filter(is_active=True, type=NewsSourceType.RSS)
         total_created = 0
         total_skipped = 0
 
@@ -47,9 +45,7 @@ class Command(BaseCommand):
             except Exception:
                 logger.exception("Failed to fetch source: %s", source.name)
 
-        self.stdout.write(
-            f"  Fetch: {total_created} new, {total_skipped} existing"
-        )
+        self.stdout.write(f"  Fetch: {total_created} new, {total_skipped} existing")
 
         # Phase 2: Summarize pending + retry failed articles
         pending_articles = NewsArticle.objects.filter(
@@ -65,9 +61,7 @@ class Command(BaseCommand):
             else:
                 failed += 1
 
-        self.stdout.write(
-            f"  Summarize: {summarized} done, {failed} failed"
-        )
+        self.stdout.write(f"  Summarize: {summarized} done, {failed} failed")
 
         # Phase 3: Match summarized articles to projects
         cutoff = timezone.now() - timedelta(hours=24)
