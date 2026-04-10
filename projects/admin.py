@@ -8,6 +8,7 @@ from .models import (
     Project,
     ProjectApproval,
     ProjectContext,
+    ResumeUpload,
     Submission,
 )
 
@@ -77,3 +78,20 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ("title", "recipient", "type", "status", "created_at")
     list_filter = ("type", "status")
     search_fields = ("title",)
+
+
+@admin.register(ResumeUpload)
+class ResumeUploadAdmin(admin.ModelAdmin):
+    list_display = (
+        "file_name",
+        "organization",
+        "project",
+        "source",
+        "status",
+        "candidate",
+        "created_by",
+        "created_at",
+    )
+    list_filter = ("status", "source", "file_type")
+    search_fields = ("file_name", "email_from", "email_subject")
+    raw_id_fields = ("candidate", "project", "organization", "created_by")

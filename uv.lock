@@ -1061,6 +1061,7 @@ name = "synco"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-htmx" },
@@ -1091,6 +1092,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=46.0.6" },
     { name = "dj-database-url", specifier = ">=2.3.0" },
     { name = "django", specifier = ">=5.2.12,<6" },
     { name = "django-htmx", specifier = ">=1.27.0" },

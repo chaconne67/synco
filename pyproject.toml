@@ -24,6 +24,7 @@ dependencies = [
     "pymupdf>=1.27.2.2",
     "python-telegram-bot>=21.0",
     "feedparser>=6.0.12",
+    "cryptography>=46.0.6",
 ]
 
 [project.optional-dependencies]

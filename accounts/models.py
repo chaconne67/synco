@@ -123,3 +123,38 @@ class TelegramVerification(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.user} - {self.code} (expired={self.is_expired})"
+
+
+class EmailMonitorConfig(BaseModel):
+    """Gmail 모니터링 설정."""
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="email_monitor_config",
+    )
+    gmail_credentials = models.BinaryField()
+    is_active = models.BooleanField(default=True)
+    filter_labels = models.JSONField(default=list, blank=True)
+    filter_from = models.JSONField(default=list, blank=True)
+    last_checked_at = models.DateTimeField(null=True, blank=True)
+    last_history_id = models.CharField(max_length=255, blank=True)
+
+    def __str__(self) -> str:
+        return f"EmailMonitor: {self.user} (active={self.is_active})"
+
+    def set_credentials(self, credentials_dict: dict) -> None:
+        """Encrypt and store OAuth2 credentials."""
+        import json
+
+        from projects.services.email.crypto import encrypt_data
+
+        self.gmail_credentials = encrypt_data(json.dumps(credentials_dict).encode())
+
+    def get_credentials(self) -> dict:
+        """Decrypt and return OAuth2 credentials."""
+        import json
+
+        from projects.services.email.crypto import decrypt_data
+
+        return json.loads(decrypt_data(bytes(self.gmail_credentials)))

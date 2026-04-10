@@ -762,3 +762,88 @@ class NewsArticleRelevance(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.article.title} -> {self.project.title} ({self.score:.2f})"
+
+
+class ResumeUpload(BaseModel):
+    """이력서 업로드 및 추출 추적."""
+
+    class FileType(models.TextChoices):
+        PDF = "pdf", "PDF"
+        DOCX = "docx", "Word (DOCX)"
+        DOC = "doc", "Word (DOC)"
+
+    class Source(models.TextChoices):
+        MANUAL = "manual", "수동 업로드"
+        EMAIL = "email", "이메일"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "대기"
+        EXTRACTING = "extracting", "추출중"
+        EXTRACTED = "extracted", "추출완료"
+        LINKED = "linked", "후보자 연결됨"
+        DUPLICATE = "duplicate", "중복"
+        FAILED = "failed", "실패"
+        DISCARDED = "discarded", "폐기"
+
+    organization = models.ForeignKey(
+        "accounts.Organization",
+        on_delete=models.CASCADE,
+        related_name="resume_uploads",
+    )
+    project = models.ForeignKey(
+        "projects.Project",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resume_uploads",
+    )
+    file = models.FileField(upload_to="resumes/uploads/")
+    file_name = models.CharField(max_length=500)
+    file_type = models.CharField(max_length=10, choices=FileType.choices)
+    source = models.CharField(
+        max_length=10, choices=Source.choices, default=Source.MANUAL
+    )
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PENDING
+    )
+    candidate = models.ForeignKey(
+        "candidates.Candidate",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resume_uploads",
+    )
+    extraction_result = models.JSONField(null=True, blank=True)
+    error_message = models.TextField(blank=True)
+    retry_count = models.PositiveIntegerField(default=0)
+    last_attempted_at = models.DateTimeField(null=True, blank=True)
+
+    # Email source fields
+    email_subject = models.CharField(max_length=500, blank=True)
+    email_from = models.EmailField(blank=True)
+    email_message_id = models.CharField(max_length=255, blank=True)
+    email_attachment_id = models.CharField(max_length=255, blank=True)
+
+    # Upload batch tracking
+    upload_batch = models.UUIDField(null=True, blank=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resume_uploads",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "email_message_id", "email_attachment_id"],
+                condition=models.Q(source="email"),
+                name="unique_email_attachment_per_org",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"ResumeUpload: {self.file_name} ({self.get_status_display()})"

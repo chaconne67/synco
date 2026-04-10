@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Membership, Organization, TelegramBinding, User
+from .models import EmailMonitorConfig, Membership, Organization, TelegramBinding, User
 
 
 @admin.register(User)
@@ -28,3 +28,10 @@ class TelegramBindingAdmin(admin.ModelAdmin):
     list_display = ("user", "chat_id", "is_active")
     list_filter = ("is_active",)
     search_fields = ("user__username", "chat_id")
+
+
+@admin.register(EmailMonitorConfig)
+class EmailMonitorConfigAdmin(admin.ModelAdmin):
+    list_display = ("user", "is_active", "last_checked_at")
+    list_filter = ("is_active",)
+    search_fields = ("user__username",)
