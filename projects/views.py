@@ -2744,7 +2744,11 @@ def resume_unassigned(request):
         project__isnull=True,
     ).exclude(status=ResumeUpload.Status.DISCARDED)
     projects = Project.objects.filter(organization=org).exclude(
-        status=ProjectStatus.CLOSED,
+        status__in=[
+            ProjectStatus.CLOSED_SUCCESS,
+            ProjectStatus.CLOSED_FAIL,
+            ProjectStatus.CLOSED_CANCEL,
+        ],
     )
 
     return render(
