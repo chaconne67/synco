@@ -1,5 +1,15 @@
 <div class="space-y-5">
 
+  <!-- P16: Context resume banner -->
+  <div id="context-banner-wrapper">
+    {% include "projects/partials/context_banner.html" %}
+  </div>
+
+  <!-- P16: Auto-actions banner -->
+  <div id="auto-actions-wrapper">
+    {% include "projects/partials/auto_actions_banner.html" with actions=pending_actions %}
+  </div>
+
   <!-- JD 요약 -->
   <section class="bg-white rounded-lg border border-gray-100 p-5">
     <div class="flex items-center justify-between mb-4">

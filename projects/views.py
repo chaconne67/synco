@@ -418,6 +418,15 @@ def project_tab_overview(request, pk):
     project = get_object_or_404(Project, pk=pk, organization=org)
     context = _build_overview_context(project)
     context["project"] = project
+
+    # P16: Work Continuity banners
+    from projects.services.context import get_active_context, get_resume_url
+    from projects.services.auto_actions import get_pending_actions
+    ctx = get_active_context(project, request.user)
+    context["context"] = ctx
+    context["resume_url"] = get_resume_url(ctx) if ctx else None
+    context["pending_actions"] = get_pending_actions(project)
+
     return render(request, "projects/partials/tab_overview.html", context)
 
 
@@ -838,6 +847,15 @@ def contact_create(request, pk):
     if project.status == ProjectStatus.PENDING_APPROVAL:
         return HttpResponse(status=403)
 
+    # P16: Resume support
+    initial = {}
+    resume_id = request.GET.get("resume")
+    if resume_id:
+        from projects.services.context import get_active_context
+        ctx = get_active_context(project, request.user)
+        if ctx and str(ctx.pk) == resume_id:
+            initial = ctx.draft_data.get("fields", {})
+
     if request.method == "POST":
         form = ContactForm(request.POST, organization=org)
         if form.is_valid():
@@ -877,7 +895,7 @@ def contact_create(request, pk):
                 headers={"HX-Trigger": "contactChanged"},
             )
     else:
-        form = ContactForm(organization=org)
+        form = ContactForm(initial=initial, organization=org)
 
     # 프리필: query param으로 candidate 전달 시
     dup = None
