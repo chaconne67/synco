@@ -1,31 +1,257 @@
 {
   "project": "headhunting-workflow",
-  "total_todos": 4,
-  "created_at": "2026-04-10T03:00:00Z",
-  "batch_status": "complete",
+  "total_todos": 20,
+  "created_at": "2026-04-10T18:30:00Z",
+  "batch_status": "running",
   "execution_mode": "background",
-  "scope": "impl_only",
-  "last_pid": 3732578,
+  "scope": "verify",
+  "last_pid": 3818354,
   "execution_order": [
+    "p01",
+    "p02",
+    "p03",
+    "p03a",
+    "p04",
+    "p05",
+    "p06",
+    "p07",
+    "p08",
+    "p09",
+    "p10",
+    "p11",
+    "p12",
+    "p13",
+    "p14-voice-agent",
+    "p15-telegram-integration",
     "p16-work-continuity",
     "p17-news-feed",
     "p18-email-resume-processing",
     "p19-chrome-extension"
   ],
-  "redteam_config": {
-    "models": [
-      "codex",
-      "agent"
-    ],
-    "env": "local"
-  },
+  "redteam_config": null,
   "todos": [
     {
-      "slug": "p16-work-continuity",
+      "slug": "p01",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "impl_commit": "d2547c0",
-      "verification_status": null,
+      "impl_commit": "227b0fd",
+      "verification_status": "running",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p02",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "8eb0858",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p03",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "d29525e",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p03a",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "67be1f4",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": [
+        "p03"
+      ]
+    },
+    {
+      "slug": "p04",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "41dc208",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p05",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "f0f6aa2",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p06",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "3eb3066",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p07",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "8b3cea8",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p08",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "d341470",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p09",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "d031346",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p10",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "f6ff133",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "medium",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p11",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "a9e757f",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "medium",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p12",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "f6ff133",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "medium",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p13",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "1ef9405",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "medium",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p14-voice-agent",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "c3eb440",
+      "verification_status": "pending",
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
@@ -34,18 +260,46 @@
         "impl-plan-agreed.md"
       ],
       "committed": true,
-      "depends_on": null,
-      "debate_summary": {
-        "design": {"rounds": 1, "issues": 20, "accepted": 17, "rebutted": 0, "escalated": 0},
-        "impl": {"rounds": 1, "issues": 9, "accepted": 9, "rebutted": 0, "escalated": 0}
-      }
+      "depends_on": null
+    },
+    {
+      "slug": "p15-telegram-integration",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "8160a48",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "large",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
+    },
+    {
+      "slug": "p16-work-continuity",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "d2547c0",
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "large",
+      "artifacts": [
+        "design-spec-agreed.md",
+        "impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "depends_on": null
     },
     {
       "slug": "p17-news-feed",
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "bc90ad6",
-      "verification_status": null,
+      "verification_status": "pending",
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
@@ -54,18 +308,14 @@
         "impl-plan-agreed.md"
       ],
       "committed": true,
-      "depends_on": null,
-      "debate_summary": {
-        "design": {"rounds": 1, "issues": 15, "accepted": 13, "rebutted": 2, "escalated": 0},
-        "impl": {"rounds": 1, "issues": 14, "accepted": 11, "rebutted": 3, "escalated": 0}
-      }
+      "depends_on": null
     },
     {
       "slug": "p18-email-resume-processing",
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "d779c2b",
-      "verification_status": null,
+      "verification_status": "pending",
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
@@ -74,18 +324,14 @@
         "impl-plan-agreed.md"
       ],
       "committed": true,
-      "depends_on": null,
-      "debate_summary": {
-        "design": {"rounds": 1, "issues": 28, "accepted": 24, "rebutted": 4, "escalated": 0},
-        "impl": {"rounds": 1, "issues": 10, "accepted": 10, "rebutted": 0, "escalated": 0}
-      }
+      "depends_on": null
     },
     {
       "slug": "p19-chrome-extension",
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "15d7dd9",
-      "verification_status": null,
+      "verification_status": "pending",
       "verification_result": null,
       "entry_point": "design",
       "complexity": "large",
@@ -94,17 +340,13 @@
         "impl-plan-agreed.md"
       ],
       "committed": true,
-      "depends_on": null,
-      "debate_summary": {
-        "design": {"rounds": 1, "issues": 30, "accepted": 24, "rebutted": 0, "escalated": 0},
-        "impl": {"rounds": 1, "issues": 16, "accepted": 14, "rebutted": 0, "escalated": 0}
-      }
+      "depends_on": null
     }
   ],
   "decisions": [
     {
-      "decision": "P16-P19 상호 의존성 없음. projects/models.py, views.py, urls.py 파일 충돌으로 순차 강제. P19는 독립(api/, candidates/, synco-extension/).",
-      "timestamp": "2026-04-10T03:00:00Z"
+      "decision": "기존 impl_only 배치(p16-p19) 완료 후, 전체 20개 할일 구현 점검 전용 배치로 재초기화",
+      "timestamp": "2026-04-10T18:30:00Z"
     }
   ]
 }
