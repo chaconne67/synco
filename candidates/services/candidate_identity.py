@@ -7,7 +7,7 @@ Name-only matches are NOT used for auto-merge to prevent false merges.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dataclass_field
 
 from candidates.models import Candidate, Resume
 
@@ -187,3 +187,69 @@ def _build_candidate_snapshot(candidate: Candidate) -> dict:
             for e in candidate.educations.all()
         ],
     }
+
+
+@dataclass
+class ExtensionIdentityResult:
+    """Extension 중복 감지 결과."""
+
+    match_type: str  # "exact" | "possible" | "none"
+    candidate: Candidate | None = None
+    match_reason: str = ""  # "external_url" | "email" | "phone" | "name_company"
+    possible_matches: list = dataclass_field(default_factory=list)
+
+
+def identify_candidate_from_extension(
+    data: dict, organization
+) -> ExtensionIdentityResult:
+    """Extension 프로필 데이터로 중복 감지.
+
+    매칭 순서 (first exact match wins):
+      1. external_profile_url 일치 (org 스코핑)
+      2. email 일치 (org 스코핑)
+      3. phone 일치 (org 스코핑)
+      4. name+company 유사 매칭 → possible_matches (사용자 확인 필요)
+
+    Race condition 방지: 호출자가 transaction.atomic() 내에서 호출해야 함.
+    select_for_update()는 exact match 시 적용.
+    """
+    base_qs = Candidate.objects.filter(owned_by=organization)
+
+    # 1. External URL match
+    url = (data.get("external_profile_url") or "").strip()
+    if url:
+        candidate = base_qs.select_for_update().filter(external_profile_url=url).first()
+        if candidate:
+            return ExtensionIdentityResult("exact", candidate, "external_url")
+
+    # 2. Email match
+    email = (data.get("email") or "").strip().lower()
+    if email:
+        candidate = base_qs.select_for_update().filter(email__iexact=email).first()
+        if candidate:
+            return ExtensionIdentityResult("exact", candidate, "email")
+
+    # 3. Phone match (normalized)
+    phone = data.get("phone") or ""
+    normalized = normalize_phone_for_matching(phone)
+    if len(normalized) >= 10:
+        candidate = (
+            base_qs.select_for_update().filter(phone_normalized=normalized).first()
+        )
+        if candidate:
+            return ExtensionIdentityResult("exact", candidate, "phone")
+
+    # 4. Name + Company possible match (NOT auto-merge)
+    name = (data.get("name") or "").strip()
+    company = (data.get("current_company") or "").strip()
+    if name and company:
+        possible = list(
+            base_qs.filter(
+                name__iexact=name,
+                current_company__iexact=company,
+            ).order_by("-updated_at")[:5]
+        )
+        if possible:
+            return ExtensionIdentityResult("possible", None, "name_company", possible)
+
+    return ExtensionIdentityResult("none")
