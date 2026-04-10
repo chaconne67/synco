@@ -46,7 +46,7 @@ def project(db, org, client_company, user):
         client=client_company,
         organization=org,
         title="품질기획",
-        status=ProjectStatus.SEARCHING,   # NOT NEW — avoids signal trigger
+        status=ProjectStatus.SEARCHING,  # NOT NEW — avoids signal trigger
         created_by=user,
     )
 

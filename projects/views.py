@@ -422,6 +422,7 @@ def project_tab_overview(request, pk):
     # P16: Work Continuity banners
     from projects.services.context import get_active_context, get_resume_url
     from projects.services.auto_actions import get_pending_actions
+
     ctx = get_active_context(project, request.user)
     context["context"] = ctx
     context["resume_url"] = get_resume_url(ctx) if ctx else None
@@ -852,6 +853,7 @@ def contact_create(request, pk):
     resume_id = request.GET.get("resume")
     if resume_id:
         from projects.services.context import get_active_context
+
         ctx = get_active_context(project, request.user)
         if ctx and str(ctx.pk) == resume_id:
             initial = ctx.draft_data.get("fields", {})

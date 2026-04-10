@@ -57,9 +57,9 @@ class TestSaveContext:
             draft_data={"form": "submission_create"},
         )
         assert ctx.last_step == "submission_create"
-        assert ProjectContext.objects.filter(
-            project=project, consultant=user
-        ).count() == 1
+        assert (
+            ProjectContext.objects.filter(project=project, consultant=user).count() == 1
+        )
 
 
 @pytest.mark.django_db

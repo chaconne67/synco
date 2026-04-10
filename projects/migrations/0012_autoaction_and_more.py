@@ -31,28 +31,59 @@ def deduplicate_contexts(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0011_notification_telegram_chat_id'),
+        ("projects", "0011_notification_telegram_chat_id"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AutoAction',
+            name="AutoAction",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('trigger_event', models.CharField(max_length=100)),
-                ('action_type', models.CharField(choices=[('posting_draft', '공지 초안'), ('candidate_search', '후보자 자동 서칭'), ('submission_draft', '제출 서류 초안'), ('offer_template', '오퍼 템플릿'), ('followup_reminder', '팔로업 리마인더'), ('recontact_reminder', '재컨택 리마인더')], max_length=30)),
-                ('title', models.CharField(max_length=300)),
-                ('data', models.JSONField(blank=True, default=dict)),
-                ('status', models.CharField(choices=[('pending', '대기'), ('applied', '적용됨'), ('dismissed', '무시됨')], default='pending', max_length=20)),
-                ('due_at', models.DateTimeField(blank=True, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("trigger_event", models.CharField(max_length=100)),
+                (
+                    "action_type",
+                    models.CharField(
+                        choices=[
+                            ("posting_draft", "공지 초안"),
+                            ("candidate_search", "후보자 자동 서칭"),
+                            ("submission_draft", "제출 서류 초안"),
+                            ("offer_template", "오퍼 템플릿"),
+                            ("followup_reminder", "팔로업 리마인더"),
+                            ("recontact_reminder", "재컨택 리마인더"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("title", models.CharField(max_length=300)),
+                ("data", models.JSONField(blank=True, default=dict)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "대기"),
+                            ("applied", "적용됨"),
+                            ("dismissed", "무시됨"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("due_at", models.DateTimeField(blank=True, null=True)),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.RunPython(
@@ -60,27 +91,52 @@ class Migration(migrations.Migration):
             reverse_code=migrations.RunPython.noop,
         ),
         migrations.AddConstraint(
-            model_name='projectcontext',
-            constraint=models.UniqueConstraint(fields=('project', 'consultant'), name='unique_context_per_project_consultant'),
+            model_name="projectcontext",
+            constraint=models.UniqueConstraint(
+                fields=("project", "consultant"),
+                name="unique_context_per_project_consultant",
+            ),
         ),
         migrations.AddField(
-            model_name='autoaction',
-            name='applied_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='applied_auto_actions', to=settings.AUTH_USER_MODEL),
+            model_name="autoaction",
+            name="applied_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="applied_auto_actions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='autoaction',
-            name='created_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_auto_actions', to=settings.AUTH_USER_MODEL),
+            model_name="autoaction",
+            name="created_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="created_auto_actions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='autoaction',
-            name='dismissed_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='dismissed_auto_actions', to=settings.AUTH_USER_MODEL),
+            model_name="autoaction",
+            name="dismissed_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="dismissed_auto_actions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='autoaction',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='auto_actions', to='projects.project'),
+            model_name="autoaction",
+            name="project",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="auto_actions",
+                to="projects.project",
+            ),
         ),
     ]
