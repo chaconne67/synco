@@ -161,13 +161,14 @@ class TestUrgencyScoring:
     def test_collect_all_returns_multiple_actions(self, project, user_consultant):
         """Fix I-R1-01: collect_all_actions returns all priorities, not just max."""
         from candidates.models import Candidate
+        from projects.models import Submission
         from projects.services.urgency import collect_all_actions
 
         candidate = Candidate.objects.create(
             name="홍길동", owned_by=project.organization
         )
         today = timezone.localdate()
-        # Red action: recontact today
+        # Red action: recontact today (priority 1)
         Contact.objects.create(
             project=project,
             candidate=candidate,
@@ -176,17 +177,26 @@ class TestUrgencyScoring:
             contacted_at=timezone.now() - timedelta(days=7),
             next_contact_date=today,
         )
-        # Yellow action: recontact later this week (priority 6)
+        # Yellow action: use offer stale >7 days (priority 7) — not day-of-week sensitive
         candidate2 = Candidate.objects.create(
             name="김영희", owned_by=project.organization
         )
-        Contact.objects.create(
+        sub = Submission.objects.create(
             project=project,
             candidate=candidate2,
             consultant=user_consultant,
-            result="응답",
-            contacted_at=timezone.now() - timedelta(days=3),
-            next_contact_date=today + timedelta(days=2),
+            status="통과",
+        )
+        from projects.models import Offer
+
+        offer = Offer.objects.create(
+            submission=sub,
+            status="협상중",
+            salary="5000만원",
+        )
+        # Backdate created_at to >7 days ago (auto_now_add prevents setting at create)
+        Offer.objects.filter(pk=offer.pk).update(
+            created_at=timezone.now() - timedelta(days=10)
         )
 
         actions = collect_all_actions(project)
