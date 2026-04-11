@@ -109,7 +109,7 @@
       "slug": "t04",
       "phase": 1,
       "title": "dashboard 보호 + test fixture 업데이트",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -119,8 +119,20 @@
       "depends_on": [
         "t03"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t04/impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 6,
+          "accepted": 4,
+          "rebutted": 2,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t05",

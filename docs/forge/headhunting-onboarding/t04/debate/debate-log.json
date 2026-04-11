@@ -1,0 +1,83 @@
+{
+  "topic": "t04",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "MAJOR",
+              "title": "Missing route-level regression tests for /dashboard/ protection",
+              "attack": "Plan has no integration test proving the core fix works. Existing tests only cover active users on /dashboard/.",
+              "action": "accepted",
+              "response": "Both codex and gemini confirmed this gap. Will add tests for all 4 membership states.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "MAJOR",
+              "title": "Verification command uses unavailable --timeout flag",
+              "attack": "pytest-timeout not in pyproject.toml. --timeout=30 will fail.",
+              "action": "accepted",
+              "response": "Confirmed pytest-timeout not in deps. Will use 'uv run pytest -v' instead.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MINOR",
+              "title": "Fixture normalization incomplete in dashboard test file",
+              "attack": "test_p13_dashboard.py local fixtures also lack explicit status.",
+              "action": "rebutted",
+              "response": "Design spec scopes fixture update to tests/conftest.py only. Local fixtures in test_p13_dashboard.py are separate and functionally correct via model default.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "CRITICAL",
+              "title": "No tests for core feature (duplicate of I-R1-01)",
+              "attack": "Three of four user states completely unverified.",
+              "action": "accepted",
+              "response": "Merged with I-R1-01. Cross-validation by both models confirms severity.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "dashboard_actions and dashboard_team left unprotected",
+              "attack": "Only main dashboard view protected; sub-routes bypass restriction.",
+              "action": "rebutted",
+              "response": "t05 explicitly covers all remaining views including dashboard partials. Adding them here is scope creep per dispatch instructions.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MINOR",
+              "title": "Fixture update redundant due to model default",
+              "attack": "Membership.status defaults to ACTIVE, so explicit status is unnecessary.",
+              "action": "partial",
+              "response": "Accept incorrect justification, rebut removal of the change. Keep for explicitness but reword justification.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 4,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
