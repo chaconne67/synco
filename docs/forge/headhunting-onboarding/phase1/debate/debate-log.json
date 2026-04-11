@@ -1,0 +1,269 @@
+{
+  "topic": "phase1",
+  "stages": {
+    "design-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "D-R1-01",
+              "severity": "MAJOR",
+              "title": "Incorrect field name (consultants vs assigned_consultants)",
+              "attack": "Design spec uses Project.objects.filter(consultants=...) but the actual model field is assigned_consultants",
+              "action": "accepted",
+              "response": "Correct. Will fix to assigned_consultants in the spec.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-02",
+              "severity": "MAJOR",
+              "title": "Duplicate _get_org with no DRY strategy",
+              "attack": "_get_org exists in both projects/views.py and clients/views.py; modifying one creates inconsistency",
+              "action": "accepted",
+              "response": "Will consolidate to accounts/helpers.py and import in both apps.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-03",
+              "severity": "MAJOR",
+              "title": "InviteCode brute-force risk from fixed prefix",
+              "attack": "Example code 'SYNCO-A3K9' has only 4 random chars; no rate limiting specified",
+              "action": "partial",
+              "response": "Clarify spec: 8 fully random chars, no prefix. Rate limiting deferred to impl plan.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-04",
+              "severity": "MINOR",
+              "title": "OneToOneField prevents multi-org",
+              "attack": "User receiving invite codes from two orgs will hit integrity error",
+              "action": "rebutted",
+              "response": "Intentional design: single-org per user. Login flow prevents reaching invite screen when membership exists.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-05",
+              "severity": "CRITICAL",
+              "title": "Missing Membership.status field definition",
+              "attack": "Spec uses Membership.status throughout but never defines the field, choices, default, or migration",
+              "action": "accepted",
+              "response": "Will add formal field definition: CharField, choices=[active,pending,rejected], default=active, with RunPython migration.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-06",
+              "severity": "MAJOR",
+              "title": "Pending user redirect loop risk",
+              "attack": "Middleware vs decorator ambiguity; middleware risks infinite redirect for pending users",
+              "action": "accepted",
+              "response": "Will specify membership_required decorator approach instead of middleware.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "MINOR",
+              "title": "No mobile nav role-based filtering",
+              "attack": "Mobile bottom nav has no role filtering; consultant sees all items",
+              "action": "rebutted",
+              "response": "Access control is at view/decorator level, not nav UI. Mobile nav refinement is phase 2 polish.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "D-R1-08",
+              "severity": "MAJOR",
+              "title": "Rejected user can re-apply infinitely",
+              "attack": "Deleting Membership on rejection lets user re-enter same invite code immediately",
+              "action": "accepted",
+              "response": "Will use Membership.status=rejected instead of deletion. Adds 'rejected' to status choices.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-09",
+              "severity": "MINOR",
+              "title": "승인 요청 naming collision (project vs member approval)",
+              "attack": "Two different approval types sharing same sidebar label confuses users",
+              "action": "accepted",
+              "response": "Rename existing to '프로젝트 승인'; member approval goes under '조직 관리' page only.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "D-R1-04",
+              "severity": "MINOR",
+              "title": "OneToOneField prevents multi-org (follow-up)",
+              "attack": "Re-evaluation of rebuttal",
+              "action": "accepted",
+              "response": "Red team withdrew. Login flow logic prevents the integrity error scenario.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "D-R1-07",
+              "severity": "MINOR",
+              "title": "No mobile nav role-based filtering (follow-up)",
+              "attack": "Re-evaluation of rebuttal",
+              "action": "accepted",
+              "response": "Red team withdrew. Agreed this is phase 2 polish, not a design flaw.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 9,
+        "accepted": 7,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    },
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "_get_org not consolidated into accounts/helpers.py",
+              "attack": "Agreed design requires consolidation but impl plan modifies in-place in both files",
+              "action": "accepted",
+              "response": "Will create accounts/helpers.py and merge into Task 2.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "Wrong field name 'consultants' throughout plan",
+              "attack": "Model uses assigned_consultants but plan uses consultants in Task 6 and Task 8",
+              "action": "accepted",
+              "response": "Will replace all occurrences with assigned_consultants.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "Missing 'rejected' status in Membership.Status choices",
+              "attack": "Agreed design has 3 choices but impl only has 2",
+              "action": "accepted",
+              "response": "Will add REJECTED choice and all related views/templates/tests.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MINOR",
+              "title": "Wrong import pattern in tests (__import__)",
+              "attack": "Non-idiomatic import pattern for Django test Client",
+              "action": "accepted",
+              "response": "Will use standard from django.test import Client as TestClient.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "Form field name mismatch with model (consultants vs assigned_consultants)",
+              "attack": "Django ModelForm save_m2m won't work with mismatched field name",
+              "action": "accepted",
+              "response": "Covered by I-R1-02 resolution.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "No explicit RunPython migration verification",
+              "attack": "CLAUDE.md requires RunPython with reverse_func for data migrations",
+              "action": "partial",
+              "response": "Added migration verification note. Django default handles forward case.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "승인 요청 sidebar label not renamed to 프로젝트 승인",
+              "attack": "Agreed design renamed it but impl plan still uses old name",
+              "action": "accepted",
+              "response": "Will change to 프로젝트 승인 in Task 7.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-08",
+              "severity": "MINOR",
+              "title": "Stale design spec path in header",
+              "attack": "References old pre-tempering spec location",
+              "action": "accepted",
+              "response": "Updated to design-spec-agreed.md path.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-09",
+              "severity": "MINOR",
+              "title": "No anonymous user check in membership_required decorator",
+              "attack": "AttributeError on AnonymousUser if @login_required omitted",
+              "action": "rebutted",
+              "response": "Consistent @login_required stacking prevents this. Docstring note sufficient.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-10",
+              "severity": "MINOR",
+              "title": "Redundant final git add -A commit in Task 10",
+              "attack": "All prior tasks already commit; may include temp files from manual testing",
+              "action": "accepted",
+              "response": "Removed Task 10 Step 5.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "I-R1-09",
+              "severity": "MINOR",
+              "title": "No anonymous user check (follow-up)",
+              "attack": "Re-evaluation of rebuttal",
+              "action": "accepted",
+              "response": "Red team withdrew. Consistent decorator stacking is sufficient.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 10,
+        "accepted": 9,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
