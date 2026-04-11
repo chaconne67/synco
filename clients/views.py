@@ -1,6 +1,8 @@
 import json
 
 from django.contrib.auth.decorators import login_required
+
+from accounts.decorators import membership_required, role_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
@@ -18,6 +20,7 @@ PAGE_SIZE = 20
 
 
 @login_required
+@membership_required
 def client_list(request):
     """List clients with search and pagination."""
     org = _get_org(request)
@@ -39,6 +42,7 @@ def client_list(request):
 
 
 @login_required
+@role_required("owner")
 def client_create(request):
     """Create a new client. GET=form, POST=save."""
     org = _get_org(request)
@@ -68,6 +72,7 @@ def client_create(request):
 
 
 @login_required
+@membership_required
 def client_detail(request, pk):
     """Client detail with contracts and active projects."""
     org = _get_org(request)
@@ -90,6 +95,7 @@ def client_detail(request, pk):
 
 
 @login_required
+@role_required("owner")
 def client_update(request, pk):
     """Update an existing client."""
     org = _get_org(request)
@@ -122,6 +128,7 @@ def client_update(request, pk):
 
 
 @login_required
+@role_required("owner")
 def client_delete(request, pk):
     """Delete a client. Block if active projects exist."""
     if request.method != "POST":
@@ -152,6 +159,7 @@ def client_delete(request, pk):
 
 
 @login_required
+@role_required("owner")
 def contract_create(request, pk):
     """Create a contract for a client (inline)."""
     org = _get_org(request)
@@ -191,6 +199,7 @@ def contract_create(request, pk):
 
 
 @login_required
+@role_required("owner")
 def contract_update(request, pk, contract_pk):
     """Update a contract (inline)."""
     org = _get_org(request)
@@ -228,6 +237,7 @@ def contract_update(request, pk, contract_pk):
 
 
 @login_required
+@role_required("owner")
 def contract_delete(request, pk, contract_pk):
     """Delete a contract (inline)."""
     if request.method != "POST":

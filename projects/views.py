@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
-from accounts.decorators import membership_required
+from accounts.decorators import membership_required, role_required
 from accounts.helpers import _get_org
 from accounts.models import Organization
 
@@ -73,6 +73,7 @@ def _filter_params_string(request, exclude=None):
 
 
 @login_required
+@membership_required
 def project_list(request):
     """List projects with scope/client/status filters, sorting, and multi-view."""
     org = _get_org(request)
@@ -170,6 +171,7 @@ def project_list(request):
 
 
 @login_required
+@membership_required
 @require_http_methods(["PATCH"])
 def status_update(request, pk):
     """Update project status via PATCH (kanban drag-and-drop)."""
@@ -196,6 +198,7 @@ def status_update(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def project_check_collision(request):
     """HTMX endpoint: check for collision when client + title are provided."""
@@ -225,6 +228,7 @@ def project_check_collision(request):
 
 
 @login_required
+@membership_required
 def project_create(request):
     """Create a new project. GET=form, POST=save with collision detection."""
     org = _get_org(request)
@@ -332,6 +336,7 @@ def project_create(request):
 
 
 @login_required
+@membership_required
 def project_detail(request, pk):
     """Project detail — tab wrapper + overview tab inline."""
     org = _get_org(request)
@@ -361,6 +366,7 @@ def project_detail(request, pk):
 
 
 @login_required
+@membership_required
 def project_update(request, pk):
     """Update an existing project."""
     org = _get_org(request)
@@ -387,6 +393,7 @@ def project_update(request, pk):
 
 
 @login_required
+@role_required("owner")
 def project_delete(request, pk):
     """Delete a project. Block if contacts or submissions exist."""
     if request.method != "POST":
@@ -464,6 +471,7 @@ def _build_overview_context(project):
 
 
 @login_required
+@membership_required
 def project_tab_overview(request, pk):
     """개요: JD 요약, 퍼널, 담당자, 최근 진행 현황."""
     org = _get_org(request)
@@ -484,6 +492,7 @@ def project_tab_overview(request, pk):
 
 
 @login_required
+@membership_required
 def project_tab_search(request, pk):
     """서칭: 매칭 결과 + 컨택 상태 표시 + 예정 등록."""
     org = _get_org(request)
@@ -563,6 +572,7 @@ def project_tab_search(request, pk):
 
 
 @login_required
+@membership_required
 def project_tab_contacts(request, pk):
     """컨택 탭: 완료 목록 + 예정 목록."""
     org = _get_org(request)
@@ -610,6 +620,7 @@ def project_tab_contacts(request, pk):
 
 
 @login_required
+@membership_required
 def project_tab_submissions(request, pk):
     """추천 탭: 상태별 그룹핑 목록."""
     org = _get_org(request)
@@ -639,6 +650,7 @@ def project_tab_submissions(request, pk):
 
 
 @login_required
+@membership_required
 def project_tab_interviews(request, pk):
     """면접 탭: 후보자별 그룹핑, 차수 순 정렬."""
     org = _get_org(request)
@@ -674,6 +686,7 @@ def project_tab_interviews(request, pk):
 
 
 @login_required
+@membership_required
 def project_tab_offers(request, pk):
     """오퍼 탭: 목록."""
     org = _get_org(request)
@@ -700,6 +713,7 @@ def project_tab_offers(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def analyze_jd(request, pk):
     """JD 분석 트리거. 파일 업로드 시 텍스트 추출 후 AI 분석."""
@@ -749,6 +763,7 @@ def analyze_jd(request, pk):
 
 
 @login_required
+@membership_required
 def jd_results(request, pk):
     """JD 분석 결과 표시 (HTMX partial)."""
     org = _get_org(request)
@@ -768,6 +783,7 @@ def jd_results(request, pk):
 
 
 @login_required
+@membership_required
 def drive_picker(request, pk):
     """Drive 파일 선택 UI. GET=파일 목록, POST=파일 선택+텍스트 추출."""
     org = _get_org(request)
@@ -840,6 +856,7 @@ def drive_picker(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def start_search_session(request, pk):
     """프로젝트 requirements → SearchSession 생성 → 후보자 검색으로 redirect."""
@@ -868,6 +885,7 @@ def start_search_session(request, pk):
 
 
 @login_required
+@membership_required
 def jd_matching_results(request, pk):
     """프로젝트 상세 내 후보자 매칭 결과 목록."""
     org = _get_org(request)
@@ -897,6 +915,7 @@ def jd_matching_results(request, pk):
 
 
 @login_required
+@membership_required
 def contact_create(request, pk):
     """컨택 기록 등록."""
     org = _get_org(request)
@@ -985,6 +1004,7 @@ def contact_create(request, pk):
 
 
 @login_required
+@membership_required
 def contact_update(request, pk, contact_pk):
     """컨택 기록 수정."""
     org = _get_org(request)
@@ -1015,6 +1035,7 @@ def contact_update(request, pk, contact_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def contact_delete(request, pk, contact_pk):
     """컨택 기록 삭제."""
@@ -1029,6 +1050,7 @@ def contact_delete(request, pk, contact_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def contact_reserve(request, pk):
     """컨택 예정 등록 (잠금). 서칭 탭에서 체크박스 선택 후 호출."""
@@ -1050,6 +1072,7 @@ def contact_reserve(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def contact_release_lock(request, pk, contact_pk):
     """잠금 해제. 담당 컨설턴트 또는 잠금 본인만 가능."""
@@ -1079,6 +1102,7 @@ def contact_release_lock(request, pk, contact_pk):
 
 
 @login_required
+@membership_required
 def contact_check_duplicate(request, pk):
     """중복 체크 (HTMX partial). 후보자 드롭다운 변경 시 호출."""
     org = _get_org(request)
@@ -1114,6 +1138,7 @@ def contact_check_duplicate(request, pk):
 
 
 @login_required
+@membership_required
 def submission_create(request, pk):
     """추천 서류 등록."""
     org = _get_org(request)
@@ -1161,6 +1186,7 @@ def submission_create(request, pk):
 
 
 @login_required
+@membership_required
 def submission_update(request, pk, sub_pk):
     """추천 서류 수정."""
     org = _get_org(request)
@@ -1201,6 +1227,7 @@ def submission_update(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def submission_delete(request, pk, sub_pk):
     """추천 서류 삭제. 면접/오퍼 존재 시 차단."""
@@ -1231,6 +1258,7 @@ def submission_delete(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def submission_submit(request, pk, sub_pk):
     """고객사에 제출 (작성중 → 제출)."""
@@ -1252,6 +1280,7 @@ def submission_submit(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def submission_feedback(request, pk, sub_pk):
     """고객사 피드백 입력 (제출 → 통과/탈락)."""
     org = _get_org(request)
@@ -1294,6 +1323,7 @@ def submission_feedback(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def submission_download(request, pk, sub_pk):
     """첨부파일 다운로드. 파일 없으면 404."""
     org = _get_org(request)
@@ -1336,6 +1366,7 @@ def _get_draft_context(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def submission_draft(request, pk, sub_pk):
     """초안 작업 메인 화면. 현재 상태에 따라 적절한 단계 표시."""
     _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
@@ -1352,6 +1383,7 @@ def submission_draft(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def draft_generate(request, pk, sub_pk):
     """AI 초안 생성. Gemini API 호출."""
@@ -1379,6 +1411,7 @@ def draft_generate(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def draft_consultation(request, pk, sub_pk):
     """상담 내용 직접 입력."""
     _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
@@ -1414,6 +1447,7 @@ def draft_consultation(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def draft_consultation_audio(request, pk, sub_pk):
     """녹음 파일 업로드 + Whisper 딕테이션."""
@@ -1473,6 +1507,7 @@ def draft_consultation_audio(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def draft_finalize(request, pk, sub_pk):
     """AI 최종 정리: 초안 + 상담 병합."""
@@ -1509,6 +1544,7 @@ def draft_finalize(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def draft_review(request, pk, sub_pk):
     """컨설턴트가 final_content_json을 직접 수정."""
     _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
@@ -1541,6 +1577,7 @@ def draft_review(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def draft_convert(request, pk, sub_pk):
     """제출용 Word 파일 변환 + 마스킹."""
@@ -1591,6 +1628,7 @@ def draft_convert(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def draft_preview(request, pk, sub_pk):
     """현재 단계의 데이터를 미리보기."""
     _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
@@ -1616,6 +1654,7 @@ def draft_preview(request, pk, sub_pk):
 
 
 @login_required
+@membership_required
 def interview_create(request, pk):
     """면접 등록."""
     org = _get_org(request)
@@ -1693,6 +1732,7 @@ def interview_create(request, pk):
 
 
 @login_required
+@membership_required
 def interview_update(request, pk, interview_pk):
     """면접 수정."""
     org = _get_org(request)
@@ -1727,6 +1767,7 @@ def interview_update(request, pk, interview_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def interview_delete(request, pk, interview_pk):
     """면접 삭제. 삭제 보호: Offer가 연결된 Submission의 Interview는 삭제 불가."""
@@ -1753,6 +1794,7 @@ def interview_delete(request, pk, interview_pk):
 
 
 @login_required
+@membership_required
 def interview_result(request, pk, interview_pk):
     """면접 결과 입력 (대기 → 합격/보류/탈락)."""
     org = _get_org(request)
@@ -1804,6 +1846,7 @@ def interview_result(request, pk, interview_pk):
 
 
 @login_required
+@membership_required
 def offer_create(request, pk):
     """오퍼 등록."""
     org = _get_org(request)
@@ -1841,6 +1884,7 @@ def offer_create(request, pk):
 
 
 @login_required
+@membership_required
 def offer_update(request, pk, offer_pk):
     """오퍼 수정. 협상중 상태에서만."""
     org = _get_org(request)
@@ -1875,6 +1919,7 @@ def offer_update(request, pk, offer_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def offer_delete(request, pk, offer_pk):
     """오퍼 삭제. 수락/거절 상태에서는 삭제 불가."""
@@ -1900,6 +1945,7 @@ def offer_delete(request, pk, offer_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def offer_accept(request, pk, offer_pk):
     """오퍼 수락 (협상중 → 수락)."""
@@ -1932,6 +1978,7 @@ def offer_accept(request, pk, offer_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def offer_reject(request, pk, offer_pk):
     """오퍼 거절 (협상중 → 거절)."""
@@ -1962,6 +2009,7 @@ def offer_reject(request, pk, offer_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def posting_generate(request, pk):
     """AI 공지 초안 생성. overwrite=true 필요 시 기존 내용 보호."""
@@ -2019,6 +2067,7 @@ def posting_generate(request, pk):
 
 
 @login_required
+@membership_required
 def posting_edit(request, pk):
     """공지 내용 편집. GET=폼, POST=저장."""
     org = _get_org(request)
@@ -2053,6 +2102,7 @@ def posting_edit(request, pk):
 
 
 @login_required
+@membership_required
 def posting_download(request, pk):
     """공지 파일 다운로드 (.txt)."""
     org = _get_org(request)
@@ -2075,6 +2125,7 @@ def posting_download(request, pk):
 
 
 @login_required
+@membership_required
 def posting_sites(request, pk):
     """포스팅 사이트 목록 (HTMX partial)."""
     org = _get_org(request)
@@ -2095,6 +2146,7 @@ def posting_sites(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["GET", "POST"])
 def posting_site_add(request, pk):
     """포스팅 사이트 추가."""
@@ -2153,6 +2205,7 @@ def posting_site_add(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["GET", "POST"])
 def posting_site_update(request, pk, site_pk):
     """포스팅 사이트 수정."""
@@ -2193,6 +2246,7 @@ def posting_site_update(request, pk, site_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def posting_site_delete(request, pk, site_pk):
     """포스팅 사이트 비활성화 (소프트 삭제)."""
@@ -2223,12 +2277,10 @@ def _is_owner(request):
 
 
 @login_required
+@role_required("owner")
 def approval_queue(request):
     """OWNER-only: list pending approval requests."""
     org = _get_org(request)
-
-    if not _is_owner(request):
-        return HttpResponse(status=403)
 
     approvals = (
         ProjectApproval.objects.filter(
@@ -2276,13 +2328,11 @@ def approval_queue(request):
 
 
 @login_required
+@role_required("owner")
 @require_http_methods(["POST"])
 def approval_decide(request, appr_pk):
     """OWNER-only: decide on an approval request."""
     org = _get_org(request)
-
-    if not _is_owner(request):
-        return HttpResponse(status=403)
 
     from .forms import ApprovalDecisionForm
     from .services.approval import (
@@ -2328,6 +2378,7 @@ def approval_decide(request, appr_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def approval_cancel(request, pk):
     """Requester cancels their approval request."""
@@ -2398,6 +2449,7 @@ def dashboard(request):
 
 
 @login_required
+@membership_required
 def dashboard_actions(request):
     """오늘의 액션 HTMX partial (새로고침용)."""
     org = _get_org(request)
@@ -2413,17 +2465,9 @@ def dashboard_actions(request):
 
 
 @login_required
+@role_required("owner")
 def dashboard_team(request):
     """팀 현황 HTMX partial (OWNER 전용)."""
-    is_owner = False
-    try:
-        is_owner = request.user.membership.role == "owner"
-    except Exception:
-        pass
-
-    if not is_owner:
-        return HttpResponse(status=403)
-
     org = _get_org(request)
 
     from projects.services.dashboard import get_pending_approvals, get_team_summary
@@ -2454,6 +2498,7 @@ from .models import AutoAction
 
 
 @login_required
+@membership_required
 @require_http_methods(["GET"])
 def project_context(request, pk):
     """GET: Return active context banner partial."""
@@ -2472,6 +2517,7 @@ def project_context(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def project_context_save(request, pk):
     """POST: Save/update context (autosave endpoint)."""
@@ -2509,6 +2555,7 @@ def project_context_save(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def project_context_resume(request, pk):
     """POST: Resume from context → redirect to target form."""
@@ -2526,6 +2573,7 @@ def project_context_resume(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def project_context_discard(request, pk):
     """POST: Discard the active context."""
@@ -2544,6 +2592,7 @@ def project_context_discard(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["GET"])
 def project_auto_actions(request, pk):
     """GET: List pending auto-actions."""
@@ -2561,6 +2610,7 @@ def project_auto_actions(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def auto_action_apply(request, pk, action_pk):
     """POST: Apply an auto-action."""
@@ -2583,6 +2633,7 @@ def auto_action_apply(request, pk, action_pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def auto_action_dismiss(request, pk, action_pk):
     """POST: Dismiss an auto-action."""
@@ -2608,6 +2659,7 @@ def auto_action_dismiss(request, pk, action_pk):
 
 
 @login_required
+@membership_required
 def resume_upload(request, pk):
     """POST: Upload resume files → create ResumeUpload(pending) per file."""
     org = _get_org(request)
@@ -2646,6 +2698,7 @@ def resume_upload(request, pk):
 
 
 @login_required
+@membership_required
 def resume_process_pending(request, pk):
     """POST: Process all pending uploads for batch. Runs extraction synchronously."""
     org = _get_org(request)
@@ -2678,6 +2731,7 @@ def resume_process_pending(request, pk):
 
 
 @login_required
+@membership_required
 def resume_upload_status(request, pk):
     """GET: HTMX polling endpoint for upload status."""
     org = _get_org(request)
@@ -2702,6 +2756,7 @@ def resume_upload_status(request, pk):
 
 
 @login_required
+@membership_required
 def resume_link_candidate(request, pk, resume_pk):
     """POST: Link extracted resume to candidate."""
     org = _get_org(request)
@@ -2728,6 +2783,7 @@ def resume_link_candidate(request, pk, resume_pk):
 
 
 @login_required
+@membership_required
 def resume_discard(request, pk, resume_pk):
     """POST: Discard resume upload + delete physical file."""
     org = _get_org(request)
@@ -2752,6 +2808,7 @@ def resume_discard(request, pk, resume_pk):
 
 
 @login_required
+@membership_required
 def resume_retry(request, pk, resume_pk):
     """POST: Retry failed extraction (max 3 retries)."""
     org = _get_org(request)
@@ -2780,6 +2837,7 @@ def resume_retry(request, pk, resume_pk):
 
 
 @login_required
+@membership_required
 def resume_unassigned(request):
     """GET: Org-scoped list of unassigned resume uploads (project=null)."""
     org = _get_org(request)
@@ -2806,6 +2864,7 @@ def resume_unassigned(request):
 
 
 @login_required
+@membership_required
 def resume_assign_project(request, resume_pk, project_pk):
     """POST: Assign an unassigned resume upload to a project."""
     org = _get_org(request)

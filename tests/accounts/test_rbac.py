@@ -100,3 +100,117 @@ class TestRoleRequired:
         view = role_required("owner")(dummy_view)
         response = view(request)
         assert response.status_code == 403
+
+
+@pytest.mark.django_db
+class TestViewPermissions:
+    """Route-level integration tests for RBAC decorators."""
+
+    def test_consultant_cannot_create_client(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/clients/new/")
+        assert response.status_code == 403
+
+    def test_owner_can_create_client(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="own", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="owner", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/clients/new/")
+        assert response.status_code == 200
+
+    def test_consultant_cannot_create_project(self):
+        """Consultant CAN access project_create (approval workflow needs it)."""
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con2", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/projects/new/")
+        # project_create uses @membership_required (not owner-only)
+        # because P11 approval workflow requires consultant access
+        assert response.status_code == 200
+
+    def test_consultant_can_read_client_list(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con3", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/clients/")
+        assert response.status_code == 200
+
+    def test_consultant_cannot_delete_project(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con4", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        # Use a valid UUID format — role_required runs before view body
+        response = client.post("/projects/00000000-0000-0000-0000-000000000000/delete/")
+        assert response.status_code == 403
+
+    def test_consultant_cannot_access_approval_queue(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con5", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/projects/approvals/")
+        assert response.status_code == 403
+
+    def test_no_membership_redirects_to_invite(self):
+        user = User.objects.create_user(username="nomem", password="pass")
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/clients/")
+        assert response.status_code == 302
+        assert "/accounts/invite/" in response.url
+
+    def test_consultant_cannot_access_dashboard_team(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con6", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/dashboard/team/")
+        assert response.status_code == 403
+
+    def test_consultant_can_access_dashboard_actions(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con7", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/dashboard/actions/")
+        assert response.status_code == 200

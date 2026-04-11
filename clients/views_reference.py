@@ -11,6 +11,8 @@ import io
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+
+from accounts.decorators import membership_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
@@ -32,6 +34,7 @@ PAGE_SIZE = 30
 
 
 @login_required
+@membership_required
 def reference_index(request):
     """Reference management main page, defaults to universities tab."""
     return reference_universities(request)
@@ -41,6 +44,7 @@ def reference_index(request):
 
 
 @login_required
+@membership_required
 def reference_universities(request):
     """University ranking tab content."""
     qs = UniversityTier.objects.all()
@@ -156,6 +160,7 @@ def university_import(request):
 
 
 @login_required
+@membership_required
 def university_export(request):
     """Export universities to CSV."""
     qs = UniversityTier.objects.all()
@@ -181,6 +186,7 @@ def university_export(request):
 
 
 @login_required
+@membership_required
 def reference_companies(request):
     """Company DB tab content."""
     qs = CompanyProfile.objects.all()
@@ -339,6 +345,7 @@ def company_import(request):
 
 
 @login_required
+@membership_required
 def company_export(request):
     """Export companies to CSV."""
     qs = CompanyProfile.objects.all()
@@ -364,6 +371,7 @@ def company_export(request):
 
 
 @login_required
+@membership_required
 def reference_certs(request):
     """Cert tab content."""
     qs = PreferredCert.objects.all()
@@ -478,6 +486,7 @@ def cert_import(request):
 
 
 @login_required
+@membership_required
 def cert_export(request):
     """Export certs to CSV."""
     qs = PreferredCert.objects.all()

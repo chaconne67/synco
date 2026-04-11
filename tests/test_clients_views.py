@@ -30,7 +30,7 @@ def org2(db):
 @pytest.fixture
 def user_with_org(db, org):
     user = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
+    Membership.objects.create(user=user, organization=org, role="owner")
     return user
 
 
