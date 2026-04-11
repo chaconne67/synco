@@ -139,7 +139,7 @@
       "phase": 1,
       "title": "기존 view에 권한 데코레이터 적용",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
