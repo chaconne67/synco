@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 267429,
+  "last_pid": 274221,
   "execution_order": [
     "t03",
     "t04",
@@ -81,7 +81,7 @@
       "phase": 1,
       "title": "카카오 로그인 플로우 수정 + 온보딩 화면",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
