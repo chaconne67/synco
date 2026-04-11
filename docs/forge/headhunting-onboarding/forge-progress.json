@@ -34,7 +34,7 @@
         "design-spec-agreed.md",
         "impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": {
           "rounds": 2,
