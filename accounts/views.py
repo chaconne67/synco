@@ -7,12 +7,129 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from .models import User
+from django.db import transaction
+
+from .models import InviteCode, Membership, User
 
 
 @login_required
 def home(request):
-    return redirect("/")
+    """Root redirect -- route by membership status."""
+    try:
+        membership = request.user.membership
+        if membership.status == "pending":
+            return redirect("pending_approval")
+        if membership.status == "rejected":
+            return redirect("rejected")
+        return redirect("dashboard")
+    except Membership.DoesNotExist:
+        return redirect("invite_code")
+
+
+@login_required
+def invite_code_page(request):
+    """초대코드 입력 화면."""
+    # Already has membership -- redirect to appropriate page
+    try:
+        m = request.user.membership
+        if m.status == "active":
+            return redirect("dashboard")
+        if m.status == "pending":
+            return redirect("pending_approval")
+        if m.status == "rejected":
+            return redirect("rejected")
+    except Membership.DoesNotExist:
+        pass
+
+    error = None
+    if request.method == "POST":
+        code_str = request.POST.get("code", "").strip().upper()
+        try:
+            invite = InviteCode.objects.get(code=code_str)
+        except InviteCode.DoesNotExist:
+            invite = None
+
+        if invite and invite.is_valid:
+            # Owner gets immediate activation
+            status = "active" if invite.role == "owner" else "pending"
+            with transaction.atomic():
+                Membership.objects.create(
+                    user=request.user,
+                    organization=invite.organization,
+                    role=invite.role,
+                    status=status,
+                )
+                invite.use()
+
+            if status == "active":
+                return redirect("dashboard")
+            else:
+                # Notify organization owners about new pending member
+                _notify_owners_new_pending(request.user, invite.organization)
+                return redirect("pending_approval")
+        else:
+            error = "유효하지 않은 초대코드입니다."
+
+    return render(request, "accounts/invite_code.html", {"error": error})
+
+
+def _notify_owners_new_pending(user, organization):
+    """Notify org owners when a new consultant requests membership."""
+    try:
+        from projects.models import Notification
+        from projects.services.notification import send_notification
+
+        owner_memberships = Membership.objects.filter(
+            organization=organization,
+            role=Membership.Role.OWNER,
+            status=Membership.Status.ACTIVE,
+        ).select_related("user")
+
+        display_name = user.get_full_name() or user.username
+
+        for om in owner_memberships:
+            notif = Notification.objects.create(
+                recipient=om.user,
+                type=Notification.Type.APPROVAL_REQUEST,
+                title="새 멤버 가입 요청",
+                body=f"{display_name}님이 조직 가입을 요청했습니다.",
+            )
+            send_notification(
+                notif,
+                text=f"새 멤버 가입 요청: {display_name}님이 조직 가입을 요청했습니다. 승인이 필요합니다.",
+            )
+    except Exception:
+        pass  # Best-effort notification -- don't block onboarding flow
+
+
+@login_required
+def pending_approval_page(request):
+    """승인 대기 화면."""
+    try:
+        membership = request.user.membership
+        if membership.status == "active":
+            return redirect("dashboard")
+        if membership.status == "rejected":
+            return redirect("rejected")
+    except Membership.DoesNotExist:
+        return redirect("invite_code")
+
+    return render(request, "accounts/pending_approval.html")
+
+
+@login_required
+def rejected_page(request):
+    """거절 안내 화면."""
+    try:
+        membership = request.user.membership
+        if membership.status == "active":
+            return redirect("dashboard")
+        if membership.status == "pending":
+            return redirect("pending_approval")
+    except Membership.DoesNotExist:
+        return redirect("invite_code")
+
+    return render(request, "accounts/rejected.html")
 
 
 def login_page(request):

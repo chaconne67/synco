@@ -3,13 +3,15 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from accounts.views import home
 from projects.views import dashboard, dashboard_actions, dashboard_team
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # P13: Dashboard — root entry point (must be before accounts.urls include)
-    path("", dashboard, name="dashboard"),
-    path("dashboard/", dashboard, name="dashboard_explicit"),
+    # Root: onboarding router (routes by membership status)
+    path("", home, name="home"),
+    # Dashboard: explicit path only (protected by membership_required in t04)
+    path("dashboard/", dashboard, name="dashboard"),
     path("dashboard/actions/", dashboard_actions, name="dashboard_actions"),
     path("dashboard/team/", dashboard_team, name="dashboard_team"),
     # Accounts (includes login, settings, etc. at root prefix)

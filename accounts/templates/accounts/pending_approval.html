@@ -1,0 +1,28 @@
+{# accounts/templates/accounts/pending_approval.html #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>synco -- 승인 대기</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+</head>
+<body class="bg-slate-50 font-sans min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-sm px-6 text-center">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-primary mb-2">synco</h1>
+      <div class="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+        <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">가입 승인을 기다리고 있습니다</h2>
+      <p class="text-gray-500 text-[15px]">조직 관리자가 승인하면 서비스를 이용할 수 있습니다.</p>
+    </div>
+
+    <a href="{% url 'logout' %}" class="text-gray-400 text-sm hover:text-gray-600">로그아웃</a>
+  </div>
+</body>
+</html>

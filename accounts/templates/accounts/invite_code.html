@@ -1,0 +1,56 @@
+{# accounts/templates/accounts/invite_code.html #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>synco -- 초대코드 입력</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+</head>
+<body class="bg-slate-50 font-sans min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-sm px-6">
+    <div class="text-center mb-8">
+      <h1 class="text-2xl font-bold text-primary mb-2">synco</h1>
+      <p class="text-gray-500 text-[15px]">조직에 참여하려면 초대코드를 입력하세요.</p>
+    </div>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <input
+          type="text"
+          name="code"
+          placeholder="초대코드 8자리"
+          maxlength="8"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-lg tracking-widest font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          autocomplete="off"
+          autofocus
+          required
+        >
+      </div>
+
+      {% if error %}
+      <p class="text-red-500 text-sm text-center">{{ error }}</p>
+      {% endif %}
+
+      <button
+        type="submit"
+        class="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition"
+      >
+        참여하기
+      </button>
+    </form>
+
+    <div class="mt-6 text-center">
+      <p class="text-gray-400 text-sm">초대코드가 없으신가요?</p>
+      <p class="text-gray-400 text-sm">조직 관리자에게 문의하세요.</p>
+    </div>
+
+    <div class="mt-8 text-center">
+      <a href="{% url 'logout' %}" class="text-gray-400 text-sm hover:text-gray-600">로그아웃</a>
+    </div>
+  </div>
+</body>
+</html>
