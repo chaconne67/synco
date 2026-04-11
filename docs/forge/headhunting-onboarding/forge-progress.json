@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 170303,
+  "last_pid": 189033,
   "execution_order": [
     "phase1",
     "phase2",
@@ -23,7 +23,7 @@
     {
       "slug": "phase1",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
