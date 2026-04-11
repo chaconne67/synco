@@ -1,0 +1,59 @@
+{
+  "project": "headhunting-onboarding",
+  "total_todos": 3,
+  "created_at": "2026-04-12T01:00:00+09:00",
+  "batch_status": "running",
+  "execution_mode": "background",
+  "scope": "verify",
+  "last_pid": null,
+  "execution_order": ["phase1", "phase2", "phase3"],
+  "redteam_config": {
+    "models": ["codex", "gemini", "agent"],
+    "env": "local"
+  },
+  "todos": [
+    {
+      "slug": "phase1",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "medium",
+      "depends_on": null,
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "phase2",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "medium",
+      "depends_on": ["phase1"],
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "phase3",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "design",
+      "complexity": "small",
+      "depends_on": ["phase1", "phase2"],
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    }
+  ],
+  "decisions": []
+}
