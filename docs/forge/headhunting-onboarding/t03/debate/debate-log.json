@@ -1,0 +1,84 @@
+{
+  "topic": "t03",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Root URL routing mismatch — GET / hits dashboard, not home",
+              "attack": "main/urls.py의 path('', dashboard)가 accounts.urls include보다 먼저 매칭되어 home() 뷰가 호출되지 않음",
+              "action": "accepted",
+              "response": "코드 참조로 확인. main/urls.py 루트를 accounts.views.home으로 변경",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "pending user can re-submit invite code → IntegrityError 500",
+              "attack": "invite_code_page guard에서 pending 상태 미처리, OneToOneField 제약 위반",
+              "action": "accepted",
+              "response": "pending 상태 guard 추가 및 테스트 추가",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "/dashboard/ direct access still returns 404 for non-active users",
+              "attack": "루트 수정해도 /dashboard/ 직접 진입 경로가 보호되지 않음",
+              "action": "rebutted",
+              "response": "t04 'dashboard 보호' task의 범위에 해당. forge-progress.json에서 확인",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "Non-atomic invite code redemption (race condition)",
+              "attack": "is_valid 체크와 Membership 생성이 비원자적, 동시 요청 시 max_uses 초과",
+              "action": "partial",
+              "response": "transaction.atomic() 적용 수용. select_for_update()는 현재 규모에서 과도",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "Consultant signup notification to owner missing from plan",
+              "attack": "design-spec의 owner 알림 요구가 impl-plan에서 완전 누락",
+              "action": "accepted",
+              "response": "최소 구현으로 _notify_owners_new_pending() 추가",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MINOR",
+              "title": "Commit step missing test file and modified files",
+              "attack": "git add에 tests/accounts/test_onboarding.py와 main/urls.py 누락",
+              "action": "accepted",
+              "response": "git add에 모든 수정/생성 파일 포함",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 4,
+        "rebutted": 1,
+        "partial": 1,
+        "escalated": 0
+      }
+    }
+  }
+}

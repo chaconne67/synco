@@ -5,14 +5,38 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": null,
+  "last_pid": 267429,
   "execution_order": [
-    "t03", "t04", "t05", "t06", "t07", "t08", "t09", "t10",
-    "t11", "t12", "t13", "t14", "t15", "t16", "t17", "t18",
-    "t19", "t20", "t21", "t22", "t23", "t24", "t25"
+    "t03",
+    "t04",
+    "t05",
+    "t06",
+    "t07",
+    "t08",
+    "t09",
+    "t10",
+    "t11",
+    "t12",
+    "t13",
+    "t14",
+    "t15",
+    "t16",
+    "t17",
+    "t18",
+    "t19",
+    "t20",
+    "t21",
+    "t22",
+    "t23",
+    "t24",
+    "t25"
   ],
   "redteam_config": {
-    "models": ["codex", "gemini", "agent"],
+    "models": [
+      "codex",
+      "gemini",
+      "agent"
+    ],
     "env": "local"
   },
   "todos": [
@@ -28,7 +52,9 @@
       "entry_point": "impl",
       "complexity": "small",
       "depends_on": null,
-      "artifacts": ["phase1/impl-plan-agreed.md"],
+      "artifacts": [
+        "phase1/impl-plan-agreed.md"
+      ],
       "committed": true
     },
     {
@@ -42,15 +68,19 @@
       "verification_result": "PASS 8/8 code, 6/6 tests. REVIEW 1: _redirect_named fallback",
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t01"],
-      "artifacts": ["phase1/impl-plan-agreed.md"],
+      "depends_on": [
+        "t01"
+      ],
+      "artifacts": [
+        "phase1/impl-plan-agreed.md"
+      ],
       "committed": true
     },
     {
       "slug": "t03",
       "phase": 1,
       "title": "카카오 로그인 플로우 수정 + 온보딩 화면",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -58,8 +88,16 @@
       "entry_point": "impl",
       "complexity": "medium",
       "depends_on": null,
-      "artifacts": ["task1/impl-plan-agreed.md", "task2/impl-plan-agreed.md"],
-      "committed": false
+      "artifacts": [
+        "task1/impl-plan-agreed.md",
+        "task2/impl-plan-agreed.md",
+        "t03/impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {"rounds": 1, "issues": 6, "accepted": 4, "rebutted": 1, "escalated": 0}
+      }
     },
     {
       "slug": "t04",
@@ -72,7 +110,9 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t03"],
+      "depends_on": [
+        "t03"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -87,7 +127,9 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t04"],
+      "depends_on": [
+        "t04"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -102,7 +144,9 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t05"],
+      "depends_on": [
+        "t05"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -117,7 +161,9 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t05"],
+      "depends_on": [
+        "t05"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -132,7 +178,9 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t05"],
+      "depends_on": [
+        "t05"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -147,7 +195,9 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t05"],
+      "depends_on": [
+        "t05"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -162,7 +212,15 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t03", "t04", "t05", "t06", "t07", "t08", "t09"],
+      "depends_on": [
+        "t03",
+        "t04",
+        "t05",
+        "t06",
+        "t07",
+        "t08",
+        "t09"
+      ],
       "artifacts": [],
       "committed": false
     },
@@ -177,8 +235,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t10"],
-      "artifacts": ["t11/design-spec.md", "t11/impl-plan.md"],
+      "depends_on": [
+        "t10"
+      ],
+      "artifacts": [
+        "t11/design-spec.md",
+        "t11/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -192,8 +255,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t11"],
-      "artifacts": ["t12/design-spec.md", "t12/impl-plan.md"],
+      "depends_on": [
+        "t11"
+      ],
+      "artifacts": [
+        "t12/design-spec.md",
+        "t12/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -207,8 +275,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t12"],
-      "artifacts": ["t13/design-spec.md", "t13/impl-plan.md"],
+      "depends_on": [
+        "t12"
+      ],
+      "artifacts": [
+        "t13/design-spec.md",
+        "t13/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -222,8 +295,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t13"],
-      "artifacts": ["t14/design-spec.md", "t14/impl-plan.md"],
+      "depends_on": [
+        "t13"
+      ],
+      "artifacts": [
+        "t14/design-spec.md",
+        "t14/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -237,8 +315,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t12"],
-      "artifacts": ["t15/design-spec.md", "t15/impl-plan.md"],
+      "depends_on": [
+        "t12"
+      ],
+      "artifacts": [
+        "t15/design-spec.md",
+        "t15/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -252,8 +335,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t15"],
-      "artifacts": ["t16/design-spec.md", "t16/impl-plan.md"],
+      "depends_on": [
+        "t15"
+      ],
+      "artifacts": [
+        "t16/design-spec.md",
+        "t16/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -267,8 +355,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t14", "t16"],
-      "artifacts": ["t17/design-spec.md", "t17/impl-plan.md"],
+      "depends_on": [
+        "t14",
+        "t16"
+      ],
+      "artifacts": [
+        "t17/design-spec.md",
+        "t17/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -282,8 +376,15 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t14", "t16", "t17"],
-      "artifacts": ["t18/design-spec.md", "t18/impl-plan.md"],
+      "depends_on": [
+        "t14",
+        "t16",
+        "t17"
+      ],
+      "artifacts": [
+        "t18/design-spec.md",
+        "t18/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -297,8 +398,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t18"],
-      "artifacts": ["t19/design-spec.md", "t19/impl-plan.md"],
+      "depends_on": [
+        "t18"
+      ],
+      "artifacts": [
+        "t19/design-spec.md",
+        "t19/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -312,8 +418,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": ["t19"],
-      "artifacts": ["t20/design-spec.md", "t20/impl-plan.md"],
+      "depends_on": [
+        "t19"
+      ],
+      "artifacts": [
+        "t20/design-spec.md",
+        "t20/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -327,8 +438,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t19"],
-      "artifacts": ["t21/design-spec.md", "t21/impl-plan.md"],
+      "depends_on": [
+        "t19"
+      ],
+      "artifacts": [
+        "t21/design-spec.md",
+        "t21/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -343,7 +459,10 @@
       "entry_point": "impl",
       "complexity": "small",
       "depends_on": null,
-      "artifacts": ["t22/design-spec.md", "t22/impl-plan.md"],
+      "artifacts": [
+        "t22/design-spec.md",
+        "t22/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -357,8 +476,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t19"],
-      "artifacts": ["t23/design-spec.md", "t23/impl-plan.md"],
+      "depends_on": [
+        "t19"
+      ],
+      "artifacts": [
+        "t23/design-spec.md",
+        "t23/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -372,8 +496,13 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t19"],
-      "artifacts": ["t24/design-spec.md", "t24/impl-plan.md"],
+      "depends_on": [
+        "t19"
+      ],
+      "artifacts": [
+        "t24/design-spec.md",
+        "t24/impl-plan.md"
+      ],
       "committed": false
     },
     {
@@ -387,8 +516,18 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": ["t19", "t20", "t21", "t22", "t23", "t24"],
-      "artifacts": ["t25/design-spec.md", "t25/impl-plan.md"],
+      "depends_on": [
+        "t19",
+        "t20",
+        "t21",
+        "t22",
+        "t23",
+        "t24"
+      ],
+      "artifacts": [
+        "t25/design-spec.md",
+        "t25/impl-plan.md"
+      ],
       "committed": false
     }
   ],
