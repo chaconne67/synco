@@ -83,7 +83,7 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "e7819ab",
-      "verification_status": "pending",
+      "verification_status": "running",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
@@ -96,7 +96,13 @@
       "committed": true,
       "debate_summary": {
         "design": null,
-        "impl": {"rounds": 1, "issues": 6, "accepted": 4, "rebutted": 1, "escalated": 0}
+        "impl": {
+          "rounds": 1,
+          "issues": 6,
+          "accepted": 4,
+          "rebutted": 1,
+          "escalated": 0
+        }
       }
     },
     {
