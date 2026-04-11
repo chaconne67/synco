@@ -110,7 +110,7 @@
       "phase": 1,
       "title": "dashboard 보호 + test fixture 업데이트",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
