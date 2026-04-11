@@ -332,10 +332,10 @@ class TestDashboardViews:
         assert "/accounts/login/" in resp.url
 
     @pytest.mark.django_db
-    def test_root_is_dashboard(self, auth_consultant):
+    def test_root_redirects_to_dashboard(self, auth_consultant):
         resp = auth_consultant.get("/")
-        assert resp.status_code == 200
-        assert "대시보드" in resp.content.decode()
+        assert resp.status_code == 302
+        assert "/dashboard/" in resp.url
 
     @pytest.mark.django_db
     def test_dashboard_explicit_url(self, auth_consultant):
