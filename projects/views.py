@@ -9,6 +9,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
+from accounts.decorators import membership_required
 from accounts.helpers import _get_org
 from accounts.models import Organization
 
@@ -2353,6 +2354,7 @@ def approval_cancel(request, pk):
 
 
 @login_required
+@membership_required
 def dashboard(request):
     """대시보드 메인 화면."""
     org = _get_org(request)

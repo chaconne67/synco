@@ -369,6 +369,40 @@ class TestDashboardViews:
         assert resp.status_code == 200
 
     @pytest.mark.django_db
+    def test_dashboard_no_membership_redirects_to_invite(self):
+        """No membership -> redirect to invite page."""
+        user = User.objects.create_user(username="nomem_dash", password="test1234")
+        c = TestClient()
+        c.force_login(user)
+        resp = c.get("/dashboard/")
+        assert resp.status_code == 302
+        assert "/accounts/invite/" in resp.url
+
+    @pytest.mark.django_db
+    def test_dashboard_pending_redirects_to_pending(self):
+        """Pending membership -> redirect to pending page."""
+        org = Organization.objects.create(name="Pending Org")
+        user = User.objects.create_user(username="pend_dash", password="test1234")
+        Membership.objects.create(user=user, organization=org, status="pending")
+        c = TestClient()
+        c.force_login(user)
+        resp = c.get("/dashboard/")
+        assert resp.status_code == 302
+        assert "/accounts/pending/" in resp.url
+
+    @pytest.mark.django_db
+    def test_dashboard_rejected_redirects_to_rejected(self):
+        """Rejected membership -> redirect to rejected page."""
+        org = Organization.objects.create(name="Rejected Org")
+        user = User.objects.create_user(username="rej_dash", password="test1234")
+        Membership.objects.create(user=user, organization=org, status="rejected")
+        c = TestClient()
+        c.force_login(user)
+        resp = c.get("/dashboard/")
+        assert resp.status_code == 302
+        assert "/accounts/rejected/" in resp.url
+
+    @pytest.mark.django_db
     def test_unauthenticated_root_redirects_to_login(self):
         c = TestClient()
         resp = c.get("/")
