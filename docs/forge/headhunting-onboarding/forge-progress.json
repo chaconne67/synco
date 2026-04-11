@@ -1,15 +1,20 @@
 {
   "project": "headhunting-onboarding",
-  "total_todos": 3,
-  "created_at": "2026-04-12T01:00:00+09:00",
+  "total_todos": 8,
+  "created_at": "2026-04-12T02:45:00+09:00",
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 189033,
+  "last_pid": null,
   "execution_order": [
-    "phase1",
-    "phase2",
-    "phase3"
+    "t03",
+    "t04",
+    "t05",
+    "t06",
+    "t07",
+    "t08",
+    "t09",
+    "t10"
   ],
   "redteam_config": {
     "models": [
@@ -21,70 +26,162 @@
   },
   "todos": [
     {
-      "slug": "phase1",
-      "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
-      "verification_status": "pending",
-      "verification_result": null,
-      "entry_point": "design",
-      "complexity": "medium",
-      "depends_on": null,
-      "artifacts": [
-        "design-spec-agreed.md",
-        "impl-plan-agreed.md"
-      ],
-      "committed": true,
-      "debate_summary": {
-        "design": {
-          "rounds": 2,
-          "issues": 9,
-          "accepted": 7,
-          "rebutted": 2,
-          "escalated": 0
-        },
-        "impl": {
-          "rounds": 2,
-          "issues": 10,
-          "accepted": 9,
-          "rebutted": 1,
-          "escalated": 0
-        }
-      }
-    },
-    {
-      "slug": "phase2",
+      "slug": "t03",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
-      "entry_point": "design",
+      "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": [
-        "phase1"
-      ],
+      "depends_on": null,
+      "source": "docs/plans/headhunting-onboarding/phase1/plan.md (Task 3)",
+      "title": "카카오 로그인 플로우 수정 + 온보딩 화면",
       "artifacts": [],
       "committed": false,
       "debate_summary": null
     },
     {
-      "slug": "phase3",
+      "slug": "t04",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
-      "entry_point": "design",
+      "entry_point": "impl",
       "complexity": "small",
       "depends_on": [
-        "phase1",
-        "phase2"
+        "t03"
       ],
+      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 4)",
+      "title": "_get_org 수정 + dashboard 보호 + test fixture",
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "t05",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": [
+        "t04"
+      ],
+      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 5)",
+      "title": "기존 view에 권한 데코레이터 적용",
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "t06",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": [
+        "t05"
+      ],
+      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 6)",
+      "title": "프로젝트 목록 consultant 필터링",
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "t07",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": [
+        "t05"
+      ],
+      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 7)",
+      "title": "사이드바 역할별 메뉴 필터링",
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "t08",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": [
+        "t05"
+      ],
+      "source": "docs/plans/headhunting-onboarding/phase3/plan.md (Task 8)",
+      "title": "프로젝트 생성 시 담당 컨설턴트 지정",
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "t09",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": [
+        "t05"
+      ],
+      "source": "docs/plans/headhunting-onboarding/phase3/plan.md (Task 9)",
+      "title": "빈 화면 CTA (역할별 분기)",
+      "artifacts": [],
+      "committed": false,
+      "debate_summary": null
+    },
+    {
+      "slug": "t10",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": [
+        "t03",
+        "t04",
+        "t05",
+        "t06",
+        "t07",
+        "t08",
+        "t09"
+      ],
+      "source": "docs/plans/headhunting-onboarding/phase3/plan.md (Task 10)",
+      "title": "전체 통합 검증",
       "artifacts": [],
       "committed": false,
       "debate_summary": null
     }
   ],
-  "decisions": []
+  "decisions": [
+    {
+      "decision": "Task 1-2 이미 구현 완료 (커밋 ffaba5a, 67df8d2). Task 3부터 재개.",
+      "timestamp": "2026-04-12T02:45:00+09:00"
+    },
+    {
+      "decision": "Phase 단위가 아닌 Task 단위로 분할. 컨텍스트 압박 최소화.",
+      "timestamp": "2026-04-12T02:45:00+09:00"
+    }
+  ]
 }

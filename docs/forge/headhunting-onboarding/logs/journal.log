@@ -28,3 +28,6 @@
 [02:37:52] PROGRESS_UPDATED phase1 impl_status=pending (reset from running — previous session killed)
 [02:39:36] TODO_PICKED phase1 action=impl
 [02:39:36] IMPL_START phase1 tasks=10(2_already_committed)
+[02:40:48] SESSION_START pid=211596 mode=continue
+[02:40:58] SKILL_LOADED plan-forge-batch mode=continue
+[02:45:22] BATCH_REBUILD task-level split: t03-t10 (8 todos), Task 1-2 already done
