@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
+from accounts.helpers import _get_org
 from accounts.models import Organization
 
 from .forms import ClientForm, ContractForm
@@ -14,10 +15,6 @@ from .models import Client, Contract
 CLOSED_STATUSES = ["closed_success", "closed_fail", "closed_cancel", "on_hold"]
 PAGE_SIZE = 20
 
-
-def _get_org(request):
-    """Return the current user's Organization via Membership, or 404."""
-    return get_object_or_404(Organization, memberships__user=request.user)
 
 
 @login_required
