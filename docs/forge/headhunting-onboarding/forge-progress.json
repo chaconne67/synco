@@ -1,32 +1,55 @@
 {
   "project": "headhunting-onboarding",
-  "total_todos": 8,
-  "created_at": "2026-04-12T02:45:00+09:00",
+  "total_todos": 25,
+  "created_at": "2026-04-12T15:00:00+09:00",
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
   "last_pid": null,
   "execution_order": [
-    "t03",
-    "t04",
-    "t05",
-    "t06",
-    "t07",
-    "t08",
-    "t09",
-    "t10"
+    "t03", "t04", "t05", "t06", "t07", "t08", "t09", "t10",
+    "t11", "t12", "t13", "t14", "t15", "t16", "t17", "t18",
+    "t19", "t20", "t21", "t22", "t23", "t24", "t25"
   ],
   "redteam_config": {
-    "models": [
-      "codex",
-      "gemini",
-      "agent"
-    ],
+    "models": ["codex", "gemini", "agent"],
     "env": "local"
   },
   "todos": [
     {
+      "slug": "t01",
+      "phase": 1,
+      "title": "InviteCode 모델 + Membership.status 추가",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "ffaba5a",
+      "verification_status": "completed",
+      "verification_result": "PASS 33/33 code, 9/9 tests",
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": null,
+      "artifacts": ["phase1/impl-plan-agreed.md"],
+      "committed": true
+    },
+    {
+      "slug": "t02",
+      "phase": 1,
+      "title": "데코레이터 + context processor + _get_org 통합",
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "67df8d2",
+      "verification_status": "completed",
+      "verification_result": "PASS 8/8 code, 6/6 tests. REVIEW 1: _redirect_named fallback",
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t01"],
+      "artifacts": ["phase1/impl-plan-agreed.md"],
+      "committed": true
+    },
+    {
       "slug": "t03",
+      "phase": 1,
+      "title": "카카오 로그인 플로우 수정 + 온보딩 화면",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -35,14 +58,13 @@
       "entry_point": "impl",
       "complexity": "medium",
       "depends_on": null,
-      "source": "docs/plans/headhunting-onboarding/phase1/plan.md (Task 3)",
-      "title": "카카오 로그인 플로우 수정 + 온보딩 화면",
-      "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "artifacts": ["task1/impl-plan-agreed.md", "task2/impl-plan-agreed.md"],
+      "committed": false
     },
     {
       "slug": "t04",
+      "phase": 1,
+      "title": "dashboard 보호 + test fixture 업데이트",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -50,17 +72,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": [
-        "t03"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 4)",
-      "title": "_get_org 수정 + dashboard 보호 + test fixture",
+      "depends_on": ["t03"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
     },
     {
       "slug": "t05",
+      "phase": 1,
+      "title": "기존 view에 권한 데코레이터 적용",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -68,17 +87,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "depends_on": [
-        "t04"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 5)",
-      "title": "기존 view에 권한 데코레이터 적용",
+      "depends_on": ["t04"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
     },
     {
       "slug": "t06",
+      "phase": 1,
+      "title": "프로젝트 목록 consultant 필터링",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -86,17 +102,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": [
-        "t05"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 6)",
-      "title": "프로젝트 목록 consultant 필터링",
+      "depends_on": ["t05"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
     },
     {
       "slug": "t07",
+      "phase": 1,
+      "title": "사이드바 역할별 메뉴 필터링",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -104,17 +117,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": [
-        "t05"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase2/plan.md (Task 7)",
-      "title": "사이드바 역할별 메뉴 필터링",
+      "depends_on": ["t05"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
     },
     {
       "slug": "t08",
+      "phase": 1,
+      "title": "프로젝트 생성 시 담당 컨설턴트 지정",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -122,17 +132,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": [
-        "t05"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase3/plan.md (Task 8)",
-      "title": "프로젝트 생성 시 담당 컨설턴트 지정",
+      "depends_on": ["t05"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
     },
     {
       "slug": "t09",
+      "phase": 1,
+      "title": "빈 화면 CTA (역할별 분기)",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -140,17 +147,14 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": [
-        "t05"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase3/plan.md (Task 9)",
-      "title": "빈 화면 CTA (역할별 분기)",
+      "depends_on": ["t05"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
     },
     {
       "slug": "t10",
+      "phase": 1,
+      "title": "전체 통합 검증",
       "tempering_status": "pending",
       "impl_status": "pending",
       "impl_commit": null,
@@ -158,20 +162,234 @@
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "depends_on": [
-        "t03",
-        "t04",
-        "t05",
-        "t06",
-        "t07",
-        "t08",
-        "t09"
-      ],
-      "source": "docs/plans/headhunting-onboarding/phase3/plan.md (Task 10)",
-      "title": "전체 통합 검증",
+      "depends_on": ["t03", "t04", "t05", "t06", "t07", "t08", "t09"],
       "artifacts": [],
-      "committed": false,
-      "debate_summary": null
+      "committed": false
+    },
+    {
+      "slug": "t11",
+      "phase": 2,
+      "title": "NotificationPreference 모델 추가",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t10"],
+      "artifacts": ["t11/design-spec.md", "t11/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t12",
+      "phase": 2,
+      "title": "accounts/forms.py 생성",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t11"],
+      "artifacts": ["t12/design-spec.md", "t12/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t13",
+      "phase": 2,
+      "title": "설정 탭 URL + 뷰 통합",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": ["t12"],
+      "artifacts": ["t13/design-spec.md", "t13/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t14",
+      "phase": 2,
+      "title": "설정 탭 템플릿 구현",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": ["t13"],
+      "artifacts": ["t14/design-spec.md", "t14/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t15",
+      "phase": 2,
+      "title": "조직 관리 뷰 + URL + 테스트",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": ["t12"],
+      "artifacts": ["t15/design-spec.md", "t15/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t16",
+      "phase": 2,
+      "title": "조직 관리 템플릿 구현",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": ["t15"],
+      "artifacts": ["t16/design-spec.md", "t16/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t17",
+      "phase": 2,
+      "title": "사이드바 + 모바일 네비게이션 업데이트",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t14", "t16"],
+      "artifacts": ["t17/design-spec.md", "t17/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t18",
+      "phase": 2,
+      "title": "email_disconnect 리다이렉트 수정 + 최종 통합 테스트",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t14", "t16", "t17"],
+      "artifacts": ["t18/design-spec.md", "t18/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t19",
+      "phase": 3,
+      "title": "tabChanged 이벤트 시스템 + tab-navigation.js",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": ["t18"],
+      "artifacts": ["t19/design-spec.md", "t19/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t20",
+      "phase": 3,
+      "title": "submission_create() 성공 시 추천 탭 자동 전환",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "depends_on": ["t19"],
+      "artifacts": ["t20/design-spec.md", "t20/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t21",
+      "phase": 3,
+      "title": "contact_update() '관심' 결과 시 추천 유도 배너",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t19"],
+      "artifacts": ["t21/design-spec.md", "t21/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t22",
+      "phase": 3,
+      "title": "예정 목록에 '컨택 등록' 버튼 추가",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": null,
+      "artifacts": ["t22/design-spec.md", "t22/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t23",
+      "phase": 3,
+      "title": "퍼널 클릭 가능한 내비게이션",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t19"],
+      "artifacts": ["t23/design-spec.md", "t23/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t24",
+      "phase": 3,
+      "title": "탭 뱃지 신규(new) 표시",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t19"],
+      "artifacts": ["t24/design-spec.md", "t24/impl-plan.md"],
+      "committed": false
+    },
+    {
+      "slug": "t25",
+      "phase": 3,
+      "title": "통합 테스트 + 엣지 케이스",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "impl_commit": null,
+      "verification_status": "pending",
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "depends_on": ["t19", "t20", "t21", "t22", "t23", "t24"],
+      "artifacts": ["t25/design-spec.md", "t25/impl-plan.md"],
+      "committed": false
     }
   ],
   "decisions": [
@@ -182,6 +400,14 @@
     {
       "decision": "Phase 단위가 아닌 Task 단위로 분할. 컨텍스트 압박 최소화.",
       "timestamp": "2026-04-12T02:45:00+09:00"
+    },
+    {
+      "decision": "Phase 2(t11-t18), Phase 3(t19-t25) 설계+구현계획 태스크별 문서 쌍 생성 완료.",
+      "timestamp": "2026-04-12T16:00:00+09:00"
+    },
+    {
+      "decision": "t03-t25 풀코스(담금질+구현+구현점검) 백그라운드 배치 시작. scope=verify.",
+      "timestamp": "2026-04-12T17:00:00+09:00"
     }
   ]
 }
