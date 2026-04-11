@@ -1,3 +1,5 @@
+import secrets
+import string
 import uuid
 
 from django.contrib.auth.models import AbstractUser
@@ -74,8 +76,86 @@ class Membership(BaseModel):
         default=Role.CONSULTANT,
     )
 
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        PENDING = "pending", "Pending"
+        REJECTED = "rejected", "Rejected"
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
+
     def __str__(self) -> str:
         return f"{self.user} - {self.organization} ({self.role})"
+
+
+class InviteCode(BaseModel):
+    """초대코드 — Organization 가입용."""
+
+    class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
+        CONSULTANT = "consultant", "Consultant"
+        VIEWER = "viewer", "Viewer"
+
+    code = models.CharField(max_length=20, unique=True, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="invite_codes",
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.CONSULTANT,
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_invite_codes",
+    )
+    max_uses = models.PositiveIntegerField(default=1)
+    used_count = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.code} ({self.organization.name}, {self.role})"
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = self._generate_code()
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def _generate_code() -> str:
+        chars = string.ascii_uppercase + string.digits
+        while True:
+            code = "".join(secrets.choice(chars) for _ in range(8))
+            if not InviteCode.objects.filter(code=code).exists():
+                return code
+
+    @property
+    def is_valid(self) -> bool:
+        if not self.is_active:
+            return False
+        if self.max_uses and self.used_count >= self.max_uses:
+            return False
+        if self.expires_at:
+            from django.utils import timezone
+            if self.expires_at <= timezone.now():
+                return False
+        return True
+
+    def use(self) -> None:
+        self.used_count += 1
+        self.save(update_fields=["used_count", "updated_at"])
 
 
 class TelegramBinding(BaseModel):

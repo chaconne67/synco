@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import EmailMonitorConfig, Membership, Organization, TelegramBinding, User
+from .models import EmailMonitorConfig, InviteCode, Membership, Organization, TelegramBinding, User
 
 
 @admin.register(User)
@@ -18,9 +18,17 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
-    list_display = ("user", "organization", "role")
-    list_filter = ("role",)
+    list_display = ("user", "organization", "role", "status")
+    list_filter = ("role", "status")
     search_fields = ("user__username", "organization__name")
+
+
+@admin.register(InviteCode)
+class InviteCodeAdmin(admin.ModelAdmin):
+    list_display = ("code", "organization", "role", "used_count", "max_uses", "is_active", "expires_at")
+    list_filter = ("role", "is_active", "organization")
+    search_fields = ("code", "organization__name")
+    readonly_fields = ("code", "used_count")
 
 
 @admin.register(TelegramBinding)
