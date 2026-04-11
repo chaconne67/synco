@@ -1,0 +1,103 @@
+{
+  "topic": "t05",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "project_create owner-only breaks approval workflow",
+              "attack": "project_create를 owner-only로 잠그면 P11 충돌 승인 워크플로우가 끊기고 기존 테스트가 깨짐",
+              "action": "accepted",
+              "response": "코드 확인 결과 project_create 내에서 ProjectApproval이 생성됨. @membership_required로 변경",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "MAJOR",
+              "title": "Reference views 파일 경로 오류 + staff_member_required 충돌",
+              "attack": "File Map에 views_reference.py 누락, @staff_member_required→@role_required 전환 필요",
+              "action": "partial",
+              "response": "파일 경로 누락은 수용. 단, staff→role 전환은 범위 초과. 읽기 뷰에 @membership_required 추가만 적용",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "membership_required만으로는 배정된 프로젝트만 접근 제어 불가",
+              "attack": "@membership_required는 프로젝트 배정 기반 필터링을 구현하지 못함",
+              "action": "rebutted",
+              "response": "프로젝트 배정 필터링은 t06의 명시적 범위. t05는 데코레이터 적용만 담당",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "dashboard_actions/dashboard_team 누락",
+              "attack": "계획서가 이 엔드포인트들을 명시하지 않음",
+              "action": "accepted",
+              "response": "t04에서 명시적으로 t05 scope로 넘긴 항목. dashboard_actions→@membership_required, dashboard_team→@role_required('owner') 추가",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "인라인 _is_owner() 정리 누락",
+              "attack": "기존 인라인 권한 체크와 데코레이터가 중복됨",
+              "action": "accepted",
+              "response": "@role_required('owner') 적용 시 내부 인라인 체크 제거로 통일",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "--timeout=30 flag 사용 불가",
+              "attack": "pytest-timeout이 deps에 없어 검증 단계 실패",
+              "action": "accepted",
+              "response": "uv run pytest -v로 변경",
+              "evidence_type": "execution_result",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "통합 테스트 범위 부족",
+              "attack": "핵심 보호 대상에 대한 route-level 통합 테스트 부족",
+              "action": "partial",
+              "response": "핵심 경로 대표 테스트 추가 (dashboard partials, project_delete, approval_queue)",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-08",
+              "severity": "MINOR",
+              "title": "나머지 모든 view 모호한 표현",
+              "attack": "@membership_required 대상 view 목록이 명시적이지 않음",
+              "action": "accepted",
+              "response": "view 목록을 명시적으로 나열",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 8,
+        "accepted": 6,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 308439,
+  "last_pid": 313384,
   "execution_order": [
     "t03",
     "t04",
@@ -138,7 +138,7 @@
       "slug": "t05",
       "phase": 1,
       "title": "기존 view에 권한 데코레이터 적용",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -148,8 +148,20 @@
       "depends_on": [
         "t04"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t05/impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 8,
+          "accepted": 6,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t06",
