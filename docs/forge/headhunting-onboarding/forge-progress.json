@@ -167,7 +167,7 @@
       "slug": "t06",
       "phase": 1,
       "title": "프로젝트 목록 consultant 필터링",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -177,8 +177,20 @@
       "depends_on": [
         "t05"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t06/impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 6,
+          "accepted": 5,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t07",
