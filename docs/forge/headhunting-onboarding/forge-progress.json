@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 341855,
+  "last_pid": 346902,
   "execution_order": [
     "t03",
     "t04",
@@ -168,7 +168,7 @@
       "phase": 1,
       "title": "프로젝트 목록 consultant 필터링",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
