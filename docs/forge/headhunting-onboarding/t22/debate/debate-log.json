@@ -1,0 +1,88 @@
+{
+  "topic": "t22",
+  "document": "docs/forge/headhunting-onboarding/t22/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "상단 버튼과 스타일 불일치 (px/py/rounded 규격 차이)",
+              "attack": "변경안의 px-2.5 py-1 rounded-md가 상단 버튼의 px-3 py-1.5 rounded-lg와 불일치. 같은 bg-primary 버튼인데 규격이 다르면 디자인 시스템 일관성이 깨진다.",
+              "action": "accepted",
+              "response": "수용. 상단 버튼과 동일한 규격(px-3 py-1.5 rounded-lg)으로 통일.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "좁은 화면/긴 이름 시 레이아웃 붕괴 위험, 검증 범위 부족",
+              "attack": "텍스트 링크에서 패딩 포함 버튼으로 바뀌면 가로 폭 증가. 좁은 화면에서 레이아웃 깨짐 위험. Step 2 검증에 레이아웃 테스트 없음.",
+              "action": "partial",
+              "response": "검증 항목 추가 수용. 코드 변경(flex-shrink-0, truncate)은 할일 범위 외로 별도 처리.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "같은 라벨 중복 — 상단/행 버튼 동작 차이 혼란",
+              "attack": "상단 '+ 컨택 등록'과 행 '컨택 등록'이 동일 라벨+동일 primary 스타일인데 동작이 다르면 사용자 혼란.",
+              "action": "rebutted",
+              "response": "'+ ' prefix와 위치 맥락이 차별화 역할. 상단 버튼은 기존 디자인이며 이 할일의 범위 외.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-04",
+              "severity": "MINOR",
+              "title": "잠금 해제 텍스트 링크와의 시각적 불균형",
+              "attack": "같은 flex row에서 컨택 등록은 강조 버튼, 잠금 해제는 텍스트 링크로 높이 차이와 위계 혼선.",
+              "action": "rebutted",
+              "response": "주 행동 vs 파괴적 행동의 의도적 위계 차이. items-center 적용으로 수직 정렬 문제 없음.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-05",
+              "severity": "MINOR",
+              "title": "라인 번호 참조 불일치",
+              "attack": "구현계획에서 라인 96-98 참조하지만 실제 파일은 라인 105-107.",
+              "action": "accepted",
+              "response": "수용. 라인 번호를 105-107로 수정.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "같은 라벨 중복 — 상단/행 버튼 동작 차이 혼란 (follow-up)",
+              "attack": "R1-03 재검토",
+              "action": "accepted",
+              "response": "레드팀이 저자 반박 ACCEPT. + prefix, 위치 맥락, query param 차이, git 이력 확인. 설계 범위 제한 타당.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 5,
+        "accepted": 3,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    }
+  }
+}

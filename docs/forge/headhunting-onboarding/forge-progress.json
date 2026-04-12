@@ -658,7 +658,7 @@
       "slug": "t22",
       "phase": 3,
       "title": "예정 목록에 '컨택 등록' 버튼 추가",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -668,9 +668,20 @@
       "depends_on": null,
       "artifacts": [
         "t22/design-spec.md",
-        "t22/impl-plan.md"
+        "t22/impl-plan.md",
+        "t22/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 2,
+          "issues": 5,
+          "accepted": 3,
+          "rebutted": 2,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t23",
