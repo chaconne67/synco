@@ -312,3 +312,66 @@ class TestProjectFiltering:
         content = response.content.decode()
         assert "Owner Project" in content
         assert "Other Project" in content
+
+
+@pytest.mark.django_db
+class TestNavFiltering:
+    """Test role-based navigation menu filtering."""
+
+    def test_owner_sees_reference_in_sidebar(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="own_nav", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="owner", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/", follow=True)
+        content = response.content.decode()
+        assert "레퍼런스" in content
+
+    def test_consultant_does_not_see_reference_in_sidebar(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con_nav", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/", follow=True)
+        content = response.content.decode()
+        assert "레퍼런스" not in content
+
+    def test_sidebar_does_not_contain_old_approval_label(self):
+        """Sidebar uses '프로젝트 승인' (not '승인 요청')."""
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="own_appr", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="owner", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/", follow=True)
+        content = response.content.decode()
+        # Extract sidebar nav section only (dash_admin.html also contains "승인 요청")
+        sidebar_start = content.find('id="sidebar-nav"')
+        sidebar_end = content.find("</nav>", sidebar_start)
+        sidebar = content[sidebar_start:sidebar_end]
+        assert "승인 요청" not in sidebar
+
+    def test_consultant_does_not_see_approval_menu(self):
+        org = Organization.objects.create(name="Org")
+        user = User.objects.create_user(username="con_appr", password="pass")
+        Membership.objects.create(
+            user=user, organization=org, role="consultant", status="active"
+        )
+        client = TestClient()
+        client.force_login(user)
+
+        response = client.get("/", follow=True)
+        content = response.content.decode()
+        assert "프로젝트 승인" not in content
+        assert "승인 요청" not in content
