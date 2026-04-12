@@ -440,7 +440,7 @@
       "slug": "t15",
       "phase": 2,
       "title": "조직 관리 뷰 + URL + 테스트",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -452,9 +452,20 @@
       ],
       "artifacts": [
         "t15/design-spec.md",
-        "t15/impl-plan.md"
+        "t15/impl-plan.md",
+        "t15/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 9,
+          "accepted": 6,
+          "rebutted": 3,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t16",

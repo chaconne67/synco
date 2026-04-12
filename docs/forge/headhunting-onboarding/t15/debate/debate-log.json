@@ -1,0 +1,113 @@
+{
+  "topic": "t15",
+  "document": "docs/forge/headhunting-onboarding/t15/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "summary": {
+        "rounds": 1,
+        "issues": 9,
+        "accepted": 6,
+        "rebutted": 3,
+        "escalated": 0
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "템플릿 파일 누락",
+              "attack": "File Map에 템플릿 없음. 뷰가 존재하지 않는 템플릿 렌더링하여 TemplateDoesNotExist 발생.",
+              "action": "rebutted",
+              "response": "템플릿은 t16의 명시적 범위. t15는 뷰+URL+테스트만 담당.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-02",
+              "severity": "MAJOR",
+              "title": "HTMX 렌더링 규약 불일치",
+              "attack": "기존 settings 뷰는 _is_tab_switch()로 HX-Target 검사. 조직 뷰는 단순 htmx 검사만.",
+              "action": "accepted",
+              "response": "기존 _is_tab_switch() 패턴을 따르도록 org용 탭 스위치 함수 추가.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "HTMX 테스트 누락",
+              "attack": "모든 테스트가 일반 요청만 사용. HTMX 분기가 검증되지 않음.",
+              "action": "partial",
+              "response": "HTMX 분기 로직은 뷰에 추가하되, 렌더링 테스트는 t16에서 검증. t15에서는 POST 비즈니스 로직만 검증.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "초대코드 생성 실패 시 성공 메시지",
+              "attack": "form.is_valid() 분기와 무관하게 항상 성공 메시지 출력.",
+              "action": "accepted",
+              "response": "message를 is_valid() 블록 내부로 이동. invalid이면 bound form + 에러 반환.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MAJOR",
+              "title": "Cross-org 보안 테스트 누락",
+              "attack": "모든 테스트가 같은 org에서만 수행. cross-org 격리 미검증.",
+              "action": "accepted",
+              "response": "cross-org approve/role/remove/deactivate 차단 테스트 추가.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MAJOR",
+              "title": "Owner 역할 변경 제한 과도",
+              "attack": "owner 역할이면 무조건 차단 — 설계의 자기자신 변경불가보다 강력.",
+              "action": "rebutted",
+              "response": "설계 명세에 owner 역할은 변경 불가로 명시. 현재 구현이 설계와 정합.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "멤버 정렬 순서 불일치",
+              "attack": "주석은 pending first인데 문자열 정렬이면 active가 먼저 옴.",
+              "action": "accepted",
+              "response": "Case/When으로 명시적 pending=0, active=1, rejected=2 정렬.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MINOR",
+              "title": "조직 정보 수정 성공 메시지 부재",
+              "attack": "org_info에서 form.save() 후 message 컨텍스트 없음.",
+              "action": "accepted",
+              "response": "org_info에 성공 메시지 추가.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MINOR",
+              "title": "URL 네임스페이스 미지정",
+              "attack": "urls_org.py에 app_name 없음. 글로벌 네임 충돌 위험.",
+              "action": "rebutted",
+              "response": "프로젝트 전체가 글로벌 네임 사용. 네임스페이스 도입은 전체 리팩터링 범위.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
