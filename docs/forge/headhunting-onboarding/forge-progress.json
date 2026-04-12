@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 488288,
+  "last_pid": 495823,
   "execution_order": [
     "t03",
     "t04",
@@ -379,7 +379,7 @@
       "phase": 2,
       "title": "설정 탭 URL + 뷰 통합",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
