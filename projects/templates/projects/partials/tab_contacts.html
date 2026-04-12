@@ -11,7 +11,11 @@
   </div>
 
   <!-- 폼 삽입 영역 -->
-  <div id="contact-form-area"></div>
+  <div id="contact-form-area">
+    {% if interest_banner %}
+      {% include "projects/partials/contact_interest_banner.html" with candidate_name=interest_banner.candidate_name candidate_id=interest_banner.candidate_id %}
+    {% endif %}
+  </div>
 
   <!-- 실제 컨택 완료 목록 -->
   <div class="bg-white rounded-lg border border-gray-100 p-5">

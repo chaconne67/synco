@@ -353,13 +353,15 @@ def _build_tab_context(project):
     }
     tab_latest = {
         "contacts": project.contacts.aggregate(latest=Max("created_at"))["latest"],
-        "submissions": project.submissions.aggregate(latest=Max("created_at"))["latest"],
-        "interviews": Interview.objects.filter(
-            submission__project=project
-        ).aggregate(latest=Max("created_at"))["latest"],
-        "offers": Offer.objects.filter(
-            submission__project=project
-        ).aggregate(latest=Max("created_at"))["latest"],
+        "submissions": project.submissions.aggregate(latest=Max("created_at"))[
+            "latest"
+        ],
+        "interviews": Interview.objects.filter(submission__project=project).aggregate(
+            latest=Max("created_at")
+        )["latest"],
+        "offers": Offer.objects.filter(submission__project=project).aggregate(
+            latest=Max("created_at")
+        )["latest"],
     }
     return tab_counts, tab_latest
 
@@ -1032,9 +1034,63 @@ def contact_update(request, pk, contact_pk):
     contact = get_object_or_404(Contact, pk=contact_pk, project=project)
 
     if request.method == "POST":
+        old_result = contact.result  # form이 instance를 수정하기 전에 보존
         form = ContactForm(request.POST, instance=contact, organization=org)
         if form.is_valid():
-            form.save()
+            contact = form.save()
+
+            # "관심"으로 전환되었고 아직 Submission이 없으면 유도 배너 포함 탭 리렌더링
+            if (
+                old_result != Contact.Result.INTERESTED
+                and contact.result == Contact.Result.INTERESTED
+                and not project.submissions.filter(candidate=contact.candidate).exists()
+            ):
+                from projects.services.contact import release_expired_reservations
+
+                release_expired_reservations()
+
+                from django.utils import timezone as tz
+
+                now = tz.now()
+
+                completed_contacts = (
+                    project.contacts.exclude(result=Contact.Result.RESERVED)
+                    .select_related("candidate", "consultant")
+                    .order_by("-contacted_at")
+                )
+                reserved_contacts = (
+                    project.contacts.filter(
+                        result=Contact.Result.RESERVED,
+                        locked_until__gt=now,
+                    )
+                    .select_related("candidate", "consultant")
+                    .order_by("-created_at")
+                )
+                submitted_candidate_ids = set(
+                    project.submissions.values_list("candidate_id", flat=True)
+                )
+
+                response = render(
+                    request,
+                    "projects/partials/tab_contacts.html",
+                    {
+                        "project": project,
+                        "completed_contacts": completed_contacts,
+                        "reserved_contacts": reserved_contacts,
+                        "can_release": request.user
+                        in project.assigned_consultants.all(),
+                        "submitted_candidate_ids": submitted_candidate_ids,
+                        "interest_banner": {
+                            "candidate_name": contact.candidate.name,
+                            "candidate_id": contact.candidate.pk,
+                        },
+                    },
+                )
+                response["HX-Retarget"] = "#tab-content"
+                response["HX-Reswap"] = "innerHTML"
+                response["HX-Trigger"] = "contactChanged"
+                return response
+
             return HttpResponse(
                 status=204,
                 headers={"HX-Trigger": "contactChanged"},
@@ -1186,10 +1242,12 @@ def submission_create(request, pk):
             response = project_tab_submissions(request, pk)
             response["HX-Retarget"] = "#tab-content"
             response["HX-Reswap"] = "innerHTML"
-            response["HX-Trigger"] = json.dumps({
-                "tabChanged": {"activeTab": "submissions"},
-                "submissionChanged": {},
-            })
+            response["HX-Trigger"] = json.dumps(
+                {
+                    "tabChanged": {"activeTab": "submissions"},
+                    "submissionChanged": {},
+                }
+            )
             return response
     else:
         form = SubmissionForm(organization=org, project=project)
