@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 644494,
+  "last_pid": 653445,
   "execution_order": [
     "t03",
     "t04",
@@ -568,7 +568,7 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "ea88375",
-      "verification_status": "pending",
+      "verification_status": "running",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
