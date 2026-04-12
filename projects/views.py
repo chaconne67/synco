@@ -1182,10 +1182,15 @@ def submission_create(request, pk):
 
             maybe_advance_project_status(project)
 
-            return HttpResponse(
-                status=204,
-                headers={"HX-Trigger": "submissionChanged"},
-            )
+            # 추천 탭 파셜을 직접 렌더링하여 반환 (자동 탭 전환)
+            response = project_tab_submissions(request, pk)
+            response["HX-Retarget"] = "#tab-content"
+            response["HX-Reswap"] = "innerHTML"
+            response["HX-Trigger"] = json.dumps({
+                "tabChanged": {"activeTab": "submissions"},
+                "submissionChanged": {},
+            })
+            return response
     else:
         form = SubmissionForm(organization=org, project=project)
 

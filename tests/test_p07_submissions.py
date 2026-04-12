@@ -4,6 +4,8 @@ Tests for submission CRUD, file upload/download, state transitions,
 project status auto-transition, organization isolation, and contact tab link.
 """
 
+import json
+
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
@@ -253,13 +255,13 @@ class TestSubmissionCRUD:
     def test_create_with_interested_candidate(
         self, auth_client, project, candidate, interested_contact
     ):
-        """관심 후보자로 Submission 생성 → 204."""
+        """관심 후보자로 Submission 생성 → 200 (추천 탭 파셜 반환)."""
         url = reverse("projects:submission_create", args=[project.pk])
         resp = auth_client.post(
             url,
             {"candidate": str(candidate.pk), "template": "xd_ko", "notes": "test"},
         )
-        assert resp.status_code == 204
+        assert resp.status_code == 200
         assert Submission.objects.filter(project=project, candidate=candidate).exists()
 
     def test_create_prefill_candidate(
@@ -367,7 +369,7 @@ class TestTemplateSelection:
                 url,
                 {"candidate": str(candidate.pk), "template": template_value},
             )
-            assert resp.status_code == 204, f"Failed for template: {template_value}"
+            assert resp.status_code == 200, f"Failed for template: {template_value}"
             sub = Submission.objects.get(project=project, candidate=candidate)
             assert sub.template == template_value
 
@@ -405,7 +407,7 @@ class TestFileUploadDownload:
                 "document_file": pdf_file,
             },
         )
-        assert resp.status_code == 204
+        assert resp.status_code == 200
         sub = Submission.objects.get(project=project, candidate=candidate)
         assert sub.document_file
 
@@ -432,7 +434,7 @@ class TestFileUploadDownload:
                 "document_file": docx_file,
             },
         )
-        assert resp.status_code == 204
+        assert resp.status_code == 200
 
     def test_upload_invalid_extension_rejected(
         self, auth_client, project, candidate, interested_contact, media_root
@@ -733,17 +735,18 @@ class TestContactTabSubmissionLink:
 
 
 class TestHTMXBehavior:
-    def test_create_returns_204_with_trigger(
+    def test_create_returns_200_with_tab_transition(
         self, auth_client, project, candidate, interested_contact
     ):
-        """생성 성공 시 204 + HX-Trigger: submissionChanged."""
+        """생성 성공 시 200 + 추천 탭 파셜 반환 + HX-Trigger에 submissionChanged 포함."""
         url = reverse("projects:submission_create", args=[project.pk])
         resp = auth_client.post(
             url,
             {"candidate": str(candidate.pk), "template": "xd_ko"},
         )
-        assert resp.status_code == 204
-        assert resp.headers.get("HX-Trigger") == "submissionChanged"
+        assert resp.status_code == 200
+        hx_trigger = json.loads(resp.headers.get("HX-Trigger", "{}"))
+        assert "submissionChanged" in hx_trigger
 
     def test_tab_has_auto_refresh_trigger(self, auth_client, project):
         """탭에 submissionChanged hx-trigger 존재."""
