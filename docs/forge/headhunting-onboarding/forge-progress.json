@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 376782,
+  "last_pid": 382828,
   "execution_order": [
     "t03",
     "t04",
@@ -238,7 +238,7 @@
       "artifacts": [
         "t08/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
