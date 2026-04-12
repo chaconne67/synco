@@ -2439,12 +2439,26 @@ def dashboard(request):
     except Exception:
         pass
 
+    # Empty state detection for dashboard CTAs
+    if is_owner:
+        from clients.models import Client
+
+        has_projects = Project.objects.filter(organization=org).exists()
+        has_clients = Client.objects.filter(organization=org).exists()
+    else:
+        has_projects = Project.objects.filter(
+            organization=org, assigned_consultants=user
+        ).exists()
+        has_clients = True  # not relevant for consultant
+
     context = {
         "today_actions": today_actions,
         "weekly_schedule": weekly_schedule,
         "pipeline": pipeline,
         "activities": activities,
         "is_owner": is_owner,
+        "has_projects": has_projects,
+        "has_clients": has_clients,
     }
 
     if is_owner:

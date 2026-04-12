@@ -5,6 +5,32 @@
     <span class="text-[14px] text-gray-500">{% now "Y년 n월 j일" %}</span>
   </div>
 
+  {% if is_owner and not has_projects and not has_clients %}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+    <div class="text-gray-400 mb-3">
+      <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    </div>
+    <p class="text-[16px] font-medium text-gray-700 mb-1">고객사를 등록하고 첫 프로젝트를 시작하세요</p>
+    <p class="text-[14px] text-gray-400 mb-4">고객사를 등록하면 프로젝트를 만들고 채용을 시작할 수 있습니다.</p>
+    <a href="/clients/new/"
+       hx-get="/clients/new/" hx-target="#main-content" hx-push-url="true"
+       class="inline-flex items-center gap-1 px-4 py-2 bg-primary text-white text-[14px] font-medium rounded-lg hover:bg-primary/90 transition">
+      고객사 등록
+    </a>
+  </div>
+  {% elif not is_owner and not has_projects %}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+    <div class="text-gray-400 mb-3">
+      <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    </div>
+    <p class="text-[16px] font-medium text-gray-700 mb-1">배정된 프로젝트가 없습니다</p>
+    <p class="text-[14px] text-gray-400">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
+  </div>
+  {% else %}
   <div id="dash-actions">
     {% include "projects/partials/dash_actions.html" %}
   </div>
@@ -12,6 +38,7 @@
   {% include "projects/partials/dash_schedule.html" %}
   {% include "projects/partials/dash_pipeline.html" %}
   {% include "projects/partials/dash_activity.html" %}
+  {% endif %}
 
   {% if is_owner %}
   {% include "projects/partials/dash_admin.html" %}
