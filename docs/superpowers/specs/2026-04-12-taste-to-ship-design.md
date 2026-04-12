@@ -1,12 +1,19 @@
 ---
 date: 2026-04-13
-status: draft-v3
+status: draft-v4
 topic: taste-to-ship (tts)
 type: workflow design spec
 ---
 
 # taste-to-ship (tts) — End-to-End AI Build Workflow
 
+> **v4 변경사항 (2026-04-13):**
+> - **CLAUDE.md 제거** (Stage 1f-4 ensure 목록에서). 런타임에 불필요 + 템플릿은 가치 낮음
+> - **Git stash 재귀 누적 방지 로직** 추가 (Stage 1f-3). 기존 tts stash 미해결 시 진행 차단
+> - **배치 스킬 세션 종료 시 auto-memory 저장 프롬프트** 추가 (design/task/impl-forge-batch 공통). 일반화 가능한 패턴만 누적
+> - **"소" 복잡도 → Task Tool (인세션 subagent)** 최적화. 세션 체이닝 오버헤드 절감
+> - **Stage 5 구현을 git worktree 기반으로** 전환. Atomic task execution + 파일 충돌 원천 차단 + squash merge로 깔끔한 히스토리
+>
 > **v3 변경사항 (2026-04-13):**
 > - Stage 1b **User Workflow Mapping** 추가 (사용자 관점 실제 업무 프로세스 설계)
 > - Stage 1e **existing/new 분기 제거** → idempotent ensure로 통일
@@ -83,8 +90,11 @@ SaaS 웹 애플리케이션을 **아이디어에서 구현 완료까지** 하나
 | **Environment verified before autonomy** | Stage 1 종료 전에 환경이 완전히 준비되어 있어야 함. "다음 세션 실행/테스트가 실패할 자원"이 있으면 진행 금지 |
 | **Idempotent ensure, never overwrite** | 파일 생성은 없으면 만들고 있으면 건드리지 않음. 프로젝트 상태 분기 없음 |
 | **Destructive ops require consent** | 좀비 kill, lock 파일 제거, 컨테이너 삭제 등 파괴적 동작은 사용자 확인 후 실행 |
-| **Preserve in-progress work** | 환경 정리 시 uncommitted 변경은 `git stash`로 보존, 절대 버리지 않음 |
+| **Preserve in-progress work** | 환경 정리 시 uncommitted 변경은 `git stash`로 보존, 절대 버리지 않음. **기존 tts stash가 미해결인 상태에서 새 stash 누적 금지** |
 | **Deploy is user's final act** | tts는 구현·점검까지만 책임. 배포는 사용자가 최종 리뷰 후 수동 실행 |
+| **Atomic task execution via worktree** | Stage 5 각 태스크는 격리된 git worktree에서 실행. 성공 시 squash merge, 실패 시 worktree 폐기. main은 오염되지 않음 |
+| **Right-sized session isolation** | "중/대" 복잡도는 세션 체이닝(별도 프로세스), "소"는 Task Tool(인세션 서브에이전트). 둘 다 완전 격리이지만 오버헤드가 다름 |
+| **Learn as you forge** | 배치 스킬은 세션 종료 시 일반화 가능하고 비자명한 패턴을 auto-memory에 저장. 다음 실행이 이전 학습을 흡수 |
 
 ---
 
@@ -165,8 +175,12 @@ Stage 3: Task Split
 Stage 4: Task Forging
   task-forge-batch (태스크별 담금질)
 
-Stage 5: Implementation
-  impl-forge-batch (구현 + 점검)
+Stage 5: Implementation (worktree-based, atomic)
+  for each task (dependency order):
+    - git worktree add .worktrees/{task}
+    - impl-forge-batch (구현 + 점검 in worktree)
+    - success: squash merge to main + cleanup worktree
+    - failure: preserve logs + drop worktree (main untouched)
 
 ═══════════════════════════════════════════════════
 tts 종료. 사용자 수동 리뷰 후 ./deploy.sh 직접 실행.
@@ -361,16 +375,40 @@ tts 종료. 사용자 수동 리뷰 후 ./deploy.sh 직접 실행.
 | **Orphan Docker 컨테이너** | `docker ps -a` + 이름/레이블 | 우리가 쓸 컨테이너 이름과 충돌하는 것만 → 사용자 확인 후 `docker rm` |
 | **`/tmp/forge-*` 임시 파일** | `ls /tmp/forge-*` | 이전 배치의 temp 파일 → 자동 제거 (안전) |
 | **`.git/index.lock`** | `ls .git/index.lock` | 살아있는 git 프로세스 확인, 없으면 자동 제거 |
+| **Orphan tts worktree** | `git worktree list` 후 `tts/*` 브랜치 감지 | 이전 Stage 5 실행 잔재 → `git worktree prune` + `.worktrees/` 하위 정리 + `tts/*` 브랜치 삭제 (사용자 확인 후) |
 
-**Uncommitted changes 처리 (from plan-forge-batch):**
+**Uncommitted changes + stash 재귀 누적 방지:**
+
+**Step 1: 기존 tts stash 검사 (무엇보다 먼저)**
+
+```bash
+EXISTING_TTS_STASHES=$(git stash list | grep "tts:" || true)
+```
+
+| 상황 | 동작 |
+|---|---|
+| 기존 tts stash 없음 | 다음 단계 진행 |
+| **기존 tts stash 있음** | **진행 차단.** 사용자에게 stash 목록 리포트 + 필수 결정 요구:<br>(a) 지금 `git stash pop`으로 복원 (충돌 시 수동 해결)<br>(b) `git stash drop`으로 버림 (복구 불가 경고)<br>(c) 유지 + 진행 (**경고 동반**: 새 stash가 쌓일 수 있음) |
+
+재귀 누적 방지 원리: 기존 stash가 해결되지 않으면 새 stash 생성 금지가 기본값. (c) 옵션은 있지만 **사용자가 매번 의식적으로 선택**해야 하므로, 실수로 N층 누적되지 않는다.
+
+**Step 2: 현재 working tree 보존**
+
+기존 tts stash 검사 통과 후:
 
 ```bash
 if [ -n "$(git status --porcelain)" ]; then
-  git stash push -m "tts: in-progress work preserved before auto stages $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  STASH_TAG="tts:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  git stash push -m "$STASH_TAG"
+  echo "$STASH_TAG" >> docs/intake/{project}/zombie-cleanup-log.md
 fi
 ```
 
-**사용자에게 반드시 알림**: "당신의 작업 중 변경을 stash로 보존했습니다. Stage 종료 후 `git stash pop`으로 복원 가능합니다."
+**사용자에게 반드시 알림:** "당신의 작업 중 변경을 `$STASH_TAG`로 stash했습니다. tts 종료 후 `git stash pop`으로 복원 가능합니다. 복원하지 않고 다음 tts를 실행하면 진행이 차단됩니다."
+
+**Step 3: tts 종료 시 리마인더**
+
+tts가 끝날 때 Stage 5 완료 리포트에 stash 복원 안내 포함. 사용자가 방치하지 않도록 경고.
 
 **조치 원칙:**
 
@@ -378,7 +416,8 @@ fi
 |---|---|
 | 소유자 PID가 이미 죽은 stale lock 파일 | **자동 제거** (안전) |
 | `/tmp/forge-*` 임시 파일 | **자동 제거** (안전) |
-| Uncommitted 변경 사항 | **자동 git stash** (보존, 절대 버리지 않음) + 사용자 알림 |
+| Uncommitted 변경 사항 (기존 tts stash 없음) | **자동 git stash** (고유 태그, 사용자 알림) |
+| **기존 tts stash 미해결** | **진행 차단**, 사용자에게 pop/drop/유지 선택 요구 |
 | 필요한 리소스를 쥐고 있는 살아있는 프로세스 | **식별 + 리포트**, 사용자 확인 후 kill |
 | 정체 불명 프로세스 (사용자도 모르겠다 답) | **유지**, "수동 점검 필요" 경고 후 진행 거부 |
 
@@ -405,11 +444,12 @@ fi
 | 9 | `.env` | 없으면 | `.env.example` 복사 (값은 비어있음, 사용자가 채움) |
 | 10 | `dev.sh` | 없으면 | 개발 서버 실행 스크립트 |
 | 11 | `deploy.sh` | 없으면 | 배포 스크립트 템플릿 (infrastructure-plan의 배포 타겟 반영) |
-| 12 | `CLAUDE.md` | 없으면 | 프로젝트 메모리 템플릿 (product-brief 요약 포함) |
-| 13 | `README.md` | 없으면 | 제품명 + 한 줄 설명 + 개발 시작 가이드 |
-| 14 | Tailwind 설정 (`package.json`, `tailwind.config.js`) | 없으면 + infrastructure-plan이 Tailwind 포함 | 기본 설정 + Pretendard font |
-| 15 | 초기 migration | DB 접속 가능 + migrations 테이블 없음 | `uv run python manage.py migrate` |
-| 16 | 첫 commit | 1~15 중 하나라도 새로 생성됐으면 | `git add -A && git commit -m "chore: tts skeleton ensure"` |
+| 12 | `README.md` | 없으면 | 제품명 + 한 줄 설명 + 개발 시작 가이드 |
+| 13 | Tailwind 설정 (`package.json`, `tailwind.config.js`) | 없으면 + infrastructure-plan이 Tailwind 포함 | 기본 설정 + Pretendard font |
+| 14 | 초기 migration | DB 접속 가능 + migrations 테이블 없음 | `uv run python manage.py migrate` |
+| 15 | 첫 commit | 1~14 중 하나라도 새로 생성됐으면 | `git add -A && git commit -m "chore: tts skeleton ensure"` |
+
+**CLAUDE.md를 생성하지 않는 이유:** 프로젝트 런타임에 불필요하고, 가치 있는 CLAUDE.md는 관례·인프라·학습이 쌓이면서 유기적으로 자라는 문서다. 템플릿으로 자동 생성하면 플레이스홀더뿐이라 가치가 낮다. 사용자가 Claude Code를 본격 사용할 시점에 직접 작성하거나, auto-memory의 학습 내역을 기반으로 추후 생성하는 것이 옳다.
 
 **핵심 특성:**
 - 빈 디렉토리: 1~16 모두 실행됨 → 완전한 skeleton
@@ -464,10 +504,25 @@ Intake 번들을 입력으로 받아, 이후 stage들이 어떻게 세션 단위
 1. **설계 문서 수 결정** — 기본 9종, 프로젝트 규모에 따라 일부 통합 가능 (소규모에서 `06-workflow-map`을 `00-overview`에 통합 등)
 2. **태스크 수 N 추정** — `architecture-sketch.md`의 모듈 개수 + 복잡도 기반
 3. **각 논리 단위의 복잡도 분류** — 소/중/대
-4. **세션 분할 결정:**
-   - 소: 1 unit = 1 session
-   - 중: 1 unit = 1 session (watchdog 감시)
-   - 대: 1 unit = 2~3 sessions (의도적 분할)
+4. **실행 방식 결정 (오버헤드 최적화):**
+   - **소: Task Tool (인세션 서브에이전트)** — `claude -p` 세션 체이닝 오버헤드(~30s) 생략. 서브에이전트 컨텍스트 격리는 유지
+   - **중: 1 unit = 1 세션 체이닝** (watchdog 감시)
+   - **대: 1 unit = 2~3 세션 체이닝** (의도적 분할)
+
+   **"소" 엄격 정의 (잘못 판정 시 컨텍스트 오염):**
+   - 파일 생성 1개, ≤300줄
+   - 단일 체크 실행 (예: `makemigrations --check`)
+   - 읽고 요약만 하는 작업
+   - 수정 범위 1개 파일 + ≤20줄
+
+   **"소"가 아닌 것 (강제로 세션 체이닝):**
+   - 코드베이스 탐색이 필요한 작업
+   - 여러 파일 편집
+   - 모든 구현 태스크 (Stage 5)
+   - 모든 담금질 작업 (Stage 2b, 4)
+
+   실제로 "소"에 해당하는 것: Stage 1.5의 light drift check, Stage 3 일부, Stage 2a의 아주 짧은 문서 초안.
+
 5. **의존성 그래프 생성**
 6. **Light drift check** — Stage 1f 종료 후 환경이 바뀌었을 수 있음:
    - 핵심 포트(8000, 5432) 재점검
@@ -684,22 +739,68 @@ Stage 4 종료 후, 담금질에서 드러난 복잡도 변화를 반영하여 S
 
 ---
 
-## Stage 5: Implementation (Auto)
+## Stage 5: Implementation (Auto, Worktree-based)
 
-### 처리
+### 핵심 원칙: Atomic Task Execution via Git Worktree
 
-- `impl-forge-batch`가 각 태스크에 대해:
-  - 1 session: 구현 (subagent-driven-development 패턴)
-  - 1 session: 구현 점검 (impl-check)
-- 의존성 순서 준수
-- 실패 전파 원칙 (상위 실패 → 하위 skip)
-- 각 태스크 완료 시 git commit
+각 태스크는 **격리된 git worktree**에서 실행된다. 실패하거나 부분 구현 상태로 끝나도 main 브랜치는 오염되지 않는다. 성공한 태스크만 squash merge로 main에 반영된다.
+
+**왜 worktree인가:**
+
+1. **Atomic 실행** — 태스크가 실패하면 worktree 폐기. main은 태스크 시작 전과 동일.
+2. **파일 충돌 원천 차단** — 각 태스크의 수정이 격리됨. 공유 파일(`settings.py`, `urls.py`) 충돌 없음.
+3. **Clean failure recovery** — 실패 태스크 재시도 시 "지저분한 상태 정리" 불필요.
+4. **깔끔한 history** — squash merge로 태스크당 main 커밋 1개. 재시도·실험 흔적 main에 안 남음.
+
+**기존 자산 활용:** superpowers의 `using-git-worktrees` 스킬 패턴을 따른다. 별도 worktree 관리 코드 재구현 금지.
+
+### 태스크 실행 플로우
+
+각 태스크 `t{NN}`에 대해 의존성 순서로 순차 실행:
+
+```
+1. Worktree 생성 (최신 main@HEAD 기준)
+   git worktree add .worktrees/{task} -b tts/{task} main
+
+2. Worktree 안에서 impl-forge-batch 실행
+   - Session A: 구현 (subagent-driven-development 패턴)
+   - Session B: 구현 점검 (impl-check)
+   - 모든 세션은 worktree 경로 컨텍스트 전달받음
+
+3a. 성공 경로:
+    cd ../..  # 원래 레포 루트
+    git merge --squash tts/{task}
+    git commit -m "tts({task}): {description from task doc}"
+    git worktree remove .worktrees/{task}
+    git branch -D tts/{task}
+
+3b. 실패 경로:
+    # 실패 증거 보존
+    cp -r .worktrees/{task}/<관련 로그> docs/forge/{project}/failed-tasks/{task}/
+    git worktree remove .worktrees/{task} --force
+    git branch -D tts/{task}
+    # 실패 전파 원칙: 의존하는 하위 태스크 skip
+```
+
+**순차 + Worktree의 중요 원칙: 최신 main에서 분기**
+
+- Task k의 worktree는 **Task k-1이 squash merge된 직후의 main@HEAD**에서 생성
+- 따라서 Task k는 이전 모든 태스크의 변경을 이미 보고 시작
+- 이 원칙이 깨지면(예: 모든 worktree를 초기 main에서 동시 생성) 머지 충돌이 발생
+
+### 병렬 실행은 Future Work
+
+Stage 5 병렬 실행(의존성 없는 태스크 동시 진행)은 큰 속도 향상 가능하지만 복잡도가 증가한다:
+- Worktree 간 상호 보이지 않음 → 병렬 실행 시 충돌 가능
+- 병렬 실행 후 merge 순서 관리 필요
+
+v4에서는 **순차 + worktree**로 시작한다. 검증 후 병렬 확장은 추후 결정.
 
 ### 환경 문제에 대한 태도
 
 **"Stage 5에서 환경 문제가 발생하면 intake가 불완전했다"** 가 기본 가정이다. Stage 1f가 모든 환경 검증을 책임지므로, Stage 5에 와서 "DB 접속 실패", "env var 없음", "외부 서비스 credential 누락" 같은 문제가 생기면 이는 복구가 아니라 **학습**의 대상이다:
 
-1. 해당 태스크 **skip + 에러 상세 기록**
+1. 해당 태스크 worktree 폐기 + 에러 상세 `docs/forge/{project}/env-learnings.md`에 기록
 2. 나머지 태스크는 의존성 따라 계속 진행
 3. 종료 후 리포트에 "Stage 1f에서 누락된 체크 항목" 섹션 생성
 4. 다음 버전 tts에서 1f의 검사 항목을 확장
@@ -822,7 +923,39 @@ tts는 Stage 5에서 **끝난다.** 배포는 tts 범위 밖이다.
 - `tts` (발음 가능한 alias, 원래 text-to-speech 약자지만 여기서는 taste-to-ship)
 - `/tts` (slash command 형식)
 - `풀 워크플로우 시작` (한국어 자연어)
-- `아이디어부터 배포까지` (한국어 자연어)
+- `아이디어부터 구현까지` (한국어 자연어)
+
+### 배치 스킬 공통: 세션 종료 시 Auto-Memory 저장
+
+`design-forge-batch`, `task-forge-batch`, `impl-forge-batch`는 모두 세션 종료 직전에 다음 프롬프트 단계를 실행한다:
+
+> **"Cross-Session Learning"**
+>
+> 이 세션에서 발견한 **일반화 가능하고 비자명한** 패턴·주의사항을 auto-memory 규칙 (`feedback` / `project` / `reference` 타입)에 따라 저장하라.
+>
+> **저장 대상:**
+> - 코드베이스의 숨은 관례 (grep/코드 탐색으로는 안 보이는 것)
+> - 환경 quirk (특정 조건에서 재현되는 실패 패턴)
+> - 도구 gotcha (특정 스킬/CLI/라이브러리의 엣지 케이스)
+> - 이번 세션 이전에 알려지지 않았던 인터페이스·제약
+>
+> **저장 금지:**
+> - 이번 세션에만 해당하는 구체 작업 기록 (git log가 기록)
+> - 자명한 사실 (코드 읽으면 보이는 것)
+> - 한 번만 관찰된 우연
+> - 이미 메모리에 있는 내용 (auto-memory 중복 금지 원칙)
+>
+> **저장 전 확인:**
+> 1. `MEMORY.md`의 index 읽고 기존 메모리와 중복 여부 확인
+> 2. 중복이면 update, 새 패턴이면 new file 생성
+> 3. 저장 후 `MEMORY.md`에 한 줄 pointer 추가
+
+**효과:**
+- 다음 tts 실행이 이전 실행의 학습 흡수
+- 프로젝트 간 공통 패턴 축적 (Django 5.2의 특정 동작 등)
+- 사용자가 직접 CLAUDE.md 유지할 필요 감소 (메모리가 대신 함)
+
+**주의:** 이 단계는 **실패해도 배치 실패가 아니다.** 메모리 저장 오류는 경고만 찍고 세션은 성공으로 종료.
 
 ---
 
@@ -889,13 +1022,23 @@ docs/
 ├── docker-compose.yml
 ├── dev.sh
 ├── deploy.sh (template)
-├── CLAUDE.md (template)
 ├── README.md
 ├── package.json, tailwind.config.js (Tailwind 사용 시)
 └── docs/ (intake/designs/forge 들어갈 공간)
 ```
 
 기존 레포의 경우 이미 있는 파일은 건드리지 않는다 — 결과적으로 아무 변화 없이 Stage 2로 진행될 수 있다.
+
+**CLAUDE.md는 생성하지 않는다** (위 ensure 테이블 설명 참조).
+
+**Stage 5 구현 중 추가되는 디렉토리:**
+
+```
+.worktrees/                              ← Stage 5 worktree 격리 공간
+├── t01/  (태스크 1 실행 중)
+├── t02/  (완료 후 자동 제거됨)
+└── ...
+```
 
 ### Git Commit 정책
 
@@ -927,8 +1070,9 @@ docs/
 | Stage 2 forge 중 실패 | `*-agreed.md` 미존재 문서만 재담금질 |
 | Stage 3 split 실패 | 전체 재실행 (빠름) |
 | Stage 4 forge 중 실패 | 실패한 태스크만 재담금질 |
-| Stage 5 태스크 환경 문제로 실패 | 해당 태스크 skip + 리포트. 나머지 태스크 계속. intake 개선 학습 기록 |
-| Stage 5 태스크 로직 실패 | 실패한 태스크부터 재개 (이전 태스크는 git commit으로 고정) |
+| Stage 5 태스크 환경 문제로 실패 | 해당 태스크 worktree 폐기 + 실패 로그 보존 + env-learnings.md 기록. 나머지 태스크 계속 |
+| Stage 5 태스크 로직 실패 | worktree 폐기, main 무오염. 실패한 태스크부터 재개 (이전 태스크는 squash merge로 고정) |
+| Stage 5 orphan worktree 잔재 | 다음 실행 시 `git worktree prune` + `.worktrees/` 하위 정리. Stage 1f-3 zombie check가 감지 |
 
 ### Watchdog 개입
 
@@ -949,36 +1093,41 @@ docs/
 
 4. `design-forge-batch/` 생성 (plan-forge-batch 복사 + 구현·점검 제거)
 5. `task-forge-batch/` 생성 (plan-forge-batch 복사 + 구현·점검 제거 + UPFRONT 모드)
-6. `impl-forge-batch/` 생성 (plan-forge-batch 복사 + 담금질 제거)
+6. `impl-forge-batch/` 생성 (plan-forge-batch 복사 + 담금질 제거 + **worktree-based 실행**)
 7. 각 스킬은 `_forge-batch-engine`을 import
+8. 각 스킬에 **세션 종료 시 auto-memory 저장 단계** 공통 추가
+9. `impl-forge-batch`는 superpowers `using-git-worktrees` 스킬 패턴 활용
 
 ### Phase 3: 보조 스킬
 
-8. `user-workflow-interview/` 생성 (Stage 1b 로직: 7차원 사용자 업무 프로세스 인터뷰)
-9. `env-readiness/` 생성 (Stage 1f 로직: infra intake + static check + zombie check + idempotent skeleton ensure)
-10. `session-planner/` 생성 (Stage 1.5 로직 + 재평가 + light drift check)
-11. `ui-mockup` 업그레이드 (Gemini Nano Banana Pro + design-shotgun 기능 포팅: parallel generation, evolve, serve HTTP feedback, iterate)
+10. `user-workflow-interview/` 생성 (Stage 1b 로직: 7차원 사용자 업무 프로세스 인터뷰)
+11. `env-readiness/` 생성 (Stage 1f 로직: infra intake + static check + zombie check + idempotent skeleton ensure + stash 재귀 방지)
+12. `session-planner/` 생성 (Stage 1.5 로직 + 재평가 + light drift check + "소/중/대" 실행 방식 결정)
+13. `ui-mockup` 업그레이드 (Gemini Nano Banana Pro + design-shotgun 기능 포팅: parallel generation, evolve, serve HTTP feedback, iterate)
 
 ### Phase 4: 오케스트레이터
 
-12. `taste-to-ship/` (tts) 생성
-13. Stage 1~5 체이닝 구현 (idempotent ensure 모델, 분기 없음)
-14. 트리거 키워드 등록 (`taste-to-ship`, `tts`, `/tts`, `풀 워크플로우 시작`, `아이디어부터 구현까지`)
-15. Tech-stack baseline skeleton 템플릿 작성 (Django + HTMX + Postgres + Tailwind 표준 starter. synco 특정 구조 피함)
+14. `taste-to-ship/` (tts) 생성
+15. Stage 1~5 체이닝 구현 (idempotent ensure 모델, 분기 없음)
+16. 트리거 키워드 등록 (`taste-to-ship`, `tts`, `/tts`, `풀 워크플로우 시작`, `아이디어부터 구현까지`)
+17. Tech-stack baseline skeleton 템플릿 작성 (Django + HTMX + Postgres + Tailwind 표준 starter. CLAUDE.md 제외. `.gitignore`에 `.worktrees/` 포함)
 
 ### Phase 5: 검증 (2가지 경로)
 
-16. **빈 디렉토리에서 검증** — tts 실행하여 bootstrap + 최소 기능 구현까지 완주 (e.g., "간단한 TODO SaaS")
-17. **기존 레포에서 검증** — synco 레포에 작은 기능 추가를 tts로 진행 (e.g., "후보자 북마크 기능"). 기존 파일이 건드려지지 않음을 확인
-18. 각 Stage 개별 테스트
-19. 실패/resume 시나리오 테스트 (중간에 좀비 발생, 세션 hang, 배치 도중 중단 등)
-20. Zombie check 시나리오 테스트 (의도적으로 orphan 생성 후 tts 실행)
+18. **빈 디렉토리에서 검증** — tts 실행하여 bootstrap + 최소 기능 구현까지 완주 (e.g., "간단한 TODO SaaS")
+19. **기존 레포에서 검증** — synco 레포에 작은 기능 추가를 tts로 진행 (e.g., "후보자 북마크 기능"). 기존 파일이 건드려지지 않음을 확인
+20. 각 Stage 개별 테스트
+21. 실패/resume 시나리오 테스트 (중간에 좀비 발생, 세션 hang, 배치 도중 중단 등)
+22. Zombie check 시나리오 테스트 (의도적으로 orphan 생성 후 tts 실행)
+23. Stash 재귀 방지 테스트 (의도적으로 이전 tts stash 방치 후 재실행)
+24. Worktree 격리 테스트 (태스크 중간 실패 시 main 무오염 확인)
+25. Auto-memory 축적 테스트 (여러 번 tts 실행 후 메모리 품질 검토)
 
 ### Phase 6: 전환 결정
 
-21. 실제 프로젝트 2~3건 taste-to-ship으로 진행
-22. 안정성 확인
-23. 기존 `plan-forge-batch` 삭제 여부 판단 (유지할 수도 있음)
+26. 실제 프로젝트 2~3건 taste-to-ship으로 진행
+27. 안정성 확인
+28. 기존 `plan-forge-batch` 삭제 여부 판단 (유지할 수도 있음)
 
 ---
 
@@ -993,7 +1142,11 @@ docs/
 - **Q7.** Django app 생성 시점: Stage 1f-4에서 만들지 않고 Stage 5에서 태스크로 생성. `architecture-sketch`의 모듈 이름이 그대로 Django app 이름으로 사용되는가, 아니면 네이밍 변환이 필요한가? → 구현 계획 단계에서 결정.
 - **Q8.** Zombie check가 false positive를 낼 경우(사용자 정상 작업 중인 프로세스를 zombie로 오판)? → 절대 자동 kill하지 않음. 항상 사용자 확인 후 조치. 사용자가 "아니, 그건 살려둬"라고 답하면 워크플로우 중단하고 사용자에게 환경 정리 후 재시작 요청. plan-forge-batch의 "pytest 실패 기준"을 적용하여 false positive 최소화.
 - **Q9.** Stage 1b의 user workflow 7차원이 모든 SaaS에 적합한가? 특정 도메인(예: 관리자 도구, B2B, 내부 도구)에서 추가 차원이 필요할 수 있음 → 첫 버전에서는 7차원 고정, 실사용에서 확장.
-- **Q10.** Stage 5에서 태스크 환경 실패 시 "학습 기록"은 구체적으로 어떻게 저장하고 활용하는가? → 구현 계획 단계에서 `forge/{project}/env-learnings.md` 같은 파일 형식 확정.
+- **Q10.** Stage 5에서 태스크 환경 실패 시 "학습 기록"은 구체적으로 어떻게 저장하고 활용하는가? → 구현 계획 단계에서 `forge/{project}/env-learnings.md` 파일 형식 확정.
+- **Q11.** 배치 스킬의 auto-memory 저장 프롬프트가 낮은 quality의 메모리를 축적할 위험은? → "일반화 가능 + 비자명" 기준을 엄격 적용. 실사용 후 메모리 품질을 주기적으로 검토. 필요 시 `auto-memory` 원칙의 "한 번만 관찰된 것은 저장 금지" 규칙 강화.
+- **Q12.** Task Tool 대 세션 체이닝의 "소" 기준이 부정확하면 어떻게 되는가? → 부정확해도 subagent 격리가 있으므로 컨텍스트 오염은 제한적. 단, summary가 의외로 길어지면 부모 세션 컨텍스트 부담. watchdog이 session 시간 초과를 감지하듯 summary 길이도 감시 가능. 실사용에서 문제 발견 시 기준 조정.
+- **Q13.** Stage 5 worktree 병렬 실행은 언제 도입할 것인가? → v4에서는 순차만. 병렬 실행 시 충돌 처리 복잡도 높음. 검증 후 v5에서 의존성 없는 태스크 그룹에 한해 도입 고려.
+- **Q14.** Worktree `.worktrees/` 디렉토리는 `.gitignore`에 포함되어야 하는가? → **Yes.** Stage 1f-4의 `.gitignore` 템플릿에 `.worktrees/` 추가 필요. 기존 레포면 사용자에게 안내 후 수동 추가 요청.
 
 ---
 
