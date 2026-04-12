@@ -415,3 +415,60 @@ class TestFunnelNavigation:
         content = resp.content.decode()
         assert "홍길동" in content  # 관심 결과 후보자
         assert "김철수" not in content  # 미응답 결과 후보자는 필터됨
+
+
+# --- Tab badge new indicator tests (t24) ---
+
+
+class TestTabBadgeNewIndicator:
+    """탭 뱃지 data 속성 렌더링 검증 (마크업 회귀 테스트)."""
+
+    @pytest.mark.django_db
+    def test_all_tabs_have_data_tab_attributes(
+        self, auth_client, project
+    ):
+        """탭바의 모든 6개 버튼에 data-tab 속성이 있어야 한다."""
+        resp = auth_client.get(f"/projects/{project.pk}/")
+        content = resp.content.decode()
+        for tab_name in ["overview", "search", "contacts", "submissions", "interviews", "offers"]:
+            assert f'data-tab="{tab_name}"' in content, f'data-tab="{tab_name}" not found'
+
+    @pytest.mark.django_db
+    def test_badge_present_with_data_attrs_when_count_positive(
+        self, auth_client, project, candidate, user_with_org
+    ):
+        """컨택이 있으면 contacts 탭 뱃지에 data-badge-count와 data-latest가 렌더링된다."""
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user_with_org,
+            channel="전화",
+            contacted_at=timezone.now(),
+            result="응답",
+        )
+        resp = auth_client.get(f"/projects/{project.pk}/")
+        content = resp.content.decode()
+
+        # contacts 탭 버튼 블록 내에 data-badge-count와 data-latest가 존재해야 한다
+        contacts_start = content.find('data-tab="contacts"')
+        assert contacts_start != -1, "contacts tab button not found"
+        # 다음 탭 버튼까지의 범위로 한정
+        contacts_end = content.find('data-tab="submissions"', contacts_start)
+        contacts_block = content[contacts_start:contacts_end]
+        assert "data-badge-count" in contacts_block, "data-badge-count not in contacts tab"
+        assert "data-latest" in contacts_block, "data-latest not in contacts tab"
+
+    @pytest.mark.django_db
+    def test_badge_absent_when_count_zero(
+        self, auth_client, project
+    ):
+        """컨택이 없으면 contacts 탭 뱃지 span이 렌더링되지 않아야 한다."""
+        resp = auth_client.get(f"/projects/{project.pk}/")
+        content = resp.content.decode()
+
+        # contacts 탭 버튼 블록 내에 data-badge-count가 없어야 한다
+        contacts_start = content.find('data-tab="contacts"')
+        assert contacts_start != -1, "contacts tab button not found"
+        contacts_end = content.find('data-tab="submissions"', contacts_start)
+        contacts_block = content[contacts_start:contacts_end]
+        assert "data-badge-count" not in contacts_block, "badge should not render when count=0"
