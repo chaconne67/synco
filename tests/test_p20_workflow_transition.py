@@ -472,3 +472,58 @@ class TestTabBadgeNewIndicator:
         contacts_end = content.find('data-tab="submissions"', contacts_start)
         contacts_block = content[contacts_start:contacts_end]
         assert "data-badge-count" not in contacts_block, "badge should not render when count=0"
+
+
+# --- Workflow edge case tests (t25) ---
+
+
+class TestWorkflowEdgeCases:
+    """워크플로우 전환 엣지 케이스."""
+
+    @pytest.mark.django_db
+    def test_submission_create_duplicate_candidate_rejected(
+        self, auth_client, project, candidate, interested_contact, user_with_org
+    ):
+        """같은 후보자에 대해 중복 Submission 생성 시도 시 에러.
+
+        interested_contact fixture가 있어야 candidate가 SubmissionForm의
+        queryset에 포함된다. 기존 Submission이 있으면 queryset에서 제외되어
+        유효성 검사가 실패해야 한다.
+        """
+        Submission.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user_with_org,
+        )
+        resp = auth_client.post(
+            f"/projects/{project.pk}/submissions/new/",
+            {"candidate": str(candidate.pk), "notes": "중복"},
+        )
+        # 유효성 검사 실패로 폼 재렌더링
+        assert resp.status_code == 200
+        assert "HX-Retarget" not in resp.headers
+        # 중복이 실제로 방지되었는지 확인
+        assert Submission.objects.filter(
+            project=project, candidate=candidate
+        ).count() == 1
+
+    @pytest.mark.django_db
+    def test_contact_update_interest_banner_disappears_on_tab_reload(
+        self, auth_client, project, candidate, user_with_org
+    ):
+        """유도 배너는 일회성이다. 컨택 탭을 새로고침하면 배너가 없어야 한다."""
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user_with_org,
+            channel="전화",
+            contacted_at=timezone.now(),
+            result="관심",
+        )
+        resp = auth_client.get(
+            f"/projects/{project.pk}/tab/contacts/",
+            HTTP_HX_REQUEST="true",
+        )
+        content = resp.content.decode()
+        # 컨택 탭 자체에는 배너가 없음 (배너는 contact_update 응답에만 포함)
+        assert "interest-banner" not in content
