@@ -198,7 +198,81 @@ def kakao_callback(request):
 
 @login_required
 def settings_page(request):
-    return render(request, "accounts/settings.html")
+    return redirect("settings_profile")
+
+
+@login_required
+def settings_profile(request):
+    """GET /accounts/settings/profile/ — Profile tab."""
+    if getattr(request, "htmx", None):
+        return render(request, "accounts/partials/settings_content.html", {"active_tab": "profile"})
+    return render(request, "accounts/settings.html", {"active_tab": "profile"})
+
+
+@login_required
+def settings_email(request):
+    """GET /accounts/settings/email/ — Email tab."""
+    from .models import EmailMonitorConfig
+
+    config = EmailMonitorConfig.objects.filter(user=request.user).first()
+    context = {"config": config, "active_tab": "email"}
+
+    if getattr(request, "htmx", None):
+        return render(request, "accounts/partials/settings_email.html", context)
+    return render(request, "accounts/settings.html", {
+        **context,
+        "tab_template": "accounts/partials/settings_email.html",
+    })
+
+
+@login_required
+def settings_telegram(request):
+    """GET /accounts/settings/telegram/ — Telegram tab."""
+    from .models import TelegramBinding
+
+    try:
+        binding = TelegramBinding.objects.get(user=request.user)
+        is_bound = binding.is_active
+        verified_at = binding.verified_at
+    except TelegramBinding.DoesNotExist:
+        is_bound = False
+        verified_at = None
+
+    context = {"is_bound": is_bound, "verified_at": verified_at, "active_tab": "telegram"}
+
+    if getattr(request, "htmx", None):
+        return render(request, "accounts/partials/settings_telegram.html", context)
+    return render(request, "accounts/settings.html", {
+        **context,
+        "tab_template": "accounts/partials/settings_telegram.html",
+    })
+
+
+@login_required
+def settings_notify(request):
+    """GET/POST /accounts/settings/notify/ — Notification preferences tab."""
+    from .forms import NotificationPreferenceForm
+    from .models import NotificationPreference
+
+    pref, _created = NotificationPreference.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = NotificationPreferenceForm(request.POST)
+        if form.is_valid():
+            pref.preferences = form.to_preferences()
+            pref.save(update_fields=["preferences", "updated_at"])
+
+    form = NotificationPreferenceForm()
+    form.load_from_preferences(pref.preferences)
+
+    context = {"form": form, "active_tab": "notify"}
+
+    if getattr(request, "htmx", None):
+        return render(request, "accounts/partials/settings_notify.html", context)
+    return render(request, "accounts/settings.html", {
+        **context,
+        "tab_template": "accounts/partials/settings_notify.html",
+    })
 
 
 def logout_view(request):
@@ -273,7 +347,7 @@ def email_oauth_callback(request):
     config.is_active = True
     config.save()
 
-    return redirect(reverse("email_settings"))
+    return redirect(reverse("settings_email"))
 
 
 @login_required
@@ -324,4 +398,4 @@ def email_disconnect(request):
 
         config.delete()
 
-    return redirect(reverse("email_settings"))
+    return redirect(reverse("settings_email"))

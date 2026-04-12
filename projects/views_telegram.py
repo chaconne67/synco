@@ -367,6 +367,73 @@ def telegram_unbind(request):
 
 
 @login_required
+def telegram_bind_partial(request):
+    """Settings tab partial for telegram binding. Reuses bind logic."""
+    template = "accounts/partials/settings_telegram.html"
+
+    if request.method == "POST":
+        user = request.user
+
+        # Invalidate previous codes
+        TelegramVerification.objects.filter(
+            user=user,
+            consumed=False,
+        ).update(consumed=True)
+
+        code = None
+        for _ in range(3):
+            candidate_code = "".join(random.choices(string.digits, k=6))
+            collision = TelegramVerification.objects.filter(
+                code=candidate_code,
+                consumed=False,
+                expires_at__gt=timezone.now(),
+            ).exists()
+            if not collision:
+                code = candidate_code
+                break
+
+        if code is None:
+            return render(
+                request,
+                template,
+                {"error": "코드 생성에 실패했습니다. 다시 시도해주세요.", "active_tab": "telegram"},
+            )
+
+        TelegramVerification.objects.create(
+            user=user,
+            code=code,
+            expires_at=timezone.now() + timedelta(minutes=5),
+        )
+
+        try:
+            binding = TelegramBinding.objects.get(user=user)
+            is_bound = binding.is_active
+        except TelegramBinding.DoesNotExist:
+            is_bound = False
+
+        return render(
+            request,
+            template,
+            {"code": code, "is_bound": is_bound, "expires_minutes": 5, "active_tab": "telegram"},
+        )
+
+    # GET
+    try:
+        binding = TelegramBinding.objects.get(user=request.user)
+        is_bound = binding.is_active
+        verified_at = binding.verified_at
+    except TelegramBinding.DoesNotExist:
+        is_bound = False
+        verified_at = None
+
+    return render(
+        request,
+        template,
+        {"is_bound": is_bound, "verified_at": verified_at, "active_tab": "telegram"},
+    )
+
+
+@login_required
 @require_POST
 def telegram_test_send(request):
     """POST /telegram/test/ — Send a test message."""

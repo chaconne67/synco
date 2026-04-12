@@ -7,7 +7,12 @@ urlpatterns = [
     path("accounts/login/", views.login_page, name="login"),
     path("accounts/kakao/login/", views.kakao_login, name="kakao_login"),
     path("accounts/kakao/callback/", views.kakao_callback, name="kakao_callback"),
+    # Settings tabs
     path("accounts/settings/", views.settings_page, name="settings"),
+    path("accounts/settings/profile/", views.settings_profile, name="settings_profile"),
+    path("accounts/settings/email/", views.settings_email, name="settings_email"),
+    path("accounts/settings/telegram/", views.settings_telegram, name="settings_telegram"),
+    path("accounts/settings/notify/", views.settings_notify, name="settings_notify"),
     path("accounts/logout/", views.logout_view, name="logout"),
     path("terms/", views.terms, name="terms"),
     path("privacy/", views.privacy, name="privacy"),
