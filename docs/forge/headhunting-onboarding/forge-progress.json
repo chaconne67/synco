@@ -410,7 +410,7 @@
       "phase": 2,
       "title": "설정 탭 템플릿 구현",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
