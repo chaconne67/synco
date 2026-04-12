@@ -502,7 +502,7 @@
       "slug": "t17",
       "phase": 2,
       "title": "사이드바 + 모바일 네비게이션 업데이트",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -515,9 +515,20 @@
       ],
       "artifacts": [
         "t17/design-spec.md",
-        "t17/impl-plan.md"
+        "t17/impl-plan.md",
+        "t17/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 5,
+          "rebutted": 2,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t18",

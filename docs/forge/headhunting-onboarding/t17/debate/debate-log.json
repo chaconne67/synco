@@ -1,0 +1,93 @@
+{
+  "topic": "t17",
+  "document": "docs/forge/headhunting-onboarding/t17/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Mobile bottom nav layout overflow",
+              "attack": "7 tabs with min-w-[64px] = 448px exceeds typical 360-390px mobile viewport, breaking owner mobile nav",
+              "action": "accepted",
+              "response": "Valid. Plan must address mobile layout overflow with spacing/sizing adjustments.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "No test cases for role-gated nav rendering",
+              "attack": "Step 3 only runs existing tests. No tests verify owner sees org link or non-owner doesn't.",
+              "action": "accepted",
+              "response": "Valid. Add basic tests for owner/non-owner nav rendering.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "Step 2 title contradicts body",
+              "attack": "Title says 'replaces reference' but code adds without removing reference.",
+              "action": "accepted",
+              "response": "Misleading title. Design spec says add, not replace. Fix wording.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "MAJOR",
+              "title": "--timeout=30 requires uninstalled pytest-timeout",
+              "attack": "pytest-timeout not in dependencies. Verification command will fail.",
+              "action": "accepted",
+              "response": "Confirmed via execution. Remove --timeout=30.",
+              "evidence_type": "execution_result",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MAJOR",
+              "title": "Hardcoded URLs instead of {% url %}",
+              "attack": "Menu uses hardcoded /org/ instead of Django {% url %} tag.",
+              "action": "rebutted",
+              "response": "All existing nav links use hardcoded URLs. Introducing {% url %} for only org would be inconsistent. Codebase convention.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-06",
+              "severity": "MAJOR",
+              "title": "DRY violation across nav files",
+              "attack": "Full org menu HTML duplicated in sidebar and mobile nav.",
+              "action": "rebutted",
+              "response": "Sidebar and mobile have different HTML structure/CSS. All existing items follow same pattern. Established convention.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "Position inconsistency between sidebar and mobile",
+              "attack": "Sidebar adds after settings, mobile adds before settings.",
+              "action": "accepted",
+              "response": "Clarify to 'before settings' consistently in both.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 7,
+        "accepted": 5,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
