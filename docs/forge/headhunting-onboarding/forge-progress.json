@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 351044,
+  "last_pid": 362669,
   "execution_order": [
     "t03",
     "t04",
@@ -196,7 +196,7 @@
       "slug": "t07",
       "phase": 1,
       "title": "사이드바 역할별 메뉴 필터링",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -206,8 +206,20 @@
       "depends_on": [
         "t05"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t07/impl-plan-agreed.md"
+      ],
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 3,
+          "rebutted": 4,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t08",
