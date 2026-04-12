@@ -226,7 +226,7 @@
       "phase": 1,
       "title": "프로젝트 생성 시 담당 컨설턴트 지정",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
