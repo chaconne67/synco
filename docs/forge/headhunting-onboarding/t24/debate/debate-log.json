@@ -1,0 +1,83 @@
+{
+  "topic": "t24",
+  "document": "docs/forge/headhunting-onboarding/t24/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Manual verification Step 3.4 conflicts with known limitation",
+              "attack": "Tab click doesn't dispatch tabChanged, so ring removal verification in Step 3.4 will always fail",
+              "action": "accepted",
+              "response": "Correct. Will revise Step 3 to use funnel navigation path that dispatches tabChanged",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Tests only verify markup, not actual new-indicator behavior",
+              "attack": "Goal says 'test functionality works correctly' but tests only check data attributes in HTML, not JS behavior",
+              "action": "accepted",
+              "response": "Valid. Will narrow Goal to 'markup regression test (auto) + behavior verification (manual)'",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "Assertions too loose — whole-page string search",
+              "attack": "assert 'data-badge-count' in content matches any occurrence on page, not specific to contacts tab",
+              "action": "accepted",
+              "response": "Valid. Will strengthen to verify attributes within specific tab button contexts",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "MAJOR",
+              "title": "Missing tabs in data-tab assertion (4 of 6)",
+              "attack": "Template has 6 tabs but test only checks 4, missing search and offers",
+              "action": "accepted",
+              "response": "Valid. Will assert all 6 tabs",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "No negative case — badge absent when count=0",
+              "attack": "No test verifies badge is absent when tab_counts=0 despite conditional rendering",
+              "action": "accepted",
+              "response": "Valid. Will add negative test for empty project",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MINOR",
+              "title": "Manual verification lacks sessionStorage initialization",
+              "attack": "Step 3 doesn't specify clearing sessionStorage, leading to inconsistent results",
+              "action": "accepted",
+              "response": "Valid. Will add prerequisite for fresh browser state",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 6,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}

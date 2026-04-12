@@ -718,7 +718,7 @@
       "slug": "t24",
       "phase": 3,
       "title": "탭 뱃지 신규(new) 표시",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -730,9 +730,20 @@
       ],
       "artifacts": [
         "t24/design-spec.md",
-        "t24/impl-plan.md"
+        "t24/impl-plan.md",
+        "t24/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 6,
+          "accepted": 6,
+          "rebutted": 0,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t25",
