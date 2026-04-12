@@ -100,7 +100,7 @@ class TestOrgMembers:
         )
         client = TestClient()
         client.force_login(owner)
-        response = client.post(f"/org/members/{m.pk}/approve/")
+        client.post(f"/org/members/{m.pk}/approve/")
         m.refresh_from_db()
         assert m.status == "active"
 
@@ -112,7 +112,7 @@ class TestOrgMembers:
         )
         client = TestClient()
         client.force_login(owner)
-        response = client.post(f"/org/members/{m.pk}/reject/")
+        client.post(f"/org/members/{m.pk}/reject/")
         m.refresh_from_db()
         assert m.status == "rejected"
 
@@ -124,7 +124,7 @@ class TestOrgMembers:
         )
         client = TestClient()
         client.force_login(owner)
-        response = client.post(f"/org/members/{m.pk}/role/", {"role": "viewer"})
+        client.post(f"/org/members/{m.pk}/role/", {"role": "viewer"})
         m.refresh_from_db()
         assert m.role == "viewer"
 
@@ -146,7 +146,7 @@ class TestOrgMembers:
         )
         client = TestClient()
         client.force_login(owner)
-        response = client.post(f"/org/members/{m.pk}/remove/")
+        client.post(f"/org/members/{m.pk}/remove/")
         assert not Membership.objects.filter(pk=m.pk).exists()
 
     def test_cannot_remove_self(self, owner_setup):
@@ -173,7 +173,7 @@ class TestOrgInvites:
         owner, org = owner_setup
         client = TestClient()
         client.force_login(owner)
-        response = client.post(
+        client.post(
             "/org/invites/create/",
             {"role": "consultant", "max_uses": "5"},
         )
@@ -202,7 +202,7 @@ class TestOrgInvites:
         )
         client = TestClient()
         client.force_login(owner)
-        response = client.post(f"/org/invites/{code.pk}/deactivate/")
+        client.post(f"/org/invites/{code.pk}/deactivate/")
         code.refresh_from_db()
         assert code.is_active is False
 
