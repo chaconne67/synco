@@ -355,9 +355,11 @@ class TestFunnelNavigation:
             HTTP_HX_REQUEST="true",
         )
         content = resp.content.decode()
+        normalized = content.replace("\n", "").replace("  ", "")
         # 관심 카운트는 1이어야 함 (미응답 제외)
-        assert "관심" in content
+        assert '>관심 <span class="font-semibold text-gray-800">1</span>' in normalized
         # 컨택 카운트는 2이어야 함 (RESERVED 제외, 나머지 모두)
+        assert '>컨택 <span class="font-semibold text-gray-800">2</span>' in normalized
 
     @pytest.mark.django_db
     def test_overview_funnel_excludes_reserved_from_contacts(
