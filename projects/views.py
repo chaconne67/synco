@@ -4,7 +4,7 @@ import uuid
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Q
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -343,6 +343,27 @@ def project_create(request):
     )
 
 
+def _build_tab_context(project):
+    """Build tab_counts and tab_latest for project detail template."""
+    tab_counts = {
+        "contacts": project.contacts.count(),
+        "submissions": project.submissions.count(),
+        "interviews": Interview.objects.filter(submission__project=project).count(),
+        "offers": Offer.objects.filter(submission__project=project).count(),
+    }
+    tab_latest = {
+        "contacts": project.contacts.aggregate(latest=Max("created_at"))["latest"],
+        "submissions": project.submissions.aggregate(latest=Max("created_at"))["latest"],
+        "interviews": Interview.objects.filter(
+            submission__project=project
+        ).aggregate(latest=Max("created_at"))["latest"],
+        "offers": Offer.objects.filter(
+            submission__project=project
+        ).aggregate(latest=Max("created_at"))["latest"],
+    }
+    return tab_counts, tab_latest
+
+
 @login_required
 @membership_required
 def project_detail(request, pk):
@@ -350,13 +371,7 @@ def project_detail(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    # 탭 배지 카운트
-    tab_counts = {
-        "contacts": project.contacts.count(),
-        "submissions": project.submissions.count(),
-        "interviews": Interview.objects.filter(submission__project=project).count(),
-        "offers": Offer.objects.filter(submission__project=project).count(),
-    }
+    tab_counts, tab_latest = _build_tab_context(project)
 
     # 개요 탭 데이터 인라인 (초기 로드 시 추가 요청 없이)
     overview_context = _build_overview_context(project)
@@ -367,6 +382,7 @@ def project_detail(request, pk):
         {
             "project": project,
             "tab_counts": tab_counts,
+            "tab_latest": tab_latest,
             "active_tab": "overview",
             **overview_context,
         },
@@ -418,12 +434,7 @@ def project_delete(request, pk):
     has_submissions = project.submissions.exists()
 
     if has_contacts or has_submissions:
-        tab_counts = {
-            "contacts": project.contacts.count(),
-            "submissions": project.submissions.count(),
-            "interviews": Interview.objects.filter(submission__project=project).count(),
-            "offers": Offer.objects.filter(submission__project=project).count(),
-        }
+        tab_counts, tab_latest = _build_tab_context(project)
         overview_context = _build_overview_context(project)
         return render(
             request,
@@ -431,6 +442,7 @@ def project_delete(request, pk):
             {
                 "project": project,
                 "tab_counts": tab_counts,
+                "tab_latest": tab_latest,
                 "active_tab": "overview",
                 "error_message": "컨택 또는 제출 이력이 있어 삭제할 수 없습니다.",
                 **overview_context,
