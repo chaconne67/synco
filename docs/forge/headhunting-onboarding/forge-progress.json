@@ -199,7 +199,7 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "939ea6d",
-      "verification_status": "pending",
+      "verification_status": "running",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
