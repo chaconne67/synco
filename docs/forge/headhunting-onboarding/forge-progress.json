@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 374850,
+  "last_pid": 376782,
   "execution_order": [
     "t03",
     "t04",
@@ -225,7 +225,7 @@
       "slug": "t08",
       "phase": 1,
       "title": "프로젝트 생성 시 담당 컨설턴트 지정",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -235,8 +235,20 @@
       "depends_on": [
         "t05"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t08/impl-plan-agreed.md"
+      ],
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 5,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t09",

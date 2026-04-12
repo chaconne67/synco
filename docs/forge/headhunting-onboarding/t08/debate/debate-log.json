@@ -1,0 +1,93 @@
+{
+  "topic": "t08",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Parameter name mismatch (org vs organization)",
+              "attack": "Plan uses org=None but codebase uses organization=None. Implementing as-is causes TypeError in all form call sites.",
+              "action": "accepted",
+              "response": "Confirmed. All call sites and __init__ use organization=. Plan must match.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "Step 4 overwrites collision approval workflow + existing M2M conflict",
+              "attack": "Plan's Step 4 replaces entire project_create body, losing collision/approval/notification flow. Also existing add(request.user) conflicts with form-based assignment.",
+              "action": "accepted",
+              "response": "Confirmed. Must preserve both collision branches, call form.save_m2m(), remove old add(request.user), add default fallback.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "Update view has no implementation step or test",
+              "attack": "Goal says create/update but steps only cover create. No rules for empty selection on update.",
+              "action": "accepted",
+              "response": "Confirmed. Added Step 4.5 for project_update. Policy: empty selection on update is allowed (no default fallback unlike create).",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "Permission premise conflicts with actual code",
+              "attack": "Design spec says owner-only but code uses @membership_required. Plan doesn't resolve this.",
+              "action": "accepted",
+              "response": "Design spec premise overridden by t05 ruling. Plan explicitly states permission is @membership_required unchanged.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "Tests too narrow scope",
+              "attack": "Only 2 happy-path tests. No collision path, update path, or negative cases.",
+              "action": "partial",
+              "response": "File placement (test_rbac.py) kept. Test scope expanded to 6 cases covering create/update/consultant/negative.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "No negative security test cases",
+              "attack": "No tests for cross-org user PK injection.",
+              "action": "accepted",
+              "response": "Added cross-org PK rejection test. distinct() unnecessary due to OneToOneField.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MINOR",
+              "title": "CheckboxSelectMultiple scalability concern",
+              "attack": "Large orgs will have unusable checkbox lists.",
+              "action": "rebutted",
+              "response": "Valid long-term concern but not plan-level issue. Current deployment has small orgs (<10). Design spec requires this widget.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 7,
+        "accepted": 5,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
