@@ -659,8 +659,8 @@
       "phase": 3,
       "title": "예정 목록에 '컨택 등록' 버튼 추가",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "6199756",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -671,7 +671,7 @@
         "t22/impl-plan.md",
         "t22/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
