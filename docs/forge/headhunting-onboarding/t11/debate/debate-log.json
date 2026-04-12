@@ -1,0 +1,93 @@
+{
+  "topic": "t11",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "기존 사용자 데이터 마이그레이션 누락",
+              "attack": "makemigrations+migrate만 실행. 기존 사용자에게 NotificationPreference 레코드 생성 전략 없음.",
+              "action": "rebutted",
+              "response": "후속 t13에서 get_or_create 패턴 확정. t11 배포 시점에 접근 코드 없음. 문서에 lazy creation NOTE 추가.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "MAJOR",
+              "title": "JSONField 스키마 유효성 검증 부재",
+              "attack": "preferences 필드에 validator/clean() 없음. Admin/shell에서 잘못된 JSON 저장 가능.",
+              "action": "partial",
+              "response": "간단한 clean() 추가 수용. NOTIFICATION_TYPES/CHANNELS 상수화. 전체 REQUIRED_SCHEMA 순회는 과잉으로 판단.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MINOR",
+              "title": "Admin 등록 검증 누락",
+              "attack": "Step 6 pytest만으로는 admin 등록 오류 감지 불가.",
+              "action": "accepted",
+              "response": "admin.site._registry 확인 테스트 추가.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MINOR",
+              "title": "OneToOne 제약 테스트 범위 과도",
+              "attack": "pytest.raises(Exception) — IntegrityError 대신 모든 예외 포착.",
+              "action": "accepted",
+              "response": "IntegrityError로 명시 변경.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MINOR",
+              "title": "기본값 중복 하드코딩",
+              "attack": "테스트 DEFAULT_PREFS와 모델 _default_notification_preferences()가 동일 구조 이중 정의.",
+              "action": "accepted",
+              "response": "모델에서 기본값 함수를 공개하고 테스트에서 import.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "JSONField GinIndex 미적용",
+              "attack": "향후 preferences 내부 키 기반 필터링 시 Full Table Scan.",
+              "action": "rebutted",
+              "response": "현재 내부 키 필터링 쿼리 없음. B2B 플랫폼 수백~수천 규모. YAGNI.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MINOR",
+              "title": "문서 내부 불일치",
+              "attack": "계획서 내 두 섹션에서 기본값 설정 방식 모순.",
+              "action": "rebutted",
+              "response": "원본에 해당 불일치 없음. Gemini가 별도 문서 혼동. False positive.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 7,
+        "accepted": 4,
+        "rebutted": 3,
+        "escalated": 0
+      }
+    }
+  }
+}

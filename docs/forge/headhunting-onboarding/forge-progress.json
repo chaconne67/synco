@@ -318,7 +318,7 @@
       "slug": "t11",
       "phase": 2,
       "title": "NotificationPreference 모델 추가",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -329,10 +329,19 @@
         "t10"
       ],
       "artifacts": [
-        "t11/design-spec.md",
-        "t11/impl-plan.md"
+        "t11/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 4,
+          "rebutted": 3,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t12",
