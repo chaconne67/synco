@@ -750,8 +750,8 @@
       "phase": 3,
       "title": "통합 테스트 + 엣지 케이스",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "1cb54cf",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -767,7 +767,7 @@
       "artifacts": [
         "t25/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
