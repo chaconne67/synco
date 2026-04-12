@@ -628,7 +628,7 @@
       "phase": 3,
       "title": "contact_update() '관심' 결과 시 추천 유도 배너",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
