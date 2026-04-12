@@ -1,8 +1,11 @@
 import os
 
 from django import forms
+from django.contrib.auth import get_user_model
 
 from clients.models import Client
+
+User = get_user_model()
 
 from .models import (
     Contact,
@@ -24,7 +27,7 @@ INPUT_CSS = (
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ["client", "title", "jd_source", "jd_text", "jd_file"]
+        fields = ["client", "title", "jd_source", "jd_text", "jd_file", "assigned_consultants"]
         widgets = {
             "client": forms.Select(attrs={"class": INPUT_CSS}),
             "title": forms.TextInput(
@@ -52,11 +55,22 @@ class ProjectForm(forms.ModelForm):
             "jd_file": "JD 파일",
         }
 
+    assigned_consultants = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label="담당 컨설턴트",
+    )
+
     def __init__(self, *args, organization=None, **kwargs):
         super().__init__(*args, **kwargs)
         if organization:
             self.fields["client"].queryset = Client.objects.filter(
                 organization=organization
+            )
+            self.fields["assigned_consultants"].queryset = User.objects.filter(
+                membership__organization=organization,
+                membership__status="active",
             )
         self.fields["jd_text"].required = False
         self.fields["jd_file"].required = False

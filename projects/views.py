@@ -265,7 +265,9 @@ def project_create(request):
                     # Collision detected -> pending_approval
                     project.status = ProjectStatus.PENDING_APPROVAL
                     project.save()
-                    project.assigned_consultants.add(request.user)
+                    form.save_m2m()
+                    if not project.assigned_consultants.exists():
+                        project.assigned_consultants.add(request.user)
 
                     top_collision = high_collisions[0]
                     approval = ProjectApproval.objects.create(
@@ -330,7 +332,9 @@ def project_create(request):
                 else:
                     # No blocking collision -> normal create
                     project.save()
-                    project.assigned_consultants.add(request.user)
+                    form.save_m2m()
+                    if not project.assigned_consultants.exists():
+                        project.assigned_consultants.add(request.user)
                     return redirect("projects:project_detail", pk=project.pk)
     else:
         form = ProjectForm(organization=org)

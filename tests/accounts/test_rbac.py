@@ -375,3 +375,175 @@ class TestNavFiltering:
         content = response.content.decode()
         assert "프로젝트 승인" not in content
         assert "승인 요청" not in content
+
+
+@pytest.mark.django_db
+class TestProjectConsultantAssignment:
+    def test_owner_can_assign_consultants_on_create(self):
+        """Owner selects specific consultants during project creation."""
+        org = Organization.objects.create(name="Org")
+        owner = User.objects.create_user(username="own_a8", password="p")
+        Membership.objects.create(
+            user=owner, organization=org, role="owner", status="active"
+        )
+        con = User.objects.create_user(username="con_a8", password="p")
+        Membership.objects.create(
+            user=con, organization=org, role="consultant", status="active"
+        )
+        client_co = Client.objects.create(name="Co8", organization=org)
+
+        test_client = TestClient()
+        test_client.force_login(owner)
+
+        response = test_client.post("/projects/new/", {
+            "title": "Assigned Project",
+            "client": str(client_co.pk),
+            "jd_text": "Test JD",
+            "assigned_consultants": [str(con.pk)],
+        }, follow=True)
+        assert response.status_code == 200
+        project = Project.objects.get(title="Assigned Project")
+        assert con in project.assigned_consultants.all()
+        # Owner should NOT be auto-added when explicit selection exists
+        assert project.assigned_consultants.count() == 1
+
+    def test_no_consultants_defaults_to_creator(self):
+        """No consultants selected => creator becomes default assignee."""
+        org = Organization.objects.create(name="Org")
+        owner = User.objects.create_user(username="own_b8", password="p")
+        Membership.objects.create(
+            user=owner, organization=org, role="owner", status="active"
+        )
+        client_co = Client.objects.create(name="Co8b", organization=org)
+
+        test_client = TestClient()
+        test_client.force_login(owner)
+
+        response = test_client.post("/projects/new/", {
+            "title": "Solo Project",
+            "client": str(client_co.pk),
+            "jd_text": "Test JD",
+        }, follow=True)
+        assert response.status_code == 200
+        project = Project.objects.get(title="Solo Project")
+        assert owner in project.assigned_consultants.all()
+
+    def test_consultant_can_create_with_self_assigned(self):
+        """Consultant creates project (via approval workflow) and gets default assignment."""
+        org = Organization.objects.create(name="Org")
+        con = User.objects.create_user(username="con_c8", password="p")
+        Membership.objects.create(
+            user=con, organization=org, role="consultant", status="active"
+        )
+        client_co = Client.objects.create(name="Co8c", organization=org)
+
+        test_client = TestClient()
+        test_client.force_login(con)
+
+        response = test_client.post("/projects/new/", {
+            "title": "Consultant Project",
+            "client": str(client_co.pk),
+            "jd_text": "Test JD",
+        }, follow=True)
+        assert response.status_code == 200
+        project = Project.objects.get(title="Consultant Project")
+        assert con in project.assigned_consultants.all()
+
+    def test_update_changes_assigned_consultants(self):
+        """Owner can change assigned consultants on update."""
+        org = Organization.objects.create(name="Org")
+        owner = User.objects.create_user(username="own_d8", password="p")
+        Membership.objects.create(
+            user=owner, organization=org, role="owner", status="active"
+        )
+        con1 = User.objects.create_user(username="con_d8a", password="p")
+        Membership.objects.create(
+            user=con1, organization=org, role="consultant", status="active"
+        )
+        con2 = User.objects.create_user(username="con_d8b", password="p")
+        Membership.objects.create(
+            user=con2, organization=org, role="consultant", status="active"
+        )
+        client_co = Client.objects.create(name="Co8d", organization=org)
+        project = Project.objects.create(
+            title="Update Test",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=owner,
+        )
+        project.assigned_consultants.add(con1)
+
+        test_client = TestClient()
+        test_client.force_login(owner)
+
+        response = test_client.post(f"/projects/{project.pk}/edit/", {
+            "title": "Update Test",
+            "client": str(client_co.pk),
+            "jd_text": "Updated JD",
+            "assigned_consultants": [str(con2.pk)],
+        }, follow=True)
+        assert response.status_code == 200
+        project.refresh_from_db()
+        assert con2 in project.assigned_consultants.all()
+        assert con1 not in project.assigned_consultants.all()
+
+    def test_cross_org_user_rejected_on_create(self):
+        """Submitting a user PK from another org is rejected by form validation."""
+        org1 = Organization.objects.create(name="Org1")
+        org2 = Organization.objects.create(name="Org2")
+        owner = User.objects.create_user(username="own_e8", password="p")
+        Membership.objects.create(
+            user=owner, organization=org1, role="owner", status="active"
+        )
+        alien = User.objects.create_user(username="alien_e8", password="p")
+        Membership.objects.create(
+            user=alien, organization=org2, role="consultant", status="active"
+        )
+        client_co = Client.objects.create(name="Co8e", organization=org1)
+
+        test_client = TestClient()
+        test_client.force_login(owner)
+
+        response = test_client.post("/projects/new/", {
+            "title": "Cross Org Project",
+            "client": str(client_co.pk),
+            "jd_text": "Test JD",
+            "assigned_consultants": [str(alien.pk)],
+        })
+        # Form should be invalid — cross-org PK not in queryset
+        assert not Project.objects.filter(title="Cross Org Project").exists()
+
+    def test_update_can_clear_all_consultants(self):
+        """Clearing all consultants on update is allowed (no default fallback)."""
+        org = Organization.objects.create(name="Org")
+        owner = User.objects.create_user(username="own_f8", password="p")
+        Membership.objects.create(
+            user=owner, organization=org, role="owner", status="active"
+        )
+        con = User.objects.create_user(username="con_f8", password="p")
+        Membership.objects.create(
+            user=con, organization=org, role="consultant", status="active"
+        )
+        client_co = Client.objects.create(name="Co8f", organization=org)
+        project = Project.objects.create(
+            title="Clear Test",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=owner,
+        )
+        project.assigned_consultants.add(con)
+
+        test_client = TestClient()
+        test_client.force_login(owner)
+
+        # POST without assigned_consultants field => M2M cleared
+        response = test_client.post(f"/projects/{project.pk}/edit/", {
+            "title": "Clear Test",
+            "client": str(client_co.pk),
+            "jd_text": "Updated JD",
+        }, follow=True)
+        assert response.status_code == 200
+        project.refresh_from_db()
+        assert project.assigned_consultants.count() == 0
