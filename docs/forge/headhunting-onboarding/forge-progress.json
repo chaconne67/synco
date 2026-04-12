@@ -254,7 +254,7 @@
       "slug": "t09",
       "phase": 1,
       "title": "빈 화면 CTA (역할별 분기)",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -264,8 +264,20 @@
       "depends_on": [
         "t05"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t09/impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 7,
+          "rebutted": 0,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t10",

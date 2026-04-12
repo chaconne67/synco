@@ -1,0 +1,93 @@
+{
+  "topic": "t09",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Project list targets wrong template — view_board.html has no empty state",
+              "attack": "Plan targets view_board.html which uses status_groups and has no global empty state. Actual empty states are in view_list.html and view_table.html.",
+              "action": "accepted",
+              "response": "Correct. File Map must target view_list.html and view_table.html. Board view always shows columns by design.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "Dashboard empty state logic is infeasible",
+              "attack": "Dashboard is composed of independent partials each with own empty state. Condition {% if not today_actions and not weekly_schedule %} conflates no-tasks with no-projects.",
+              "action": "accepted",
+              "response": "Remove dashboard step from scope or use per-partial approach with existing is_owner variable.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "MAJOR",
+              "title": "Header + 등록 buttons visible to consultants",
+              "attack": "project_list.html and client_list.html show + 등록 button to all roles, contradicting empty state CTA logic.",
+              "action": "accepted",
+              "response": "Wrap header buttons in owner role check. project_create permission issue noted but out of t09 scope.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "Design spec requires 5 screens, plan covers only 3",
+              "attack": "Contact tab and submission tab empty states are omitted from the plan despite being in the design spec.",
+              "action": "accepted",
+              "response": "Add tab_contacts.html and tab_submissions.html to File Map with updated text per spec.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "Client list plan breaks search-empty vs data-empty distinction",
+              "attack": "Plan uses {% if not clients %} but actual template uses page_obj and q to distinguish search-empty from data-empty.",
+              "action": "accepted",
+              "response": "Preserve existing page_obj/q branching. Add role CTA only in not-q branch.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MINOR",
+              "title": "CTA markup lacks HTMX attributes, uses hardcoded URLs",
+              "attack": "Plan's CTA links missing hx-get, hx-target, hx-push-url. Dashboard step hardcodes /clients/ URL.",
+              "action": "accepted",
+              "response": "All CTAs must include HTMX attributes and use {% url %} tags.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MINOR",
+              "title": "Dashboard uses membership.role instead of existing is_owner pattern",
+              "attack": "Dashboard already uses is_owner boolean. Plan introduces inconsistent membership.role check.",
+              "action": "accepted",
+              "response": "Subsumed by Issue 2. Use is_owner if dashboard modifications are kept.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 7,
+        "accepted": 7,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
