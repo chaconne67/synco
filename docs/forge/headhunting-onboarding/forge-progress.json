@@ -284,7 +284,7 @@
       "phase": 1,
       "title": "전체 통합 검증",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
