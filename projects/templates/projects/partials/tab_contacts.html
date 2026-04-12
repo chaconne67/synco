@@ -104,7 +104,7 @@
         <div class="flex items-center gap-2">
           <button hx-get="{% url 'projects:contact_create' project.pk %}?candidate={{ contact.candidate.pk }}"
                   hx-target="#contact-form-area"
-                  class="text-[13px] text-primary hover:text-primary-dark">결과 기록</button>
+                  class="text-[13px] bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-dark transition">컨택 등록</button>
           {% if can_release %}
           <button hx-post="{% url 'projects:contact_release_lock' project.pk contact.pk %}"
                   hx-confirm="잠금을 해제하시겠습니까?"
