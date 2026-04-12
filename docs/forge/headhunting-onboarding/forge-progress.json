@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 792805,
+  "last_pid": 796289,
   "execution_order": [
     "t03",
     "t04",
@@ -749,7 +749,7 @@
       "slug": "t25",
       "phase": 3,
       "title": "통합 테스트 + 엣지 케이스",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -765,10 +765,19 @@
         "t24"
       ],
       "artifacts": [
-        "t25/design-spec.md",
-        "t25/impl-plan.md"
+        "t25/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 6,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     }
   ],
   "decisions": [

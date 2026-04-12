@@ -1,0 +1,93 @@
+{
+  "topic": "t25",
+  "document": "docs/forge/headhunting-onboarding/t25/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Test 1 duplicates existing test_invalid_form_still_returns_form",
+              "attack": "Proposed test is nearly identical to existing test at line 141-150. Only adds trivial '추천 서류' assertion.",
+              "action": "accepted",
+              "response": "Genuine duplicate. Remove and replace with new edge case.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Test 4 duplicates existing test_overview_funnel_excludes_reserved_from_contacts",
+              "attack": "Functionally identical to existing test at line 365-384. Proposed assertion is weaker.",
+              "action": "accepted",
+              "response": "Genuine duplicate. Remove and replace with new edge case.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "Test 2 missing interested_contact fixture — passes for wrong reason",
+              "attack": "Without interested_contact, candidate not in queryset regardless. Test passes because 'not in queryset' not 'duplicate prevented'.",
+              "action": "accepted",
+              "response": "Fix: add interested_contact fixture and verify Submission count stays at 1.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "MAJOR",
+              "title": "Step 3 expected test count wrong",
+              "attack": "Plan says 13 but file has 17 tests. With changes, total should be 19.",
+              "action": "accepted",
+              "response": "Correct count to 19.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MAJOR",
+              "title": "Step 4 regression scope too narrow",
+              "attack": "Only runs p05, p06. Should include p07 for submission tests.",
+              "action": "accepted",
+              "response": "Expand to include test_p07_submissions.py.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MINOR",
+              "title": "Test 2 should verify specific error message",
+              "attack": "Only checks status and headers, not the actual validation error content.",
+              "action": "accepted",
+              "response": "Add assertion for form error.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "Tests should go in existing classes instead of new class",
+              "attack": "Remaining tests could be placed in existing classes for better organization.",
+              "action": "rebutted",
+              "response": "Cross-cutting integration tests belong in dedicated class for organizational clarity.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 7,
+        "accepted": 6,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
