@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 486130,
+  "last_pid": 488288,
   "execution_order": [
     "t03",
     "t04",
@@ -378,7 +378,7 @@
       "slug": "t13",
       "phase": 2,
       "title": "설정 탭 URL + 뷰 통합",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -390,9 +390,20 @@
       ],
       "artifacts": [
         "t13/design-spec.md",
-        "t13/impl-plan.md"
+        "t13/impl-plan.md",
+        "t13/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 8,
+          "accepted": 4,
+          "rebutted": 4,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t14",

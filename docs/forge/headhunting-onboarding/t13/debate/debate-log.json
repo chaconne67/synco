@@ -1,0 +1,103 @@
+{
+  "topic": "t13",
+  "document": "docs/forge/headhunting-onboarding/t13/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Onboarding URLs deleted from urlpatterns",
+              "attack": "Step 3 replaces entire urlpatterns, dropping invite/pending/rejected routes. Breaks onboarding flow.",
+              "action": "accepted",
+              "response": "Clear regression. Plan must preserve existing routes and only append new settings tab URLs.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Missing templates cause TemplateDoesNotExist",
+              "attack": "Views reference settings_email/telegram/notify.html which don't exist. Tests will fail with TemplateDoesNotExist.",
+              "action": "partial",
+              "response": "Templates deferred to t14 by design. Added stub templates step so tests pass. Rebut full template creation in t13 scope.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "Root URL home duplicated in accounts/urls.py",
+              "attack": "Step 3 adds home route but main/urls.py already owns it. Creates t03 regression risk.",
+              "action": "accepted",
+              "response": "accounts/urls.py has explicit comment noting home is in main/urls.py. Removed from Step 3.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "Tests too weak — only check status code",
+              "attack": "Tests only assert status_code == 200. Wrong template rendering would still pass.",
+              "action": "partial",
+              "response": "Added assertTemplateUsed and HTMX partial check. Full content assertions deferred to t14.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MAJOR",
+              "title": "telegram_bind_partial disconnected from UI flow",
+              "attack": "New endpoint added but no template references it. Existing templates still use old URLs.",
+              "action": "rebutted",
+              "response": "Endpoint is infrastructure for t14 templates. Must exist before templates can reference it.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-06",
+              "severity": "CRITICAL",
+              "title": "NotificationPreference/Form dependency not in File Map",
+              "attack": "settings_notify uses models/forms not listed in File Map, suggesting they don't exist.",
+              "action": "rebutted",
+              "response": "Both exist from t11 (model, commit 42cb509) and t12 (form, commit 9b2a7e1). File Map lists only files modified by t13.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "Dangling email_settings URL",
+              "attack": "Both email_settings and settings_email serve email-related functionality.",
+              "action": "rebutted",
+              "response": "Different purposes: settings_email = GET tab view, email_settings = POST config handler.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "Cross-app import circular reference risk",
+              "attack": "accounts/views.py imports from projects app models.",
+              "action": "rebutted",
+              "response": "EmailMonitorConfig and TelegramBinding are in accounts/models.py, not projects. No cross-app import.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 8,
+        "accepted": 4,
+        "rebutted": 4,
+        "escalated": 0
+      }
+    }
+  }
+}
