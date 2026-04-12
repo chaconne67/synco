@@ -1,0 +1,123 @@
+{
+  "topic": "t20",
+  "document": "docs/forge/headhunting-onboarding/t20/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Test fixture missing interested_contact + owned_by",
+              "attack": "SubmissionForm requires candidate with owned_by=org and Contact with result=INTERESTED. Plan fixture creates bare candidate without these, so form validation fails before reaching success branch.",
+              "action": "accepted",
+              "response": "Verified SubmissionForm.__init__ at forms.py:192 filters by interested contacts and owned_by. Must match test_p07 fixture pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Existing tests (test_p07) will break",
+              "attack": "test_p07_submissions.py line 745 asserts status_code==204 and HX-Trigger=='submissionChanged'. Multiple other assertions at lines 262, 310, 370, 408, 435 also expect 204.",
+              "action": "accepted",
+              "response": "Confirmed existing tests check 204 status. Plan must update all affected assertions in test_p07_submissions.py.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "Step 4 self-contradictory",
+              "attack": "Step 4 says 'remove hx-target' then concludes 'no change needed'. Contradictory instructions for implementer.",
+              "action": "accepted",
+              "response": "Rewrite Step 4 as clear no-op with explanation of HX-Retarget precedence.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "Code duplication with project_tab_submissions()",
+              "attack": "Plan copies exact queryset, status grouping, and render call from project_tab_submissions(). All 3 reviewers flagged independently (severity upgraded).",
+              "action": "accepted",
+              "response": "Call project_tab_submissions(request, pk) directly and add HTMX headers to returned response.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "Weak tabChanged test — no JSON parsing",
+              "attack": "Test only checks 'tabChanged' string presence, doesn't verify JSON structure or activeTab value. 2/3 reviewers flagged (severity upgraded).",
+              "action": "accepted",
+              "response": "Parse JSON, verify tabChanged.activeTab=='submissions', submissionChanged presence, and HX-Reswap.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MAJOR",
+              "title": "import json inside function body",
+              "attack": "PEP 8 violation: import json placed inside function. 2/3 reviewers flagged (severity upgraded from MINOR).",
+              "action": "accepted",
+              "response": "Move import json to file top-level.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "Line number inaccuracy",
+              "attack": "Step 3 says 'line 1124' but actual code is at line 1162.",
+              "action": "accepted",
+              "response": "Correct line reference.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "Fragile string assertion",
+              "attack": "Testing for '추천 이력' in response is fragile if template text changes.",
+              "action": "rebutted",
+              "response": "'추천 이력' is a stable heading in tab_submissions.html:8. Standard pattern to verify correct template was rendered. If text changes, test should update to match.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-09",
+              "severity": "MINOR",
+              "title": "Missing HX-Reswap test",
+              "attack": "No test verifies HX-Reswap header.",
+              "action": "accepted",
+              "response": "Add HX-Reswap assertion.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-10",
+              "severity": "MINOR",
+              "title": "Overly split test methods",
+              "attack": "4 tests repeat same POST request, wasting execution time.",
+              "action": "rebutted",
+              "response": "Separate methods provide clearer failure diagnostics. Consistent with project convention in test_p07.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 10,
+        "accepted": 8,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
