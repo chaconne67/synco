@@ -535,7 +535,7 @@
       "phase": 2,
       "title": "email_disconnect 리다이렉트 수정 + 최종 통합 테스트",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
