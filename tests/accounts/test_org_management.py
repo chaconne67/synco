@@ -12,7 +12,9 @@ User = get_user_model()
 def owner_setup(db):
     org = Organization.objects.create(name="Test Org")
     owner = User.objects.create_user(username="owner1", password="pass")
-    Membership.objects.create(user=owner, organization=org, role="owner", status="active")
+    Membership.objects.create(
+        user=owner, organization=org, role="owner", status="active"
+    )
     return owner, org
 
 
@@ -20,7 +22,9 @@ def owner_setup(db):
 def consultant_setup(db):
     org = Organization.objects.create(name="Test Org")
     consultant = User.objects.create_user(username="cons1", password="pass")
-    Membership.objects.create(user=consultant, organization=org, role="consultant", status="active")
+    Membership.objects.create(
+        user=consultant, organization=org, role="consultant", status="active"
+    )
     return consultant, org
 
 
@@ -29,11 +33,15 @@ def cross_org_setup(db):
     """Two orgs with owners for cross-org isolation tests."""
     org_a = Organization.objects.create(name="Org A")
     owner_a = User.objects.create_user(username="owner_a", password="pass")
-    Membership.objects.create(user=owner_a, organization=org_a, role="owner", status="active")
+    Membership.objects.create(
+        user=owner_a, organization=org_a, role="owner", status="active"
+    )
 
     org_b = Organization.objects.create(name="Org B")
     owner_b = User.objects.create_user(username="owner_b", password="pass")
-    Membership.objects.create(user=owner_b, organization=org_b, role="owner", status="active")
+    Membership.objects.create(
+        user=owner_b, organization=org_b, role="owner", status="active"
+    )
 
     return owner_a, org_a, owner_b, org_b
 
@@ -191,7 +199,9 @@ class TestOrgInvites:
             "/org/invites/create/",
             {"role": "consultant", "max_uses": "0"},  # min is 1
         )
-        assert not InviteCode.objects.filter(organization=org, created_by=owner).exists()
+        assert not InviteCode.objects.filter(
+            organization=org, created_by=owner
+        ).exists()
         content = response.content.decode()
         assert "생성되었습니다" not in content
 
@@ -274,7 +284,9 @@ class TestOrgHTMXRendering:
         response = client.get("/org/info/")
         assert response.status_code == 200
         assert "accounts/org_base.html" in [t.name for t in response.templates]
-        assert "accounts/partials/org_tab_bar.html" in [t.name for t in response.templates]
+        assert "accounts/partials/org_tab_bar.html" in [
+            t.name for t in response.templates
+        ]
         content = response.content.decode()
         assert "조직 정보" in content
         assert "멤버 관리" in content
@@ -308,9 +320,7 @@ class TestOrgHTMXRendering:
             HTTP_HX_TARGET="org-content",
         )
         assert response.status_code == 200
-        assert "accounts/partials/org_info.html" in [
-            t.name for t in response.templates
-        ]
+        assert "accounts/partials/org_info.html" in [t.name for t in response.templates]
         content = response.content.decode()
         assert "조직 정보" in content
         assert "<html" not in content
