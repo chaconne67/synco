@@ -1,0 +1,128 @@
+{
+  "topic": "t19",
+  "document": "docs/forge/headhunting-onboarding/t19/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "tabChanged event is never dispatched",
+              "attack": "Plan creates listener but no code dispatches the event. Core goal of tab active state update fails for normal tab clicks.",
+              "action": "rebutted",
+              "response": "Design spec line 37 explicitly scopes t19 as infrastructure only. Event dispatching is assigned to t20, t21, t23.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "DOMContentLoaded fails on HTMX navigation",
+              "attack": "Badge init uses DOMContentLoaded which won't fire on HTMX-navigated page entries, the primary nav path.",
+              "action": "accepted",
+              "response": "Valid. Must adopt htmx:afterSettle + readyState pattern like existing context-autosave.js.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "Duplicate event listener registration on HTMX re-swap",
+              "attack": "Script in swapped content re-adds listeners on each HTMX navigation, causing memory leaks and multiple handler executions.",
+              "action": "accepted",
+              "response": "Valid. Must wrap in IIFE with cleanup logic following context-autosave.js pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "MAJOR",
+              "title": "project_delete() error path missing tab_latest",
+              "attack": "project_delete() renders project_detail.html without tab_latest in context.",
+              "action": "accepted",
+              "response": "Valid. Will add tab_latest via shared helper to both views.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MAJOR",
+              "title": "Manual verification too weak",
+              "attack": "Step 5 only checks DOM attributes and script loading, not actual behavior.",
+              "action": "accepted",
+              "response": "Valid. Will expand verification to test console dispatch, sessionStorage, badge rings.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MINOR",
+              "title": "Import style — local import inside function",
+              "attack": "from django.db.models import Max as local import inconsistent with existing top-level pattern.",
+              "action": "accepted",
+              "response": "Valid. Will move Max to top-level import.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "offers missing from tab_latest",
+              "attack": "tab_latest has 3 keys vs tab_counts 4 keys, inconsistent.",
+              "action": "accepted",
+              "response": "Valid. Will add offers for forward compatibility.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MINOR",
+              "title": "Line reference inaccuracy",
+              "attack": "Plan says lines 339-345, actual is 354-359.",
+              "action": "accepted",
+              "response": "Valid. Will correct.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MINOR",
+              "title": "depends_on mismatch",
+              "attack": "Plan says depends_on none, forge-progress.json says t18.",
+              "action": "accepted",
+              "response": "Valid. Will correct to t18.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "tabChanged event is never dispatched (follow-up)",
+              "attack": "Downstream tasks only dispatch for workflow flows, not regular tab bar clicks. Gap persists across all tasks.",
+              "action": "partial",
+              "response": "Gap valid at project level, documented as upstream note. Out of t19 scope per design spec. Severity: MINOR for t19.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 9,
+        "accepted": 8,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}

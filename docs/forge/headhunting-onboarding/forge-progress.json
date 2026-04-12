@@ -565,7 +565,7 @@
       "slug": "t19",
       "phase": 3,
       "title": "tabChanged 이벤트 시스템 + tab-navigation.js",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -577,9 +577,20 @@
       ],
       "artifacts": [
         "t19/design-spec.md",
-        "t19/impl-plan.md"
+        "t19/impl-plan.md",
+        "t19/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 2,
+          "issues": 9,
+          "accepted": 8,
+          "rebutted": 0,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t20",
