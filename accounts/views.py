@@ -201,23 +201,42 @@ def settings_page(request):
     return redirect("settings_profile")
 
 
+def _is_tab_switch(request):
+    """Check if this is an HTMX tab switch (targeting #settings-content)."""
+    return (
+        getattr(request, "htmx", None)
+        and request.headers.get("HX-Target") == "settings-content"
+    )
+
+
 @login_required
 def settings_profile(request):
     """GET /accounts/settings/profile/ — Profile tab."""
-    if getattr(request, "htmx", None):
-        return render(request, "accounts/partials/settings_content.html", {"active_tab": "profile"})
-    return render(request, "accounts/settings.html", {"active_tab": "profile"})
+    context = {"active_tab": "profile"}
+    if _is_tab_switch(request):
+        return render(request, "accounts/partials/settings_content.html", context)
+    return render(request, "accounts/settings.html", context)
 
 
 @login_required
 def settings_email(request):
-    """GET /accounts/settings/email/ — Email tab."""
+    """GET/POST /accounts/settings/email/ — Email tab."""
     from .models import EmailMonitorConfig
 
     config = EmailMonitorConfig.objects.filter(user=request.user).first()
+
+    if request.method == "POST" and config:
+        config.filter_from = [
+            e.strip()
+            for e in request.POST.get("filter_from", "").split(",")
+            if e.strip()
+        ]
+        config.is_active = request.POST.get("is_active") == "on"
+        config.save(update_fields=["filter_from", "is_active", "updated_at"])
+
     context = {"config": config, "active_tab": "email"}
 
-    if getattr(request, "htmx", None):
+    if _is_tab_switch(request) or (getattr(request, "htmx", None) and request.method == "POST"):
         return render(request, "accounts/partials/settings_email.html", context)
     return render(request, "accounts/settings.html", {
         **context,
@@ -240,7 +259,7 @@ def settings_telegram(request):
 
     context = {"is_bound": is_bound, "verified_at": verified_at, "active_tab": "telegram"}
 
-    if getattr(request, "htmx", None):
+    if _is_tab_switch(request):
         return render(request, "accounts/partials/settings_telegram.html", context)
     return render(request, "accounts/settings.html", {
         **context,
@@ -267,7 +286,7 @@ def settings_notify(request):
 
     context = {"form": form, "active_tab": "notify"}
 
-    if getattr(request, "htmx", None):
+    if _is_tab_switch(request) or (getattr(request, "htmx", None) and request.method == "POST"):
         return render(request, "accounts/partials/settings_notify.html", context)
     return render(request, "accounts/settings.html", {
         **context,

@@ -1,7 +1,25 @@
+{# accounts/templates/accounts/settings.html #}
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
 {% block title %}synco - 설정{% endblock %}
 
 {% block content %}
-  {% include "accounts/partials/settings_content.html" %}
+<div class="p-4 lg:p-8 space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-heading font-bold">설정</h1>
+  </div>
+
+  <!-- Tab Bar -->
+  {% include "accounts/partials/settings_tab_bar.html" %}
+
+  <!-- Tab Content -->
+  <div id="settings-content">
+    {% if tab_template %}
+      {% include tab_template %}
+    {% else %}
+      {% include "accounts/partials/settings_content.html" %}
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

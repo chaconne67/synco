@@ -474,3 +474,57 @@ def telegram_test_send(request):
                 "error": "메시지 전송에 실패했습니다.",
             },
         )
+
+
+@login_required
+@require_POST
+def telegram_test_partial(request):
+    """POST /telegram/test-partial/ — Test message, returns settings tab partial."""
+    from projects.services.notification import _send_telegram_message
+
+    template = "accounts/partials/settings_telegram.html"
+
+    try:
+        binding = TelegramBinding.objects.get(user=request.user, is_active=True)
+    except TelegramBinding.DoesNotExist:
+        return render(request, template, {
+            "is_bound": False,
+            "error": "텔레그램이 연결되어 있지 않습니다.",
+            "active_tab": "telegram",
+        })
+
+    try:
+        _send_telegram_message(binding.chat_id, "🤖 synco 테스트 메시지입니다!")
+        return render(request, template, {
+            "is_bound": True,
+            "verified_at": binding.verified_at,
+            "message": "테스트 메시지가 전송되었습니다.",
+            "active_tab": "telegram",
+        })
+    except Exception:
+        return render(request, template, {
+            "is_bound": True,
+            "verified_at": binding.verified_at,
+            "error": "메시지 전송에 실패했습니다.",
+            "active_tab": "telegram",
+        })
+
+
+@login_required
+@require_POST
+def telegram_unbind_partial(request):
+    """POST /telegram/unbind-partial/ — Unbind, returns settings tab partial."""
+    template = "accounts/partials/settings_telegram.html"
+
+    try:
+        binding = TelegramBinding.objects.get(user=request.user)
+        binding.is_active = False
+        binding.save(update_fields=["is_active"])
+    except TelegramBinding.DoesNotExist:
+        pass
+
+    return render(request, template, {
+        "is_bound": False,
+        "message": "텔레그램 연동이 해제되었습니다.",
+        "active_tab": "telegram",
+    })

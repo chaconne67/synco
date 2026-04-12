@@ -1,70 +1,53 @@
 {% load static %}
 
-<div class="p-4 lg:p-8 space-y-6">
+<!-- My Info -->
+<section class="bg-white rounded-lg border border-gray-100 p-5">
+  <h2 class="text-[15px] font-semibold text-gray-500 mb-4">내 정보</h2>
 
-  <!-- Page Header -->
-  <div>
-    <h1 class="text-heading font-bold">설정</h1>
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <span class="text-[15px] text-gray-500">이름</span>
+      <span class="text-[15px] font-medium">{{ user.first_name|default:"-" }}</span>
+    </div>
+    <div class="flex items-center justify-between">
+      <span class="text-[15px] text-gray-500">소속</span>
+      <span class="text-[15px] font-medium">{{ user.company_name|default:"-" }}</span>
+    </div>
+    <div class="flex items-center justify-between">
+      <span class="text-[15px] text-gray-500">전화번호</span>
+      <span class="text-[15px] font-medium">{{ user.phone|default:"-" }}</span>
+    </div>
   </div>
+</section>
 
-  <!-- My Info -->
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">내 정보</h2>
+<!-- App Info -->
+<section class="bg-white rounded-lg border border-gray-100 p-5">
+  <h2 class="text-[15px] font-semibold text-gray-500 mb-4">앱 정보</h2>
 
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <span class="text-[15px] text-gray-500">이름</span>
-        <span class="text-[15px] font-medium">{{ user.first_name|default:"-" }}</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="text-[15px] text-gray-500">소속</span>
-        <span class="text-[15px] font-medium">{{ user.company_name|default:"-" }}</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="text-[15px] text-gray-500">전화번호</span>
-        <span class="text-[15px] font-medium">{{ user.phone|default:"-" }}</span>
-      </div>
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <span class="text-[15px] text-gray-500">버전</span>
+      <span class="text-[15px] text-gray-500">1.0.0</span>
     </div>
-  </section>
-
-  <!-- Notifications (준비 중) -->
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">알림</h2>
-    <div class="flex items-center justify-center py-4">
-      <p class="text-[15px] text-gray-400">알림 설정 기능을 준비 중입니다</p>
-    </div>
-  </section>
-
-  <!-- App Info -->
-  <section class="bg-white rounded-lg border border-gray-100 p-5">
-    <h2 class="text-[15px] font-semibold text-gray-500 mb-4">앱 정보</h2>
-
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <span class="text-[15px] text-gray-500">버전</span>
-        <span class="text-[15px] text-gray-500">1.0.0</span>
-      </div>
-      <a href="/terms/" class="flex items-center justify-between group">
-        <span class="text-[15px] text-gray-500 group-hover:text-gray-700">이용약관</span>
-        <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
-      <a href="/privacy/" class="flex items-center justify-between group">
-        <span class="text-[15px] text-gray-500 group-hover:text-gray-700">개인정보처리방침</span>
-        <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
-    </div>
-  </section>
-
-  <!-- Logout -->
-  <div class="pt-2 pb-4">
-    <a href="{% url 'logout' %}"
-       class="block w-full text-center text-[15px] font-medium text-red-500 py-3 rounded-lg hover:bg-red-50 transition">
-      로그아웃
+    <a href="{% url 'terms' %}" class="flex items-center justify-between group">
+      <span class="text-[15px] text-gray-500 group-hover:text-gray-700">이용약관</span>
+      <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+    <a href="{% url 'privacy' %}" class="flex items-center justify-between group">
+      <span class="text-[15px] text-gray-500 group-hover:text-gray-700">개인정보처리방침</span>
+      <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
     </a>
   </div>
+</section>
 
+<!-- Logout -->
+<div class="pt-2 pb-4">
+  <a href="{% url 'logout' %}"
+     class="block w-full text-center text-[15px] font-medium text-red-500 py-3 rounded-lg hover:bg-red-50 transition">
+    로그아웃
+  </a>
 </div>

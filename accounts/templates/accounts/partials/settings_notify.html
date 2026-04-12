@@ -1,3 +1,89 @@
-<div id="settings-tab-notify">
-  <p class="text-gray-400 text-[15px]">알림 설정 (준비 중)</p>
-</div>
+{# accounts/templates/accounts/partials/settings_notify.html #}
+{% load static %}
+
+<section class="bg-white rounded-lg border border-gray-100 p-5">
+  <h2 class="text-[15px] font-semibold text-gray-500 mb-4">알림 설정</h2>
+
+  <form method="post"
+        hx-post="{% url 'settings_notify' %}"
+        hx-target="#settings-content"
+        hx-push-url="false">
+    {% csrf_token %}
+
+    <div class="space-y-1">
+      <!-- Header row -->
+      <div class="grid grid-cols-3 gap-4 pb-2 border-b border-gray-100">
+        <span class="text-[13px] font-medium text-gray-500">알림 유형</span>
+        <span class="text-[13px] font-medium text-gray-500 text-center">웹</span>
+        <span class="text-[13px] font-medium text-gray-500 text-center">텔레그램</span>
+      </div>
+
+      <!-- Contact result -->
+      <div class="grid grid-cols-3 gap-4 py-3 border-b border-gray-50">
+        <span class="text-[14px] text-gray-700">새 컨택 결과</span>
+        <div class="text-center">
+          <input type="checkbox" name="contact_result_web"
+                 {% if form.initial.contact_result_web %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+        <div class="text-center">
+          <input type="checkbox" name="contact_result_telegram"
+                 {% if form.initial.contact_result_telegram %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+      </div>
+
+      <!-- Recommendation feedback -->
+      <div class="grid grid-cols-3 gap-4 py-3 border-b border-gray-50">
+        <span class="text-[14px] text-gray-700">추천 피드백</span>
+        <div class="text-center">
+          <input type="checkbox" name="recommendation_feedback_web"
+                 {% if form.initial.recommendation_feedback_web %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+        <div class="text-center">
+          <input type="checkbox" name="recommendation_feedback_telegram"
+                 {% if form.initial.recommendation_feedback_telegram %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+      </div>
+
+      <!-- Project approval -->
+      <div class="grid grid-cols-3 gap-4 py-3 border-b border-gray-50">
+        <span class="text-[14px] text-gray-700">프로젝트 승인 요청</span>
+        <div class="text-center">
+          <input type="checkbox" name="project_approval_web"
+                 {% if form.initial.project_approval_web %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+        <div class="text-center">
+          <input type="checkbox" name="project_approval_telegram"
+                 {% if form.initial.project_approval_telegram %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+      </div>
+
+      <!-- Newsfeed update -->
+      <div class="grid grid-cols-3 gap-4 py-3">
+        <span class="text-[14px] text-gray-700">뉴스피드 업데이트</span>
+        <div class="text-center">
+          <input type="checkbox" name="newsfeed_update_web"
+                 {% if form.initial.newsfeed_update_web %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+        <div class="text-center">
+          <input type="checkbox" name="newsfeed_update_telegram"
+                 {% if form.initial.newsfeed_update_telegram %}checked{% endif %}
+                 class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <button type="submit"
+              class="w-full py-2.5 text-[14px] font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">
+        설정 저장
+      </button>
+    </div>
+  </form>
+</section>
