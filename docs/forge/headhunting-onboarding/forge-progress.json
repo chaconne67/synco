@@ -687,7 +687,7 @@
       "slug": "t23",
       "phase": 3,
       "title": "퍼널 클릭 가능한 내비게이션",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -699,9 +699,20 @@
       ],
       "artifacts": [
         "t23/design-spec.md",
-        "t23/impl-plan.md"
+        "t23/impl-plan.md",
+        "t23/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 10,
+          "accepted": 5,
+          "rebutted": 5,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t24",
