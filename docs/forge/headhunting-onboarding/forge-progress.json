@@ -286,7 +286,7 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "0048458",
-      "verification_status": "pending",
+      "verification_status": "running",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
