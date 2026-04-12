@@ -596,7 +596,7 @@
       "slug": "t20",
       "phase": 3,
       "title": "submission_create() 성공 시 추천 탭 자동 전환",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -608,9 +608,20 @@
       ],
       "artifacts": [
         "t20/design-spec.md",
-        "t20/impl-plan.md"
+        "t20/impl-plan.md",
+        "t20/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 10,
+          "accepted": 8,
+          "rebutted": 2,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t21",
