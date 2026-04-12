@@ -471,7 +471,7 @@
       "slug": "t16",
       "phase": 2,
       "title": "조직 관리 템플릿 구현",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -483,9 +483,20 @@
       ],
       "artifacts": [
         "t16/design-spec.md",
-        "t16/impl-plan.md"
+        "t16/impl-plan.md",
+        "t16/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 6,
+          "accepted": 4,
+          "rebutted": 2,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t17",

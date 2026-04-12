@@ -1,0 +1,83 @@
+{
+  "topic": "t16",
+  "document": "docs/forge/headhunting-onboarding/t16/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I1",
+              "severity": "CRITICAL",
+              "title": "Form validation error display missing",
+              "attack": "org_info.html and org_invites.html render form widgets but no field.errors or non_field_errors. Invalid submissions re-render silently with no explanation.",
+              "action": "accepted",
+              "response": "Valid. No existing templates use field.errors but this is a genuine gap. Will add per-field errors and non_field_errors to both forms.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I2",
+              "severity": "CRITICAL",
+              "title": "Tab bar uses buttons instead of links (no fallback)",
+              "attack": "Tab bar uses <button hx-get> without <a href> fallback. Mutation forms lack action attributes. If HTMX fails, tabs and actions break.",
+              "action": "rebutted",
+              "response": "Existing settings_tab_bar.html uses identical <button hx-get> pattern. HTMX is a hard dependency, not optional. Changing only org tabs would break consistency.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "I3",
+              "severity": "MAJOR",
+              "title": "Verification step lacks HTMX rendering tests",
+              "attack": "Step 6 only runs status code/DB tests. No HTMX rendering tests for full-shell vs partial, tab bar presence. Known regressions from t14/t15 could recur.",
+              "action": "accepted",
+              "response": "Valid. Will add HTMX rendering tests mirroring test_settings_tabs.py: full-page, main entry, tab switch.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I4",
+              "severity": "MINOR",
+              "title": "org_info.html missing success message display",
+              "attack": "View passes message in context but template has no {% if message %} block, unlike org_members and org_invites.",
+              "action": "accepted",
+              "response": "Clear oversight. Will add message display consistent with other partials.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I5",
+              "severity": "MAJOR",
+              "title": "Inconsistent feedback mechanism (static msg vs toast)",
+              "attack": "Static message div and JavaScript toast used inconsistently. Long lists hide success message at top of re-rendered content.",
+              "action": "rebutted",
+              "response": "Switching to HX-Trigger toast requires views_org.py changes — out of t16 template-only scope. Static message consumes view context. Toast for clipboard is inherently client-side.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "I6",
+              "severity": "MINOR",
+              "title": "Clipboard copy error handling",
+              "attack": "navigator.clipboard.writeText() is async but toast fires synchronously. Failed copy still shows success.",
+              "action": "partial",
+              "response": "Accept Promise chaining fix. Maintain MINOR severity — HTTPS production + localhost both support clipboard API.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 4,
+        "rebutted": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
