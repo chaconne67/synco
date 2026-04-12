@@ -1,11 +1,25 @@
-{# accounts/templates/accounts/org_base.html — stub for t15; t16 builds proper templates #}
+{# accounts/templates/accounts/org_base.html #}
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
 {% block title %}synco - 조직 관리{% endblock %}
 
 {% block content %}
 <div class="p-4 lg:p-8 space-y-6">
-  <h1 class="text-heading font-bold">조직 관리</h1>
-  {% include tab_template %}
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-heading font-bold">조직 관리</h1>
+  </div>
+
+  <!-- Tab Bar -->
+  {% include "accounts/partials/org_tab_bar.html" %}
+
+  <!-- Tab Content -->
+  <div id="org-content">
+    {% if tab_template %}
+      {% include tab_template %}
+    {% else %}
+      {% include "accounts/partials/org_info.html" %}
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

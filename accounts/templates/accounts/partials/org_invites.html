@@ -1,9 +1,168 @@
-{% if message %}<div class="text-green-600">{{ message }}</div>{% endif %}
-{% for code in codes %}
-<div>{{ code.code }} - {{ code.role }} ({% if code.is_active %}active{% else %}inactive{% endif %})</div>
-{% endfor %}
-<form method="post" action="{% url 'org_invite_create' %}">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">생성</button>
-</form>
+{# accounts/templates/accounts/partials/org_invites.html #}
+{% load static %}
+
+{% if message %}
+<div class="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{{ message }}</div>
+{% endif %}
+
+<!-- Create invite code form -->
+<section class="bg-white rounded-lg border border-gray-100 p-5 mb-4">
+  <h2 class="text-[15px] font-semibold text-gray-500 mb-4">새 초대코드 생성</h2>
+
+  <form method="post"
+        hx-post="{% url 'org_invite_create' %}"
+        hx-target="#org-content">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <label for="id_role" class="block text-[13px] font-medium text-gray-600 mb-1">역할</label>
+        {{ form.role }}
+        {% if form.role.errors %}
+        <p class="mt-1 text-[12px] text-red-600">{{ form.role.errors|first }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label for="id_max_uses" class="block text-[13px] font-medium text-gray-600 mb-1">최대 사용 횟수</label>
+        {{ form.max_uses }}
+        {% if form.max_uses.errors %}
+        <p class="mt-1 text-[12px] text-red-600">{{ form.max_uses.errors|first }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label for="id_expires_at" class="block text-[13px] font-medium text-gray-600 mb-1">만료일 (선택)</label>
+        {{ form.expires_at }}
+        {% if form.expires_at.errors %}
+        <p class="mt-1 text-[12px] text-red-600">{{ form.expires_at.errors|first }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <button type="submit"
+              class="w-full sm:w-auto px-6 py-2.5 text-[14px] font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">
+        초대코드 생성
+      </button>
+    </div>
+  </form>
+</section>
+
+<!-- Invite code list -->
+<section class="bg-white rounded-lg border border-gray-100">
+  <div class="p-5 border-b border-gray-100">
+    <h2 class="text-[15px] font-semibold text-gray-500">초대코드 목록</h2>
+  </div>
+
+  <!-- Desktop table -->
+  <div class="hidden sm:block overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="text-left text-[12px] font-medium text-gray-500 border-b border-gray-100">
+          <th class="px-5 py-3">코드</th>
+          <th class="px-5 py-3">역할</th>
+          <th class="px-5 py-3">사용/최대</th>
+          <th class="px-5 py-3">만료일</th>
+          <th class="px-5 py-3">상태</th>
+          <th class="px-5 py-3">액션</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for code in codes %}
+        <tr>
+          <td class="px-5 py-3 font-mono text-[14px] font-medium text-gray-900">{{ code.code }}</td>
+          <td class="px-5 py-3 text-[13px] text-gray-600">{{ code.get_role_display }}</td>
+          <td class="px-5 py-3 text-[13px] text-gray-600">{{ code.used_count }}/{{ code.max_uses }}</td>
+          <td class="px-5 py-3 text-[13px] text-gray-600">
+            {% if code.expires_at %}{{ code.expires_at|date:"Y-m-d" }}{% else %}-{% endif %}
+          </td>
+          <td class="px-5 py-3">
+            {% if code.is_valid %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>활성
+              </span>
+            {% elif not code.is_active %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">비활성</span>
+            {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">소진/만료</span>
+            {% endif %}
+          </td>
+          <td class="px-5 py-3">
+            <div class="flex items-center gap-2">
+              {% if code.is_active and code.is_valid %}
+                <button onclick="navigator.clipboard.writeText('{{ code.code }}').then(function(){window.showToast('코드가 복사되었습니다')}).catch(function(){window.showToast('복사에 실패했습니다')})"
+                        class="px-2.5 py-1 text-[12px] font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition">
+                  복사
+                </button>
+                <form method="post"
+                      hx-post="{% url 'org_invite_deactivate' code.pk %}"
+                      hx-target="#org-content">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="px-2.5 py-1 text-[12px] font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                    비활성화
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-5 py-8 text-center text-[14px] text-gray-400">
+            생성된 초대코드가 없습니다.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile card list -->
+  <div class="sm:hidden divide-y divide-gray-50">
+    {% for code in codes %}
+    <div class="p-4 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-[14px] font-medium text-gray-900">{{ code.code }}</span>
+        {% if code.is_valid %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">활성</span>
+        {% elif not code.is_active %}
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">비활성</span>
+        {% else %}
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">소진/만료</span>
+        {% endif %}
+      </div>
+      <div class="text-[12px] text-gray-500">
+        {{ code.get_role_display }} | {{ code.used_count }}/{{ code.max_uses }}
+        {% if code.expires_at %} | {{ code.expires_at|date:"Y-m-d" }}{% endif %}
+      </div>
+      {% if code.is_active and code.is_valid %}
+      <div class="flex gap-2 pt-1">
+        <button onclick="navigator.clipboard.writeText('{{ code.code }}').then(function(){window.showToast('코드가 복사되었습니다')}).catch(function(){window.showToast('복사에 실패했습니다')})"
+                class="px-3 py-1.5 text-[12px] font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition">
+          복사
+        </button>
+        <form method="post"
+              hx-post="{% url 'org_invite_deactivate' code.pk %}"
+              hx-target="#org-content">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3 py-1.5 text-[12px] font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+            비활성화
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="p-8 text-center text-[14px] text-gray-400">
+      생성된 초대코드가 없습니다.
+    </div>
+    {% endfor %}
+  </div>
+</section>

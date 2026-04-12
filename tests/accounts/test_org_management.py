@@ -260,3 +260,95 @@ class TestOrgCrossOrgIsolation:
         assert response.status_code == 404
         code.refresh_from_db()
         assert code.is_active is True
+
+
+@pytest.mark.django_db
+class TestOrgHTMXRendering:
+    """HTMX rendering tests — mirror test_settings_tabs.py patterns."""
+
+    def test_org_info_full_page_renders_tab_bar(self, owner_setup):
+        """Full page request renders org_base.html with tab bar."""
+        owner, org = owner_setup
+        client = TestClient()
+        client.force_login(owner)
+        response = client.get("/org/info/")
+        assert response.status_code == 200
+        assert "accounts/org_base.html" in [t.name for t in response.templates]
+        assert "accounts/partials/org_tab_bar.html" in [t.name for t in response.templates]
+        content = response.content.decode()
+        assert "조직 정보" in content
+        assert "멤버 관리" in content
+        assert "초대코드" in content
+
+    def test_org_info_htmx_main_entry_includes_tab_bar(self, owner_setup):
+        """HTMX request to #main-content includes tab bar (sidebar nav)."""
+        owner, org = owner_setup
+        client = TestClient()
+        client.force_login(owner)
+        response = client.get(
+            "/org/info/",
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="main-content",
+        )
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "조직 정보" in content
+        assert "멤버 관리" in content
+        assert "org-content" in content  # Container for tab content
+        assert "<html" not in content  # No full page wrapper
+
+    def test_org_info_htmx_tab_switch_returns_partial_only(self, owner_setup):
+        """HTMX request to #org-content returns only info partial."""
+        owner, org = owner_setup
+        client = TestClient()
+        client.force_login(owner)
+        response = client.get(
+            "/org/info/",
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="org-content",
+        )
+        assert response.status_code == 200
+        assert "accounts/partials/org_info.html" in [
+            t.name for t in response.templates
+        ]
+        content = response.content.decode()
+        assert "조직 정보" in content
+        assert "<html" not in content
+        # Should NOT contain tab bar (only partial)
+        assert "org_tab_bar" not in content
+
+    def test_org_members_htmx_tab_switch_returns_partial_only(self, owner_setup):
+        """HTMX request to #org-content returns only members partial."""
+        owner, org = owner_setup
+        client = TestClient()
+        client.force_login(owner)
+        response = client.get(
+            "/org/members/",
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="org-content",
+        )
+        assert response.status_code == 200
+        assert "accounts/partials/org_members.html" in [
+            t.name for t in response.templates
+        ]
+        content = response.content.decode()
+        assert "멤버 목록" in content
+        assert "<html" not in content
+
+    def test_org_invites_htmx_tab_switch_returns_partial_only(self, owner_setup):
+        """HTMX request to #org-content returns only invites partial."""
+        owner, org = owner_setup
+        client = TestClient()
+        client.force_login(owner)
+        response = client.get(
+            "/org/invites/",
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="org-content",
+        )
+        assert response.status_code == 200
+        assert "accounts/partials/org_invites.html" in [
+            t.name for t in response.templates
+        ]
+        content = response.content.decode()
+        assert "초대코드 목록" in content
+        assert "<html" not in content
