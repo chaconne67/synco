@@ -240,3 +240,48 @@ class EmailMonitorConfig(BaseModel):
         from projects.services.email.crypto import decrypt_data
 
         return json.loads(decrypt_data(bytes(self.gmail_credentials)))
+
+
+NOTIFICATION_TYPES = ("contact_result", "recommendation_feedback", "project_approval", "newsfeed_update")
+CHANNELS = ("web", "telegram")
+
+
+def _default_notification_preferences():
+    return {
+        "contact_result": {"web": True, "telegram": True},
+        "recommendation_feedback": {"web": True, "telegram": True},
+        "project_approval": {"web": True, "telegram": True},
+        "newsfeed_update": {"web": True, "telegram": False},
+    }
+
+
+class NotificationPreference(BaseModel):
+    """사용자별 알림 설정."""
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notification_preference",
+    )
+    preferences = models.JSONField(default=_default_notification_preferences)
+
+    def __str__(self) -> str:
+        return f"NotificationPref: {self.user}"
+
+    def clean(self) -> None:
+        super().clean()
+        from django.core.exceptions import ValidationError
+
+        if not isinstance(self.preferences, dict):
+            raise ValidationError("preferences must be a dict")
+        for ntype in NOTIFICATION_TYPES:
+            if ntype not in self.preferences:
+                raise ValidationError(f"Missing notification type: {ntype}")
+            channels = self.preferences[ntype]
+            if not isinstance(channels, dict):
+                raise ValidationError(f"'{ntype}' must be a dict of channels")
+            for ch in CHANNELS:
+                if ch not in channels:
+                    raise ValidationError(f"Missing channel '{ch}' for '{ntype}'")
+                if not isinstance(channels[ch], bool):
+                    raise ValidationError(f"'{ntype}.{ch}' must be a boolean")

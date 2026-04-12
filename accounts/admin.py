@@ -5,6 +5,7 @@ from .models import (
     EmailMonitorConfig,
     InviteCode,
     Membership,
+    NotificationPreference,
     Organization,
     TelegramBinding,
     User,
@@ -57,4 +58,10 @@ class TelegramBindingAdmin(admin.ModelAdmin):
 class EmailMonitorConfigAdmin(admin.ModelAdmin):
     list_display = ("user", "is_active", "last_checked_at")
     list_filter = ("is_active",)
+    search_fields = ("user__username",)
+
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    list_display = ("user",)
     search_fields = ("user__username",)
