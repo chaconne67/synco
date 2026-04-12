@@ -1,0 +1,63 @@
+{
+  "topic": "t18",
+  "document": "docs/forge/headhunting-onboarding/t18/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I1",
+              "severity": "CRITICAL",
+              "title": "Step 1 is a no-op (already implemented)",
+              "attack": "email_disconnect already redirects to settings_email at line 420. Plan instructs a change that's already done.",
+              "action": "accepted",
+              "response": "Correct. Convert to verification step with regression test.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I2",
+              "severity": "CRITICAL",
+              "title": "Step 2 targets wrong view, introduces duplicate logic",
+              "attack": "settings_email (t13) already handles HTMX POST. Adding same to email_settings creates dead/competing code. request.htmx check too broad for legacy page.",
+              "action": "accepted",
+              "response": "Correct. Remove Step 2 entirely. Legacy email_settings stays as-is.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I3",
+              "severity": "CRITICAL",
+              "title": "Verification plan too weak",
+              "attack": "No existing tests for email_disconnect or email_settings. Full suite passing is false positive.",
+              "action": "accepted",
+              "response": "Add targeted tests for redirect target, backward compat, and HTMX partial.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I4",
+              "severity": "MINOR",
+              "title": "Duplicate save logic drift",
+              "attack": "email_settings saves filter_labels but settings_email does not. Divergence will grow.",
+              "action": "accepted",
+              "response": "Valid but beyond t18 scope. Note discrepancy, test both paths.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 4,
+        "accepted": 4,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
