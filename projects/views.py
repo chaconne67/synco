@@ -81,7 +81,14 @@ def project_list(request):
     if view_type not in ("board", "list", "table"):
         view_type = "board"
 
-    projects = Project.objects.filter(organization=org)
+    # Role-based filtering: consultant/viewer see only assigned projects
+    membership = request.user.membership
+    if membership.role == "owner":
+        projects = Project.objects.filter(organization=org)
+    else:
+        projects = Project.objects.filter(
+            organization=org, assigned_consultants=request.user
+        )
 
     # scope filter (default: mine)
     scope = request.GET.get("scope", "mine")

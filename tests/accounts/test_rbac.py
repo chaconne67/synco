@@ -214,3 +214,101 @@ class TestViewPermissions:
 
         response = client.get("/dashboard/actions/")
         assert response.status_code == 200
+
+
+from clients.models import Client
+from projects.models import Project, ProjectStatus
+
+
+@pytest.mark.django_db
+class TestProjectFiltering:
+    @pytest.mark.parametrize("role", ["consultant", "viewer"])
+    def test_non_owner_sees_only_assigned_projects(self, role):
+        org = Organization.objects.create(name="Org")
+        owner = User.objects.create_user(username=f"owner_{role}", password="p")
+        Membership.objects.create(
+            user=owner, organization=org, role="owner", status="active"
+        )
+        user = User.objects.create_user(username=f"user_{role}", password="p")
+        Membership.objects.create(
+            user=user, organization=org, role=role, status="active"
+        )
+        client_co = Client.objects.create(name="Client", organization=org)
+
+        # Project assigned to user
+        p1 = Project.objects.create(
+            title="Assigned",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=owner,
+        )
+        p1.assigned_consultants.add(user)
+
+        # Project NOT assigned but created_by user (should NOT be visible)
+        Project.objects.create(
+            title="Created But Not Assigned",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=user,
+        )
+
+        # Project NOT assigned at all
+        Project.objects.create(
+            title="Not Assigned",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=owner,
+        )
+
+        test_client = TestClient()
+        test_client.force_login(user)
+
+        # Test with scope=all (the real behavioral change)
+        response = test_client.get("/projects/?scope=all")
+        content = response.content.decode()
+        assert "Assigned" in content
+        assert "Created But Not Assigned" not in content
+        assert "Not Assigned" not in content
+
+    def test_owner_sees_all_projects(self):
+        org = Organization.objects.create(name="Org")
+        owner = User.objects.create_user(username="owner2", password="p")
+        Membership.objects.create(
+            user=owner, organization=org, role="owner", status="active"
+        )
+        other = User.objects.create_user(username="other2", password="p")
+        Membership.objects.create(
+            user=other, organization=org, role="consultant", status="active"
+        )
+        client_co = Client.objects.create(name="Client", organization=org)
+
+        # Project created by owner
+        Project.objects.create(
+            title="Owner Project",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=owner,
+        )
+
+        # Project created by another user, assigned to another user
+        p2 = Project.objects.create(
+            title="Other Project",
+            client=client_co,
+            organization=org,
+            status=ProjectStatus.SEARCHING,
+            created_by=other,
+        )
+        p2.assigned_consultants.add(other)
+
+        test_client = TestClient()
+        test_client.force_login(owner)
+
+        # Owner should see all projects with scope=all
+        response = test_client.get("/projects/?scope=all")
+        content = response.content.decode()
+        assert "Owner Project" in content
+        assert "Other Project" in content
