@@ -379,8 +379,8 @@
       "phase": 2,
       "title": "설정 탭 URL + 뷰 통합",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "e1320d4",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -393,7 +393,7 @@
         "t13/impl-plan.md",
         "t13/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
