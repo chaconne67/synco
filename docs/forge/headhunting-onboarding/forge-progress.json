@@ -441,8 +441,8 @@
       "phase": 2,
       "title": "조직 관리 뷰 + URL + 테스트",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "f2afb49",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -455,7 +455,7 @@
         "t15/impl-plan.md",
         "t15/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
