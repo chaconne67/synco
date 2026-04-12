@@ -505,7 +505,7 @@ class TestProjectConsultantAssignment:
         test_client = TestClient()
         test_client.force_login(owner)
 
-        response = test_client.post("/projects/new/", {
+        test_client.post("/projects/new/", {
             "title": "Cross Org Project",
             "client": str(client_co.pk),
             "jd_text": "Test JD",
