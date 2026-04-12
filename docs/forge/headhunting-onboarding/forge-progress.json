@@ -347,9 +347,9 @@
       "slug": "t12",
       "phase": 2,
       "title": "accounts/forms.py 생성",
-      "tempering_status": "pending",
-      "impl_status": "pending",
-      "impl_commit": null,
+      "tempering_status": "completed",
+      "impl_status": "completed",
+      "impl_commit": "9b2a7e1",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -359,9 +359,20 @@
       ],
       "artifacts": [
         "t12/design-spec.md",
-        "t12/impl-plan.md"
+        "t12/impl-plan.md",
+        "t12/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 6,
+          "accepted": 5,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t13",

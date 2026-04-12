@@ -1,0 +1,83 @@
+{
+  "topic": "t12",
+  "document": "docs/forge/headhunting-onboarding/t12/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "MAJOR",
+              "title": "expires_at DateTimeField + DateInput type mismatch",
+              "attack": "DateTimeField with date-only widget creates semantic mismatch: midnight expiry means same-day codes are immediately invalid. Gemini incorrectly escalated to CRITICAL claiming runtime failure.",
+              "action": "accepted",
+              "response": "Verified DateTimeField accepts date-only input (no CRITICAL). Semantic mismatch is valid — change to DateField + clean_expires_at() with end-of-day conversion.",
+              "evidence_type": "execution_result",
+              "resolved": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "MAJOR",
+              "title": "expires_at missing future-date validation",
+              "attack": "No clean_expires_at() to reject past dates. Owner could create dead-on-arrival invite codes.",
+              "action": "accepted",
+              "response": "Valid. Add past-date rejection in clean_expires_at() combined with Issue 1 fix.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "NotificationPreference hardcoded defaults/schema drift",
+              "attack": "Form hardcodes 8 fields and to_preferences() defaults instead of reusing model constants. Schema drift risk when types/channels change.",
+              "action": "partial",
+              "response": "Remove fallback defaults from to_preferences() (BooleanField returns False). Keep explicit field declarations — dynamic generation is premature for 8 fields.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "MAJOR",
+              "title": "InviteCodeCreateForm role choices hardcoded",
+              "attack": "Role choices hardcoded instead of derived from InviteCode.Role model constant.",
+              "action": "accepted",
+              "response": "Derive from InviteCode.Role excluding OWNER.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MINOR",
+              "title": "Widget CSS hardcoded/inconsistent with project patterns",
+              "attack": "Uses focus:ring-indigo-500 and text-[14px] instead of project's focus:ring-primary and text-[15px] pattern.",
+              "action": "accepted",
+              "response": "Define INPUT_CSS constant matching project pattern.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MINOR",
+              "title": "No test step in plan",
+              "attack": "Plan goes from creation to commit with no unit tests.",
+              "action": "rebutted",
+              "response": "Form-only tasks defer testing to view integration in t13/t15. Previous tasks followed same pattern.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 6,
+        "accepted": 5,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
