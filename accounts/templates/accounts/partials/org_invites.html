@@ -1,0 +1,9 @@
+{% if message %}<div class="text-green-600">{{ message }}</div>{% endif %}
+{% for code in codes %}
+<div>{{ code.code }} - {{ code.role }} ({% if code.is_active %}active{% else %}inactive{% endif %})</div>
+{% endfor %}
+<form method="post" action="{% url 'org_invite_create' %}">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">생성</button>
+</form>

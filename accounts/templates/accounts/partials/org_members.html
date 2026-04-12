@@ -1,0 +1,4 @@
+{% if message %}<div class="text-green-600">{{ message }}</div>{% endif %}
+{% for m in members %}
+<div>{{ m.user.username }} - {{ m.role }} ({{ m.status }})</div>
+{% endfor %}
