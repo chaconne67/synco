@@ -558,4 +558,4 @@ class TestContactTabContent:
             HTTP_HX_REQUEST="true",
         )
         assert resp.status_code == 200
-        assert "컨택 이력이 없습니다" in resp.content.decode()
+        assert "후보자를 서칭하고 컨택을 시작하세요" in resp.content.decode()

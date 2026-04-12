@@ -72,7 +72,12 @@
       </table>
     </div>
     {% else %}
-    <p class="text-[14px] text-gray-400">컨택 이력이 없습니다.</p>
+    <p class="text-[14px] text-gray-400">후보자를 서칭하고 컨택을 시작하세요.</p>
+    <button hx-get="{% url 'projects:project_tab_search' project.pk %}"
+            hx-target="#tab-content"
+            class="text-[13px] text-primary hover:text-primary-dark mt-2 inline-block">
+      서칭 탭으로 이동 &rarr;
+    </button>
     {% endif %}
   </div>
 

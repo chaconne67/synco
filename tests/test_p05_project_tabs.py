@@ -281,7 +281,7 @@ class TestTabContacts:
         resp = auth_client.get(f"/projects/{project_obj.pk}/tab/contacts/")
         assert resp.status_code == 200
         content = resp.content.decode()
-        assert "컨택 이력이 없습니다" in content
+        assert "후보자를 서칭하고 컨택을 시작하세요" in content
 
     @pytest.mark.django_db
     def test_contacts_list(self, auth_client, project_obj, candidate, user_with_org):
@@ -307,7 +307,7 @@ class TestTabSubmissions:
         resp = auth_client.get(f"/projects/{project_obj.pk}/tab/submissions/")
         assert resp.status_code == 200
         content = resp.content.decode()
-        assert "추천 이력이 없습니다" in content
+        assert "컨택에서 관심 후보자가 생기면 추천서류를 작성할 수 있습니다" in content
 
     @pytest.mark.django_db
     def test_submissions_list(self, auth_client, project_obj, candidate, user_with_org):

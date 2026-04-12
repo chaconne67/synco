@@ -14,6 +14,8 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-[14px] text-gray-400 text-center py-4">이번 주 일정이 없습니다.</p>
+  <p class="text-[14px] text-gray-400 text-center py-4">
+    {% if is_owner %}이번 주 일정이 없습니다.{% else %}배정된 일정이 없습니다.{% endif %}
+  </p>
   {% endif %}
 </section>

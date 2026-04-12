@@ -100,6 +100,7 @@
 
 {% else %}
 <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+  {% if membership and membership.role == 'owner' %}
   <p class="text-gray-500 text-[15px] mb-4">
     {% if scope == "mine" %}
     담당 프로젝트가 없습니다.
@@ -110,7 +111,11 @@
   <a href="{% url 'projects:project_create' %}"
      hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
      class="bg-primary text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] hover:bg-primary-dark transition">
-    프로젝트 등록
+    새 프로젝트 만들기
   </a>
+  {% else %}
+  <p class="text-gray-500 text-[15px]">배정된 프로젝트가 없습니다.</p>
+  <p class="text-gray-400 text-[13px] mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
+  {% endif %}
 </div>
 {% endif %}

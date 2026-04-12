@@ -2468,10 +2468,15 @@ def dashboard_actions(request):
     from projects.services.dashboard import get_today_actions
 
     today_actions = get_today_actions(request.user, org)
+    is_owner = False
+    try:
+        is_owner = request.user.membership.role == "owner"
+    except Exception:
+        pass
     return render(
         request,
         "projects/partials/dash_actions.html",
-        {"today_actions": today_actions},
+        {"today_actions": today_actions, "is_owner": is_owner},
     )
 
 

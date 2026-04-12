@@ -18,6 +18,8 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-[14px] text-gray-400 text-center py-4">오늘 긴급한 액션이 없습니다.</p>
+  <p class="text-[14px] text-gray-400 text-center py-4">
+    {% if is_owner %}오늘 긴급한 액션이 없습니다.{% else %}배정된 업무가 없습니다.{% endif %}
+  </p>
   {% endif %}
 </section>

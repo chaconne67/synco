@@ -8,11 +8,13 @@
   <!-- Page Header -->
   <div class="flex items-center justify-between">
     <h1 class="text-heading font-bold">고객사</h1>
+    {% if membership and membership.role == 'owner' %}
     <a href="{% url 'clients:client_create' %}"
        hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
        class="bg-primary text-white font-semibold py-2 px-4 rounded-lg text-[15px] hover:bg-primary-dark transition">
       + 등록
     </a>
+    {% endif %}
   </div>
 
   <!-- Search -->
@@ -87,19 +89,17 @@
 
   {% else %}
   <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
-    <p class="text-gray-500 text-[15px] mb-4">
-      {% if q %}
-      '{{ q }}'에 해당하는 고객사가 없습니다.
-      {% else %}
-      등록된 고객사가 없습니다.
-      {% endif %}
-    </p>
-    {% if not q %}
+    {% if q %}
+    <p class="text-gray-500 text-[15px]">'{{ q }}'에 해당하는 고객사가 없습니다.</p>
+    {% elif membership and membership.role == 'owner' %}
+    <p class="text-gray-500 text-[15px] mb-4">등록된 고객사가 없습니다.</p>
     <a href="{% url 'clients:client_create' %}"
        hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
        class="bg-primary text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] hover:bg-primary-dark transition">
-      고객사 등록
+      첫 고객사를 등록하세요
     </a>
+    {% else %}
+    <p class="text-gray-500 text-[15px]">등록된 고객사가 없습니다.</p>
     {% endif %}
   </div>
   {% endif %}

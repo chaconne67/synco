@@ -8,11 +8,13 @@
   <!-- Page Header -->
   <div class="flex items-center justify-between">
     <h1 class="text-heading font-bold">프로젝트</h1>
+    {% if membership and membership.role == 'owner' %}
     <a href="{% url 'projects:project_create' %}"
        hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
        class="bg-primary text-white font-semibold py-2 px-4 rounded-lg text-[15px] hover:bg-primary-dark transition">
       + 등록
     </a>
+    {% endif %}
   </div>
 
   <!-- View Tabs -->
