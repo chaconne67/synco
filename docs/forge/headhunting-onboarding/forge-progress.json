@@ -627,7 +627,7 @@
       "slug": "t21",
       "phase": 3,
       "title": "contact_update() '관심' 결과 시 추천 유도 배너",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -639,9 +639,20 @@
       ],
       "artifacts": [
         "t21/design-spec.md",
-        "t21/impl-plan.md"
+        "t21/impl-plan.md",
+        "t21/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": false,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 5,
+          "accepted": 4,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t22",

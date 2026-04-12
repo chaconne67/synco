@@ -1,0 +1,73 @@
+{
+  "topic": "t21",
+  "document": "docs/forge/headhunting-onboarding/t21/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "contactChanged 이벤트로 인한 배너 즉시 덮어쓰기",
+              "attack": "배너 응답에 HX-Trigger: contactChanged를 포함하면 tab_contacts.html의 contactChanged 리스너가 #tab-content 전체를 리로드하여 배너가 즉시 사라진다.",
+              "action": "accepted",
+              "response": "확인. 탭 전체를 리렌더링하여 배너를 포함시키는 방식으로 전환.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "상태 변경 검사 누락 — 이미 관심인 컨택 수정 시 배너 재표시",
+              "attack": "조건이 contact.result == INTERESTED만 확인하므로 이미 관심 상태인 컨택의 메모 수정 시에도 배너가 반복 표시된다.",
+              "action": "accepted",
+              "response": "전이 조건(old_result != INTERESTED → INTERESTED)으로 변경.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "MAJOR",
+              "title": "배너 CTA 클릭 시 tabChanged 이벤트 미발행",
+              "attack": "설계가 tabChanged 발행을 요구하지만 배너 HTML에 해당 로직이 없어 탭 바 하이라이트가 불일치한다.",
+              "action": "accepted",
+              "response": "CTA 버튼에 tabChanged 발행 메커니즘 추가.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "MAJOR",
+              "title": "테스트가 HTMX 핵심 헤더를 검증하지 않음",
+              "attack": "테스트가 배너 문구와 204 여부만 확인. HX-Retarget, HX-Reswap, HX-Trigger 검증 없음.",
+              "action": "accepted",
+              "response": "HTMX 헤더 검증 테스트 및 이미 관심이던 건 수정 시 배너 미표시 테스트 추가.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MAJOR",
+              "title": "배너가 CTA 클릭 후에도 화면에 잔류",
+              "attack": "#tab-content가 교체되어도 배너가 화면에 남아있을 수 있다.",
+              "action": "rebutted",
+              "response": "#contact-form-area는 #tab-content 안에 위치. CTA의 hx-target=#tab-content가 전체를 교체하므로 배너 자동 제거.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 5,
+        "accepted": 4,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
