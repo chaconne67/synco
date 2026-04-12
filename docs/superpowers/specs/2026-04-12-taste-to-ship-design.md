@@ -1,12 +1,18 @@
 ---
 date: 2026-04-13
-status: draft-v4
+status: draft-v5
 topic: taste-to-ship (tts)
 type: workflow design spec
 ---
 
 # taste-to-ship (tts) — End-to-End AI Build Workflow
 
+> **v5 변경사항 (2026-04-13):**
+> - **Stash 재귀 방지 (c) 옵션 제거** — pop/drop 이진 선택만. "tts stash는 내 작업이거나 쓰레기, 중간 없음"
+> - **"소" 복잡도 기준을 토큰 추정 기반으로 재설계** — 파일 줄 수 기준 폐기. 예상 peak 컨텍스트 < 30K tokens
+> - **Worktree sequential merge HEAD 안전 체크 추가** — squash merge 직전 `main@HEAD` 이동 여부 확인, 이동했으면 abort
+> - Auto-memory 품질 우려 (Q11) 제거 — LLM 판단 신뢰
+>
 > **v4 변경사항 (2026-04-13):**
 > - **CLAUDE.md 제거** (Stage 1f-4 ensure 목록에서). 런타임에 불필요 + 템플릿은 가치 낮음
 > - **Git stash 재귀 누적 방지 로직** 추가 (Stage 1f-3). 기존 tts stash 미해결 시 진행 차단
@@ -90,7 +96,7 @@ SaaS 웹 애플리케이션을 **아이디어에서 구현 완료까지** 하나
 | **Environment verified before autonomy** | Stage 1 종료 전에 환경이 완전히 준비되어 있어야 함. "다음 세션 실행/테스트가 실패할 자원"이 있으면 진행 금지 |
 | **Idempotent ensure, never overwrite** | 파일 생성은 없으면 만들고 있으면 건드리지 않음. 프로젝트 상태 분기 없음 |
 | **Destructive ops require consent** | 좀비 kill, lock 파일 제거, 컨테이너 삭제 등 파괴적 동작은 사용자 확인 후 실행 |
-| **Preserve in-progress work** | 환경 정리 시 uncommitted 변경은 `git stash`로 보존, 절대 버리지 않음. **기존 tts stash가 미해결인 상태에서 새 stash 누적 금지** |
+| **Preserve in-progress work (once)** | 환경 정리 시 uncommitted 변경은 고유 태그 `git stash`로 1회 보존. **기존 tts stash가 미해결인 상태에서 새 stash 누적 금지** — 사용자는 pop 또는 drop으로 이진 결정, 중간 상태 없음 |
 | **Deploy is user's final act** | tts는 구현·점검까지만 책임. 배포는 사용자가 최종 리뷰 후 수동 실행 |
 | **Atomic task execution via worktree** | Stage 5 각 태스크는 격리된 git worktree에서 실행. 성공 시 squash merge, 실패 시 worktree 폐기. main은 오염되지 않음 |
 | **Right-sized session isolation** | "중/대" 복잡도는 세션 체이닝(별도 프로세스), "소"는 Task Tool(인세션 서브에이전트). 둘 다 완전 격리이지만 오버헤드가 다름 |
@@ -388,9 +394,9 @@ EXISTING_TTS_STASHES=$(git stash list | grep "tts:" || true)
 | 상황 | 동작 |
 |---|---|
 | 기존 tts stash 없음 | 다음 단계 진행 |
-| **기존 tts stash 있음** | **진행 차단.** 사용자에게 stash 목록 리포트 + 필수 결정 요구:<br>(a) 지금 `git stash pop`으로 복원 (충돌 시 수동 해결)<br>(b) `git stash drop`으로 버림 (복구 불가 경고)<br>(c) 유지 + 진행 (**경고 동반**: 새 stash가 쌓일 수 있음) |
+| **기존 tts stash 있음** | **진행 차단.** 사용자에게 stash 목록 + 각 stash의 메시지/diff 요약 리포트 + **이진 선택 강제**:<br>(a) `git stash pop` — 복원 (충돌 시 사용자 수동 해결)<br>(b) `git stash drop` — 버림 (복구 불가) |
 
-재귀 누적 방지 원리: 기존 stash가 해결되지 않으면 새 stash 생성 금지가 기본값. (c) 옵션은 있지만 **사용자가 매번 의식적으로 선택**해야 하므로, 실수로 N층 누적되지 않는다.
+**"유지 + 진행" 옵션은 없다.** 이유: tts stash는 **내 작업(→pop)이거나 쓰레기(→drop) 두 가지뿐**이다. 중간 상태를 허용하면 N층 누적이 가능해진다. 깔끔한 이진 선택이 안전하다. 크래시로 인한 미결 상태는 보존 가치가 없으므로 drop해도 손실 없다.
 
 **Step 2: 현재 working tree 보존**
 
@@ -503,25 +509,47 @@ Intake 번들을 입력으로 받아, 이후 stage들이 어떻게 세션 단위
 
 1. **설계 문서 수 결정** — 기본 9종, 프로젝트 규모에 따라 일부 통합 가능 (소규모에서 `06-workflow-map`을 `00-overview`에 통합 등)
 2. **태스크 수 N 추정** — `architecture-sketch.md`의 모듈 개수 + 복잡도 기반
-3. **각 논리 단위의 복잡도 분류** — 소/중/대
-4. **실행 방식 결정 (오버헤드 최적화):**
-   - **소: Task Tool (인세션 서브에이전트)** — `claude -p` 세션 체이닝 오버헤드(~30s) 생략. 서브에이전트 컨텍스트 격리는 유지
-   - **중: 1 unit = 1 세션 체이닝** (watchdog 감시)
-   - **대: 1 unit = 2~3 세션 체이닝** (의도적 분할)
+3. **각 논리 단위의 복잡도 분류 (토큰 추정 기반)**
 
-   **"소" 엄격 정의 (잘못 판정 시 컨텍스트 오염):**
-   - 파일 생성 1개, ≤300줄
-   - 단일 체크 실행 (예: `makemigrations --check`)
-   - 읽고 요약만 하는 작업
-   - 수정 범위 1개 파일 + ≤20줄
+   복잡도는 **예상 peak 컨텍스트 사용량**(토큰)으로 판정한다. 파일 줄 수나 개수 같은 선형 기준은 자의적이라 폐기.
 
-   **"소"가 아닌 것 (강제로 세션 체이닝):**
-   - 코드베이스 탐색이 필요한 작업
-   - 여러 파일 편집
-   - 모든 구현 태스크 (Stage 5)
-   - 모든 담금질 작업 (Stage 2b, 4)
+   **추정 공식:**
 
-   실제로 "소"에 해당하는 것: Stage 1.5의 light drift check, Stage 3 일부, Stage 2a의 아주 짧은 문서 초안.
+   ```
+   peak_tokens ≈
+     base_context    (세션이 로드할 intake/design 문서 토큰)
+   + read_cost       (touch할 파일들의 추정 토큰 합)
+   + exploration_budget (코드베이스 탐색 예상 오버헤드)
+   + output_budget   (생성할 문서/코드 예상 토큰)
+   + safety_margin   (위 합의 30% 버퍼)
+   ```
+
+   **등급 임계값 (200K 윈도우 기준):**
+
+   | 등급 | peak_tokens 범위 | 윈도우 % | 실행 방식 |
+   |---|---|---|---|
+   | **소** | < 30K | < 15% | **Task Tool** (인세션 서브에이전트) |
+   | **중** | 30K ~ 80K | 15% ~ 40% | 1 unit = 1 세션 체이닝 (watchdog 감시) |
+   | **대** | > 80K | > 40% | 1 unit = 2~3 세션 체이닝 (의도적 분할) |
+
+   **왜 30K가 "소" 경계인가:** 컨텍스트가 이 이하면 세션 전체가 barely 차고, `claude -p` 시작 오버헤드(~30s) + 파일시스템 상태 전달 비용이 작업 자체보다 큼. Task Tool의 서브에이전트도 완전 격리를 제공하므로 "격리" 관점에서 손해 없음. 반환되는 summary만 부모 컨텍스트에 들어오는데, 소 작업의 summary는 작음.
+
+   **추정 예시 (session-planner가 unit별로 계산):**
+
+   | 작업 | base | read | exploration | output | safety | 합계 | 등급 |
+   |---|---|---|---|---|---|---|---|
+   | `00-overview.md` 초안 | 5K | 0 | 0 | 1K | 1.8K | ~8K | 소 |
+   | `04-data-model.md` 초안 | 10K | 2K | 5K | 3K | 6K | ~26K | 소 |
+   | 태스크 담금질 (t03) | 20K | 5K | 10K | 8K | 13K | ~56K | 중 |
+   | 3개 파일 수정 구현 | 20K | 6K | 15K | 5K | 14K | ~60K | 중 |
+   | 10개 파일 리팩토링 | 20K | 20K | 30K | 15K | 26K | ~111K | 대 |
+
+   **실제로 "소"에 해당할 것:** Stage 1.5 light drift check, Stage 3 일부, Stage 2a의 짧은 문서 몇 개. 모든 담금질·구현 태스크는 통상 중/대.
+
+4. **실행 방식 확정:**
+   - **소 → Task Tool** (`claude -p` 생략, 인세션 서브에이전트 dispatch)
+   - **중 → 1 세션 체이닝**
+   - **대 → 2~3 세션 체이닝 (분할)**
 
 5. **의존성 그래프 생성**
 6. **Light drift check** — Stage 1f 종료 후 환경이 바뀌었을 수 있음:
@@ -538,20 +566,21 @@ Intake 번들을 입력으로 받아, 이후 stage들이 어떻게 세션 단위
 {
   "schema_version": "1.0",
   "project": "{project}",
-  "created_at": "2026-04-12T...",
+  "created_at": "2026-04-13T...",
   "stages": [
     {
       "id": "2.1",
       "type": "design-draft",
       "sessions": [
-        {"unit": "00-overview", "complexity": "소", "estimated_minutes": 5},
-        {"unit": "01-architecture", "complexity": "중", "estimated_minutes": 10},
-        {"unit": "02-design-system", "complexity": "중", "estimated_minutes": 10},
-        {"unit": "03-ux-flows", "complexity": "중", "estimated_minutes": 10},
-        {"unit": "04-data-model", "complexity": "중", "estimated_minutes": 10},
-        {"unit": "05-auth-rbac", "complexity": "중", "estimated_minutes": 10},
-        {"unit": "06-workflow-map", "complexity": "소", "estimated_minutes": 5},
-        {"unit": "99-implementation-plan", "complexity": "대", "estimated_minutes": 20}
+        {"unit": "00-overview", "estimated_tokens": 8000, "complexity": "소", "exec": "task_tool"},
+        {"unit": "01-architecture", "estimated_tokens": 45000, "complexity": "중", "exec": "session_chain"},
+        {"unit": "02-design-system", "estimated_tokens": 35000, "complexity": "중", "exec": "session_chain"},
+        {"unit": "03-ux-flows", "estimated_tokens": 40000, "complexity": "중", "exec": "session_chain"},
+        {"unit": "04-data-model", "estimated_tokens": 26000, "complexity": "소", "exec": "task_tool"},
+        {"unit": "05-auth-rbac", "estimated_tokens": 38000, "complexity": "중", "exec": "session_chain"},
+        {"unit": "06-workflow-map", "estimated_tokens": 12000, "complexity": "소", "exec": "task_tool"},
+        {"unit": "07-infrastructure", "estimated_tokens": 32000, "complexity": "중", "exec": "session_chain"},
+        {"unit": "99-implementation-plan", "estimated_tokens": 95000, "complexity": "대", "exec": "session_chain_split"}
       ]
     },
     {
@@ -759,8 +788,11 @@ Stage 4 종료 후, 담금질에서 드러난 복잡도 변화를 반영하여 S
 각 태스크 `t{NN}`에 대해 의존성 순서로 순차 실행:
 
 ```
-1. Worktree 생성 (최신 main@HEAD 기준)
-   git worktree add .worktrees/{task} -b tts/{task} main
+1. main@HEAD 스냅샷 + Worktree 생성
+   BASE_SHA=$(git rev-parse main)
+   git worktree add .worktrees/{task} -b tts/{task} "$BASE_SHA"
+   # BASE_SHA를 태스크 메타데이터에 기록
+   echo "$BASE_SHA" > .worktrees/{task}/.tts-base-sha
 
 2. Worktree 안에서 impl-forge-batch 실행
    - Session A: 구현 (subagent-driven-development 패턴)
@@ -769,6 +801,18 @@ Stage 4 종료 후, 담금질에서 드러난 복잡도 변화를 반영하여 S
 
 3a. 성공 경로:
     cd ../..  # 원래 레포 루트
+
+    # ⭐ 안전 체크: main@HEAD가 BASE_SHA에서 움직였는가?
+    CURRENT_SHA=$(git rev-parse main)
+    BASE_SHA=$(cat .worktrees/{task}/.tts-base-sha)
+    if [ "$CURRENT_SHA" != "$BASE_SHA" ]; then
+      # 외부 커밋 감지됨 — tts가 모르는 변경이 main에 들어옴
+      echo "ABORT: main@HEAD moved from $BASE_SHA to $CURRENT_SHA during Stage 5"
+      echo "External commit detected. tts cannot safely squash merge."
+      # worktree와 브랜치는 보존 (사용자가 수동 병합 가능)
+      exit 1
+    fi
+
     git merge --squash tts/{task}
     git commit -m "tts({task}): {description from task doc}"
     git worktree remove .worktrees/{task}
@@ -782,11 +826,19 @@ Stage 4 종료 후, 담금질에서 드러난 복잡도 변화를 반영하여 S
     # 실패 전파 원칙: 의존하는 하위 태스크 skip
 ```
 
-**순차 + Worktree의 중요 원칙: 최신 main에서 분기**
+**순차 + Worktree의 보장: 충돌 0 assertion**
 
-- Task k의 worktree는 **Task k-1이 squash merge된 직후의 main@HEAD**에서 생성
-- 따라서 Task k는 이전 모든 태스크의 변경을 이미 보고 시작
-- 이 원칙이 깨지면(예: 모든 worktree를 초기 main에서 동시 생성) 머지 충돌이 발생
+- Task k의 worktree는 **Task k-1이 squash merge된 직후의 main@HEAD**에서 생성 (`BASE_SHA` 기록)
+- Task k 실행 중에 main은 외부에서 변경되지 않아야 함 (순수 sequential tts의 전제)
+- 따라서 squash merge 시점에 main이 여전히 `BASE_SHA`라면 → **머지 충돌 발생 불가능 (assertion)**
+- 만약 외부에서 main에 커밋이 들어왔다면 → 즉시 abort, 사용자 개입 요청. 자동 머지 금지
+
+**왜 assertion인가:** 이론적으로 "충돌 0"이지만 런타임에 확인하지 않으면 가정이 깨질 때 silent corruption이 난다. `git rev-parse` 한 줄로 확인 가능하므로 assertion으로 강제한다. 이건 "이론 + 런타임 검증" 이중 안전망이다.
+
+**외부 커밋 감지 시 복구 경로:**
+- Worktree는 보존 (`--force` 사용 안 함)
+- 사용자가 수동으로 `tts/{task}` 브랜치를 main에 merge 또는 rebase
+- 이후 tts를 다시 실행하여 남은 태스크 계속 진행
 
 ### 병렬 실행은 Future Work
 
@@ -1072,6 +1124,7 @@ docs/
 | Stage 4 forge 중 실패 | 실패한 태스크만 재담금질 |
 | Stage 5 태스크 환경 문제로 실패 | 해당 태스크 worktree 폐기 + 실패 로그 보존 + env-learnings.md 기록. 나머지 태스크 계속 |
 | Stage 5 태스크 로직 실패 | worktree 폐기, main 무오염. 실패한 태스크부터 재개 (이전 태스크는 squash merge로 고정) |
+| Stage 5 외부 커밋 감지 (HEAD 이동) | **Abort**, worktree 보존 (사용자 수동 병합용). 사용자가 `tts/{task}` 브랜치를 main에 수동 merge/rebase한 후 tts 재실행하면 Continue 모드로 남은 태스크 진행 |
 | Stage 5 orphan worktree 잔재 | 다음 실행 시 `git worktree prune` + `.worktrees/` 하위 정리. Stage 1f-3 zombie check가 감지 |
 
 ### Watchdog 개입
@@ -1143,10 +1196,10 @@ docs/
 - **Q8.** Zombie check가 false positive를 낼 경우(사용자 정상 작업 중인 프로세스를 zombie로 오판)? → 절대 자동 kill하지 않음. 항상 사용자 확인 후 조치. 사용자가 "아니, 그건 살려둬"라고 답하면 워크플로우 중단하고 사용자에게 환경 정리 후 재시작 요청. plan-forge-batch의 "pytest 실패 기준"을 적용하여 false positive 최소화.
 - **Q9.** Stage 1b의 user workflow 7차원이 모든 SaaS에 적합한가? 특정 도메인(예: 관리자 도구, B2B, 내부 도구)에서 추가 차원이 필요할 수 있음 → 첫 버전에서는 7차원 고정, 실사용에서 확장.
 - **Q10.** Stage 5에서 태스크 환경 실패 시 "학습 기록"은 구체적으로 어떻게 저장하고 활용하는가? → 구현 계획 단계에서 `forge/{project}/env-learnings.md` 파일 형식 확정.
-- **Q11.** 배치 스킬의 auto-memory 저장 프롬프트가 낮은 quality의 메모리를 축적할 위험은? → "일반화 가능 + 비자명" 기준을 엄격 적용. 실사용 후 메모리 품질을 주기적으로 검토. 필요 시 `auto-memory` 원칙의 "한 번만 관찰된 것은 저장 금지" 규칙 강화.
-- **Q12.** Task Tool 대 세션 체이닝의 "소" 기준이 부정확하면 어떻게 되는가? → 부정확해도 subagent 격리가 있으므로 컨텍스트 오염은 제한적. 단, summary가 의외로 길어지면 부모 세션 컨텍스트 부담. watchdog이 session 시간 초과를 감지하듯 summary 길이도 감시 가능. 실사용에서 문제 발견 시 기준 조정.
-- **Q13.** Stage 5 worktree 병렬 실행은 언제 도입할 것인가? → v4에서는 순차만. 병렬 실행 시 충돌 처리 복잡도 높음. 검증 후 v5에서 의존성 없는 태스크 그룹에 한해 도입 고려.
-- **Q14.** Worktree `.worktrees/` 디렉토리는 `.gitignore`에 포함되어야 하는가? → **Yes.** Stage 1f-4의 `.gitignore` 템플릿에 `.worktrees/` 추가 필요. 기존 레포면 사용자에게 안내 후 수동 추가 요청.
+- **Q11.** Task Tool 대 세션 체이닝의 "소" 기준이 현실에서 얼마나 정확한가? → 토큰 추정은 근사이므로 실제 peak과 차이 가능. session-planner는 추정치를 `session-plan.json`에 기록하고, 실행 후 실제 token usage와 비교하여 다음 재평가 시 보정. 심하게 빗나가면 사용자에게 "프로젝트가 예상보다 복잡함" 알림.
+- **Q12.** Stage 5 worktree 병렬 실행은 언제 도입할 것인가? → v5에서는 순차만. 병렬 실행 시 다중 worktree 간 충돌 처리 복잡도 높음. 검증 후 의존성 없는 태스크 그룹에 한해 도입 고려.
+- **Q13.** Worktree `.worktrees/` 디렉토리는 `.gitignore`에 포함되어야 하는가? → **Yes.** Stage 1f-4의 `.gitignore` 템플릿에 `.worktrees/` 추가 필요. 기존 레포면 사용자에게 안내 후 수동 추가 요청.
+- **Q14.** 외부 커밋 감지로 Stage 5가 abort된 경우, 사용자의 수동 복구 후 tts를 어떻게 재개하는가? → `forge-progress.json`이 완료된 태스크 상태를 보존하므로 tts 재실행 시 Continue 모드로 진입하여 남은 태스크부터 진행. 수동 머지된 `tts/{task}` 브랜치는 사용자가 `git worktree remove` + `git branch -D`로 정리.
 
 ---
 
