@@ -149,6 +149,7 @@ class InviteCode(BaseModel):
             return False
         if self.expires_at:
             from django.utils import timezone
+
             if self.expires_at <= timezone.now():
                 return False
         return True

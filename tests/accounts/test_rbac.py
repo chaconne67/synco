@@ -395,12 +395,16 @@ class TestProjectConsultantAssignment:
         test_client = TestClient()
         test_client.force_login(owner)
 
-        response = test_client.post("/projects/new/", {
-            "title": "Assigned Project",
-            "client": str(client_co.pk),
-            "jd_text": "Test JD",
-            "assigned_consultants": [str(con.pk)],
-        }, follow=True)
+        response = test_client.post(
+            "/projects/new/",
+            {
+                "title": "Assigned Project",
+                "client": str(client_co.pk),
+                "jd_text": "Test JD",
+                "assigned_consultants": [str(con.pk)],
+            },
+            follow=True,
+        )
         assert response.status_code == 200
         project = Project.objects.get(title="Assigned Project")
         assert con in project.assigned_consultants.all()
@@ -419,11 +423,15 @@ class TestProjectConsultantAssignment:
         test_client = TestClient()
         test_client.force_login(owner)
 
-        response = test_client.post("/projects/new/", {
-            "title": "Solo Project",
-            "client": str(client_co.pk),
-            "jd_text": "Test JD",
-        }, follow=True)
+        response = test_client.post(
+            "/projects/new/",
+            {
+                "title": "Solo Project",
+                "client": str(client_co.pk),
+                "jd_text": "Test JD",
+            },
+            follow=True,
+        )
         assert response.status_code == 200
         project = Project.objects.get(title="Solo Project")
         assert owner in project.assigned_consultants.all()
@@ -440,11 +448,15 @@ class TestProjectConsultantAssignment:
         test_client = TestClient()
         test_client.force_login(con)
 
-        response = test_client.post("/projects/new/", {
-            "title": "Consultant Project",
-            "client": str(client_co.pk),
-            "jd_text": "Test JD",
-        }, follow=True)
+        response = test_client.post(
+            "/projects/new/",
+            {
+                "title": "Consultant Project",
+                "client": str(client_co.pk),
+                "jd_text": "Test JD",
+            },
+            follow=True,
+        )
         assert response.status_code == 200
         project = Project.objects.get(title="Consultant Project")
         assert con in project.assigned_consultants.all()
@@ -477,12 +489,16 @@ class TestProjectConsultantAssignment:
         test_client = TestClient()
         test_client.force_login(owner)
 
-        response = test_client.post(f"/projects/{project.pk}/edit/", {
-            "title": "Update Test",
-            "client": str(client_co.pk),
-            "jd_text": "Updated JD",
-            "assigned_consultants": [str(con2.pk)],
-        }, follow=True)
+        response = test_client.post(
+            f"/projects/{project.pk}/edit/",
+            {
+                "title": "Update Test",
+                "client": str(client_co.pk),
+                "jd_text": "Updated JD",
+                "assigned_consultants": [str(con2.pk)],
+            },
+            follow=True,
+        )
         assert response.status_code == 200
         project.refresh_from_db()
         assert con2 in project.assigned_consultants.all()
@@ -505,12 +521,15 @@ class TestProjectConsultantAssignment:
         test_client = TestClient()
         test_client.force_login(owner)
 
-        test_client.post("/projects/new/", {
-            "title": "Cross Org Project",
-            "client": str(client_co.pk),
-            "jd_text": "Test JD",
-            "assigned_consultants": [str(alien.pk)],
-        })
+        test_client.post(
+            "/projects/new/",
+            {
+                "title": "Cross Org Project",
+                "client": str(client_co.pk),
+                "jd_text": "Test JD",
+                "assigned_consultants": [str(alien.pk)],
+            },
+        )
         # Form should be invalid — cross-org PK not in queryset
         assert not Project.objects.filter(title="Cross Org Project").exists()
 
@@ -539,11 +558,15 @@ class TestProjectConsultantAssignment:
         test_client.force_login(owner)
 
         # POST without assigned_consultants field => M2M cleared
-        response = test_client.post(f"/projects/{project.pk}/edit/", {
-            "title": "Clear Test",
-            "client": str(client_co.pk),
-            "jd_text": "Updated JD",
-        }, follow=True)
+        response = test_client.post(
+            f"/projects/{project.pk}/edit/",
+            {
+                "title": "Clear Test",
+                "client": str(client_co.pk),
+                "jd_text": "Updated JD",
+            },
+            follow=True,
+        )
         assert response.status_code == 200
         project.refresh_from_db()
         assert project.assigned_consultants.count() == 0

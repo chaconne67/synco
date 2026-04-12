@@ -9,14 +9,12 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.helpers import _get_org
-from accounts.models import Organization
 
 from .forms import ClientForm, ContractForm
 from .models import Client, Contract
 
 CLOSED_STATUSES = ["closed_success", "closed_fail", "closed_cancel", "on_hold"]
 PAGE_SIZE = 20
-
 
 
 @login_required

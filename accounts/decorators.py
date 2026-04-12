@@ -1,4 +1,5 @@
 """RBAC decorators. Must be used after @login_required."""
+
 from functools import wraps
 
 from django.http import HttpResponseForbidden
@@ -51,9 +52,7 @@ def role_required(*roles):
                 return _redirect_named("pending_approval", "/accounts/pending/")
 
             if membership.role not in roles:
-                return HttpResponseForbidden(
-                    "이 페이지에 접근할 권한이 없습니다."
-                )
+                return HttpResponseForbidden("이 페이지에 접근할 권한이 없습니다.")
 
             return view_func(request, *args, **kwargs)
 

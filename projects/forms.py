@@ -27,7 +27,14 @@ INPUT_CSS = (
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ["client", "title", "jd_source", "jd_text", "jd_file", "assigned_consultants"]
+        fields = [
+            "client",
+            "title",
+            "jd_source",
+            "jd_text",
+            "jd_file",
+            "assigned_consultants",
+        ]
         widgets = {
             "client": forms.Select(attrs={"class": INPUT_CSS}),
             "title": forms.TextInput(

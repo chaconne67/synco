@@ -11,7 +11,6 @@ from django.views.decorators.http import require_http_methods
 
 from accounts.decorators import membership_required, role_required
 from accounts.helpers import _get_org
-from accounts.models import Organization
 
 from projects.services import posting as posting_service
 from projects.services.resume.linker import link_resume_to_candidate
@@ -56,7 +55,6 @@ PAGE_SIZE = 20
 # days_elapsed thresholds for list view urgency
 URGENCY_RED_DAYS = 20
 URGENCY_YELLOW_DAYS = 10
-
 
 
 def _filter_params_string(request, exclude=None):
@@ -306,8 +304,7 @@ def project_create(request):
                         )
                         text = format_approval_request(
                             requester_name=(
-                                request.user.get_full_name()
-                                or request.user.username
+                                request.user.get_full_name() or request.user.username
                             ),
                             project_title=project.title,
                             conflict_info=(

@@ -20,9 +20,7 @@ class TestInviteCodeView:
 
     def test_valid_owner_code_creates_active_membership(self):
         org = Organization.objects.create(name="Org")
-        code = InviteCode.objects.create(
-            organization=org, role="owner", max_uses=1
-        )
+        code = InviteCode.objects.create(organization=org, role="owner", max_uses=1)
         user = User.objects.create_user(username="boss", password="pass")
         client = TestClient()
         client.force_login(user)
@@ -95,9 +93,7 @@ class TestPendingApprovalView:
     def test_pending_user_sees_waiting_page(self):
         org = Organization.objects.create(name="Org")
         user = User.objects.create_user(username="wait", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, status="pending"
-        )
+        Membership.objects.create(user=user, organization=org, status="pending")
         client = TestClient()
         client.force_login(user)
 
@@ -108,9 +104,7 @@ class TestPendingApprovalView:
     def test_active_user_redirects_to_dashboard(self):
         org = Organization.objects.create(name="Org")
         user = User.objects.create_user(username="active", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, status="active"
-        )
+        Membership.objects.create(user=user, organization=org, status="active")
         client = TestClient()
         client.force_login(user)
 
@@ -123,9 +117,7 @@ class TestRejectedView:
     def test_rejected_user_sees_rejection_page(self):
         org = Organization.objects.create(name="Org")
         user = User.objects.create_user(username="rej", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, status="rejected"
-        )
+        Membership.objects.create(user=user, organization=org, status="rejected")
         client = TestClient()
         client.force_login(user)
 
@@ -136,9 +128,7 @@ class TestRejectedView:
     def test_active_user_redirects_from_rejected(self):
         org = Organization.objects.create(name="Org")
         user = User.objects.create_user(username="act2", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, status="active"
-        )
+        Membership.objects.create(user=user, organization=org, status="active")
         client = TestClient()
         client.force_login(user)
 
@@ -160,9 +150,7 @@ class TestHomeRedirection:
     def test_pending_redirects_to_pending(self):
         org = Organization.objects.create(name="Org")
         user = User.objects.create_user(username="pend", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, status="pending"
-        )
+        Membership.objects.create(user=user, organization=org, status="pending")
         client = TestClient()
         client.force_login(user)
 
@@ -173,9 +161,7 @@ class TestHomeRedirection:
     def test_rejected_redirects_to_rejected(self):
         org = Organization.objects.create(name="Org")
         user = User.objects.create_user(username="rej2", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, status="rejected"
-        )
+        Membership.objects.create(user=user, organization=org, status="rejected")
         client = TestClient()
         client.force_login(user)
 

@@ -81,15 +81,11 @@ class TestMembershipStatus:
     def test_pending_status(self):
         org = Organization.objects.create(name="Test Org")
         user = User.objects.create_user(username="test", password="pass")
-        m = Membership.objects.create(
-            user=user, organization=org, status="pending"
-        )
+        m = Membership.objects.create(user=user, organization=org, status="pending")
         assert m.status == "pending"
 
     def test_rejected_status(self):
         org = Organization.objects.create(name="Test Org")
         user = User.objects.create_user(username="test", password="pass")
-        m = Membership.objects.create(
-            user=user, organization=org, status="rejected"
-        )
+        m = Membership.objects.create(user=user, organization=org, status="rejected")
         assert m.status == "rejected"
