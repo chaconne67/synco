@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 501963,
+  "last_pid": 509958,
   "execution_order": [
     "t03",
     "t04",
@@ -409,7 +409,7 @@
       "slug": "t14",
       "phase": 2,
       "title": "설정 탭 템플릿 구현",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -421,9 +421,20 @@
       ],
       "artifacts": [
         "t14/design-spec.md",
-        "t14/impl-plan.md"
+        "t14/impl-plan.md",
+        "t14/impl-plan-agreed.md"
       ],
-      "committed": false
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 7,
+          "accepted": 6,
+          "rebutted": 1,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t15",

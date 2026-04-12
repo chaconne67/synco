@@ -1,0 +1,93 @@
+{
+  "topic": "t14",
+  "document": "docs/forge/headhunting-onboarding/t14/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "HTMX main nav entry missing tab bar",
+              "attack": "Sidebar hx-get targets #main-content, but settings_profile HTMX response returns only profile partial without tab bar. Tab UI never appears on primary entry.",
+              "action": "accepted",
+              "response": "Confirmed. Plan must add HX-Target detection: #main-content gets full tab shell, #settings-content gets tab partial only.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Email POST returns wrong template",
+              "attack": "Email form POSTs to email_settings endpoint which returns email_settings.html (full page with own header/back button), breaking tab context.",
+              "action": "accepted",
+              "response": "Confirmed. Template must POST to settings_email instead. View POST handling must be added as companion change.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "Telegram actions return non-partial responses",
+              "attack": "telegram:test and telegram:unbind render telegram_bind.html (full page), not the tab partial. Tab context destroyed after test/unbind.",
+              "action": "accepted",
+              "response": "Confirmed. Templates must use partial-aware endpoints. Partial variants needed for test/unbind.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "Tests too weak (t13 R1-04 unaddressed)",
+              "attack": "Step 7 only runs existing status_code tests. No content verification despite t13 CRITICAL flag.",
+              "action": "accepted",
+              "response": "Accepted. Must add tab bar text verification, active tab content checks, HTMX partial content validation.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "MINOR",
+              "title": "Style tokens inconsistent",
+              "attack": "Templates use text-[14px], focus:ring-indigo-500 vs project convention focus:ring-primary.",
+              "action": "accepted",
+              "response": "Accepted as MINOR. Will note preferred tokens in plan.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MINOR",
+              "title": "Hardcoded terms/privacy URLs",
+              "attack": "Step 3 uses /terms/ and /privacy/ instead of {% url %} tags.",
+              "action": "accepted",
+              "response": "Valid. Will use {% url 'terms' %} and {% url 'privacy' %}.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MINOR",
+              "title": "HTMX redirect for /accounts/settings/ not handled",
+              "attack": "settings_page 302 redirect may cause full page reload for HTMX requests.",
+              "action": "rebutted",
+              "response": "Outside t14 scope (view logic). HTMX follows 302 redirects transparently.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 7,
+        "accepted": 6,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
