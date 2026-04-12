@@ -463,7 +463,8 @@ def project_delete(request, pk):
 def _build_overview_context(project):
     """개요 탭 공통 컨텍스트."""
     funnel = {
-        "contacts": project.contacts.count(),
+        "contacts": project.contacts.exclude(result=Contact.Result.RESERVED).count(),
+        "interested": project.contacts.filter(result=Contact.Result.INTERESTED).count(),
         "submissions": project.submissions.count(),
         "interviews": Interview.objects.filter(submission__project=project).count(),
         "offers": Offer.objects.filter(submission__project=project).count(),
@@ -616,6 +617,11 @@ def project_tab_contacts(request, pk):
         .order_by("-contacted_at")
     )
 
+    # 퍼널에서 결과 필터 클릭 시
+    result_filter = request.GET.get("result")
+    if result_filter and result_filter in Contact.Result.values:
+        completed_contacts = completed_contacts.filter(result=result_filter)
+
     # 컨택 예정(잠금) 목록 — 유효한 것만
     reserved_contacts = (
         project.contacts.filter(result=Contact.Result.RESERVED, locked_until__gt=now)
@@ -637,6 +643,7 @@ def project_tab_contacts(request, pk):
             "reserved_contacts": reserved_contacts,
             "can_release": request.user in project.assigned_consultants.all(),
             "submitted_candidate_ids": submitted_candidate_ids,
+            "result_filter": result_filter,
         },
     )
 

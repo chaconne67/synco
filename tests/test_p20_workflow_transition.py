@@ -1,6 +1,7 @@
 """P20: Workflow transition tests.
 
-Tests for submission_create auto-transition to submissions tab.
+Tests for submission_create auto-transition to submissions tab,
+and funnel navigation (t23).
 """
 
 import json
@@ -292,3 +293,123 @@ class TestContactInterestBanner:
         )
         # 관심→관심 (변경 없음)이므로 배너 없이 204 반환
         assert resp.status_code == 204
+
+
+# --- Funnel navigation tests (t23) ---
+
+
+class TestFunnelNavigation:
+    """개요 탭 퍼널의 각 단계가 클릭 가능한 링크로 렌더링되어야 한다."""
+
+    @pytest.mark.django_db
+    def test_overview_funnel_has_clickable_links(
+        self, auth_client, project
+    ):
+        """퍼널 항목에 hx-get 링크가 포함되어야 한다."""
+        resp = auth_client.get(
+            f"/projects/{project.pk}/tab/overview/",
+            HTTP_HX_REQUEST="true",
+        )
+        content = resp.content.decode()
+        # 4개 탭 URL이 있어야 함
+        assert f"/projects/{project.pk}/tab/contacts/" in content
+        assert f"/projects/{project.pk}/tab/submissions/" in content
+        assert f"/projects/{project.pk}/tab/interviews/" in content
+        assert f"/projects/{project.pk}/tab/offers/" in content
+        # 관심 필터 링크
+        assert f"/projects/{project.pk}/tab/contacts/?result=" in content
+        # hx-get 속성이 퍼널 영역에 존재
+        assert 'hx-target="#tab-content"' in content
+        # tabChanged 이벤트 발행 코드 존재
+        assert "tabChanged" in content
+
+    @pytest.mark.django_db
+    def test_overview_funnel_includes_interested_count(
+        self, auth_client, project, candidate, user_with_org
+    ):
+        """퍼널에 '관심' 카운트가 정확히 포함되어야 한다."""
+        # 관심 컨택 1건
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user_with_org,
+            channel=Contact.Channel.PHONE,
+            contacted_at=timezone.now(),
+            result=Contact.Result.INTERESTED,
+        )
+        # 미응답 컨택 1건 (관심 아님)
+        other_candidate = Candidate.objects.create(
+            name="김철수",
+            owned_by=project.organization,
+        )
+        Contact.objects.create(
+            project=project,
+            candidate=other_candidate,
+            consultant=user_with_org,
+            channel=Contact.Channel.PHONE,
+            contacted_at=timezone.now(),
+            result=Contact.Result.NO_RESPONSE,
+        )
+        resp = auth_client.get(
+            f"/projects/{project.pk}/tab/overview/",
+            HTTP_HX_REQUEST="true",
+        )
+        content = resp.content.decode()
+        # 관심 카운트는 1이어야 함 (미응답 제외)
+        assert "관심" in content
+        # 컨택 카운트는 2이어야 함 (RESERVED 제외, 나머지 모두)
+
+    @pytest.mark.django_db
+    def test_overview_funnel_excludes_reserved_from_contacts(
+        self, auth_client, project, candidate, user_with_org
+    ):
+        """퍼널 컨택 카운트에서 예정(RESERVED)이 제외되어야 한다."""
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user_with_org,
+            channel=Contact.Channel.PHONE,
+            contacted_at=timezone.now(),
+            result=Contact.Result.RESERVED,
+            locked_until=timezone.now() + timezone.timedelta(hours=1),
+        )
+        resp = auth_client.get(
+            f"/projects/{project.pk}/tab/overview/",
+            HTTP_HX_REQUEST="true",
+        )
+        content = resp.content.decode()
+        # RESERVED만 있으므로 퍼널 컨택 카운트는 0이어야 함
+        assert '>컨택 <span class="font-semibold text-gray-800">0</span>' in content.replace("\n", "").replace("  ", "")
+
+    @pytest.mark.django_db
+    def test_contacts_tab_result_filter(
+        self, auth_client, project, candidate, user_with_org
+    ):
+        """컨택 탭에 ?result=관심 필터가 동작해야 한다."""
+        Contact.objects.create(
+            project=project,
+            candidate=candidate,
+            consultant=user_with_org,
+            channel=Contact.Channel.PHONE,
+            contacted_at=timezone.now(),
+            result=Contact.Result.INTERESTED,
+        )
+        other_candidate = Candidate.objects.create(
+            name="김철수",
+            owned_by=project.organization,
+        )
+        Contact.objects.create(
+            project=project,
+            candidate=other_candidate,
+            consultant=user_with_org,
+            channel=Contact.Channel.PHONE,
+            contacted_at=timezone.now(),
+            result=Contact.Result.NO_RESPONSE,
+        )
+        resp = auth_client.get(
+            f"/projects/{project.pk}/tab/contacts/?result=관심",
+            HTTP_HX_REQUEST="true",
+        )
+        content = resp.content.decode()
+        assert "홍길동" in content  # 관심 결과 후보자
+        assert "김철수" not in content  # 미응답 결과 후보자는 필터됨

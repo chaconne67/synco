@@ -1,4 +1,4 @@
-<div class="space-y-4" hx-trigger="contactChanged from:body" hx-get="{% url 'projects:project_tab_contacts' project.pk %}" hx-target="#tab-content">
+<div class="space-y-4" hx-trigger="contactChanged from:body" hx-get="{% url 'projects:project_tab_contacts' project.pk %}{% if result_filter %}?result={{ result_filter }}{% endif %}" hx-target="#tab-content">
 
   <!-- 상단: 컨택 등록 버튼 -->
   <div class="flex justify-between items-center">

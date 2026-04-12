@@ -100,13 +100,45 @@
   <section class="bg-white rounded-lg border border-gray-100 p-5">
     <h2 class="text-[15px] font-semibold text-gray-500 mb-4">진행 현황</h2>
     <div class="flex items-center gap-3 text-[14px]">
-      <span class="text-gray-600">컨택 <span class="font-semibold text-gray-800">{{ funnel.contacts }}</span></span>
+      <a hx-get="{% url 'projects:project_tab_contacts' project.pk %}"
+         hx-target="#tab-content"
+         hx-push-url="false"
+         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'contacts'}}))"
+         class="text-gray-600 hover:text-primary cursor-pointer transition">
+        컨택 <span class="font-semibold text-gray-800">{{ funnel.contacts }}</span>
+      </a>
       <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      <span class="text-gray-600">추천 <span class="font-semibold text-gray-800">{{ funnel.submissions }}</span></span>
+      <a hx-get="{% url 'projects:project_tab_contacts' project.pk %}?result=관심"
+         hx-target="#tab-content"
+         hx-push-url="false"
+         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'contacts'}}))"
+         class="text-gray-600 hover:text-primary cursor-pointer transition">
+        관심 <span class="font-semibold text-gray-800">{{ funnel.interested }}</span>
+      </a>
       <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      <span class="text-gray-600">면접 <span class="font-semibold text-gray-800">{{ funnel.interviews }}</span></span>
+      <a hx-get="{% url 'projects:project_tab_submissions' project.pk %}"
+         hx-target="#tab-content"
+         hx-push-url="false"
+         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'submissions'}}))"
+         class="text-gray-600 hover:text-primary cursor-pointer transition">
+        추천 <span class="font-semibold text-gray-800">{{ funnel.submissions }}</span>
+      </a>
       <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      <span class="text-gray-600">오퍼 <span class="font-semibold text-gray-800">{{ funnel.offers }}</span></span>
+      <a hx-get="{% url 'projects:project_tab_interviews' project.pk %}"
+         hx-target="#tab-content"
+         hx-push-url="false"
+         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'interviews'}}))"
+         class="text-gray-600 hover:text-primary cursor-pointer transition">
+        면접 <span class="font-semibold text-gray-800">{{ funnel.interviews }}</span>
+      </a>
+      <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      <a hx-get="{% url 'projects:project_tab_offers' project.pk %}"
+         hx-target="#tab-content"
+         hx-push-url="false"
+         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'offers'}}))"
+         class="text-gray-600 hover:text-primary cursor-pointer transition">
+        오퍼 <span class="font-semibold text-gray-800">{{ funnel.offers }}</span>
+      </a>
     </div>
     {% with total=funnel.contacts %}
     {% if total > 0 %}
