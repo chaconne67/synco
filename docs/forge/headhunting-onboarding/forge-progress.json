@@ -441,7 +441,7 @@
       "phase": 2,
       "title": "조직 관리 뷰 + URL + 테스트",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
