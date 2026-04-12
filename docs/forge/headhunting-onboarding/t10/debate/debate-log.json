@@ -1,0 +1,113 @@
+{
+  "topic": "t10",
+  "stages": {
+    "design-tempering": null,
+    "impl-tempering": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-R1-01",
+              "severity": "CRITICAL",
+              "title": "Migration check incomplete — makemigrations --check does not verify applied state",
+              "attack": "makemigrations --check only verifies model-migration file match, not DB schema sync. Design spec requires no unapplied migrations.",
+              "action": "accepted",
+              "response": "Correct. Adding migrate --check to Step 3.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-02",
+              "severity": "CRITICAL",
+              "title": "Consultant project detail/edit direct-URL bypass not verified",
+              "attack": "project_detail, project_update, and tab views use organization=org without assigned_consultants check. Consultant can access any org project via UUID.",
+              "action": "accepted",
+              "response": "Valid gap. Adding checklist items for consultant unassigned project access. Will likely fail and need follow-up fix.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-03",
+              "severity": "CRITICAL",
+              "title": "Reference management owner access not verified",
+              "attack": "Reference write endpoints use @staff_member_required, not @role_required('owner'). Non-staff owner sees menu but gets 403.",
+              "action": "rebutted",
+              "response": "Explicit design decision in t05 impl-plan: 'Write views keep existing @staff_member_required (staff→role 전환은 별도 작업)'. Not in t03-t09 scope. Downgraded to MINOR.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-04",
+              "severity": "MAJOR",
+              "title": "Step 10 sidebar '프로젝트 승인' not reproducible without setup data",
+              "attack": "Sidebar menu is conditional on pending_approval_count > 0. Checklist never creates the precondition.",
+              "action": "accepted",
+              "response": "Adding precondition: create pending approval project before checking sidebar label.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-05",
+              "severity": "MAJOR",
+              "title": "Task 9 empty-state CTAs are not verified",
+              "attack": "Manual checklist never exercises role-based empty-state CTAs from Task 9. Design spec 1.5 requires these.",
+              "action": "accepted",
+              "response": "Adding checklist items for owner/consultant empty-state CTAs on dashboard, project list, client list.",
+              "evidence_type": "code_reference",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-06",
+              "severity": "MAJOR",
+              "title": "No negative-path testing for invite codes",
+              "attack": "Only valid codes tested. Invalid, expired, used codes not checked. Design spec defines negative path behavior.",
+              "action": "accepted",
+              "response": "Downgraded to MINOR (automated tests cover this). Adding one negative-path checklist item.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            },
+            {
+              "id": "I-R1-07",
+              "severity": "MAJOR",
+              "title": "No unauthenticated user access testing",
+              "attack": "All checklist items assume logged-in state. No verification of unauthenticated access to protected pages.",
+              "action": "rebutted",
+              "response": "All views use @login_required. Automated tests cover this. Manual verification adds no value.",
+              "evidence_type": "code_reference",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-08",
+              "severity": "MINOR",
+              "title": "No test coverage verification",
+              "attack": "Test suite runs without coverage check. Critical RBAC paths could be untested.",
+              "action": "rebutted",
+              "response": "Project has no coverage baseline. Coverage tooling is a project-level concern, not a verification checklist item. Each task wrote its own tests.",
+              "evidence_type": "logical_reasoning",
+              "resolved": false
+            },
+            {
+              "id": "I-R1-09",
+              "severity": "MINOR",
+              "title": "No state transition lifecycle verification",
+              "attack": "States checked in isolation, not re-entry behavior (e.g., approved user revisiting pending page).",
+              "action": "accepted",
+              "response": "Adding state transition checks for approved/rejected users accessing old state URLs.",
+              "evidence_type": "logical_reasoning",
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 9,
+        "accepted": 6,
+        "rebutted": 3,
+        "escalated": 0
+      }
+    }
+  }
+}

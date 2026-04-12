@@ -283,7 +283,7 @@
       "slug": "t10",
       "phase": 1,
       "title": "전체 통합 검증",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "impl_commit": null,
       "verification_status": "pending",
@@ -299,8 +299,20 @@
         "t08",
         "t09"
       ],
-      "artifacts": [],
-      "committed": false
+      "artifacts": [
+        "t10/impl-plan-agreed.md"
+      ],
+      "committed": true,
+      "debate_summary": {
+        "design": null,
+        "impl": {
+          "rounds": 1,
+          "issues": 9,
+          "accepted": 6,
+          "rebutted": 3,
+          "escalated": 0
+        }
+      }
     },
     {
       "slug": "t11",
