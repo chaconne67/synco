@@ -566,7 +566,7 @@
       "phase": 3,
       "title": "tabChanged 이벤트 시스템 + tab-navigation.js",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
