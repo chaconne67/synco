@@ -628,8 +628,8 @@
       "phase": 3,
       "title": "contact_update() '관심' 결과 시 추천 유도 배너",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "9da2899",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -642,7 +642,7 @@
         "t21/impl-plan.md",
         "t21/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
