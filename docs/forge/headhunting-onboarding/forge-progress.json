@@ -688,7 +688,7 @@
       "phase": 3,
       "title": "퍼널 클릭 가능한 내비게이션",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
