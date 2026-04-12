@@ -599,7 +599,7 @@
       "tempering_status": "completed",
       "impl_status": "completed",
       "impl_commit": "a90fb2c",
-      "verification_status": "pending",
+      "verification_status": "running",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
