@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "verify",
-  "last_pid": 780555,
+  "last_pid": 788186,
   "execution_order": [
     "t03",
     "t04",
@@ -719,7 +719,7 @@
       "phase": 3,
       "title": "탭 뱃지 신규(new) 표시",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "impl_commit": null,
       "verification_status": "pending",
       "verification_result": null,
