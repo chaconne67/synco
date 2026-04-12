@@ -197,8 +197,8 @@
       "phase": 1,
       "title": "사이드바 역할별 메뉴 필터링",
       "tempering_status": "completed",
-      "impl_status": "running",
-      "impl_commit": null,
+      "impl_status": "completed",
+      "impl_commit": "939ea6d",
       "verification_status": "pending",
       "verification_result": null,
       "entry_point": "impl",
@@ -209,7 +209,7 @@
       "artifacts": [
         "t07/impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "debate_summary": {
         "design": null,
         "impl": {
