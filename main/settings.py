@@ -131,6 +131,15 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+# Session: sliding 24h (updated every request)
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# CEO test login — hidden ID/PW login for local CEO role verification.
+# Production (.env.prod) must NOT set this; default False.
+ALLOW_CEO_TEST_LOGIN = os.environ.get("ALLOW_CEO_TEST_LOGIN", "0") == "1"
+
 # Kakao OAuth
 KAKAO_CLIENT_ID = os.environ.get("KAKAO_CLIENT_ID", "")
 KAKAO_CLIENT_SECRET = os.environ.get("KAKAO_CLIENT_SECRET", "")
