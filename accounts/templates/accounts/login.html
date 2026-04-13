@@ -4,45 +4,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>synco - 로그인</title>
-
-  <!-- Pretendard Font -->
+  <title>synco - AI 헤드헌팅 플랫폼</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
-
-  <!-- Tailwind CSS (built) -->
   <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
 <body class="bg-white font-sans text-gray-900">
+  <div class="min-h-screen flex flex-col lg:flex-row">
 
-  <div class="min-h-screen flex flex-col items-center justify-center px-6">
-
-    <div class="w-full max-w-sm flex flex-col items-center">
-
-      <!-- Logo & Tagline -->
-      <div class="mb-12 text-center">
-        <h1 class="text-display font-bold text-primary mb-3">synco</h1>
-        <p class="text-gray-500 text-[15px]">AI로 인재를 빠르게 찾으세요</p>
+    <section class="flex-1 flex items-center justify-center px-6 py-16 lg:py-0 bg-gradient-to-br from-primary/5 via-white to-white">
+      <div class="max-w-md">
+        <h1 class="text-display font-bold text-primary mb-4">synco</h1>
+        <p class="text-heading font-semibold text-gray-900 leading-tight mb-6">
+          AI로 인재를 빠르게 찾으세요
+        </p>
+        <ul class="space-y-3 text-[15px] text-gray-600">
+          <li class="flex gap-2"><span class="text-primary">✓</span> 이력서 자동 파싱과 구조화</li>
+          <li class="flex gap-2"><span class="text-primary">✓</span> 후보자 검색과 검수 워크플로우</li>
+          <li class="flex gap-2"><span class="text-primary">✓</span> 프로젝트·보고·알림 한 곳에서</li>
+        </ul>
       </div>
+    </section>
 
-      <!-- Kakao Login Button -->
-      <a href="{% url 'kakao_login' %}"
-         class="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-[#191919] font-semibold rounded-lg py-3 text-[15px] hover:brightness-95 transition">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#191919">
-          <path d="M12 3C6.48 3 2 6.58 2 10.9c0 2.78 1.86 5.22 4.66 6.6l-.96 3.56c-.08.3.26.54.52.36l4.2-2.78c.52.06 1.04.1 1.58.1 5.52 0 10-3.58 10-7.84S17.52 3 12 3z"/>
-        </svg>
-        카카오로 시작하기
-      </a>
+    <section class="flex-1 flex items-center justify-center px-6 py-16 lg:py-0">
+      <div class="w-full max-w-sm">
+        <div class="mb-10 text-center">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">시작하기</h2>
+          <p class="text-sm text-gray-500">카카오 계정으로 바로 로그인하세요</p>
+        </div>
 
-      <!-- Terms -->
-      <p class="mt-8 text-sm text-gray-500">
-        <a href="/terms/" class="hover:text-gray-600">이용약관</a>
-        <span class="mx-1">&middot;</span>
-        <a href="/privacy/" class="hover:text-gray-600">개인정보처리방침</a>
-      </p>
+        <a href="{% url 'kakao_login' %}"
+           class="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-[#191919] font-semibold rounded-lg py-3 text-[15px] hover:brightness-95 transition">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#191919">
+            <path d="M12 3C6.48 3 2 6.58 2 10.9c0 2.78 1.86 5.22 4.66 6.6l-.96 3.56c-.08.3.26.54.52.36l4.2-2.78c.52.06 1.04.1 1.58.1 5.52 0 10-3.58 10-7.84S17.52 3 12 3z"/>
+          </svg>
+          카카오로 시작하기
+        </a>
 
-    </div>
+        <p class="mt-8 text-xs text-gray-500 text-center">
+          로그인 시
+          <a href="/terms/" class="underline hover:text-gray-700">이용약관</a>과
+          <a href="/privacy/" class="underline hover:text-gray-700">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.
+        </p>
+      </div>
+    </section>
 
   </div>
-
 </body>
 </html>
