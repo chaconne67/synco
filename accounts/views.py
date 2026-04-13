@@ -4,6 +4,7 @@ import httpx
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -354,6 +355,45 @@ def staff_login_page(request):
         {
             "error": error,
             "title": "SuperAdmin 로그인",
+            "submit_label": "로그인",
+            "form_action": request.path,
+        },
+    )
+
+
+def ceo_login_page(request):
+    """Hidden ID/PW login for OWNER role testing. Gated by ALLOW_CEO_TEST_LOGIN."""
+    if not getattr(settings, "ALLOW_CEO_TEST_LOGIN", False):
+        raise Http404()
+
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    error = None
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            error = "아이디 또는 비밀번호가 올바르지 않습니다."
+        else:
+            try:
+                m = user.membership
+                if m.role != Membership.Role.OWNER or m.status != Membership.Status.ACTIVE:
+                    error = "활성 OWNER 계정만 로그인할 수 있습니다."
+            except Membership.DoesNotExist:
+                error = "활성 OWNER 계정만 로그인할 수 있습니다."
+
+            if error is None:
+                login(request, user)
+                return redirect("home")
+
+    return render(
+        request,
+        "accounts/staff_login.html",
+        {
+            "error": error,
+            "title": "CEO 테스트 로그인",
             "submit_label": "로그인",
             "form_action": request.path,
         },
