@@ -1,46 +1,467 @@
 {% load humanize %}
-<div class="p-4 lg:p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-[22px] font-bold text-gray-900">대시보드</h1>
-    <span class="text-[14px] text-gray-500">{% now "Y년 n월 j일" %}</span>
-  </div>
+<style>
+  .dash-scope {
+    --ink: #0A0A0A;
+    --ink-2: #27272A;
+    --muted: #52525B;
+    --muted-2: #9CA3AF;
+    --bg: #FAFAFA;
+    --surface: #FFFFFF;
+    --surface-2: #F4F4F5;
+    --border: #E4E4E7;
+    --border-soft: #F1F1F3;
+    --brand: #4A56A8;
+    --brand-deep: #2F3A86;
+    --brand-soft: #EEF0F9;
+  }
+  .dash-scope .dash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.02), 0 8px 24px -12px rgba(15,23,42,.06);
+  }
+  .dash-scope .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px;
+    transition: transform .12s ease, box-shadow .15s ease;
+  }
+  .dash-scope .kpi-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px -12px rgba(15,23,42,.1);
+  }
+  .dash-scope .kpi-number {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .dash-scope .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-2);
+  }
+  .dash-scope .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .dash-scope .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .dash-scope .greeting-h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.024em;
+    line-height: 1.15;
+  }
+</style>
 
-  {% if is_owner and not has_projects and not has_clients %}
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-    <div class="text-gray-400 mb-3">
-      <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
+<div class="dash-scope p-5 lg:p-8 space-y-6 max-w-[1280px] mx-auto">
+
+  <!-- ============================================== -->
+  <!-- Greeting header                                 -->
+  <!-- ============================================== -->
+  <header class="flex flex-wrap items-start justify-between gap-4 mb-2">
+    <div>
+      <div class="eyebrow mb-2">{% now "Y년 n월 j일 l" %}</div>
+      <h1 class="greeting-h1">
+        안녕하세요,
+        <span class="text-[color:var(--brand)]">{{ request.user.first_name|default:request.user.username }}</span>님.
+      </h1>
+      <p class="mt-2 text-[14px] text-[color:var(--muted)]">
+        {% if today_actions %}
+          오늘 {{ today_actions|length }}건의 액션이 기다리고 있어요.
+        {% else %}
+          오늘은 급한 액션이 없어요. 여유롭게 한 주를 준비해보세요.
+        {% endif %}
+      </p>
     </div>
-    <p class="text-[16px] font-medium text-gray-700 mb-1">고객사를 등록하고 첫 프로젝트를 시작하세요</p>
-    <p class="text-[14px] text-gray-400 mb-4">고객사를 등록하면 프로젝트를 만들고 채용을 시작할 수 있습니다.</p>
-    <a href="/clients/new/"
-       hx-get="/clients/new/" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-1 px-4 py-2 bg-primary text-white text-[14px] font-medium rounded-lg hover:bg-primary/90 transition">
-      고객사 등록
+    <div class="flex items-center gap-2">
+      <button type="button"
+              onclick="window.VoiceAgent && window.VoiceAgent.toggle()"
+              class="inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] text-white text-[13px] font-semibold px-4 py-2.5 hover:bg-[#18181B] transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+        음성 명령
+      </button>
+      <button type="button"
+              hx-get="/dashboard/actions/" hx-target="#dash-actions" hx-swap="innerHTML"
+              class="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border)] text-[color:var(--ink)] text-[13px] font-semibold px-3.5 py-2.5 hover:bg-[color:var(--surface-2)] transition"
+              aria-label="새로고침">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================== -->
+  <!-- Empty state (owner with no clients/projects)    -->
+  <!-- ============================================== -->
+  {% if is_owner and not has_projects and not has_clients %}
+  <div class="dash-card p-10 text-center">
+    <div class="mx-auto h-14 w-14 rounded-2xl bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center mb-4">
+      <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    </div>
+    <p class="text-[17px] font-bold text-[color:var(--ink)] mb-1.5">고객사를 등록하고 첫 프로젝트를 시작하세요</p>
+    <p class="text-[14px] text-[color:var(--muted)] mb-6">고객사를 등록하면 프로젝트를 만들고 후보자 매칭을 시작할 수 있습니다.</p>
+    <a href="/clients/new/" hx-get="/clients/new/" hx-target="#main-content" hx-push-url="true"
+       class="inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] text-white text-[14px] font-semibold px-5 py-2.5 hover:bg-[#18181B] transition">
+      + 고객사 등록
     </a>
   </div>
   {% elif not is_owner and not has_projects %}
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-    <div class="text-gray-400 mb-3">
-      <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
+  <div class="dash-card p-10 text-center">
+    <div class="mx-auto h-14 w-14 rounded-2xl bg-[color:var(--surface-2)] text-[color:var(--muted)] flex items-center justify-center mb-4">
+      <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
     </div>
-    <p class="text-[16px] font-medium text-gray-700 mb-1">배정된 프로젝트가 없습니다</p>
-    <p class="text-[14px] text-gray-400">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
+    <p class="text-[17px] font-bold text-[color:var(--ink)] mb-1.5">배정된 프로젝트가 없습니다</p>
+    <p class="text-[14px] text-[color:var(--muted)]">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
   </div>
   {% else %}
-  <div id="dash-actions">
-    {% include "projects/partials/dash_actions.html" %}
-  </div>
 
-  {% include "projects/partials/dash_schedule.html" %}
-  {% include "projects/partials/dash_pipeline.html" %}
-  {% include "projects/partials/dash_activity.html" %}
+  <!-- ============================================== -->
+  <!-- KPI row (4 cards)                               -->
+  <!-- ============================================== -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="eyebrow">진행 중</div>
+        <div class="h-8 w-8 rounded-lg bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+      </div>
+      <div class="kpi-number">{{ pipeline.total_active|default:"0" }}</div>
+      <p class="mt-2 text-[12px] text-[color:var(--muted)]">활성 프로젝트</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="eyebrow">오늘 액션</div>
+        <div class="h-8 w-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        </div>
+      </div>
+      <div class="kpi-number">{{ today_actions|length }}</div>
+      <p class="mt-2 text-[12px] text-[color:var(--muted)]">긴급 처리 필요</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="eyebrow">이번 주</div>
+        <div class="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+      </div>
+      <div class="kpi-number">{{ weekly_schedule|length }}</div>
+      <p class="mt-2 text-[12px] text-[color:var(--muted)]">예정된 일정</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="eyebrow">이번 달 클로즈</div>
+        <div class="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+      </div>
+      <div class="kpi-number">{{ pipeline.month_closed|default:"0" }}</div>
+      <p class="mt-2 text-[12px] text-[color:var(--muted)]">성사된 채용</p>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Main grid: Actions (left 2 col) + Pipeline      -->
+  <!-- ============================================== -->
+  <section class="grid lg:grid-cols-3 gap-5">
+
+    <!-- Today + This week actions (span 2) -->
+    <div class="dash-card p-5 lg:p-6 lg:col-span-2" id="dash-actions-outer">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="section-title">오늘의 액션 &amp; 이번 주</div>
+          {% if today_actions %}
+          <span class="pill bg-rose-50 text-rose-700">
+            <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+            긴급 {{ today_actions|length }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div id="dash-actions">
+        {% if today_actions %}
+        <div class="space-y-2 mb-4">
+          {% for action in today_actions %}
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-50/70 border border-rose-100 hover:bg-rose-50 transition">
+            <span class="h-2 w-2 rounded-full bg-rose-500 flex-shrink-0"></span>
+            <div class="flex-1 min-w-0">
+              <div class="text-[14px] font-semibold text-[color:var(--ink)] truncate">{{ action.label }}</div>
+              <div class="text-[12px] text-[color:var(--muted)] truncate">{{ action.project.title }}</div>
+            </div>
+            <span class="text-[12px] text-[color:var(--muted-2)] flex-shrink-0 font-medium">{{ action.detail }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if weekly_schedule %}
+        <div class="space-y-2">
+          {% for action in weekly_schedule %}
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[color:var(--surface-2)] border border-[color:var(--border-soft)] hover:bg-amber-50/60 transition">
+            <span class="h-2 w-2 rounded-full bg-amber-400 flex-shrink-0"></span>
+            <div class="flex-1 min-w-0">
+              <div class="text-[14px] font-semibold text-[color:var(--ink)] truncate">{{ action.label }}</div>
+              <div class="text-[12px] text-[color:var(--muted)] truncate">{{ action.project.title }}</div>
+            </div>
+            <span class="text-[12px] text-[color:var(--muted-2)] flex-shrink-0 font-medium">{{ action.detail }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not today_actions and not weekly_schedule %}
+        <div class="py-12 text-center">
+          <div class="mx-auto h-12 w-12 rounded-xl bg-[color:var(--surface-2)] text-[color:var(--muted-2)] flex items-center justify-center mb-3">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          </div>
+          <p class="text-[14px] text-[color:var(--muted)]">
+            {% if is_owner %}오늘과 이번 주 모두 여유로워요.{% else %}배정된 업무가 없습니다.{% endif %}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Pipeline funnel -->
+    <div class="dash-card p-5 lg:p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div class="section-title">내 파이프라인</div>
+        <a href="/projects/" hx-get="/projects/" hx-target="#main-content" hx-push-url="true"
+           class="text-[12px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--brand)]">
+          전체 &rarr;
+        </a>
+      </div>
+
+      {% with counts=pipeline.status_counts %}
+      {% with new_count=counts.new|default:0 searching_count=counts.searching|default:0 recommending_count=counts.recommending|default:0 interviewing_count=counts.interviewing|default:0 negotiating_count=counts.negotiating|default:0 %}
+      <div class="space-y-2.5">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[12px] font-semibold text-sky-700">신규</span>
+            <span class="text-[12px] font-bold text-[color:var(--ink)]">{{ new_count }}</span>
+          </div>
+          <div class="h-2 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
+            <div class="h-full bg-sky-500 rounded-full transition-all" style="width: {% if new_count %}{% widthratio new_count 10 100 %}{% else %}2{% endif %}%; min-width: 2%;"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[12px] font-semibold text-amber-700">서칭</span>
+            <span class="text-[12px] font-bold text-[color:var(--ink)]">{{ searching_count }}</span>
+          </div>
+          <div class="h-2 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
+            <div class="h-full bg-amber-500 rounded-full transition-all" style="width: {% if searching_count %}{% widthratio searching_count 10 100 %}{% else %}2{% endif %}%; min-width: 2%;"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[12px] font-semibold text-[color:var(--brand)]">추천</span>
+            <span class="text-[12px] font-bold text-[color:var(--ink)]">{{ recommending_count }}</span>
+          </div>
+          <div class="h-2 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
+            <div class="h-full bg-[color:var(--brand)] rounded-full transition-all" style="width: {% if recommending_count %}{% widthratio recommending_count 10 100 %}{% else %}2{% endif %}%; min-width: 2%;"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[12px] font-semibold text-purple-700">면접</span>
+            <span class="text-[12px] font-bold text-[color:var(--ink)]">{{ interviewing_count }}</span>
+          </div>
+          <div class="h-2 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
+            <div class="h-full bg-purple-500 rounded-full transition-all" style="width: {% if interviewing_count %}{% widthratio interviewing_count 10 100 %}{% else %}2{% endif %}%; min-width: 2%;"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[12px] font-semibold text-rose-700">오퍼</span>
+            <span class="text-[12px] font-bold text-[color:var(--ink)]">{{ negotiating_count }}</span>
+          </div>
+          <div class="h-2 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
+            <div class="h-full bg-rose-500 rounded-full transition-all" style="width: {% if negotiating_count %}{% widthratio negotiating_count 10 100 %}{% else %}2{% endif %}%; min-width: 2%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 pt-4 border-t border-[color:var(--border-soft)] grid grid-cols-2 gap-3">
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted-2)]">진행</div>
+          <div class="text-[18px] font-extrabold text-[color:var(--ink)] mt-0.5">{{ pipeline.total_active|default:"0" }}<span class="text-[11px] font-semibold text-[color:var(--muted)] ml-1">건</span></div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted-2)]">월 클로즈</div>
+          <div class="text-[18px] font-extrabold text-emerald-600 mt-0.5">{{ pipeline.month_closed|default:"0" }}<span class="text-[11px] font-semibold text-[color:var(--muted)] ml-1">건</span></div>
+        </div>
+      </div>
+      {% endwith %}
+      {% endwith %}
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Second row: Activity feed + Pending approvals   -->
+  <!-- ============================================== -->
+  <section class="grid lg:grid-cols-3 gap-5">
+    <div class="dash-card p-5 lg:p-6 lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <div class="section-title">최근 활동</div>
+        {% if activities %}
+        <span class="text-[12px] text-[color:var(--muted-2)]">최근 {{ activities|length }}건</span>
+        {% endif %}
+      </div>
+      {% if activities %}
+      <ol class="space-y-1">
+        {% for activity in activities %}
+        <li class="flex items-start gap-4 py-2 group">
+          <div class="relative flex-shrink-0 mt-1.5">
+            <span class="h-2 w-2 rounded-full bg-[color:var(--brand)] block"></span>
+            {% if not forloop.last %}<span class="absolute left-1/2 -translate-x-1/2 top-3 h-full w-px bg-[color:var(--border-soft)]"></span>{% endif %}
+          </div>
+          <div class="flex-1 min-w-0 pb-2">
+            <div class="text-[13px] text-[color:var(--ink)] leading-relaxed">{{ activity.description }}</div>
+            <div class="text-[11px] text-[color:var(--muted-2)] mt-0.5">{{ activity.timestamp|naturaltime }}</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <div class="py-12 text-center">
+        <p class="text-[14px] text-[color:var(--muted-2)]">최근 활동이 없습니다.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if is_owner %}
+    <div class="dash-card p-5 lg:p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <div class="section-title">프로젝트 승인</div>
+          {% if pending_approvals %}
+          <span class="pill bg-rose-50 text-rose-700">{{ pending_approvals.count }}건</span>
+          {% endif %}
+        </div>
+        {% if pending_approvals %}
+        <a href="/projects/approvals/" hx-get="/projects/approvals/" hx-target="#main-content" hx-push-url="true"
+           class="text-[12px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--brand)]">전체 &rarr;</a>
+        {% endif %}
+      </div>
+      {% if pending_approvals %}
+      <ul class="space-y-2">
+        {% for approval in pending_approvals %}
+        <li class="px-3 py-2.5 rounded-xl bg-[color:var(--surface-2)] border border-[color:var(--border-soft)]">
+          <div class="text-[13px] font-semibold text-[color:var(--ink)] truncate">
+            {{ approval.requested_by.first_name|default:approval.requested_by.username }}
+          </div>
+          <div class="text-[11px] text-[color:var(--muted)] truncate mt-0.5">
+            &rarr; {{ approval.project.title }}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="py-8 text-center">
+        <div class="mx-auto h-10 w-10 rounded-xl bg-[color:var(--surface-2)] text-[color:var(--muted-2)] flex items-center justify-center mb-2">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <p class="text-[12px] text-[color:var(--muted-2)]">대기 중인 승인 요청이 없습니다.</p>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <!-- Non-owner: quick tip / voice hint -->
+    <div class="dash-card p-5 lg:p-6 bg-gradient-to-br from-[color:var(--brand-soft)] to-white border-[color:var(--brand-soft)]">
+      <div class="h-9 w-9 rounded-xl bg-[color:var(--brand)] text-white flex items-center justify-center mb-3">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+      </div>
+      <div class="text-[14px] font-bold text-[color:var(--ink)] mb-1">말로 시키세요</div>
+      <p class="text-[12px] text-[color:var(--muted)] leading-relaxed mb-3">
+        "핀테크 5년차 찾아줘", "박지훈 미팅 잡아줘" 한 마디면 synco가 처리합니다.
+      </p>
+      <button type="button"
+              onclick="window.VoiceAgent && window.VoiceAgent.toggle()"
+              class="text-[12px] font-semibold text-[color:var(--brand)] hover:text-[color:var(--brand-deep)]">
+        음성 에이전트 열기 &rarr;
+      </button>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Team performance (OWNER only)                   -->
+  <!-- ============================================== -->
+  {% if is_owner and team_summary %}
+  <section class="dash-card p-5 lg:p-6">
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div>
+        <div class="section-title">팀 전체 현황</div>
+        <div class="text-[12px] text-[color:var(--muted)] mt-0.5">컨설턴트별 진행 현황 및 팀 KPI</div>
+      </div>
+      <div class="flex items-center gap-4 text-[12px]">
+        <div class="flex items-center gap-1.5">
+          <span class="text-[color:var(--muted-2)]">컨택→추천</span>
+          <span class="font-bold text-[color:var(--ink)]">{{ team_summary.kpi.contact_to_submission }}%</span>
+        </div>
+        <span class="h-3 w-px bg-[color:var(--border)]"></span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-[color:var(--muted-2)]">추천→면접</span>
+          <span class="font-bold text-[color:var(--ink)]">{{ team_summary.kpi.submission_to_interview }}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto -mx-5 px-5 lg:mx-0 lg:px-0">
+      <table class="w-full text-[13px] min-w-[640px]">
+        <thead>
+          <tr class="text-[11px] font-semibold uppercase tracking-wider text-[color:var(--muted-2)] border-b border-[color:var(--border-soft)]">
+            <th class="text-left py-3 pr-4">컨설턴트</th>
+            <th class="text-center py-3 px-3">진행</th>
+            <th class="text-center py-3 px-3">컨택</th>
+            <th class="text-center py-3 px-3">추천</th>
+            <th class="text-center py-3 px-3">면접</th>
+            <th class="text-center py-3 px-3">클로즈</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in team_summary.consultants %}
+          <tr class="border-b border-[color:var(--border-soft)] last:border-0 hover:bg-[color:var(--surface-2)]/50 transition">
+            <td class="py-3 pr-4">
+              <div class="flex items-center gap-2.5">
+                <div class="h-7 w-7 rounded-full bg-gradient-to-br from-[color:var(--brand)] to-[color:var(--brand-deep)] text-white text-[11px] font-bold flex items-center justify-center">
+                  {{ c.user.first_name|default:c.user.username|first }}
+                </div>
+                <span class="font-semibold text-[color:var(--ink)]">{{ c.user.first_name|default:c.user.username }}</span>
+              </div>
+            </td>
+            <td class="text-center py-3 px-3 font-semibold text-[color:var(--ink)]">{{ c.active }}</td>
+            <td class="text-center py-3 px-3 text-[color:var(--muted)]">{{ c.contacts }}</td>
+            <td class="text-center py-3 px-3 text-[color:var(--muted)]">{{ c.submissions }}</td>
+            <td class="text-center py-3 px-3 text-[color:var(--muted)]">{{ c.interviews }}</td>
+            <td class="text-center py-3 px-3 font-semibold text-emerald-600">{{ c.closed }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
   {% endif %}
 
-  {% if is_owner %}
-  {% include "projects/partials/dash_admin.html" %}
   {% endif %}
+
 </div>
