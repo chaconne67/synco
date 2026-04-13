@@ -2,6 +2,11 @@
 
 {% block title %}대시보드 — synco{% endblock %}
 
+{% block breadcrumb_page %}
+<span class="text-slate-500">/</span>
+<span class="text-white font-semibold">대시보드</span>
+{% endblock %}
+
 {% block content %}
 {% include "projects/partials/dash_full.html" %}
 {% endblock %}
