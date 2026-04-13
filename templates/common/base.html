@@ -30,14 +30,14 @@
 
     <!-- Desktop sidebar (lg+) — dark navy -->
     {% block sidebar %}
-    <nav class="hidden lg:flex lg:flex-col lg:w-64 lg:p-5 lg:sticky lg:top-0 lg:h-screen lg:shrink-0"
+    <nav class="hidden lg:flex lg:flex-col lg:w-52 lg:px-3 lg:py-5 lg:sticky lg:top-0 lg:h-screen lg:shrink-0"
          style="background:#0F1A36;">
       {% include "common/nav_sidebar.html" %}
     </nav>
     {% endblock %}
 
     <!-- Right column: top bar + main content -->
-    <div class="flex-1 min-w-0 flex flex-col">
+    <div class="flex-1 min-w-0 flex flex-col" style="background:#0F1A36;">
 
       <!-- Top bar (sticky, dark navy) -->
       {% block top_bar %}
@@ -75,8 +75,8 @@
       </header>
       {% endblock %}
 
-      <!-- Main content -->
-      <main id="main-content" class="flex-1 min-w-0 pb-20 lg:pb-0 bg-slate-50 min-h-screen">
+      <!-- Main content (rounded top-left notch against the dark chrome) -->
+      <main id="main-content" class="flex-1 min-w-0 pb-20 lg:pb-0 bg-slate-50 min-h-screen lg:rounded-tl-2xl">
         {% block content %}{% endblock %}
       </main>
     </div>

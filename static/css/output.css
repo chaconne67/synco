@@ -4167,8 +4167,8 @@ section {
     height: 100vh;
   }
 
-  .lg\:w-64 {
-    width: 16rem;
+  .lg\:w-52 {
+    width: 13rem;
   }
 
   .lg\:shrink-0 {
@@ -4217,8 +4217,8 @@ section {
     gap: 2rem;
   }
 
-  .lg\:p-5 {
-    padding: 1.25rem;
+  .lg\:rounded-tl-2xl {
+    border-top-left-radius: 1rem;
   }
 
   .lg\:p-7 {
@@ -4232,6 +4232,11 @@ section {
   .lg\:px-10 {
     padding-left: 2.5rem;
     padding-right: 2.5rem;
+  }
+
+  .lg\:px-3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 
   .lg\:px-8 {
@@ -4252,6 +4257,11 @@ section {
   .lg\:py-28 {
     padding-top: 7rem;
     padding-bottom: 7rem;
+  }
+
+  .lg\:py-5 {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
   }
 
   .lg\:pb-0 {
