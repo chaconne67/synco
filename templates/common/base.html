@@ -55,7 +55,7 @@
             <kbd class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-white/10 border border-white/10 rounded px-1.5 py-0.5">⌘K</kbd>
           </div>
           <button type="button"
-                  onclick="window.VoiceAgent && window.VoiceAgent.toggle()"
+                  onclick="toggleChatbot()"
                   class="inline-flex items-center gap-1.5 rounded-md bg-[#0C9DDC] hover:bg-[#0B8DC4] text-white text-[13px] font-semibold px-3 py-1.5 transition"
                   title="음성 명령">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
@@ -210,7 +210,7 @@
   <!-- Voice input for comment forms -->
   <script src="{% static 'candidates/voice-input.js' %}"></script>
 
-  <!-- Global: voice agent FAB + modal -->
-  {% include "projects/partials/voice_button.html" %}
+  <!-- Global: mic button + chatbot modal -->
+  {% include "candidates/partials/chatbot_fab.html" %}
 </body>
 </html>
