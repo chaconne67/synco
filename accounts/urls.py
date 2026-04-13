@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     # Note: home is now in main/urls.py as root entry point
     path("accounts/login/", views.login_page, name="login"),
+    path("accounts/chaconne67-login/", views.staff_login_page, name="staff_login"),
     path("accounts/kakao/login/", views.kakao_login, name="kakao_login"),
     path("accounts/kakao/callback/", views.kakao_callback, name="kakao_callback"),
     # Settings tabs

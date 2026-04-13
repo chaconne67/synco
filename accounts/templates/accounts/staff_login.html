@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>synco - {{ title }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+</head>
+<body class="bg-white font-sans text-gray-900">
+  <div class="min-h-screen flex flex-col items-center justify-center px-6">
+    <div class="w-full max-w-sm">
+      <div class="mb-10 text-center">
+        <h1 class="text-display font-bold text-primary mb-2">synco</h1>
+        <p class="text-gray-500 text-sm">{{ title }}</p>
+      </div>
+
+      {% if error %}
+      <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="{{ form_action }}" class="space-y-3">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="아이디" autocomplete="username" required
+               class="w-full rounded-md border border-gray-300 px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        <input type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required
+               class="w-full rounded-md border border-gray-300 px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        <button type="submit"
+                class="w-full rounded-md bg-primary text-white font-semibold py-3 text-[15px] hover:brightness-110 transition">
+          {{ submit_label }}
+        </button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

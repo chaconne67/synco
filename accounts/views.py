@@ -2,7 +2,7 @@ import json
 
 import httpx
 from django.conf import settings
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -328,6 +328,36 @@ def privacy(request):
         else "accounts/privacy.html"
     )
     return render(request, template)
+
+
+def staff_login_page(request):
+    """Hidden ID/PW login for superusers only."""
+    if request.user.is_authenticated and request.user.is_superuser:
+        return redirect("home")
+
+    error = None
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            error = "아이디 또는 비밀번호가 올바르지 않습니다."
+        elif not user.is_superuser:
+            error = "슈퍼유저 계정만 로그인할 수 있습니다."
+        else:
+            login(request, user)
+            return redirect("home")
+
+    return render(
+        request,
+        "accounts/staff_login.html",
+        {
+            "error": error,
+            "title": "SuperAdmin 로그인",
+            "submit_label": "로그인",
+            "form_action": request.path,
+        },
+    )
 
 
 # --- P18: Gmail integration ---
