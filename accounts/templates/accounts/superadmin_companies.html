@@ -1,0 +1,59 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}synco - SuperAdmin 업체 관리{% endblock %}
+
+{% block content %}
+<div class="p-4 lg:p-8 space-y-6 max-w-4xl">
+  <div>
+    <h1 class="text-heading font-bold">업체 관리</h1>
+    <p class="text-sm text-gray-500 mt-1">새 헤드헌팅 업체를 등록하면 OWNER 초대코드가 자동 발급됩니다.</p>
+  </div>
+
+  {% if error %}
+  <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post" class="flex gap-2 items-start">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="업체명" required
+           class="flex-1 rounded-md border border-gray-300 px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-primary/40" />
+    <button type="submit"
+            class="rounded-md bg-primary text-white font-semibold px-6 py-3 text-[15px] hover:brightness-110 transition">
+      업체 등록
+    </button>
+  </form>
+
+  <div class="rounded-lg border border-gray-200 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-600 text-left">
+        <tr>
+          <th class="px-4 py-2 font-medium">업체명</th>
+          <th class="px-4 py-2 font-medium">OWNER 초대코드</th>
+          <th class="px-4 py-2 font-medium">사용</th>
+          <th class="px-4 py-2 font-medium">등록일</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr class="border-t border-gray-100">
+          <td class="px-4 py-3">{{ row.org.name }}</td>
+          <td class="px-4 py-3 font-mono">
+            {% if row.invite %}{{ row.invite.code }}{% else %}<span class="text-gray-400">없음</span>{% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if row.invite %}{{ row.invite.used_count }} / {{ row.invite.max_uses }}{% else %}—{% endif %}
+          </td>
+          <td class="px-4 py-3 text-gray-500">{{ row.org.created_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-gray-400">등록된 업체가 없습니다.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

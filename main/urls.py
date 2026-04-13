@@ -23,6 +23,7 @@ urlpatterns = [
     path("projects/", include("projects.urls")),
     path("telegram/", include("projects.urls_telegram")),
     path("org/", include("accounts.urls_org")),
+    path("superadmin/", include("accounts.urls_superadmin")),
     path("news/", include("projects.urls_news")),
 ]
 
