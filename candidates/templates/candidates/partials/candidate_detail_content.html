@@ -1,18 +1,18 @@
 {% load humanize candidate_extras %}
 
-<div class="max-w-4xl mx-auto px-4 py-4">
+<div>
   <!-- Header -->
   <div class="flex items-center gap-3 mb-4">
     <a href="javascript:void(0)"
        onclick="history.back()"
-       class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-600 cursor-pointer">
+       class="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-slate-700 cursor-pointer">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
       </svg>
     </a>
     <div class="flex-1">
       <div class="flex items-center gap-3">
-        <h1 class="text-heading text-gray-900">{{ candidate.name }}</h1>
+        <h1 class="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight">{{ candidate.name }}</h1>
         <span id="recommendation-badge">{% include "candidates/partials/_recommendation_badge.html" %}</span>
         {% if primary_resume and primary_resume.drive_file_id %}
         <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view"
@@ -50,15 +50,15 @@
 
   <!-- Career summary + Core competencies -->
   {% if candidate.summary or candidate.core_competencies %}
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
-    <h2 class="text-sm font-bold text-gray-700 mb-2">요약</h2>
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
+    <h2 class="text-sm font-bold text-slate-700 mb-2">요약</h2>
     {% if candidate.summary %}
-    <p class="text-[15px] text-gray-700 leading-relaxed">{{ candidate.summary }}</p>
+    <p class="text-[15px] text-slate-700 leading-relaxed">{{ candidate.summary }}</p>
     {% endif %}
     {% if candidate.core_competencies %}
     <div class="flex flex-wrap gap-1.5 {% if candidate.summary %}mt-3{% endif %}">
       {% for comp in candidate.core_competencies %}
-      <span class="text-[13px] font-medium text-primary bg-primary-light px-2.5 py-1 rounded-full">{{ comp }}</span>
+      <span class="text-[13px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-2.5 py-1 rounded-full">{{ comp }}</span>
       {% endfor %}
     </div>
     {% endif %}
@@ -68,9 +68,9 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 1. 인적사항                                             #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-lg font-bold text-primary-dark mb-3 mt-8 px-2"><i class="fa-solid fa-user text-primary-dark mr-2"></i>인적사항</h2>
+  <h2 class="text-lg font-bold text-slate-900 mb-3 mt-8 px-2"><i class="fa-solid fa-user text-[#0C9DDC] mr-2"></i>인적사항</h2>
 
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <!-- 기본 정보 -->
     <div class="space-y-2 text-[15px] md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 md:space-y-0">
       {% if candidate.birth_year %}
@@ -133,7 +133,7 @@
         {% endif %}
         {% if candidate.desired_salary %}
         <p><span class="text-gray-500">희망 연봉:</span>
-          <span class="font-semibold text-primary">{{ candidate.desired_salary|intcomma }}만원</span>
+          <span class="font-semibold text-[#0C9DDC]">{{ candidate.desired_salary|intcomma }}만원</span>
         </p>
         {% endif %}
       </div>
@@ -141,7 +141,7 @@
       <details class="mt-3 border-t border-gray-100 pt-3">
         <summary class="py-2 text-[13px] text-gray-500 cursor-pointer hover:text-gray-700 transition select-none">
           보수 상세 보기
-          <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
+          <span class="text-[11px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
         </summary>
         <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[15px]">
           {% for key, value in salary_detail.items %}
@@ -190,9 +190,9 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 2. 학력                                                 #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-lg font-bold text-primary-dark mb-3 mt-8 px-2"><i class="fa-solid fa-graduation-cap text-primary-dark mr-2"></i>학력</h2>
+  <h2 class="text-lg font-bold text-slate-900 mb-3 mt-8 px-2"><i class="fa-solid fa-graduation-cap text-[#0C9DDC] mr-2"></i>학력</h2>
 
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <!-- Education -->
     {% if educations %}
     <div class="space-y-2">
@@ -259,9 +259,9 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 3. 경력                                                 #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-lg font-bold text-primary-dark mb-3 mt-8 px-2"><i class="fa-solid fa-briefcase text-primary-dark mr-2"></i>경력</h2>
+  <h2 class="text-lg font-bold text-slate-900 mb-3 mt-8 px-2"><i class="fa-solid fa-briefcase text-[#0C9DDC] mr-2"></i>경력</h2>
 
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <!-- Career timeline -->
     {% if careers %}
     <div class="space-y-0">
@@ -275,13 +275,13 @@
           {% endif %}
         </div>
         <div class="flex flex-col items-center pt-1.5">
-          <div class="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-white {% if career.is_current %}bg-primary{% else %}bg-gray-300{% endif %}"></div>
+          <div class="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-white {% if career.is_current %}bg-[#0C9DDC]{% else %}bg-slate-300{% endif %}"></div>
           {% if not forloop.last %}<div class="w-0.5 flex-1 bg-gray-200 mt-1"></div>{% endif %}
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-baseline gap-2 flex-wrap">
             <span class="text-base font-semibold text-gray-900">{{ career.company }}</span>
-            {% if career.is_current %}<span class="text-[13px] text-white bg-primary px-1.5 py-0.5 rounded font-medium">현직</span>{% endif %}
+            {% if career.is_current %}<span class="text-[13px] text-white bg-[#0C9DDC] px-1.5 py-0.5 rounded font-medium">현직</span>{% endif %}
             {% if career.uses_duration_inference %}<span class="text-[11px] text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-full font-medium">기간 정보로 보정</span>{% endif %}
           </div>
           <p class="text-sm text-gray-600 mt-0.5">{{ career.position }}{% if career.department %} · {{ career.department }}{% endif %}</p>
@@ -328,7 +328,7 @@
           <div class="flex items-start justify-between">
             <span class="text-[15px] font-semibold text-gray-900">{{ project.name }}</span>
             {% if project.role %}
-            <span class="text-[13px] text-primary bg-primary-light px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{{ project.role }}</span>
+            <span class="text-[13px] text-[#0B5FAA] bg-[#E6F6FD] px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{{ project.role }}</span>
             {% endif %}
           </div>
           <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
@@ -377,9 +377,9 @@
   {# ═══════════════════════════════════════════════════════ #}
   {# 4. 능력                                                 #}
   {# ═══════════════════════════════════════════════════════ #}
-  <h2 class="text-lg font-bold text-primary-dark mb-3 mt-8 px-2"><i class="fa-solid fa-star text-primary-dark mr-2"></i>능력</h2>
+  <h2 class="text-lg font-bold text-slate-900 mb-3 mt-8 px-2"><i class="fa-solid fa-star text-[#0C9DDC] mr-2"></i>능력</h2>
 
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <!-- Skills tag cloud -->
     {% if candidate.skills %}
     <div>
@@ -389,8 +389,8 @@
         {% with desc=skill|skill_description name=skill|skill_name %}
         {% if desc %}
         <span class="relative group cursor-help">
-          <span class="text-[13px] font-medium text-primary bg-primary-light px-2.5 py-1 rounded-full
-                       border border-transparent group-hover:border-primary/30 transition">{{ name }}</span>
+          <span class="text-[13px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-2.5 py-1 rounded-full
+                       border border-transparent group-hover:border-[#0C9DDC]/30 transition">{{ name }}</span>
           <span class="invisible group-hover:visible opacity-0 group-hover:opacity-100
                        absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5
                        bg-gray-800 text-white text-[12px] rounded-lg px-2.5 py-1.5
@@ -398,7 +398,7 @@
                        pointer-events-none">{{ desc }}</span>
         </span>
         {% else %}
-        <span class="text-[13px] font-medium text-primary bg-primary-light px-2.5 py-1 rounded-full">{{ name }}</span>
+        <span class="text-[13px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-2.5 py-1 rounded-full">{{ name }}</span>
         {% endif %}
         {% endwith %}
         {% endfor %}
@@ -427,7 +427,7 @@
       <h3 class="text-[13px] font-medium text-gray-400 mb-2">어학</h3>
       <div class="flex flex-wrap gap-2">
         {% for lang in language_skills %}
-        <span class="text-[15px] bg-primary-light text-primary px-2 py-1 rounded">{{ lang.language }}{% if lang.test_name %} {{ lang.test_name }}{% endif %}{% if lang.score %} {{ lang.score }}{% endif %}{% if lang.level %} · {{ lang.level }}{% endif %}</span>
+        <span class="text-[15px] bg-[#E6F6FD] text-[#0B5FAA] px-2 py-1 rounded">{{ lang.language }}{% if lang.test_name %} {{ lang.test_name }}{% endif %}{% if lang.score %} {{ lang.score }}{% endif %}{% if lang.level %} · {{ lang.level }}{% endif %}</span>
         {% endfor %}
       </div>
     </div>
@@ -516,10 +516,10 @@
 
   <!-- Overseas experience -->
   {% if overseas_experience %}
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
       해외 경험
-      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
+      <span class="text-[11px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
     </h2>
     <div class="space-y-2">
       {% for exp in overseas_experience %}
@@ -549,15 +549,15 @@
 
   <!-- Self introduction -->
   {% if self_introduction %}
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
       자기소개
-      <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
+      <span class="text-[11px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
     </h2>
     <p class="text-[15px] text-gray-700 leading-relaxed whitespace-pre-line">{{ self_introduction|truncatewords:120 }}</p>
     {% if self_introduction|length > 500 %}
     <details class="mt-2">
-      <summary class="py-2 text-[13px] text-primary cursor-pointer hover:underline select-none">전체 보기</summary>
+      <summary class="py-2 text-[13px] text-[#0C9DDC] cursor-pointer hover:underline select-none">전체 보기</summary>
       <p class="text-[15px] text-gray-700 leading-relaxed mt-2 whitespace-pre-line">{{ self_introduction }}</p>
     </details>
     {% endif %}
@@ -566,11 +566,11 @@
 
   <!-- Family info (sensitive - collapsed) -->
   {% if family_info %}
-  <section class="bg-white rounded-lg border border-gray-200 mb-3">
+  <section class="bg-white rounded-xl border border-slate-200 mb-3">
     <details>
       <summary class="py-2 flex items-center gap-2 cursor-pointer select-none">
         <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider">가족 사항</h2>
-        <span class="text-[11px] font-medium text-primary bg-primary-light px-1.5 py-0.5 rounded-full">AI 추출</span>
+        <span class="text-[11px] font-medium text-[#0B5FAA] bg-[#E6F6FD] px-1.5 py-0.5 rounded-full">AI 추출</span>
         <svg class="w-3.5 h-3.5 text-gray-500 ml-auto" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
         </svg>
