@@ -19,7 +19,7 @@ def test_ceo_login_returns_404_when_flag_off(client):
 def test_ceo_login_get_renders_form_when_flag_on(client):
     resp = client.get(CEO_LOGIN_URL)
     assert resp.status_code == 200
-    assert b"name=\"username\"" in resp.content
+    assert b'name="username"' in resp.content
 
 
 @pytest.mark.django_db

@@ -33,10 +33,16 @@ def companies_page(request):
             )
             return redirect("superadmin_companies")
 
-    orgs = Organization.objects.all().order_by("-created_at").prefetch_related("invite_codes")
+    orgs = (
+        Organization.objects.all()
+        .order_by("-created_at")
+        .prefetch_related("invite_codes")
+    )
     rows = []
     for org in orgs:
-        owner_invites = [ic for ic in org.invite_codes.all() if ic.role == InviteCode.Role.OWNER]
+        owner_invites = [
+            ic for ic in org.invite_codes.all() if ic.role == InviteCode.Role.OWNER
+        ]
         latest_owner_invite = owner_invites[0] if owner_invites else None
         rows.append(
             {

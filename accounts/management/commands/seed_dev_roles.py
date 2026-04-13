@@ -38,7 +38,9 @@ class Command(BaseCommand):
         su.is_staff = True
         su.set_password(SUPERUSER_PASSWORD)
         su.save()
-        self.stdout.write(f"{'created' if created else 'updated'} superuser: {SUPERUSER_NAME}")
+        self.stdout.write(
+            f"{'created' if created else 'updated'} superuser: {SUPERUSER_NAME}"
+        )
 
         # 3) Test organization
         org, org_created = Organization.objects.get_or_create(name=ORG_NAME)
@@ -52,7 +54,9 @@ class Command(BaseCommand):
         ceo.email = CEO_EMAIL
         ceo.set_password(CEO_PASSWORD)
         ceo.save()
-        self.stdout.write(f"{'created' if ceo_created else 'updated'} CEO user: {CEO_NAME}")
+        self.stdout.write(
+            f"{'created' if ceo_created else 'updated'} CEO user: {CEO_NAME}"
+        )
 
         Membership.objects.update_or_create(
             user=ceo,
@@ -68,7 +72,11 @@ class Command(BaseCommand):
         try:
             consultant = User.objects.get(username=CONSULTANT_USERNAME)
         except User.DoesNotExist:
-            self.stdout.write(self.style.WARNING(f"{CONSULTANT_USERNAME} not found — skipping consultant membership"))
+            self.stdout.write(
+                self.style.WARNING(
+                    f"{CONSULTANT_USERNAME} not found — skipping consultant membership"
+                )
+            )
             self.stdout.write(self.style.SUCCESS("seed_dev_roles done"))
             return
 

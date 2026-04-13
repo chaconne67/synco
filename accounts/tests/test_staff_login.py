@@ -1,5 +1,4 @@
 import pytest
-from django.urls import reverse
 
 from accounts.models import User
 
@@ -11,8 +10,8 @@ STAFF_LOGIN_URL = "/accounts/chaconne67-login/"
 def test_staff_login_get_renders_form(client):
     resp = client.get(STAFF_LOGIN_URL)
     assert resp.status_code == 200
-    assert b"name=\"username\"" in resp.content
-    assert b"name=\"password\"" in resp.content
+    assert b'name="username"' in resp.content
+    assert b'name="password"' in resp.content
 
 
 @pytest.mark.django_db

@@ -13,7 +13,9 @@ urlpatterns = [
     path("accounts/settings/", views.settings_page, name="settings"),
     path("accounts/settings/profile/", views.settings_profile, name="settings_profile"),
     path("accounts/settings/email/", views.settings_email, name="settings_email"),
-    path("accounts/settings/telegram/", views.settings_telegram, name="settings_telegram"),
+    path(
+        "accounts/settings/telegram/", views.settings_telegram, name="settings_telegram"
+    ),
     path("accounts/settings/notify/", views.settings_notify, name="settings_notify"),
     path("accounts/logout/", views.logout_view, name="logout"),
     path("terms/", views.terms, name="terms"),

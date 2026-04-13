@@ -248,12 +248,18 @@ def settings_email(request):
 
     context = {"config": config, "active_tab": "email"}
 
-    if _is_tab_switch(request) or (getattr(request, "htmx", None) and request.method == "POST"):
+    if _is_tab_switch(request) or (
+        getattr(request, "htmx", None) and request.method == "POST"
+    ):
         return render(request, "accounts/partials/settings_email.html", context)
-    return render(request, "accounts/settings.html", {
-        **context,
-        "tab_template": "accounts/partials/settings_email.html",
-    })
+    return render(
+        request,
+        "accounts/settings.html",
+        {
+            **context,
+            "tab_template": "accounts/partials/settings_email.html",
+        },
+    )
 
 
 @login_required
@@ -269,14 +275,22 @@ def settings_telegram(request):
         is_bound = False
         verified_at = None
 
-    context = {"is_bound": is_bound, "verified_at": verified_at, "active_tab": "telegram"}
+    context = {
+        "is_bound": is_bound,
+        "verified_at": verified_at,
+        "active_tab": "telegram",
+    }
 
     if _is_tab_switch(request):
         return render(request, "accounts/partials/settings_telegram.html", context)
-    return render(request, "accounts/settings.html", {
-        **context,
-        "tab_template": "accounts/partials/settings_telegram.html",
-    })
+    return render(
+        request,
+        "accounts/settings.html",
+        {
+            **context,
+            "tab_template": "accounts/partials/settings_telegram.html",
+        },
+    )
 
 
 @login_required
@@ -298,12 +312,18 @@ def settings_notify(request):
 
     context = {"form": form, "active_tab": "notify"}
 
-    if _is_tab_switch(request) or (getattr(request, "htmx", None) and request.method == "POST"):
+    if _is_tab_switch(request) or (
+        getattr(request, "htmx", None) and request.method == "POST"
+    ):
         return render(request, "accounts/partials/settings_notify.html", context)
-    return render(request, "accounts/settings.html", {
-        **context,
-        "tab_template": "accounts/partials/settings_notify.html",
-    })
+    return render(
+        request,
+        "accounts/settings.html",
+        {
+            **context,
+            "tab_template": "accounts/partials/settings_notify.html",
+        },
+    )
 
 
 def logout_view(request):
@@ -379,7 +399,10 @@ def ceo_login_page(request):
         else:
             try:
                 m = user.membership
-                if m.role != Membership.Role.OWNER or m.status != Membership.Status.ACTIVE:
+                if (
+                    m.role != Membership.Role.OWNER
+                    or m.status != Membership.Status.ACTIVE
+                ):
                     error = "활성 OWNER 계정만 로그인할 수 있습니다."
             except Membership.DoesNotExist:
                 error = "활성 OWNER 계정만 로그인할 수 있습니다."

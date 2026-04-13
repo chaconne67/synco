@@ -1,5 +1,6 @@
 # accounts/views_org.py
 """조직 관리 뷰 — owner 전용."""
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, Value, When
 from django.http import HttpResponseBadRequest
@@ -45,10 +46,14 @@ def org_info(request):
 
     if _is_org_tab_switch(request):
         return render(request, "accounts/partials/org_info.html", context)
-    return render(request, "accounts/org_base.html", {
-        **context,
-        "tab_template": "accounts/partials/org_info.html",
-    })
+    return render(
+        request,
+        "accounts/org_base.html",
+        {
+            **context,
+            "tab_template": "accounts/partials/org_info.html",
+        },
+    )
 
 
 @login_required
@@ -72,10 +77,14 @@ def org_members(request):
 
     if _is_org_tab_switch(request):
         return render(request, "accounts/partials/org_members.html", context)
-    return render(request, "accounts/org_base.html", {
-        **context,
-        "tab_template": "accounts/partials/org_members.html",
-    })
+    return render(
+        request,
+        "accounts/org_base.html",
+        {
+            **context,
+            "tab_template": "accounts/partials/org_members.html",
+        },
+    )
 
 
 def _render_members_partial(request, org, message=None):
@@ -91,10 +100,16 @@ def _render_members_partial(request, org, message=None):
         .annotate(status_order=status_order)
         .order_by("status_order", "-created_at")
     )
-    return render(request, "accounts/partials/org_members.html", {
-        "org": org, "members": members, "active_tab": "members",
-        "message": message,
-    })
+    return render(
+        request,
+        "accounts/partials/org_members.html",
+        {
+            "org": org,
+            "members": members,
+            "active_tab": "members",
+            "message": message,
+        },
+    )
 
 
 @login_required
@@ -103,12 +118,15 @@ def _render_members_partial(request, org, message=None):
 def org_member_approve(request, pk):
     """POST /org/members/<pk>/approve/ — 멤버 승인."""
     org = _get_org(request)
-    membership = get_object_or_404(Membership, pk=pk, organization=org, status="pending")
+    membership = get_object_or_404(
+        Membership, pk=pk, organization=org, status="pending"
+    )
     membership.status = "active"
     membership.save(update_fields=["status", "updated_at"])
 
     return _render_members_partial(
-        request, org,
+        request,
+        org,
         f"{membership.user.first_name or membership.user.username}님이 승인되었습니다.",
     )
 
@@ -119,12 +137,15 @@ def org_member_approve(request, pk):
 def org_member_reject(request, pk):
     """POST /org/members/<pk>/reject/ — 멤버 거절."""
     org = _get_org(request)
-    membership = get_object_or_404(Membership, pk=pk, organization=org, status="pending")
+    membership = get_object_or_404(
+        Membership, pk=pk, organization=org, status="pending"
+    )
     membership.status = "rejected"
     membership.save(update_fields=["status", "updated_at"])
 
     return _render_members_partial(
-        request, org,
+        request,
+        org,
         f"{membership.user.first_name or membership.user.username}님의 가입이 거절되었습니다.",
     )
 
@@ -148,7 +169,8 @@ def org_member_role(request, pk):
     membership.save(update_fields=["role", "updated_at"])
 
     return _render_members_partial(
-        request, org,
+        request,
+        org,
         f"{membership.user.first_name or membership.user.username}님의 역할이 {new_role}로 변경되었습니다.",
     )
 
@@ -171,7 +193,9 @@ def org_member_remove(request, pk):
             organization=org, role="owner", status="active"
         ).count()
         if owner_count <= 1:
-            return HttpResponseBadRequest("조직에 owner가 1명뿐이면 제거할 수 없습니다.")
+            return HttpResponseBadRequest(
+                "조직에 owner가 1명뿐이면 제거할 수 없습니다."
+            )
 
     name = membership.user.first_name or membership.user.username
     membership.delete()
@@ -191,10 +215,14 @@ def org_invites(request):
 
     if _is_org_tab_switch(request):
         return render(request, "accounts/partials/org_invites.html", context)
-    return render(request, "accounts/org_base.html", {
-        **context,
-        "tab_template": "accounts/partials/org_invites.html",
-    })
+    return render(
+        request,
+        "accounts/org_base.html",
+        {
+            **context,
+            "tab_template": "accounts/partials/org_invites.html",
+        },
+    )
 
 
 @login_required
@@ -218,10 +246,17 @@ def org_invite_create(request):
         form = InviteCodeCreateForm()  # Reset only on success
 
     codes = InviteCode.objects.filter(organization=org).order_by("-created_at")
-    return render(request, "accounts/partials/org_invites.html", {
-        "org": org, "codes": codes, "form": form, "active_tab": "invites",
-        "message": message,
-    })
+    return render(
+        request,
+        "accounts/partials/org_invites.html",
+        {
+            "org": org,
+            "codes": codes,
+            "form": form,
+            "active_tab": "invites",
+            "message": message,
+        },
+    )
 
 
 @login_required
@@ -236,7 +271,14 @@ def org_invite_deactivate(request, pk):
 
     codes = InviteCode.objects.filter(organization=org).order_by("-created_at")
     form = InviteCodeCreateForm()
-    return render(request, "accounts/partials/org_invites.html", {
-        "org": org, "codes": codes, "form": form, "active_tab": "invites",
-        "message": "초대코드가 비활성화되었습니다.",
-    })
+    return render(
+        request,
+        "accounts/partials/org_invites.html",
+        {
+            "org": org,
+            "codes": codes,
+            "form": form,
+            "active_tab": "invites",
+            "message": "초대코드가 비활성화되었습니다.",
+        },
+    )

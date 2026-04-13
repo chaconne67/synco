@@ -1,7 +1,6 @@
 import pytest
-from django.urls import reverse
 
-from accounts.models import InviteCode, Membership, Organization, User
+from accounts.models import InviteCode, Organization, User
 
 
 SUPERADMIN_URL = "/superadmin/companies/"
@@ -25,20 +24,26 @@ def test_non_superuser_gets_404(client):
 @pytest.mark.django_db
 def test_superuser_get_shows_form_and_empty_list(client):
     su = User.objects.create_user(
-        username="su", email="su@e.com", password="p!",
-        is_superuser=True, is_staff=True,
+        username="su",
+        email="su@e.com",
+        password="p!",
+        is_superuser=True,
+        is_staff=True,
     )
     client.force_login(su)
     resp = client.get(SUPERADMIN_URL)
     assert resp.status_code == 200
-    assert b"name=\"name\"" in resp.content
+    assert b'name="name"' in resp.content
 
 
 @pytest.mark.django_db
 def test_superuser_post_creates_org_and_owner_invite(client):
     su = User.objects.create_user(
-        username="su", email="su@e.com", password="p!",
-        is_superuser=True, is_staff=True,
+        username="su",
+        email="su@e.com",
+        password="p!",
+        is_superuser=True,
+        is_staff=True,
     )
     client.force_login(su)
     resp = client.post(SUPERADMIN_URL, {"name": "ACME 헤드헌팅"})
@@ -54,8 +59,11 @@ def test_superuser_post_creates_org_and_owner_invite(client):
 @pytest.mark.django_db
 def test_superuser_post_empty_name_shows_error(client):
     su = User.objects.create_user(
-        username="su", email="su@e.com", password="p!",
-        is_superuser=True, is_staff=True,
+        username="su",
+        email="su@e.com",
+        password="p!",
+        is_superuser=True,
+        is_staff=True,
     )
     client.force_login(su)
     resp = client.post(SUPERADMIN_URL, {"name": "   "})
@@ -66,8 +74,11 @@ def test_superuser_post_empty_name_shows_error(client):
 @pytest.mark.django_db
 def test_list_shows_existing_companies_with_codes(client):
     su = User.objects.create_user(
-        username="su", email="su@e.com", password="p!",
-        is_superuser=True, is_staff=True,
+        username="su",
+        email="su@e.com",
+        password="p!",
+        is_superuser=True,
+        is_staff=True,
     )
     org = Organization.objects.create(name="Preexisting Co")
     InviteCode.objects.create(

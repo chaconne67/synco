@@ -242,7 +242,12 @@ class EmailMonitorConfig(BaseModel):
         return json.loads(decrypt_data(bytes(self.gmail_credentials)))
 
 
-NOTIFICATION_TYPES = ("contact_result", "recommendation_feedback", "project_approval", "newsfeed_update")
+NOTIFICATION_TYPES = (
+    "contact_result",
+    "recommendation_feedback",
+    "project_approval",
+    "newsfeed_update",
+)
 CHANNELS = ("web", "telegram")
 
 
