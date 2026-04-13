@@ -15,6 +15,8 @@ from .models import InviteCode, Membership, User
 @login_required
 def home(request):
     """Root redirect -- route by membership status."""
+    if request.user.is_superuser:
+        return redirect("dashboard")
     try:
         membership = request.user.membership
         if membership.status == "pending":
@@ -29,6 +31,9 @@ def home(request):
 @login_required
 def invite_code_page(request):
     """초대코드 입력 화면."""
+    if request.user.is_superuser:
+        return redirect("dashboard")
+
     # Already has membership -- redirect to appropriate page
     try:
         m = request.user.membership
@@ -105,6 +110,9 @@ def _notify_owners_new_pending(user, organization):
 @login_required
 def pending_approval_page(request):
     """승인 대기 화면."""
+    if request.user.is_superuser:
+        return redirect("dashboard")
+
     try:
         membership = request.user.membership
         if membership.status == "active":
@@ -120,6 +128,9 @@ def pending_approval_page(request):
 @login_required
 def rejected_page(request):
     """거절 안내 화면."""
+    if request.user.is_superuser:
+        return redirect("dashboard")
+
     try:
         membership = request.user.membership
         if membership.status == "active":
