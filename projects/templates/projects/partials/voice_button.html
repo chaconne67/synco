@@ -2,7 +2,7 @@
 <button
   id="voice-agent-fab"
   type="button"
-  class="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+  class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
   data-voice-context='{"page": "{{ voice_page|default:"unknown" }}", "project_id": "{{ voice_project_id|default:"" }}", "tab": "{{ voice_tab|default:"" }}"}'
   aria-label="음성 에이전트"
   onclick="window.VoiceAgent.toggle()"
