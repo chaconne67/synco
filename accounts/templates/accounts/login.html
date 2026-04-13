@@ -136,16 +136,18 @@
         <span class="text-[18px] font-extrabold tracking-tight">synco</span>
         <span class="ml-1 hidden sm:inline-block text-[11px] font-semibold uppercase tracking-wider text-[color:var(--brand)] bg-[color:var(--brand-soft)] px-2 py-0.5 rounded-full">HIRING</span>
       </a>
-      <nav class="hidden md:flex items-center gap-8 text-[14px] text-[color:var(--muted)]">
+      <nav class="hidden lg:flex items-center gap-9 text-[13.5px] text-[color:var(--muted)]">
         <a href="#features" class="hover:text-[color:var(--ink)] transition">기능</a>
         <a href="#workflow" class="hover:text-[color:var(--ink)] transition">워크플로우</a>
         <a href="#customers" class="hover:text-[color:var(--ink)] transition">고객사</a>
         <a href="#pricing" class="hover:text-[color:var(--ink)] transition">가격</a>
       </nav>
-      <div class="flex items-center gap-3">
-        <a href="#cta" class="hidden sm:inline text-[14px] font-semibold text-[color:var(--ink)] hover:text-[color:var(--brand)] transition">로그인</a>
-        <a href="{% url 'kakao_login' %}" class="cta-dark text-[13px] py-2 px-4">시작하기
-          <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+      <div class="flex items-center gap-5">
+        <a href="#cta" class="hidden sm:inline text-[13.5px] font-medium text-[color:var(--muted)] hover:text-[color:var(--ink)] transition">로그인</a>
+        <a href="{% url 'kakao_login' %}"
+           class="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--ink)] text-white text-[13px] font-semibold px-4 py-2 hover:bg-[#18181B] transition">
+          시작하기
+          <svg class="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
         </a>
       </div>
     </div>

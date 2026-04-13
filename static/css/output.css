@@ -1456,12 +1456,16 @@ video {
   gap: 1rem;
 }
 
+.gap-5 {
+  gap: 1.25rem;
+}
+
 .gap-6 {
   gap: 1.5rem;
 }
 
-.gap-8 {
-  gap: 2rem;
+.gap-9 {
+  gap: 2.25rem;
 }
 
 .gap-\[2px\] {
@@ -2492,6 +2496,10 @@ video {
   font-size: 12px;
 }
 
+.text-\[13\.5px\] {
+  font-size: 13.5px;
+}
+
 .text-\[13px\] {
   font-size: 13px;
 }
@@ -3208,6 +3216,11 @@ section {
   border-color: rgb(74 86 168 / 0.4);
 }
 
+.hover\:bg-\[\#18181B\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(24 24 27 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-\[color\:var\(--surface-2\)\]:hover {
   background-color: var(--surface-2);
 }
@@ -3336,10 +3349,6 @@ section {
 
 .hover\:bg-white\/10:hover {
   background-color: rgb(255 255 255 / 0.1);
-}
-
-.hover\:text-\[color\:var\(--brand\)\]:hover {
-  color: var(--brand);
 }
 
 .hover\:text-\[color\:var\(--ink\)\]:hover {
@@ -3644,10 +3653,6 @@ section {
 @media (min-width: 768px) {
   .md\:col-span-2 {
     grid-column: span 2 / span 2;
-  }
-
-  .md\:flex {
-    display: flex;
   }
 
   .md\:grid {
