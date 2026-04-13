@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>synco — AI 헤드헌팅 플랫폼</title>
-  <meta name="description" content="이력서 자동 파싱부터 후보자 검색·검수까지. AI가 헤드헌팅의 반복 작업을 대신합니다.">
+  <title>synco — 말로 일하는 AI 헤드헌팅 플랫폼</title>
+  <meta name="description" content="말로 시키고, 텔레그램으로 받으세요. AI가 후보자 검색·매칭·검증을 대신합니다. 컴퓨터 앞에 붙어있지 않아도 됩니다.">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="{% static 'css/output.css' %}">
@@ -22,7 +22,14 @@
       --border: #E4E4E7;
       --border-soft: #F1F1F3;
       --brand: #4A56A8;
+      --brand-deep: #2F3A86;
       --brand-soft: #EEF0F9;
+      --accent-green: #10B981;
+      --accent-green-soft: #D1FAE5;
+      --accent-amber: #F59E0B;
+      --accent-amber-soft: #FEF3C7;
+      --accent-rose: #F43F5E;
+      --accent-rose-soft: #FFE4E6;
     }
     html, body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -32,16 +39,16 @@
       color: var(--ink);
     }
     .display-h1 {
-      font-size: clamp(40px, 6vw, 68px);
+      font-size: clamp(40px, 6vw, 72px);
       font-weight: 800;
-      letter-spacing: -0.028em;
-      line-height: 1.05;
+      letter-spacing: -0.03em;
+      line-height: 1.02;
     }
     .display-h2 {
-      font-size: clamp(28px, 4vw, 44px);
+      font-size: clamp(28px, 4vw, 46px);
       font-weight: 800;
       letter-spacing: -0.024em;
-      line-height: 1.1;
+      line-height: 1.08;
     }
     .section-eyebrow {
       font-size: 13px;
@@ -122,6 +129,49 @@
       mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
       -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
     }
+    .gradient-soft-indigo {
+      background: linear-gradient(135deg, #EEF0F9 0%, #DDE2F4 50%, #F5F6FC 100%);
+    }
+    .gradient-soft-sand {
+      background: linear-gradient(160deg, #FEF9F0 0%, #FFF3E0 50%, #FFE7CC 100%);
+    }
+    .gradient-soft-mint {
+      background: linear-gradient(150deg, #E6FCF5 0%, #D1FAE5 100%);
+    }
+    .gradient-dark-hero {
+      background: linear-gradient(160deg, #0A0A0A 0%, #1E1E2E 60%, #2F3A86 100%);
+    }
+    @keyframes voice-pulse {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+    .wave-bar {
+      display: inline-block;
+      width: 3px;
+      height: 100%;
+      background: currentColor;
+      border-radius: 999px;
+      transform-origin: center;
+      animation: voice-pulse 1.2s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: .1s; }
+    .wave-bar:nth-child(3) { animation-delay: .2s; }
+    .wave-bar:nth-child(4) { animation-delay: .3s; }
+    .wave-bar:nth-child(5) { animation-delay: .4s; }
+    .wave-bar:nth-child(6) { animation-delay: .5s; }
+    .wave-bar:nth-child(7) { animation-delay: .6s; }
+    .photo-frame {
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px -20px rgba(15,23,42,.25), 0 8px 24px -8px rgba(15,23,42,.12);
+      position: relative;
+    }
+    .photo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
@@ -129,18 +179,18 @@
   <!-- ============================================== -->
   <!-- Top Nav                                         -->
   <!-- ============================================== -->
-  <header class="sticky top-0 z-40 backdrop-blur bg-white/70 border-b border-[color:var(--border-soft)]">
+  <header class="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-[color:var(--border-soft)]">
     <div class="mx-auto max-w-7xl px-6 lg:px-10 h-16 flex items-center justify-between">
       <a href="#" class="flex items-center gap-2">
         <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[color:var(--ink)] text-white text-[13px] font-black tracking-tight">S</span>
         <span class="text-[18px] font-extrabold tracking-tight">synco</span>
-        <span class="ml-1 hidden sm:inline-block text-[11px] font-semibold uppercase tracking-wider text-[color:var(--brand)] bg-[color:var(--brand-soft)] px-2 py-0.5 rounded-full">HIRING</span>
+        <span class="ml-1 hidden sm:inline-block text-[11px] font-semibold uppercase tracking-wider text-[color:var(--brand)] bg-[color:var(--brand-soft)] px-2 py-0.5 rounded-full">VOICE AI</span>
       </a>
       <nav class="hidden lg:flex items-center gap-9 text-[13.5px] text-[color:var(--muted)]">
-        <a href="#features" class="hover:text-[color:var(--ink)] transition">기능</a>
-        <a href="#workflow" class="hover:text-[color:var(--ink)] transition">워크플로우</a>
-        <a href="#customers" class="hover:text-[color:var(--ink)] transition">고객사</a>
-        <a href="#pricing" class="hover:text-[color:var(--ink)] transition">가격</a>
+        <a href="#voice" class="hover:text-[color:var(--ink)] transition">음성 에이전트</a>
+        <a href="#remote" class="hover:text-[color:var(--ink)] transition">원격 업무</a>
+        <a href="#matching" class="hover:text-[color:var(--ink)] transition">자동 매칭</a>
+        <a href="#trust" class="hover:text-[color:var(--ink)] transition">위조 검출</a>
       </nav>
       <div class="flex items-center gap-5">
         <a href="#cta" class="hidden sm:inline text-[13.5px] font-medium text-[color:var(--muted)] hover:text-[color:var(--ink)] transition">로그인</a>
@@ -159,22 +209,25 @@
   <section class="relative overflow-hidden">
     <div class="absolute inset-0 subtle-grid opacity-70 pointer-events-none"></div>
     <div class="relative mx-auto max-w-7xl px-6 lg:px-10 pt-20 lg:pt-28 pb-20 lg:pb-28">
-      <div class="grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
         <!-- Hero text -->
         <div>
           <div class="pill-badge mb-6">
-            <span class="h-1.5 w-1.5 rounded-full bg-[color:var(--brand)]"></span>
-            AI 헤드헌팅 플랫폼
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--brand)] opacity-50"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--brand)]"></span>
+            </span>
+            말로 일하는 헤드헌팅
           </div>
           <h1 class="display-h1 mb-6">
-            이력서부터 검수까지,<br>
-            <span class="text-[color:var(--brand)]">AI가 먼저 합니다.</span>
+            말로 시키세요.<br>
+            <span class="text-[color:var(--brand)]">synco가 합니다.</span>
           </h1>
           <p class="text-[18px] lg:text-[19px] leading-[1.65] text-[color:var(--muted)] max-w-xl mb-10">
-            반복되는 이력서 정리와 후보자 검색을 AI에 맡기세요.<br class="hidden sm:inline">
-            synco는 파싱·검수·프로젝트·알림을 하나의 흐름으로 묶어
-            헤드헌터가 본업에 집중하게 합니다.
+            후보자 검색도, 미팅 정리도, 이메일 답장도 &mdash; 목소리 하나면 충분합니다.<br class="hidden sm:inline">
+            카페에서, 공항에서, 거실 소파에서.
+            synco는 헤드헌터가 책상 앞에 붙어있지 않아도 되게 만듭니다.
           </p>
           <div class="flex flex-wrap items-center gap-3">
             <a href="{% url 'kakao_login' %}" class="cta-kakao">
@@ -183,8 +236,8 @@
               </svg>
               카카오로 시작하기
             </a>
-            <a href="#features" class="cta-ghost">
-              제품 둘러보기
+            <a href="#voice" class="cta-ghost">
+              음성 데모 보기
               <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
             </a>
           </div>
@@ -195,82 +248,92 @@
           </p>
         </div>
 
-        <!-- Hero product preview -->
+        <!-- Hero: Voice agent mockup -->
         <div class="relative">
-          <!-- Candidate card -->
+          <!-- Voice chat card -->
           <div class="card-panel p-6 lg:p-7 relative z-10">
-            <div class="flex items-start justify-between mb-5">
+            <div class="flex items-center justify-between mb-5 pb-4 border-b border-[color:var(--border-soft)]">
               <div class="flex items-center gap-3">
-                <div class="h-11 w-11 rounded-full bg-gradient-to-br from-[color:var(--brand)] to-indigo-700 text-white flex items-center justify-center font-bold text-[15px]">김</div>
+                <div class="relative h-10 w-10 rounded-full bg-gradient-to-br from-[color:var(--brand)] to-[color:var(--brand-deep)] flex items-center justify-center text-white">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+                  <span class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white"></span>
+                </div>
                 <div>
-                  <div class="font-bold text-[15px] text-[color:var(--ink)]">김현수</div>
-                  <div class="text-[12px] text-[color:var(--muted-2)]">Backend Engineer · 8년차</div>
+                  <div class="font-bold text-[14px] text-[color:var(--ink)]">synco 음성 에이전트</div>
+                  <div class="text-[11px] text-[color:var(--muted-2)]">듣는 중 &middot; Seoul</div>
                 </div>
               </div>
-              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
-                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                파싱 완료
-              </span>
-            </div>
-
-            <!-- Parsed sections -->
-            <div class="space-y-3">
-              <div class="flex items-center gap-3 rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] px-3 py-2.5">
-                <div class="h-7 w-7 rounded-md bg-white border border-[color:var(--border)] flex items-center justify-center text-[color:var(--brand)]">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-[12px] font-semibold text-[color:var(--ink)]">경력 이력</div>
-                  <div class="text-[11px] text-[color:var(--muted)] truncate">카카오, 네이버, 토스 · 총 8년 · 결제/검색 도메인</div>
-                </div>
-                <div class="text-[11px] text-[color:var(--muted-2)]">3건</div>
-              </div>
-              <div class="flex items-center gap-3 rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] px-3 py-2.5">
-                <div class="h-7 w-7 rounded-md bg-white border border-[color:var(--border)] flex items-center justify-center text-[color:var(--brand)]">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422A12.083 12.083 0 0118 13.63v6.37L12 21l-6-1V13.63a12.083 12.083 0 01-.16-1.578L12 14z"/></svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-[12px] font-semibold text-[color:var(--ink)]">학력</div>
-                  <div class="text-[11px] text-[color:var(--muted)] truncate">서울대 컴퓨터공학 · 2015 졸업</div>
-                </div>
-                <div class="text-[11px] text-[color:var(--muted-2)]">1건</div>
-              </div>
-              <div class="flex items-center gap-3 rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] px-3 py-2.5">
-                <div class="h-7 w-7 rounded-md bg-white border border-[color:var(--border)] flex items-center justify-center text-[color:var(--brand)]">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-[12px] font-semibold text-[color:var(--ink)]">기술 스택</div>
-                  <div class="text-[11px] text-[color:var(--muted)] truncate">Java · Kotlin · Spring · Kafka · PostgreSQL</div>
-                </div>
-                <div class="text-[11px] text-[color:var(--muted-2)]">12개</div>
+              <div class="flex items-end gap-0.5 h-5 text-[color:var(--brand)]">
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
               </div>
             </div>
 
-            <div class="mt-5 pt-4 border-t border-[color:var(--border-soft)] flex items-center justify-between">
-              <div class="text-[11px] text-[color:var(--muted-2)]">Gemini · 2.8초 만에 파싱</div>
-              <div class="flex items-center gap-1.5 text-[11px] font-semibold text-[color:var(--brand)]">
-                상세 보기
-                <svg class="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+            <!-- Chat messages -->
+            <div class="space-y-3 mb-5">
+              <!-- User bubble -->
+              <div class="flex justify-end">
+                <div class="bg-[color:var(--brand)] text-white text-[13px] font-medium rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%] shadow-sm">
+                  "핀테크 5년차 이상 백엔드, 매칭 점수 상위 5명 뽑아줘"
+                </div>
               </div>
+              <!-- Agent response -->
+              <div class="flex justify-start">
+                <div class="bg-[color:var(--surface-2)] text-[color:var(--ink)] text-[13px] rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%]">
+                  <div class="font-semibold mb-1.5">14명 매칭 완료 &middot; 상위 5명 추렸습니다</div>
+                  <div class="flex items-center gap-2 text-[11px] text-[color:var(--muted)]">
+                    <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>박지훈 98</span>
+                    <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>이서연 94</span>
+                    <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>최민호 91</span>
+                    <span class="text-[color:var(--muted-2)]">+2</span>
+                  </div>
+                </div>
+              </div>
+              <!-- User bubble -->
+              <div class="flex justify-end">
+                <div class="bg-[color:var(--brand)] text-white text-[13px] font-medium rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%] shadow-sm">
+                  "박지훈한테 미팅 제안 이메일 보내줘"
+                </div>
+              </div>
+              <div class="flex justify-start">
+                <div class="bg-[color:var(--surface-2)] text-[color:var(--ink)] text-[13px] rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%]">
+                  <span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    초안 작성 &middot; 검토 대기
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mic input bar -->
+            <div class="flex items-center gap-2 rounded-full bg-[color:var(--surface-2)] border border-[color:var(--border-soft)] px-4 py-2.5">
+              <div class="h-6 w-6 rounded-full bg-[color:var(--brand)] flex items-center justify-center text-white">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+              </div>
+              <div class="flex-1 text-[12px] text-[color:var(--muted-2)]">눌러서 말하기 &middot; "면접 일정 잡아줘"</div>
+              <kbd class="text-[10px] font-mono text-[color:var(--muted-2)] bg-white border border-[color:var(--border)] rounded px-1.5 py-0.5">Space</kbd>
             </div>
           </div>
 
-          <!-- Floating stat card -->
-          <div class="hidden lg:block absolute -left-8 -bottom-10 card-panel px-5 py-4 z-20" style="max-width:230px;">
-            <div class="flex items-center gap-3">
-              <div class="h-9 w-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-              </div>
-              <div>
-                <div class="text-[11px] text-[color:var(--muted)]">이번 주 파싱</div>
-                <div class="text-[18px] font-extrabold text-[color:var(--ink)] leading-none mt-1">1,284건 <span class="text-[11px] font-semibold text-emerald-600">+12%</span></div>
-              </div>
+          <!-- Floating stat card: weekly voice commands -->
+          <div class="hidden lg:flex absolute -left-8 -bottom-10 card-panel px-5 py-4 z-20 items-center gap-3" style="max-width:260px;">
+            <div class="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4l4 4 4-4m5-6a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="text-[11px] text-[color:var(--muted)]">이번 주 음성 명령</div>
+              <div class="text-[18px] font-extrabold text-[color:var(--ink)] leading-none mt-1">2,489건 <span class="text-[11px] font-semibold text-emerald-600">+22%</span></div>
             </div>
           </div>
 
           <!-- Background decoration -->
-          <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[color:var(--brand-soft)] blur-3xl pointer-events-none"></div>
+          <div class="absolute -right-16 -top-16 h-60 w-60 rounded-full bg-[color:var(--brand-soft)] blur-3xl pointer-events-none"></div>
+          <div class="absolute -right-4 bottom-8 h-32 w-32 rounded-full bg-emerald-100 blur-3xl pointer-events-none opacity-70"></div>
         </div>
 
       </div>
@@ -306,19 +369,19 @@
     <div class="mx-auto max-w-7xl px-6 lg:px-10">
       <div class="grid sm:grid-cols-3 gap-6 lg:gap-8">
         <div class="card-panel p-8">
-          <div class="text-[13px] font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">이력서 처리</div>
-          <div class="text-[48px] font-extrabold tracking-tight leading-none text-[color:var(--ink)]">10,000<span class="text-[color:var(--brand)]">+</span></div>
-          <p class="mt-3 text-[14px] text-[color:var(--muted)]">누적 파싱·정규화된 이력서 수. 매주 1,000건 이상 증가.</p>
+          <div class="text-[13px] font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">시간 절약</div>
+          <div class="text-[48px] font-extrabold tracking-tight leading-none text-[color:var(--ink)]">73<span class="text-[22px] ml-1 text-[color:var(--muted)]">%</span></div>
+          <p class="mt-3 text-[14px] text-[color:var(--muted)]">음성·자동화로 헤드헌터가 줄인 주당 평균 작업 시간.</p>
         </div>
         <div class="card-panel p-8">
-          <div class="text-[13px] font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">평균 파싱 속도</div>
-          <div class="text-[48px] font-extrabold tracking-tight leading-none text-[color:var(--ink)]">3<span class="text-[22px] ml-1 text-[color:var(--muted)]">분</span></div>
-          <p class="mt-3 text-[14px] text-[color:var(--muted)]">PDF 이력서가 구조화된 데이터로 변환되는 평균 시간.</p>
+          <div class="text-[13px] font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">매칭 정확도</div>
+          <div class="text-[48px] font-extrabold tracking-tight leading-none text-[color:var(--ink)]">94<span class="text-[22px] ml-1 text-[color:var(--muted)]">%</span></div>
+          <p class="mt-3 text-[14px] text-[color:var(--muted)]">JD와 후보자 매칭 점수가 실제 합격·추천으로 이어진 비율.</p>
         </div>
         <div class="card-panel p-8">
-          <div class="text-[13px] font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">필드 정확도</div>
-          <div class="text-[48px] font-extrabold tracking-tight leading-none text-[color:var(--ink)]">98<span class="text-[22px] ml-1 text-[color:var(--muted)]">%</span></div>
-          <p class="mt-3 text-[14px] text-[color:var(--muted)]">경력·학력·스택 등 핵심 필드에 대한 자동 추출 정확도.</p>
+          <div class="text-[13px] font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">위조 이력서 감지</div>
+          <div class="text-[48px] font-extrabold tracking-tight leading-none text-[color:var(--ink)]">1,240<span class="text-[22px] ml-1 text-[color:var(--muted)]">건</span></div>
+          <p class="mt-3 text-[14px] text-[color:var(--muted)]">누적 감지된 의심·위조 이력서. 평균 월 180건 이상 경고.</p>
         </div>
       </div>
     </div>
@@ -332,205 +395,372 @@
 
       <div class="text-center max-w-2xl mx-auto mb-16 lg:mb-20">
         <div class="section-eyebrow mb-3">WHY SYNCO</div>
-        <h2 class="display-h2 mb-5">반복을 줄이고, 사람에 집중하게.</h2>
+        <h2 class="display-h2 mb-5">책상 앞에 있지 않아도, 일은 돌아갑니다.</h2>
         <p class="text-[17px] text-[color:var(--muted)] leading-relaxed">
-          synco는 헤드헌터가 매일 반복하는 5가지 작업을 AI로 자동화합니다.
-          남는 시간에 후보자와 대화하고, 더 나은 제안을 만드세요.
+          음성과 메신저로 지시하고, AI가 검색·매칭·검증·정리까지.
+          synco는 헤드헌터의 시간과 에너지를 가장 가치 있는 곳 &mdash; 사람에게 &mdash; 돌려드립니다.
         </p>
       </div>
 
-      <!-- Feature 1: Resume parsing -->
-      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20 lg:mb-28">
+      <!-- Feature 1: Voice agent (hero feature) -->
+      <div id="voice" class="grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center mb-24 lg:mb-32">
         <div>
-          <div class="section-eyebrow mb-3">01 &mdash; 이력서 파싱</div>
-          <h3 class="text-[30px] lg:text-[36px] font-extrabold tracking-tight leading-tight mb-5">
-            PDF 한 장을<br>구조화된 데이터로.
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">01 &mdash; VOICE AGENT</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[color:var(--brand)] bg-[color:var(--brand-soft)] rounded-full px-2.5 py-0.5">MOST LOVED</span>
+          </div>
+          <h3 class="text-[32px] lg:text-[40px] font-extrabold tracking-tight leading-[1.08] mb-5">
+            말로 묻고,<br>말로 시키세요.
           </h3>
-          <p class="text-[16px] text-[color:var(--muted)] leading-[1.7] mb-6">
-            Gemini 기반 파이프라인이 이력서를 읽고 경력·학력·기술·프로젝트를
-            분리해 저장합니다. 중복 후보자는 email·phone 매칭으로 자동 병합되고,
-            누락·비정상 값은 검수 큐로 이동합니다.
+          <p class="text-[16px] text-[color:var(--muted)] leading-[1.75] mb-6">
+            "핀테크 5년차 찾아줘", "박지훈한테 미팅 제안 이메일 써줘",
+            "어제 미팅 내용 정리해서 보고서 만들어줘". 마이크 버튼 한 번이면
+            synco가 알아서 검색·작성·요약·전송까지 처리합니다.
           </p>
-          <ul class="space-y-2.5 text-[14px]">
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> PDF/DOCX/한글 파일 한 번에</li>
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 경력·학력·스택·프로젝트 필드 분리</li>
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> email/phone 기반 중복 자동 병합</li>
-          </ul>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+              <div class="text-[13px] font-bold text-[color:var(--ink)]">후보자 검색</div>
+              <div class="text-[12px] text-[color:var(--muted)] mt-0.5">조건 말하면 즉시 랭킹</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              </div>
+              <div class="text-[13px] font-bold text-[color:var(--ink)]">미팅 정리</div>
+              <div class="text-[12px] text-[color:var(--muted)] mt-0.5">녹음 → 요약·액션 아이템</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <div class="text-[13px] font-bold text-[color:var(--ink)]">이메일 자동 작성</div>
+              <div class="text-[12px] text-[color:var(--muted)] mt-0.5">톤·맥락 맞춰 초안 생성</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <div class="text-[13px] font-bold text-[color:var(--ink)]">문서 초안</div>
+              <div class="text-[12px] text-[color:var(--muted)] mt-0.5">리포트·추천서 자동 생성</div>
+            </div>
+          </div>
         </div>
-        <div class="card-panel p-6 relative">
-          <div class="flex items-center justify-between pb-4 border-b border-[color:var(--border-soft)] mb-4">
-            <div class="flex items-center gap-2">
-              <div class="h-2 w-2 rounded-full bg-rose-400"></div>
-              <div class="h-2 w-2 rounded-full bg-amber-400"></div>
-              <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
-            </div>
-            <div class="text-[11px] text-[color:var(--muted-2)] font-mono">resume_kim_0412.pdf</div>
-          </div>
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-[12px] text-[color:var(--muted)]">파싱 진행률</span>
-              <span class="text-[12px] font-bold text-[color:var(--ink)]">100%</span>
-            </div>
-            <div class="h-2 rounded-full bg-[color:var(--surface-2)] overflow-hidden">
-              <div class="h-full bg-gradient-to-r from-[color:var(--brand)] to-indigo-500 rounded-full" style="width:100%"></div>
-            </div>
-            <div class="grid grid-cols-2 gap-2 pt-2">
-              <div class="rounded-lg bg-[color:var(--surface-2)] p-3">
-                <div class="text-[10px] uppercase tracking-wider text-[color:var(--muted-2)] font-semibold">경력</div>
-                <div class="text-[18px] font-extrabold mt-1 text-[color:var(--ink)]">3<span class="text-[11px] text-[color:var(--muted)] ml-1">건</span></div>
+
+        <!-- Feature 1 visual: voice + photo composition -->
+        <div class="relative">
+          <!-- Real-life photo card -->
+          <div class="photo-frame aspect-[4/5] relative gradient-soft-indigo">
+            <img src="https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=900&q=80&auto=format&fit=crop"
+                 alt="카페에서 일하는 헤드헌터"
+                 onerror="this.style.display='none'"
+                 class="absolute inset-0" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[rgba(10,10,10,0.55)] via-transparent to-transparent"></div>
+            <div class="absolute bottom-5 left-5 right-5 text-white">
+              <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 mb-2 border border-white/20">
+                <span class="relative flex h-1.5 w-1.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+                </span>
+                <span class="text-[11px] font-semibold tracking-wide">녹음 중</span>
               </div>
-              <div class="rounded-lg bg-[color:var(--surface-2)] p-3">
-                <div class="text-[10px] uppercase tracking-wider text-[color:var(--muted-2)] font-semibold">스택</div>
-                <div class="text-[18px] font-extrabold mt-1 text-[color:var(--ink)]">12<span class="text-[11px] text-[color:var(--muted)] ml-1">개</span></div>
-              </div>
-              <div class="rounded-lg bg-[color:var(--surface-2)] p-3">
-                <div class="text-[10px] uppercase tracking-wider text-[color:var(--muted-2)] font-semibold">학력</div>
-                <div class="text-[18px] font-extrabold mt-1 text-[color:var(--ink)]">1<span class="text-[11px] text-[color:var(--muted)] ml-1">건</span></div>
-              </div>
-              <div class="rounded-lg bg-[color:var(--surface-2)] p-3">
-                <div class="text-[10px] uppercase tracking-wider text-[color:var(--muted-2)] font-semibold">프로젝트</div>
-                <div class="text-[18px] font-extrabold mt-1 text-[color:var(--ink)]">7<span class="text-[11px] text-[color:var(--muted)] ml-1">개</span></div>
-              </div>
+              <div class="text-[13px] font-medium opacity-90">"어제 박지훈님 미팅 내용<br>보고서로 정리해줘"</div>
             </div>
           </div>
+          <!-- Floating command bubble -->
+          <div class="hidden sm:flex absolute -left-6 top-8 card-panel px-4 py-3 items-center gap-3 max-w-[240px]">
+            <div class="h-9 w-9 rounded-full bg-[color:var(--brand)] text-white flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+              <div class="text-[11px] text-[color:var(--muted)]">완료</div>
+              <div class="text-[12px] font-bold text-[color:var(--ink)]">미팅 요약 · 4분 소요</div>
+            </div>
+          </div>
+          <!-- Decoration -->
+          <div class="absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-[color:var(--brand-soft)] blur-3xl pointer-events-none"></div>
         </div>
       </div>
 
-      <!-- Feature 2: Search & shortlist -->
-      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20 lg:mb-28">
-        <div class="card-panel p-6 order-2 lg:order-1">
-          <div class="flex items-center gap-2 rounded-xl border border-[color:var(--border)] px-3.5 py-2.5 mb-4 bg-[color:var(--surface-2)]">
-            <svg class="w-4 h-4 text-[color:var(--muted)]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <span class="text-[13px] text-[color:var(--ink)]">핀테크 경력 5년 이상, Kotlin</span>
-            <span class="ml-auto text-[11px] text-[color:var(--muted-2)]">24건</span>
+      <!-- Feature 2: Telegram / remote -->
+      <div id="remote" class="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center mb-24 lg:mb-32">
+        <!-- Visual (left on desktop) -->
+        <div class="relative order-2 lg:order-1">
+          <!-- Real-life photo: beach/remote -->
+          <div class="photo-frame aspect-[5/4] relative gradient-soft-sand">
+            <img src="https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=900&q=80&auto=format&fit=crop"
+                 alt="출장 중 원격 업무"
+                 onerror="this.style.display='none'"
+                 class="absolute inset-0" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[rgba(10,10,10,0.45)] to-transparent"></div>
           </div>
-          <div class="space-y-2.5">
-            {% with name="박지훈 이서연 최민호"|cut:" " %}{% endwith %}
-            <div class="flex items-center gap-3 rounded-lg border border-[color:var(--border-soft)] px-3 py-2.5 hover:bg-[color:var(--surface-2)] transition">
-              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-[12px]">박</div>
-              <div class="flex-1 min-w-0">
-                <div class="text-[13px] font-semibold text-[color:var(--ink)]">박지훈</div>
-                <div class="text-[11px] text-[color:var(--muted)] truncate">핀테크 · 7년차 · Kotlin/Spring</div>
+
+          <!-- Telegram chat mockup (floating) -->
+          <div class="absolute -right-4 lg:right-6 bottom-6 w-[280px] card-panel p-4 z-20">
+            <div class="flex items-center gap-2 mb-3 pb-3 border-b border-[color:var(--border-soft)]">
+              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
               </div>
-              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">98%</span>
+              <div class="flex-1 min-w-0">
+                <div class="text-[12px] font-bold text-[color:var(--ink)]">synco bot</div>
+                <div class="text-[10px] text-[color:var(--muted-2)]">방금 전 &middot; 온라인</div>
+              </div>
             </div>
-            <div class="flex items-center gap-3 rounded-lg border border-[color:var(--border-soft)] px-3 py-2.5 hover:bg-[color:var(--surface-2)] transition">
-              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-[12px]">이</div>
-              <div class="flex-1 min-w-0">
-                <div class="text-[13px] font-semibold text-[color:var(--ink)]">이서연</div>
-                <div class="text-[11px] text-[color:var(--muted)] truncate">카카오뱅크 · 6년차 · Kotlin/Kafka</div>
+            <div class="space-y-2">
+              <div class="bg-sky-50 border border-sky-100 rounded-lg rounded-tl-sm px-3 py-2">
+                <div class="text-[11px] font-semibold text-sky-900 mb-0.5">📋 오늘의 요약</div>
+                <div class="text-[11px] text-[color:var(--muted)] leading-relaxed">신규 이력서 14건, 위조 의심 2건, 매칭 진행 5건</div>
               </div>
-              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">94%</span>
-            </div>
-            <div class="flex items-center gap-3 rounded-lg border border-[color:var(--border-soft)] px-3 py-2.5 hover:bg-[color:var(--surface-2)] transition">
-              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-[12px]">최</div>
-              <div class="flex-1 min-w-0">
-                <div class="text-[13px] font-semibold text-[color:var(--ink)]">최민호</div>
-                <div class="text-[11px] text-[color:var(--muted)] truncate">토스 · 5년차 · Java/MSA</div>
+              <div class="bg-sky-50 border border-sky-100 rounded-lg rounded-tl-sm px-3 py-2">
+                <div class="text-[11px] font-semibold text-sky-900 mb-0.5">✉️ 답장 대기</div>
+                <div class="text-[11px] text-[color:var(--muted)] leading-relaxed">박지훈님 &middot; "일정 가능합니다" &rarr; 자동 답장 초안 준비됨</div>
               </div>
-              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">91%</span>
+              <div class="text-right">
+                <button class="text-[10px] font-semibold text-sky-600">승인 →</button>
+              </div>
             </div>
           </div>
+          <div class="absolute -left-4 -top-4 h-28 w-28 rounded-full bg-amber-100 blur-3xl pointer-events-none opacity-80"></div>
         </div>
+
         <div class="order-1 lg:order-2">
-          <div class="section-eyebrow mb-3">02 &mdash; 시맨틱 검색</div>
-          <h3 class="text-[30px] lg:text-[36px] font-extrabold tracking-tight leading-tight mb-5">
-            자연어로 묻고,<br>정확히 찾습니다.
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">02 &mdash; TELEGRAM SYNC</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 rounded-full px-2.5 py-0.5">WORK ANYWHERE</span>
+          </div>
+          <h3 class="text-[32px] lg:text-[40px] font-extrabold tracking-tight leading-[1.08] mb-5">
+            집에서도, 출장 중에도.<br>
+            가족과 더 함께.
           </h3>
-          <p class="text-[16px] text-[color:var(--muted)] leading-[1.7] mb-6">
-            "핀테크 경력 5년 이상, Kotlin 주 언어"처럼 조건을 그대로 입력하면
-            임베딩 기반으로 의미가 가까운 후보자를 순위로 돌려드립니다.
-            필터·태그·검수 상태와 자유롭게 조합할 수 있습니다.
+          <p class="text-[16px] text-[color:var(--muted)] leading-[1.75] mb-6">
+            컴퓨터 앞에 붙어있지 않아도 헤드헌팅은 돌아갑니다.
+            텔레그램으로 synco와 대화하세요. 새 이력서, 매칭 결과, 위조 경고, 답장 초안까지
+            &mdash; 필요한 순간에 푸시로 도착하고, 한 번의 승인으로 실행됩니다.
           </p>
-          <ul class="space-y-2.5 text-[14px]">
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 자연어 + 필터 하이브리드 검색</li>
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 관련도 점수와 매칭 근거 제공</li>
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 쇼트리스트로 바로 프로젝트 연결</li>
+          <ul class="space-y-3 text-[14px]">
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">오늘의 브리핑</strong> &mdash; 아침에 자동 푸시. 새 이력서·매칭 결과·일정 한눈에.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">원터치 승인</strong> &mdash; 답장·일정·채용 공고 게시까지 채팅에서 즉시.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">음성 메모</strong> &mdash; 걸어가면서 말한 지시사항을 AI가 실행합니다.</span>
+            </li>
           </ul>
         </div>
       </div>
 
-      <!-- Feature 3: Project board -->
-      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- Feature 3: JD matching & scoring -->
+      <div id="matching" class="grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center mb-24 lg:mb-32">
         <div>
-          <div class="section-eyebrow mb-3">03 &mdash; 프로젝트 보드</div>
-          <h3 class="text-[30px] lg:text-[36px] font-extrabold tracking-tight leading-tight mb-5">
-            의뢰받은 순간부터<br>오퍼까지 한 화면에.
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">03 &mdash; JD MATCHING</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 rounded-full px-2.5 py-0.5">AUTO-SCORED</span>
+          </div>
+          <h3 class="text-[32px] lg:text-[40px] font-extrabold tracking-tight leading-[1.08] mb-5">
+            JD 붙이면,<br>후보자 순위가 떨어집니다.
           </h3>
-          <p class="text-[16px] text-[color:var(--muted)] leading-[1.7] mb-6">
-            신규 의뢰·서칭·추천·면접·오퍼·클로즈까지 각 프로젝트의 상태가 칸반으로 보입니다.
-            드래그 한 번에 단계가 바뀌고, 사장·컨설턴트 권한이 분리되어
-            팀 전체의 진척도와 KPI가 한눈에 들어옵니다.
+          <p class="text-[16px] text-[color:var(--muted)] leading-[1.75] mb-6">
+            고객사 JD를 붙여넣으면 synco가 즉시 후보자 풀을 훑고 매칭 점수로 줄을 세웁니다.
+            점수가 왜 그 점수인지 근거까지 함께 보여드려서, 헤드헌터는 "왜?" 대신 "누구?"에만 집중하면 됩니다.
           </p>
-          <ul class="space-y-2.5 text-[14px]">
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 6단계 파이프라인 칸반</li>
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 사장·컨설턴트 권한 분리</li>
-            <li class="flex gap-2.5"><span class="text-[color:var(--brand)] font-bold">✓</span> 승인 워크플로우 내장</li>
+          <ul class="space-y-3 text-[14px]">
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">요구사항 추출</strong> &mdash; JD에서 필수/우대 조건을 자동 분리.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">매칭 점수</strong> &mdash; 경력·스택·도메인·연차 가중치로 100점 만점 랭킹.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">매칭 근거</strong> &mdash; 왜 이 점수인지 항목별 이유를 함께 제공.</span>
+            </li>
           </ul>
         </div>
-        <div class="card-panel p-5">
-          <div class="flex items-center justify-between mb-4">
-            <div class="text-[13px] font-bold text-[color:var(--ink)]">프로젝트 파이프라인</div>
-            <div class="flex gap-1">
-              <div class="h-5 w-5 rounded-full bg-indigo-500 ring-2 ring-white"></div>
-              <div class="h-5 w-5 rounded-full bg-emerald-500 ring-2 ring-white -ml-1.5"></div>
-              <div class="h-5 w-5 rounded-full bg-amber-500 ring-2 ring-white -ml-1.5"></div>
+
+        <!-- Matching visual -->
+        <div class="relative">
+          <div class="card-panel p-6">
+            <!-- JD header -->
+            <div class="flex items-start justify-between mb-4 pb-4 border-b border-[color:var(--border-soft)]">
+              <div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold text-[color:var(--muted-2)]">INPUT &middot; JD</div>
+                <div class="text-[14px] font-bold text-[color:var(--ink)] mt-1">핀테크 백엔드 리드 &middot; 토스뱅크</div>
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                  <span class="text-[10px] font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">Kotlin</span>
+                  <span class="text-[10px] font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">MSA</span>
+                  <span class="text-[10px] font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">5년+</span>
+                  <span class="text-[10px] font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">Payment</span>
+                </div>
+              </div>
+              <div class="text-[11px] text-[color:var(--muted-2)] text-right">
+                <div>분석 완료</div>
+                <div class="font-mono">0.8s</div>
+              </div>
+            </div>
+
+            <div class="text-[10px] uppercase tracking-wider font-semibold text-[color:var(--muted-2)] mb-3">OUTPUT &middot; 매칭 상위 3명</div>
+
+            <!-- Match row 1 -->
+            <div class="space-y-3">
+              <div class="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-[11px]">박</div>
+                    <div>
+                      <div class="text-[13px] font-bold text-[color:var(--ink)]">박지훈 &middot; 카카오뱅크</div>
+                      <div class="text-[11px] text-[color:var(--muted)]">7년차 &middot; Kotlin/Spring</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[20px] font-black text-emerald-600 leading-none">98</div>
+                    <div class="text-[9px] text-[color:var(--muted-2)] mt-0.5">MATCH</div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Kotlin 주언어</span>
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Payment 도메인</span>
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ 리드 경험</span>
+                </div>
+              </div>
+
+              <!-- Match row 2 -->
+              <div class="rounded-xl border border-[color:var(--border-soft)] p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-[11px]">이</div>
+                    <div>
+                      <div class="text-[13px] font-bold text-[color:var(--ink)]">이서연 &middot; 토스페이먼츠</div>
+                      <div class="text-[11px] text-[color:var(--muted)]">6년차 &middot; Kotlin/Kafka</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[20px] font-black text-[color:var(--ink)] leading-none">94</div>
+                    <div class="text-[9px] text-[color:var(--muted-2)] mt-0.5">MATCH</div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Kotlin/Kafka</span>
+                  <span class="text-[9px] bg-amber-100 text-amber-800 font-semibold rounded px-1.5 py-0.5">△ 리드 경험 부족</span>
+                </div>
+              </div>
+
+              <!-- Match row 3 -->
+              <div class="rounded-xl border border-[color:var(--border-soft)] p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-[11px]">최</div>
+                    <div>
+                      <div class="text-[13px] font-bold text-[color:var(--ink)]">최민호 &middot; 네이버페이</div>
+                      <div class="text-[11px] text-[color:var(--muted)]">5년차 &middot; Java/MSA</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[20px] font-black text-[color:var(--ink)] leading-none">91</div>
+                    <div class="text-[9px] text-[color:var(--muted-2)] mt-0.5">MATCH</div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ MSA</span>
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Payment</span>
+                  <span class="text-[9px] bg-amber-100 text-amber-800 font-semibold rounded px-1.5 py-0.5">△ Java (우대: Kotlin)</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-2.5">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-sky-700 mb-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>신규 <span class="ml-auto text-[color:var(--muted)]">4</span>
+
+          <div class="absolute -right-8 -top-4 h-32 w-32 rounded-full bg-emerald-100 blur-3xl pointer-events-none opacity-70"></div>
+        </div>
+      </div>
+
+      <!-- Feature 4: Resume forgery detection -->
+      <div id="trust" class="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
+        <div class="relative order-2 lg:order-1">
+          <!-- Photo bg with warning card overlay -->
+          <div class="photo-frame aspect-[5/4] relative" style="background: linear-gradient(135deg, #FFF5F5 0%, #FEE4E6 50%, #FDE2E4 100%);">
+            <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=900&q=80&auto=format&fit=crop"
+                 alt="이력서 검토"
+                 onerror="this.style.display='none'"
+                 class="absolute inset-0" />
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(244,63,94,0.15)] via-transparent to-transparent"></div>
+          </div>
+
+          <!-- Suspicious resume alert card (floating) -->
+          <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 lg:left-8 lg:top-auto lg:translate-x-0 lg:bottom-8 lg:translate-y-0 w-[300px] card-panel p-5 z-20">
+            <div class="flex items-start gap-3 mb-3">
+              <div class="h-9 w-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
               </div>
-              <div class="space-y-1.5">
-                <div class="h-1.5 w-full rounded bg-white border border-[color:var(--border-soft)]"></div>
-                <div class="h-1.5 w-4/5 rounded bg-white border border-[color:var(--border-soft)]"></div>
+              <div class="flex-1">
+                <div class="text-[12px] font-bold text-rose-700 uppercase tracking-wider">위조 의심</div>
+                <div class="text-[14px] font-bold text-[color:var(--ink)] mt-0.5">김○○ &middot; 시니어 개발자</div>
+              </div>
+              <div class="text-[11px] font-mono text-rose-600 font-bold">87%</div>
+            </div>
+            <div class="space-y-1.5 text-[12px]">
+              <div class="flex items-start gap-2">
+                <span class="text-rose-500 font-bold flex-shrink-0">!</span>
+                <span class="text-[color:var(--muted)]">재직 기간 중 <strong class="text-[color:var(--ink)]">회사 폐업</strong> 이력 (2021.06)</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-rose-500 font-bold flex-shrink-0">!</span>
+                <span class="text-[color:var(--muted)]">학력 연도와 경력 시작점 <strong class="text-[color:var(--ink)]">시간 모순</strong></span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-amber-500 font-bold flex-shrink-0">△</span>
+                <span class="text-[color:var(--muted)]">동일 인물 이력서 2건, 경력 불일치</span>
               </div>
             </div>
-            <div class="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-2.5">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 mb-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>서칭 <span class="ml-auto text-[color:var(--muted)]">7</span>
-              </div>
-              <div class="space-y-1.5">
-                <div class="h-1.5 w-full rounded bg-white border border-[color:var(--border-soft)]"></div>
-                <div class="h-1.5 w-full rounded bg-white border border-[color:var(--border-soft)]"></div>
-                <div class="h-1.5 w-3/5 rounded bg-white border border-[color:var(--border-soft)]"></div>
-              </div>
+            <button class="mt-4 w-full text-[12px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg py-2 transition">검수 큐로 보내기</button>
+          </div>
+          <div class="absolute -right-8 -bottom-4 h-40 w-40 rounded-full bg-rose-100 blur-3xl pointer-events-none opacity-60"></div>
+        </div>
+
+        <div class="order-1 lg:order-2">
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">04 &mdash; TRUST &amp; SAFETY</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-800 bg-rose-100 rounded-full px-2.5 py-0.5">GUARDRAIL</span>
+          </div>
+          <h3 class="text-[32px] lg:text-[40px] font-extrabold tracking-tight leading-[1.08] mb-5">
+            가짜 이력서,<br>AI가 먼저 잡습니다.
+          </h3>
+          <p class="text-[16px] text-[color:var(--muted)] leading-[1.75] mb-6">
+            이력서의 시간선 모순, 폐업한 회사 재직 기록, 동일 인물의 불일치 이력, 비정상적인 성과 수치 &mdash;
+            synco는 사람이 놓치기 쉬운 위조·허위 신호를 자동으로 잡아내 검수 큐로 올립니다.
+            고객사에 보내기 전에 한 번 더 거르세요.
+          </p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-3 text-center">
+              <div class="text-[22px] font-extrabold text-[color:var(--ink)]">1,240</div>
+              <div class="text-[11px] text-[color:var(--muted)] mt-1">누적 감지</div>
             </div>
-            <div class="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--brand-soft)] p-2.5">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-[color:var(--brand)] mb-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-[color:var(--brand)]"></span>추천 <span class="ml-auto text-[color:var(--muted)]">3</span>
-              </div>
-              <div class="space-y-1.5">
-                <div class="h-1.5 w-full rounded bg-white border border-[color:var(--border-soft)]"></div>
-                <div class="h-1.5 w-4/5 rounded bg-white border border-[color:var(--border-soft)]"></div>
-              </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-3 text-center">
+              <div class="text-[22px] font-extrabold text-[color:var(--ink)]">180<span class="text-[12px] font-semibold text-[color:var(--muted)]">/월</span></div>
+              <div class="text-[11px] text-[color:var(--muted)] mt-1">평균 경고</div>
             </div>
-            <div class="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-2.5">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-purple-700 mb-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-purple-500"></span>면접 <span class="ml-auto text-[color:var(--muted)]">2</span>
-              </div>
-              <div class="space-y-1.5">
-                <div class="h-1.5 w-full rounded bg-white border border-[color:var(--border-soft)]"></div>
-              </div>
-            </div>
-            <div class="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-2.5">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-rose-700 mb-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>오퍼 <span class="ml-auto text-[color:var(--muted)]">1</span>
-              </div>
-              <div class="space-y-1.5">
-                <div class="h-1.5 w-3/5 rounded bg-white border border-[color:var(--border-soft)]"></div>
-              </div>
-            </div>
-            <div class="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-2.5">
-              <div class="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 mb-1.5">
-                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>클로즈 <span class="ml-auto text-[color:var(--muted)]">8</span>
-              </div>
-              <div class="space-y-1.5">
-                <div class="h-1.5 w-full rounded bg-white border border-[color:var(--border-soft)]"></div>
-                <div class="h-1.5 w-4/5 rounded bg-white border border-[color:var(--border-soft)]"></div>
-                <div class="h-1.5 w-2/3 rounded bg-white border border-[color:var(--border-soft)]"></div>
-              </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-3 text-center">
+              <div class="text-[22px] font-extrabold text-[color:var(--ink)]">12<span class="text-[12px] font-semibold text-[color:var(--muted)]">가지</span></div>
+              <div class="text-[11px] text-[color:var(--muted)] mt-1">검출 룰</div>
             </div>
           </div>
         </div>
@@ -544,28 +774,28 @@
   <!-- ============================================== -->
   <section id="workflow" class="py-20 lg:py-24 bg-[color:var(--surface-2)] border-y border-[color:var(--border-soft)]">
     <div class="mx-auto max-w-5xl px-6 lg:px-10 text-center">
-      <div class="section-eyebrow mb-3">워크플로우</div>
-      <h2 class="display-h2 mb-14">4단계, 끝.</h2>
+      <div class="section-eyebrow mb-3">어떻게 일하나</div>
+      <h2 class="display-h2 mb-14">말 한 마디로, 끝까지.</h2>
       <div class="grid sm:grid-cols-4 gap-6 text-left">
         <div>
           <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-[15px] mb-4">01</div>
-          <div class="font-bold text-[16px] mb-1.5">이력서 업로드</div>
-          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">PDF·DOCX·한글 파일을 드래그&드롭. 한 번에 여러 개도 OK.</p>
+          <div class="font-bold text-[16px] mb-1.5">말하기</div>
+          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">마이크 한 번 누르고 요청. "핀테크 5년차 찾아줘" 한 마디면 됩니다.</p>
         </div>
         <div>
           <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-[15px] mb-4">02</div>
-          <div class="font-bold text-[16px] mb-1.5">AI 자동 파싱</div>
-          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">Gemini가 경력·학력·스택을 자동으로 구조화. 평균 3분.</p>
+          <div class="font-bold text-[16px] mb-1.5">AI가 찾고 매칭</div>
+          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">후보자 풀을 훑어 매칭 점수로 정렬, 위조 의심은 자동으로 걸러냅니다.</p>
         </div>
         <div>
           <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-[15px] mb-4">03</div>
-          <div class="font-bold text-[16px] mb-1.5">후보자 검색</div>
-          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">자연어 쿼리 + 필터로 의미 가까운 후보자 랭킹.</p>
+          <div class="font-bold text-[16px] mb-1.5">텔레그램으로 푸시</div>
+          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">결과와 초안이 메신저로 도착. 어디에 있든 한 번의 탭으로 승인.</p>
         </div>
         <div>
           <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-[15px] mb-4">04</div>
-          <div class="font-bold text-[16px] mb-1.5">프로젝트 진행</div>
-          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">칸반 보드에서 서칭·추천·면접·오퍼까지 한 화면 관리.</p>
+          <div class="font-bold text-[16px] mb-1.5">사람에 집중</div>
+          <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">정리된 요약·이메일 초안 위에서, 헤드헌터는 판단과 대화에만 집중.</p>
         </div>
       </div>
     </div>
@@ -574,24 +804,22 @@
   <!-- ============================================== -->
   <!-- Final CTA                                       -->
   <!-- ============================================== -->
-  <section id="cta" class="py-20 lg:py-28 bg-[color:var(--ink)] text-white">
-    <div class="mx-auto max-w-3xl px-6 lg:px-10 text-center">
+  <section id="cta" class="py-20 lg:py-28 gradient-dark-hero text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20 subtle-grid pointer-events-none" style="background-size:80px 80px;"></div>
+    <div class="relative mx-auto max-w-3xl px-6 lg:px-10 text-center">
       <h2 class="display-h2 mb-5">
         더 빠른 헤드헌팅,<br>지금 시작하세요.
       </h2>
       <p class="text-[17px] text-white/70 leading-relaxed mb-10 max-w-xl mx-auto">
-        반복을 AI가 대신합니다. 신용카드 없이 카카오 계정만으로
+        말로 시키고, 텔레그램으로 받으세요. 신용카드 없이 카카오 계정만으로
         1분 안에 팀을 만들 수 있습니다.
       </p>
-      <div class="flex flex-wrap items-center justify-center gap-3">
+      <div class="flex items-center justify-center">
         <a href="{% url 'kakao_login' %}" class="cta-kakao">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#191919">
             <path d="M12 3C6.48 3 2 6.58 2 10.9c0 2.78 1.86 5.22 4.66 6.6l-.96 3.56c-.08.3.26.54.52.36l4.2-2.78c.52.06 1.04.1 1.58.1 5.52 0 10-3.58 10-7.84S17.52 3 12 3z"/>
           </svg>
           카카오로 시작하기
-        </a>
-        <a href="#features" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-white/20 text-white text-[15px] font-semibold hover:bg-white/10 transition">
-          제품 더 알아보기
         </a>
       </div>
     </div>
@@ -609,16 +837,16 @@
             <span class="text-[18px] font-extrabold tracking-tight">synco</span>
           </div>
           <p class="text-[13px] text-[color:var(--muted)] leading-relaxed">
-            AI로 헤드헌팅의 반복 작업을 줄이고, 헤드헌터가 본업에 집중하게 합니다.
+            말로 일하는 AI 헤드헌팅 플랫폼. 헤드헌터가 사람에 집중하게 합니다.
           </p>
         </div>
         <div>
           <div class="text-[12px] font-bold uppercase tracking-wider text-[color:var(--ink)] mb-4">제품</div>
           <ul class="space-y-2.5 text-[13px] text-[color:var(--muted)]">
-            <li><a href="#features" class="hover:text-[color:var(--ink)]">기능</a></li>
-            <li><a href="#workflow" class="hover:text-[color:var(--ink)]">워크플로우</a></li>
-            <li><a href="#pricing" class="hover:text-[color:var(--ink)]">가격</a></li>
-            <li><a href="#customers" class="hover:text-[color:var(--ink)]">고객사</a></li>
+            <li><a href="#voice" class="hover:text-[color:var(--ink)]">음성 에이전트</a></li>
+            <li><a href="#remote" class="hover:text-[color:var(--ink)]">원격 업무</a></li>
+            <li><a href="#matching" class="hover:text-[color:var(--ink)]">자동 매칭</a></li>
+            <li><a href="#trust" class="hover:text-[color:var(--ink)]">위조 검출</a></li>
           </ul>
         </div>
         <div>
@@ -640,7 +868,7 @@
       </div>
       <div class="pt-8 border-t border-[color:var(--border-soft)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <p class="text-[12px] text-[color:var(--muted-2)]">© 2026 synco. All rights reserved.</p>
-        <p class="text-[12px] text-[color:var(--muted-2)]">Made in Seoul · Powered by Gemini</p>
+        <p class="text-[12px] text-[color:var(--muted-2)]">Made in Seoul · Powered by AI</p>
       </div>
     </div>
   </footer>
