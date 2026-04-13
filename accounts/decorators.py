@@ -18,10 +18,13 @@ def _redirect_named(name, fallback):
 
 
 def membership_required(view_func):
-    """Ensure user has an active Membership. Redirect otherwise."""
+    """Ensure user has an active Membership. Superusers bypass."""
 
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
         try:
             membership = request.user.membership
         except Membership.DoesNotExist:
