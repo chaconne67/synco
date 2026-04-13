@@ -1,15 +1,10 @@
 {% if last_turn %}
-<div class="bg-primary-light border-b border-primary/10 cursor-pointer" onclick="toggleChatbot()">
-  <div class="max-w-4xl mx-auto px-4 py-2">
-    <p class="text-sm text-primary font-medium truncate">
-      🔍 "{{ last_turn.user_text }}" — {{ last_turn.result_count }}명 찾음
-    </p>
-  </div>
-</div>
-{% else %}
-<div class="bg-gray-50 border-b border-gray-100">
-  <div class="max-w-4xl mx-auto px-4 py-2">
-    <p class="text-sm text-gray-500">전체 후보자 {{ total }}명</p>
-  </div>
+<div class="mb-3 flex items-center gap-2 rounded-lg bg-[#E6F6FD] border border-[#BAE6FD] px-3.5 py-2 cursor-pointer hover:bg-[#DBF0FA] transition"
+     onclick="toggleChatbot()">
+  <svg class="w-3.5 h-3.5 text-[#0B5FAA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+  <p class="text-[13px] text-[#0B5FAA] font-semibold truncate flex-1">
+    "{{ last_turn.user_text }}" &mdash; {{ last_turn.result_count }}명 찾음
+  </p>
+  <span class="text-[11px] text-[#0B5FAA]/70 font-medium">수정하기 &rarr;</span>
 </div>
 {% endif %}

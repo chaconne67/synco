@@ -3,16 +3,19 @@
 
 {% block title %}{{ candidate.name }} — synco{% endblock %}
 
-{# v2: 사이드바, 하단 네비 제거 #}
-{% block wrapper_class %}min-h-screen bg-white{% endblock %}
-{% block sidebar %}{% endblock %}
-{% block bottom_nav %}{% endblock %}
+{% block breadcrumb_page %}
+<span class="text-slate-500">/</span>
+<a href="/candidates/" hx-get="/candidates/" hx-target="#main-content" hx-push-url="true" class="text-slate-300 hover:text-white transition">후보자</a>
+<span class="text-slate-500">/</span>
+<span class="text-white font-semibold">{{ candidate.name }}</span>
+{% endblock %}
 
 {% block content %}
-<div>
-  {% include "candidates/partials/candidate_detail_content.html" %}
+<div class="p-6 lg:p-8" style="background:#F7F9FC;">
+  <div class="max-w-5xl mx-auto">
+    {% include "candidates/partials/candidate_detail_content.html" %}
+  </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
