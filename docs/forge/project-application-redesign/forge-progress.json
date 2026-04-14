@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1520952,
+  "last_pid": 1526096,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
