@@ -240,3 +240,39 @@
 [20:50:59] AUTHOR_REBUTTAL_DONE round=1 accepted=12 rebutted=0 partial=1
 [20:54:10] TEMPERING_DONE rounds=1 total_issues=13
 [20:54:10] FORGE_DONE slug=phase-4b-templates-modals result=success
+[20:54:54] GIT_COMMIT bdf4fb1
+[20:54:54] PROGRESS_UPDATED phase-4b-templates-modals tempering_status=completed
+[20:55:12] SESSION_CHAIN_SPAWN pid=1572079
+[20:55:12] SESSION_END
+[20:57:21] SESSION_START pid=1573318 mode=continue
+[20:57:21] SKILL_LOADED impl-forge-batch mode=continue
+[20:57:21] TODO_PICKED phase-4b-templates-modals action=impl
+[20:57:21] WORKTREE_CREATED phase-4b-templates-modals base_sha=bdf4fb1 path=.worktrees/phase-4b-templates-modals
+[20:57:21] PROGRESS_UPDATED phase-4b-templates-modals impl_status=running
+[20:57:52] SUBAGENT_DISPATCHED subagent-driven-dev slug=phase-4b-templates-modals
+[2026-04-14T21:15:00Z] T4b.1 modal convention applied: all 8 modals use consistent overlay/close/accessibility pattern
+[2026-04-14T21:15:00Z] T4b.2 add_candidate_modal.html implemented (DB search tab, form, HTMX submit)
+[2026-04-14T21:15:00Z] T4b.3 action_create_modal.html implemented (type/channel/dates/note fields)
+[2026-04-14T21:15:00Z] T4b.4 action_complete_modal.html implemented (R1-04: no next_action checkboxes)
+[2026-04-14T21:15:00Z] T4b.5 action_propose_next_modal.html implemented (checkbox list from suggestions)
+[2026-04-14T21:15:00Z] T4b.6 drop_application_modal.html implemented (radio reason, note)
+[2026-04-14T21:15:00Z] T4b.7 project_close_modal.html implemented (R1-03: GET handler added)
+[2026-04-14T21:15:00Z] T4b.8 project_timeline.html implemented (R1-12: -created_at ordering)
+[2026-04-14T21:15:00Z] T4b.9 application_actions_list.html implemented (includes action_item_card)
+[2026-04-14T21:15:00Z] T4b.10 project_applications_list.html implemented (HTMX swap target)
+[2026-04-14T21:15:00Z] T4b.11 view_filters.html rewritten (R1-05: phase filter, status=closed for 종료)
+[2026-04-14T21:15:00Z] T4b.12 candidate_detail_content.html updated (R1-06: Application section added)
+[2026-04-14T21:15:00Z] T4b.13 base.html modal-container fixed (R1-01: removed hidden class)
+[2026-04-14T21:15:00Z] T4b.14 legacy templates deleted: tab_offers, dash_pipeline, view_board_card
+[2026-04-14T21:15:00Z] T4b.15 kanban.js emptied, view_board.html updated to use kanban_column
+[2026-04-14T21:15:00Z] T4b.R1-08 action_skip_modal + action_reschedule_modal implemented
+[2026-04-14T21:15:00Z] T4b.R1-07 Prefetch() for candidate.applications reverse FK
+[2026-04-14T21:15:00Z] T4b.R1-09 Accessibility: role=dialog, aria-modal, aria-labelledby, max-h+overflow, Escape
+[2026-04-14T21:15:00Z] T4b.R1-10 Timeline tab enabled with hx-get wiring
+[2026-04-14T21:15:00Z] T4b.R1-11 Prefetch added to partial views (applications, actions)
+[2026-04-14T21:15:00Z] T4b.R1-12 Ordering: timeline -created_at, actions status/due_at
+[2026-04-14T21:15:00Z] T4b.16 manage.py check PASS, pytest 595 passed, ruff format applied
+[2026-04-14T21:15:00Z] T4b.COMPLETE committed b95a2e0 (22 files, +743 -329)
+[21:14:34] SUBAGENT_RETURNED phase-4b-templates-modals result=success
+[21:14:34] SQUASH_MERGE phase-4b-templates-modals commit=88dcc87
+[21:14:34] PROGRESS_UPDATED phase-4b-templates-modals impl_status=completed impl_commit=88dcc87
