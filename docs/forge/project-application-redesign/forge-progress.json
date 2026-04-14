@@ -82,7 +82,7 @@
     {
       "slug": "phase-3a-views-base",
       "tempering_status": "completed",
-      "impl_status": "running",
+      "impl_status": "completed",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,

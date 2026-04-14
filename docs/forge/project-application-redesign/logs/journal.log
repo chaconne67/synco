@@ -97,3 +97,16 @@
 [18:45:39] TODO_PICKED phase-3a-views-base action=impl
 [18:45:39] WORKTREE_CREATED phase-3a-views-base base_sha=2ba6713 path=.worktrees/phase-3a-views-base
 [18:45:39] PROGRESS_UPDATED phase-3a-views-base impl_status=running
+[18:45:59] SUBAGENT_DISPATCHED subagent-driven-dev slug=phase-3a-views-base
+[18:56:03] T3a.1 views.py inventory complete — 55 functions categorized
+[18:56:03] T3a.2 forms.py: 7 new forms added (ApplicationCreateForm, ApplicationDropForm, ProjectCloseForm, ActionItem*)
+[18:56:03] T3a.3 urls.py: 16 new routes added (close/reopen/applications/timeline + 10 Phase 3b stubs)
+[18:56:03] T3a.3b main/urls.py: dashboard_todo_partial route added
+[18:56:03] T3a.4 views.py: 10 Phase 3b stub functions added at EOF
+[18:56:03] T3a.5 dashboard + dashboard_todo_partial rewritten with new service calls
+[18:56:03] T3a.6 project_list rewritten with get_project_kanban_cards + role-based filtering
+[18:56:03] T3a.7 project_detail + partials rewritten with Application-based queries
+[18:56:03] T3a.8 project_create/update preserved with collision/approval workflow adapted
+[18:56:03] T3a.9 project_close/reopen implemented with CHECK constraint + ActionItem cancellation
+[18:56:03] T3a.10 legacy refs cleaned: PENDING_APPROVAL -> _has_pending_approval(), Contact/Offer -> sentinel stubs
+[18:56:03] T3a.11 manage.py check PASS, ruff check PASS, ruff format PASS
