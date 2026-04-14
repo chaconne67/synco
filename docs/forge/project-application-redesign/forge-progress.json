@@ -27,17 +27,19 @@
     {
       "slug": "phase-1-models",
       "tempering_status": "completed",
-      "impl_status": "running",
+      "impl_status": "completed",
       "verification_status": "pending",
-      "impl_commit": null,
+      "impl_commit": "4e6a18d",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
       "artifacts": [
         "impl-plan-agreed.md"
       ],
-      "committed": false,
-      "depends_on": []
+      "committed": true,
+      "depends_on": [],
+      "worktree_path": ".worktrees/phase-1-models",
+      "base_sha": "f5aa6fdd04566b2e82b27f8f8d21a512a4f0372a"
     },
     {
       "slug": "phase-2a-services-core",
