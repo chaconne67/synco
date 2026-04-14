@@ -303,3 +303,27 @@
 [21:46:55] TEMPERING_DONE rounds=1 total_issues=14
 [21:47:16] PROGRESS_UPDATED phase-5-tests tempering_status=completed
 [21:47:16] FORGE_DONE slug=phase-5-tests result=success
+[21:47:44] GIT_COMMIT 7269d68
+[21:47:44] SESSION_END
+[21:50:16] SESSION_START pid=1598259 mode=continue
+[21:50:16] SKILL_LOADED impl-forge-batch mode=continue
+[21:50:16] TODO_PICKED phase-5-tests action=impl
+[21:50:16] WORKTREE_CREATED phase-5-tests base_sha=7269d68 path=.worktrees/phase-5-tests
+[21:50:16] PROGRESS_UPDATED phase-5-tests impl_status=running
+[21:50:41] SUBAGENT_DISPATCHED subagent-driven-dev slug=phase-5-tests
+[2026-04-14T22:15:00Z] T5.1 conftest.py extended: 7 new fixtures (action_types, logged_in_client, other_org_client, third_candidate/application, _disable_manifest_storage)
+[2026-04-14T22:15:00Z] T5.2 test_phase_derivation.py: 7 tests (reach_out done, submit pending, multi-app drop, OR rule, app delete signal)
+[2026-04-14T22:15:00Z] T5.3 test_application_lifecycle.py: 12 tests (create, drop/restore round-trip, hire full verify, 9 guard failures)
+[2026-04-14T22:15:00Z] T5.4 test_action_lifecycle.py: 18 tests (create, complete, skip, cancel, reschedule, propose_next, is_overdue, 7 guards)
+[2026-04-14T22:15:00Z] T5.5 test_signals.py: 6 tests (stale state correction, action/app delete recompute, status sync)
+[2026-04-14T22:15:00Z] T5.6 test_constraints.py: 6 tests (unique app, unique hired, 3 check constraints, transaction)
+[2026-04-14T22:15:00Z] T5.7 test_views_dashboard.py: 6 tests (auth, context, org isolation, assigned_to, todo partial)
+[2026-04-14T22:15:00Z] T5.8 test_views_project.py: 6 tests (list, detail org isolation, close, close modal, reopen)
+[2026-04-14T22:15:00Z] T5.9 test_views_application.py: 10 tests (add, drop HTMX, restore, hire HTMX, duplicate error, org isolation, auth)
+[2026-04-14T22:15:00Z] T5.10 test_views_action.py: 11 tests (create, complete, skip, reschedule, propose_next, org isolation, auth)
+[2026-04-14T22:15:00Z] T5.11 test_lifecycle_scenario.py: 2 tests (full lifecycle 7 steps + Case D closed project)
+[2026-04-14T22:15:00Z] T5.12 projects/tests.py deleted, root conftest.py collect_ignore preserved (Phase 6 scope)
+[2026-04-14T22:15:00Z] T5.13 pytest: 84 new tests + 591 existing = 675 total, ALL PASS. ruff check + format clean
+[22:12:34] SUBAGENT_RETURNED phase-5-tests result=success
+[22:12:34] SQUASH_MERGE phase-5-tests commit=94bfe06
+[22:12:34] PROGRESS_UPDATED phase-5-tests impl_status=completed impl_commit=94bfe06
