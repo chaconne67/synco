@@ -121,15 +121,15 @@
       "slug": "phase-4a-templates-core",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "verification_status": "running",
-      "impl_commit": null,
-      "verification_result": null,
+      "verification_status": "completed",
+      "impl_commit": "86f59e2",
+      "verification_result": "PASS 12/12",
       "entry_point": "impl",
       "complexity": "medium",
       "artifacts": [
         "impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "depends_on": [
         "phase-3b-views-crud"
       ],
