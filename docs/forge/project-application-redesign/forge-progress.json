@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1487452,
+  "last_pid": 1497981,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
@@ -63,7 +63,7 @@
     {
       "slug": "phase-2b-services-cleanup",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
@@ -75,7 +75,9 @@
       "committed": false,
       "depends_on": [
         "phase-2a-services-core"
-      ]
+      ],
+      "worktree_path": ".worktrees/phase-2b-services-cleanup",
+      "base_sha": "6071e57c2ed0c293b79a941bb00b810887cde59e"
     },
     {
       "slug": "phase-3a-views-base",
