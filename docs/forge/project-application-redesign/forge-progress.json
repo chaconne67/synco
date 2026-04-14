@@ -101,16 +101,16 @@
     {
       "slug": "phase-3b-views-crud",
       "tempering_status": "completed",
-      "impl_status": "running",
+      "impl_status": "completed",
       "verification_status": "pending",
-      "impl_commit": null,
+      "impl_commit": "8d88286",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
       "artifacts": [
         "impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "depends_on": [
         "phase-3a-views-base"
       ],
