@@ -5,9 +5,6 @@ Two entry points:
     confirm_action()  — commits to DB
 
 Dispatches to intent-specific handlers via _PREVIEW_HANDLERS / _CONFIRM_HANDLERS.
-
-Note: contact_record, contact_reserve, offer_create intents removed in Phase 3b.
-TODO: Add application_add intent in Phase 4+.
 """
 
 from __future__ import annotations
@@ -29,7 +26,6 @@ from projects.models import (
     Submission,
 )
 from projects.services.dashboard import get_today_actions
-from projects.services.lifecycle import maybe_advance_to_interviewing
 from projects.services.voice.entity_resolver import resolve_submission_for_interview
 
 # ---------------------------------------------------------------------------
@@ -236,8 +232,6 @@ def _confirm_interview_schedule(
         location=entities.get("location", ""),
         notes=entities.get("notes", ""),
     )
-
-    maybe_advance_to_interviewing(project)
 
     return {
         "ok": True,

@@ -1,68 +1,31 @@
-"""Check for due auto-actions and expiring locks. Run daily via cron."""
+"""Check for due auto-actions. Run daily via cron."""
 
 from __future__ import annotations
-
-from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from projects.models import (
-    ActionStatus,
-    ActionType,
+    ActionStatusChoice,
     AutoAction,
-    Contact,
     Notification,
 )
 
 
 class Command(BaseCommand):
-    help = "Check for expiring locks and process due auto-action reminders"
+    help = "Check for due auto-actions and create reminder notifications"
 
     def handle(self, *args, **options):
         now = timezone.now()
-        tomorrow = now + timedelta(days=1)
 
-        lock_count = self._check_expiring_locks(now, tomorrow)
         due_count = self._process_due_actions(now)
 
-        self.stdout.write(
-            f"check_due_actions: {lock_count} lock reminders, "
-            f"{due_count} due actions processed"
-        )
-
-    def _check_expiring_locks(self, now, tomorrow) -> int:
-        """Create recontact reminders for locks expiring within 24h."""
-        expiring = Contact.objects.filter(
-            result=Contact.Result.RESERVED,
-            locked_until__lte=tomorrow,
-            locked_until__gt=now,
-        ).select_related("candidate", "project", "consultant")
-
-        count = 0
-        for contact in expiring:
-            contact_id = str(contact.pk)
-            if AutoAction.objects.filter(
-                project=contact.project,
-                action_type=ActionType.RECONTACT_REMINDER,
-                data__contact_id=contact_id,
-            ).exists():
-                continue
-            AutoAction.objects.create(
-                project=contact.project,
-                trigger_event="lock_expiring",
-                action_type=ActionType.RECONTACT_REMINDER,
-                title=f"{contact.candidate.name} 컨택 잠금 내일 만료",
-                data={"contact_id": contact_id},
-                created_by=contact.consultant,
-            )
-            count += 1
-        return count
+        self.stdout.write(f"check_due_actions: {due_count} due actions processed")
 
     def _process_due_actions(self, now) -> int:
         """Create Notifications for due pending actions."""
         due_actions = AutoAction.objects.filter(
-            status=ActionStatus.PENDING,
+            status=ActionStatusChoice.PENDING,
             due_at__lte=now,
         ).select_related("project", "created_by")
 
@@ -83,7 +46,7 @@ class Command(BaseCommand):
                 },
             )
             # Mark the action as applied regardless
-            action.status = ActionStatus.APPLIED
+            action.status = ActionStatusChoice.APPLIED
             action.save(update_fields=["status", "updated_at"])
             if created:
                 count += 1

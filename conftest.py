@@ -1,10 +1,8 @@
-# Root conftest: skip legacy test modules broken by Phase 1 model changes.
-# These reference removed models (Contact, Offer, ActionStatus),
-# removed ProjectStatus values (SEARCHING, NEW, CLOSED_SUCCESS),
-# or templates that reference removed fields.
-# Phase 2b/5 will fix them.
+# Root conftest: skip legacy test modules that reference removed models,
+# deleted enum values, or templates with removed fields.
+# These need rewriting to use the new Application/ActionItem models.
 collect_ignore = [
-    # Import errors: removed models (Contact, Offer, ActionStatus)
+    # Reference removed models or deleted enum values
     "tests/test_auto_actions.py",
     "tests/test_check_due_actions.py",
     "tests/test_context_views.py",

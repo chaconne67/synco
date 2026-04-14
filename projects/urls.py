@@ -103,11 +103,6 @@ urlpatterns = [
         name="project_tab_search",
     ),
     path(
-        "<uuid:pk>/tab/contacts/",
-        views.project_tab_contacts,
-        name="project_tab_contacts",
-    ),
-    path(
         "<uuid:pk>/tab/submissions/",
         views.project_tab_submissions,
         name="project_tab_submissions",
@@ -116,11 +111,6 @@ urlpatterns = [
         "<uuid:pk>/tab/interviews/",
         views.project_tab_interviews,
         name="project_tab_interviews",
-    ),
-    path(
-        "<uuid:pk>/tab/offers/",
-        views.project_tab_offers,
-        name="project_tab_offers",
     ),
     # P07: Submission 관리
     path(

@@ -1,7 +1,4 @@
-"""Link extracted resume to candidate.
-
-Phase 1: Contact model deleted. Phase 2 will add Application creation here.
-"""
+"""Link extracted resume to candidate."""
 
 import logging
 
@@ -69,8 +66,5 @@ def link_resume_to_candidate(
         upload.candidate = candidate
         upload.save(update_fields=["candidate", "updated_at"])
         transition_status(upload, ResumeUpload.Status.LINKED)
-
-        # Phase 2 TODO: create Application + initial ActionItem here
-        # (Contact model was deleted in Phase 1)
 
     return upload

@@ -2,9 +2,6 @@
 
 Handles disambiguation when multiple candidates share the same name,
 and resolves submissions for various workflow stages.
-
-Phase 1: Contact references removed. Submission.Status removed.
-Phase 2-6: Will be rewritten with Application/ActionItem-based flow.
 """
 
 from __future__ import annotations
@@ -56,7 +53,6 @@ def resolve_candidate(
         )
 
     # Multiple matches: try to narrow by project context
-    # Phase 1: Contact model deleted. Use Application instead.
     if project:
         from projects.models import Application
 
@@ -115,10 +111,7 @@ def resolve_submission(
     candidate_id: uuid_mod.UUID,
     project: Project,
 ) -> dict[str, Any]:
-    """Resolve the best eligible submission for a candidate in a project.
-
-    Phase 1: Submission.Status removed. This is a legacy stub.
-    """
+    """Resolve the best eligible submission for a candidate in a project."""
     return {"status": "not_found", "submission_id": None, "submissions": []}
 
 
@@ -127,14 +120,5 @@ def resolve_submission_for_interview(
     candidate_id: uuid_mod.UUID,
     project: Project,
 ) -> dict[str, Any]:
-    """Legacy stub — Submission model no longer has status/project/candidate FK."""
-    return {"status": "not_found", "submission_id": None}
-
-
-def resolve_submission_for_offer(
-    *,
-    candidate_id: uuid_mod.UUID,
-    project: Project,
-) -> dict[str, Any]:
-    """Legacy stub — Offer model deleted."""
+    """Resolve a submission eligible for interview scheduling."""
     return {"status": "not_found", "submission_id": None}

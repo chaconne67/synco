@@ -1,8 +1,4 @@
-"""AutoAction management: create (idempotent), apply, dismiss, validate.
-
-Phase 1: Updated to use ActionStatusChoice (old ActionStatus/ActionType TextChoices deleted).
-Phase 6: AutoAction model itself will be redesigned or removed.
-"""
+"""AutoAction management: create (idempotent), apply, dismiss, validate."""
 
 from __future__ import annotations
 
@@ -35,16 +31,8 @@ ACTION_DATA_SCHEMA: dict[str, dict] = {
         "required": ["candidate_id"],
         "optional": ["draft_json"],
     },
-    "offer_template": {
-        "required": ["submission_id"],
-        "optional": ["salary", "terms"],
-    },
     "followup_reminder": {
         "required": ["submission_id"],
-        "optional": ["message"],
-    },
-    "recontact_reminder": {
-        "required": ["contact_id"],
         "optional": ["message"],
     },
 }
@@ -91,36 +79,7 @@ def _apply_candidate_search(action, user):
     pass
 
 
-def _apply_submission_draft(action, user):
-    """Create or update SubmissionDraft with auto_draft_json."""
-
-    # Phase 1: Submission no longer has project/candidate FK.
-    # This handler is legacy and will be removed in Phase 6.
-    logger.warning("_apply_submission_draft is legacy — skipping in Phase 1.")
-
-
-def _apply_offer_template(action, user):
-    """Create Offer from template data. NOOP — Offer model deleted."""
-    # Phase 1: Offer model deleted. Phase 6 will remove this handler.
-    logger.warning("_apply_offer_template is legacy — Offer model deleted.")
-
-
 def _apply_followup_reminder(action, user):
-    """Create Notification for the consultant."""
-    from projects.models import Notification
-
-    Notification.objects.get_or_create(
-        recipient=user,
-        type=Notification.Type.REMINDER,
-        title=action.title,
-        callback_data={"auto_action_id": str(action.pk)},
-        defaults={
-            "body": action.data.get("message", action.title),
-        },
-    )
-
-
-def _apply_recontact_reminder(action, user):
     """Create Notification for the consultant."""
     from projects.models import Notification
 
@@ -138,10 +97,7 @@ def _apply_recontact_reminder(action, user):
 _APPLY_HANDLERS = {
     "posting_draft": _apply_posting_draft,
     "candidate_search": _apply_candidate_search,
-    "submission_draft": _apply_submission_draft,
-    "offer_template": _apply_offer_template,
     "followup_reminder": _apply_followup_reminder,
-    "recontact_reminder": _apply_recontact_reminder,
 }
 
 

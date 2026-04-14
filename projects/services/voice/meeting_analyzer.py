@@ -37,7 +37,6 @@ FIELD_LABELS = {
 }
 
 # Amendment A11: Interest level -> result mapping
-# Phase 1: Contact model deleted, using string values directly
 INTEREST_TO_RESULT = {
     "높음": "관심",
     "보통": "응답",
@@ -208,10 +207,8 @@ def apply_meeting_insights(
 ) -> None:
     """Apply selected analysis fields to the database.
 
-    Phase 1: Contact model deleted. Only updates MeetingRecord status.
-    Phase 2-6: Will create ActionItems from meeting insights.
+    Updates MeetingRecord status to APPLIED.
     """
-    # Phase 1: only mark record as applied, skip Contact-based logic
     record.status = MeetingRecord.Status.APPLIED
     record.applied_at = timezone.now()
     record.applied_by = user

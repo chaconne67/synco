@@ -100,14 +100,6 @@ class ProjectForm(forms.ModelForm):
         return cleaned
 
 
-# ContactForm removed — Contact model deleted in Phase 1.
-# Phase 3 will replace with ActionItem-based forms.
-class ContactForm(forms.Form):
-    """Stub — Contact model deleted. Phase 3 will replace."""
-
-    pass
-
-
 # ---------------------------------------------------------------------------
 # P07: Submission forms
 # ---------------------------------------------------------------------------
@@ -163,7 +155,7 @@ class SubmissionFeedbackForm(forms.Form):
 
 
 # ---------------------------------------------------------------------------
-# P09: Interview / Offer forms
+# P09: Interview forms
 # ---------------------------------------------------------------------------
 
 
@@ -221,14 +213,6 @@ class InterviewResultForm(forms.Form):
         label="피드백",
         required=False,
     )
-
-
-# OfferForm removed — Offer model deleted in Phase 1.
-# Phase 3 will replace with ActionItem-based hiring workflow.
-class OfferForm(forms.Form):
-    """Stub — Offer model deleted. Phase 3 will replace."""
-
-    pass
 
 
 # ---------------------------------------------------------------------------

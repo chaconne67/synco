@@ -1,8 +1,4 @@
-"""긴급도 자동 산정 로직.
-
-Phase 2b: Stubs updated for ActionItem-based urgency.
-Contact/Offer models deleted, old ProjectStatus replaced.
-"""
+"""긴급도 자동 산정 로직."""
 
 from __future__ import annotations
 

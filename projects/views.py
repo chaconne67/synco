@@ -521,9 +521,7 @@ def project_close(request, pk):
     # R1-03: HTMX requests use HX-Redirect for full page navigation
     if request.headers.get("HX-Request"):
         response = HttpResponse(status=204)
-        response["HX-Redirect"] = reverse(
-            "projects:project_detail", args=[project.pk]
-        )
+        response["HX-Redirect"] = reverse("projects:project_detail", args=[project.pk])
         return response
     return redirect("projects:project_detail", pk=project.pk)
 
@@ -635,7 +633,7 @@ def project_tab_search(request, pk):
 
         results = match_candidates(project.requirements, organization=org, limit=50)
 
-        # Application-based status lookup (replaces Contact)
+        # Application-based status lookup
         project_applications = {
             a.candidate_id: a
             for a in project.applications.select_related("candidate").all()
@@ -665,14 +663,6 @@ def project_tab_search(request, pk):
             "has_requirements": bool(project.requirements),
             "resume_uploads": resume_uploads,
         },
-    )
-
-
-@membership_required
-def project_tab_contacts(request, pk):
-    """Legacy: 컨택 탭 제거됨. ActionItem으로 대체."""
-    return HttpResponse(
-        '<div class="p-4 text-gray-500">이 기능은 ActionItem으로 대체되었습니다.</div>'
     )
 
 
@@ -739,14 +729,6 @@ def project_tab_interviews(request, pk):
             "grouped_interviews": grouped,
             "total_count": interviews.count(),
         },
-    )
-
-
-@membership_required
-def project_tab_offers(request, pk):
-    """Legacy: 오퍼 탭 제거됨. ActionItem으로 대체."""
-    return HttpResponse(
-        '<div class="p-4 text-gray-500">이 기능은 ActionItem으로 대체되었습니다.</div>'
     )
 
 
@@ -1487,11 +1469,6 @@ def interview_create(request, pk):
         if form.is_valid():
             form.save()
 
-            # 프로젝트 status 자동 전환
-            from projects.services.lifecycle import maybe_advance_to_interviewing
-
-            maybe_advance_to_interviewing(project)
-
             return HttpResponse(
                 status=204,
                 headers={"HX-Trigger": "interviewChanged"},
@@ -1620,7 +1597,7 @@ def interview_result(request, pk, interview_pk):
     if request.method == "POST":
         form = InterviewResultForm(request.POST)
         if form.is_valid():
-            from projects.services.lifecycle import (
+            from projects.services.action_lifecycle import (
                 InvalidTransition,
                 apply_interview_result,
             )
@@ -1955,12 +1932,7 @@ def approval_queue(request):
                     organization=org,
                 )
                 .exclude(
-                    status__in=[
-                        "closed_success",
-                        "closed_fail",
-                        "closed_cancel",
-                        "pending_approval",
-                    ],
+                    status=ProjectStatus.CLOSED,
                 )
                 .exclude(
                     pk=appr.project_id,

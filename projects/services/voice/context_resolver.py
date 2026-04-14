@@ -15,10 +15,8 @@ logger = logging.getLogger(__name__)
 PROJECT_PAGES = {
     "project_detail",
     "project_tab_search",
-    "project_tab_contacts",
     "project_tab_submissions",
     "project_tab_interviews",
-    "project_tab_offers",
 }
 
 

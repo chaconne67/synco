@@ -104,7 +104,5 @@ class ActionTypeAdmin(admin.ModelAdmin):
         protected = queryset.filter(is_protected=True)
         if protected.exists():
             codes = ", ".join(protected.values_list("code", flat=True))
-            raise ValidationError(
-                f"Cannot delete protected ActionTypes: {codes}"
-            )
+            raise ValidationError(f"Cannot delete protected ActionTypes: {codes}")
         super().delete_queryset(request, queryset)

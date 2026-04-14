@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from projects.models import Contact, Interview, Notification, Submission
+from projects.models import Interview, Notification, Submission
 from projects.services.notification import send_notification
 from projects.telegram.formatters import format_reminder
 
@@ -21,51 +21,7 @@ class Command(BaseCommand):
         now = timezone.now()
         total_sent = 0
 
-        # 1. Recontact reminders
-        recontacts = Contact.objects.filter(
-            next_contact_date=today,
-            result=Contact.Result.RESERVED,
-        ).select_related("consultant", "candidate", "project")
-
-        for contact in recontacts:
-            if not contact.consultant:
-                continue
-            notif = Notification.objects.create(
-                recipient=contact.consultant,
-                type=Notification.Type.REMINDER,
-                title="재컨택 예정",
-                body=f"{contact.candidate.name} - {contact.project.title}",
-            )
-            text = format_reminder(
-                reminder_type="recontact",
-                details=f"{contact.candidate.name} - {contact.project.title}",
-            )
-            if send_notification(notif, text=text):
-                total_sent += 1
-
-        # 2. Lock expiry reminders (tomorrow)
-        lock_expiring = Contact.objects.filter(
-            locked_until__date=tomorrow,
-            result=Contact.Result.RESERVED,
-        ).select_related("consultant", "candidate", "project")
-
-        for contact in lock_expiring:
-            if not contact.consultant:
-                continue
-            notif = Notification.objects.create(
-                recipient=contact.consultant,
-                type=Notification.Type.REMINDER,
-                title="잠금 만료 임박",
-                body=f"{contact.candidate.name} - {contact.project.title}",
-            )
-            text = format_reminder(
-                reminder_type="lock_expiry",
-                details=f"{contact.candidate.name} - {contact.project.title} (만료: {contact.locked_until:%m/%d})",
-            )
-            if send_notification(notif, text=text):
-                total_sent += 1
-
-        # 3. Submission review pending 2+ days
+        # 1. Submission review pending 2+ days
         stale_submissions = Submission.objects.filter(
             status=Submission.Status.SUBMITTED,
             submitted_at__lte=now - timedelta(days=2),
@@ -88,7 +44,7 @@ class Command(BaseCommand):
             if send_notification(notif, text=text):
                 total_sent += 1
 
-        # 4. Interview tomorrow
+        # 2. Interview tomorrow
         tomorrow_interviews = Interview.objects.filter(
             scheduled_at__date=tomorrow,
             result=Interview.Result.PENDING,
