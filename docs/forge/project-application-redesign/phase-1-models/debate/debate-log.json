@@ -1,0 +1,174 @@
+{
+  "topic": "phase-1-models",
+  "document": "docs/forge/project-application-redesign/phase-1-models/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "E1-1",
+              "severity": "CRITICAL",
+              "title": "App boot path broken by model-only deletion",
+              "attack": "signals.py/admin.py import Contact/Offer/ProjectStatus — app won't boot if models deleted without fixing imports",
+              "action": "accepted",
+              "response": "Verified: apps.py→signals.py→Contact/ProjectStatus/ActionType(TextChoices). Phase 1 scope expanded to include boot path cleanup.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "E2-1",
+              "severity": "CRITICAL",
+              "title": "ActionType name collision (TextChoices vs BaseModel)",
+              "attack": "Existing ActionType(TextChoices) at models.py:594 will be shadowed by new ActionType(BaseModel)",
+              "action": "accepted",
+              "response": "Verified: AutoAction model references old ActionType enum. T1.1 updated to explicitly remove old enum.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-2",
+              "severity": "MAJOR",
+              "title": "User FK instead of settings.AUTH_USER_MODEL",
+              "attack": "ActionItem FK uses User directly, project uses custom user model",
+              "action": "accepted",
+              "response": "All existing FKs use settings.AUTH_USER_MODEL. Plan shorthand was ambiguous. Fixed to explicit.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-3",
+              "severity": "MAJOR",
+              "title": "Interview unique constraint meaningless with OneToOne",
+              "attack": "(action_item, round) is redundant since OneToOne already makes action_item unique",
+              "action": "accepted",
+              "response": "Correct. Replace DB constraint with clean() validation on action_item__application + round.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-4",
+              "severity": "MAJOR",
+              "title": "No action_type validation for output models",
+              "attack": "Any ActionItem can have Submission/Interview/MeetingRecord regardless of action_type",
+              "action": "partial",
+              "response": "Valid structurally, but Phase 1 = schema only. Added constraint documentation to T1.5/T1.6/T1.7. Validation in Phase 2.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-5",
+              "severity": "MAJOR",
+              "title": "No CheckConstraint for Project invariants",
+              "attack": "closed_at/status/result can be inconsistent without DB constraints",
+              "action": "accepted",
+              "response": "Added 3 CheckConstraints to T1.1 Meta.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-6",
+              "severity": "MAJOR",
+              "title": "Seed reverse_func contradictory",
+              "attack": "Description says all().delete() but code filters by codes. Also PROTECT FK blocks deletion.",
+              "action": "partial",
+              "response": "Code example correct, description wrong. Fixed description to match code. Added PROTECT caveat.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-7",
+              "severity": "MAJOR",
+              "title": "Missing Meta cleanup for deleted fields",
+              "attack": "Interview.Meta.ordering references deleted submission field",
+              "action": "accepted",
+              "response": "Verified: Interview.Meta.ordering = ['submission', 'round']. Added Meta cleanup step to T1.5/T1.6/T1.7.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "E2-2",
+              "severity": "MAJOR",
+              "title": "Seed count confusion (심사 8 vs 7)",
+              "attack": "Breakdown inconsistency could confuse implementers",
+              "action": "rebutted",
+              "response": "impl-plan says '23개' consistently without per-phase breakdown. The '심사 8개' was a review prompt error, not a plan error.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "E2-3",
+              "severity": "MAJOR",
+              "title": "submit_to_pm missing from suggests_next",
+              "attack": "No next action suggested after PM review completion",
+              "action": "partial",
+              "response": "Valid concern for seed completeness. Added directive to T1.12: define suggests_next for all 23 types.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "E2-4",
+              "severity": "MAJOR",
+              "title": "DropReason insufficient (position_cancelled)",
+              "attack": "4 enum may not cover high-frequency drop reasons like position cancellation",
+              "action": "rebutted",
+              "response": "FINAL-SPEC 9.4 explicitly caps at 4 enum with 'no over-classification'. Plan implements spec faithfully.",
+              "evidence_type": "code_reference",
+              "author_accepted": false
+            },
+            {
+              "id": "E2-5",
+              "severity": "MAJOR",
+              "title": "STATE_FROM_ACTION_TYPE mapping not defined",
+              "attack": "current_state property references undefined constant mapping",
+              "action": "partial",
+              "response": "Added skeleton mapping for protected 4 types + key types. Remaining = 'in_progress' fallback + Phase 2 TODO.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "E2-6",
+              "severity": "MAJOR",
+              "title": "Phase derivation edge case documentation",
+              "attack": "Droped submitted applications and phase recalculation needs explicit documentation",
+              "action": "partial",
+              "response": "Behavior is per FINAL-SPEC 6.2. Added phase field docstring referencing derivation rules.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "E1-8",
+              "severity": "MINOR",
+              "title": "Missing index for current_state query",
+              "attack": "current_state uses filter(status=DONE).order_by('-completed_at') without supporting index",
+              "action": "accepted",
+              "response": "Added Index(['application', 'status', '-completed_at']) to T1.4 ActionItem Meta.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "E2-7",
+              "severity": "MINOR",
+              "title": "ActionOutputKind NONE notation incomplete",
+              "attack": "Plan shows '' instead of NONE = '', '없음'",
+              "action": "accepted",
+              "response": "Fixed T1.2 to match FINAL-SPEC notation: NONE = '', '없음'.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 15,
+        "accepted": 8,
+        "rebutted": 2,
+        "partial": 5,
+        "escalated": 0
+      }
+    }
+  }
+}
