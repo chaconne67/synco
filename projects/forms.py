@@ -8,11 +8,9 @@ from clients.models import Client
 User = get_user_model()
 
 from .models import (
-    Contact,
     Interview,
     JDSource,
     NewsSource,
-    Offer,
     PostingSite,
     Project,
     Submission,
@@ -102,59 +100,12 @@ class ProjectForm(forms.ModelForm):
         return cleaned
 
 
-class ContactForm(forms.ModelForm):
-    class Meta:
-        model = Contact
-        fields = ["candidate", "channel", "contacted_at", "result", "notes"]
-        widgets = {
-            "candidate": forms.Select(attrs={"class": INPUT_CSS}),
-            "channel": forms.Select(attrs={"class": INPUT_CSS}),
-            "contacted_at": forms.DateTimeInput(
-                attrs={"class": INPUT_CSS, "type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
-            ),
-            "result": forms.Select(attrs={"class": INPUT_CSS}),
-            "notes": forms.Textarea(
-                attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "메모"}
-            ),
-        }
-        labels = {
-            "candidate": "후보자",
-            "channel": "연락 방법",
-            "contacted_at": "컨택 일시",
-            "result": "결과",
-            "notes": "메모",
-        }
+# ContactForm removed — Contact model deleted in Phase 1.
+# Phase 3 will replace with ActionItem-based forms.
+class ContactForm(forms.Form):
+    """Stub — Contact model deleted. Phase 3 will replace."""
 
-    def __init__(self, *args, organization=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if organization:
-            from candidates.models import Candidate
-
-            self.fields["candidate"].queryset = Candidate.objects.filter(
-                owned_by=organization
-            )
-        # 예정(RESERVED) 결과는 폼에서 선택 불가 (reserve 전용 엔드포인트 사용)
-        self.fields["result"].choices = [
-            (value, label)
-            for value, label in Contact.Result.choices
-            if value != Contact.Result.RESERVED
-        ]
-
-    def clean(self):
-        cleaned = super().clean()
-        result = cleaned.get("result")
-        channel = cleaned.get("channel")
-        contacted_at = cleaned.get("contacted_at")
-
-        # 실제 컨택 기록에는 채널과 일시 필수
-        if result and result != Contact.Result.RESERVED:
-            if not channel:
-                self.add_error("channel", "연락 방법을 선택해주세요.")
-            if not contacted_at:
-                self.add_error("contacted_at", "컨택 일시를 입력해주세요.")
-
-        return cleaned
+    pass
 
 
 # ---------------------------------------------------------------------------
@@ -165,12 +116,12 @@ ALLOWED_FILE_EXTENSIONS = [".pdf", ".doc", ".docx"]
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
+# SubmissionForm — Phase 3 will rewrite to use ActionItem-based flow.
 class SubmissionForm(forms.ModelForm):
     class Meta:
         model = Submission
-        fields = ["candidate", "template", "document_file", "notes"]
+        fields = ["template", "document_file", "notes"]
         widgets = {
-            "candidate": forms.Select(attrs={"class": INPUT_CSS}),
             "template": forms.Select(attrs={"class": INPUT_CSS}),
             "document_file": forms.ClearableFileInput(attrs={"class": INPUT_CSS}),
             "notes": forms.Textarea(
@@ -178,41 +129,10 @@ class SubmissionForm(forms.ModelForm):
             ),
         }
         labels = {
-            "candidate": "후보자",
             "template": "양식",
             "document_file": "추천 서류",
             "notes": "메모",
         }
-
-    def __init__(self, *args, organization=None, project=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if organization and project:
-            from candidates.models import Candidate
-
-            interested_candidate_ids = Contact.objects.filter(
-                project=project,
-                result=Contact.Result.INTERESTED,
-            ).values_list("candidate_id", flat=True)
-
-            # 이미 등록된 Submission의 후보자 제외 (수정 시에는 현재 후보자 포함)
-            existing_submission_ids = Submission.objects.filter(
-                project=project
-            ).values_list("candidate_id", flat=True)
-            if self.instance and self.instance.pk:
-                existing_submission_ids = existing_submission_ids.exclude(
-                    candidate_id=self.instance.candidate_id
-                )
-
-            self.fields["candidate"].queryset = Candidate.objects.filter(
-                pk__in=interested_candidate_ids,
-                owned_by=organization,
-            ).exclude(pk__in=existing_submission_ids)
-        elif organization:
-            from candidates.models import Candidate
-
-            self.fields["candidate"].queryset = Candidate.objects.filter(
-                owned_by=organization
-            )
 
     def clean_document_file(self):
         f = self.cleaned_data.get("document_file")
@@ -229,17 +149,10 @@ class SubmissionForm(forms.ModelForm):
         return f
 
 
+# SubmissionFeedbackForm — Submission.Status removed. Phase 3 will redesign.
 class SubmissionFeedbackForm(forms.Form):
-    """고객사 피드백 입력 폼."""
+    """고객사 피드백 입력 폼. Phase 3 will redesign."""
 
-    result = forms.ChoiceField(
-        choices=[
-            (Submission.Status.PASSED, "통과"),
-            (Submission.Status.REJECTED, "탈락"),
-        ],
-        widget=forms.Select(attrs={"class": INPUT_CSS}),
-        label="결과",
-    )
     feedback = forms.CharField(
         widget=forms.Textarea(
             attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "피드백 내용"}
@@ -254,12 +167,12 @@ class SubmissionFeedbackForm(forms.Form):
 # ---------------------------------------------------------------------------
 
 
+# InterviewForm — Phase 3 will rewrite to use ActionItem-based flow.
 class InterviewForm(forms.ModelForm):
     class Meta:
         model = Interview
-        fields = ["submission", "round", "scheduled_at", "type", "location", "notes"]
+        fields = ["round", "scheduled_at", "type", "location", "notes"]
         widgets = {
-            "submission": forms.Select(attrs={"class": INPUT_CSS}),
             "round": forms.NumberInput(attrs={"class": INPUT_CSS, "min": 1}),
             "scheduled_at": forms.DateTimeInput(
                 attrs={"class": INPUT_CSS, "type": "datetime-local"},
@@ -277,43 +190,12 @@ class InterviewForm(forms.ModelForm):
             ),
         }
         labels = {
-            "submission": "추천 건",
             "round": "차수",
             "scheduled_at": "면접 일시",
             "type": "유형",
             "location": "장소/링크",
             "notes": "메모",
         }
-
-    def __init__(self, *args, project=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if project:
-            # 통과된 Submission만 선택 가능
-            self.fields["submission"].queryset = Submission.objects.filter(
-                project=project,
-                status=Submission.Status.PASSED,
-            ).select_related("candidate")
-
-    def clean(self):
-        cleaned = super().clean()
-        submission = cleaned.get("submission")
-        round_num = cleaned.get("round")
-
-        if submission and round_num:
-            # 중복 (submission, round) 검증 — 수정 시 자기 자신 제외
-            qs = Interview.objects.filter(
-                submission=submission,
-                round=round_num,
-            )
-            if self.instance and self.instance.pk:
-                qs = qs.exclude(pk=self.instance.pk)
-            if qs.exists():
-                self.add_error(
-                    "round",
-                    f"{round_num}차 면접이 이미 등록되어 있습니다.",
-                )
-
-        return cleaned
 
 
 class InterviewResultForm(forms.Form):
@@ -341,62 +223,12 @@ class InterviewResultForm(forms.Form):
     )
 
 
-class OfferForm(forms.ModelForm):
-    class Meta:
-        model = Offer
-        fields = ["submission", "salary", "position_title", "start_date", "notes"]
-        widgets = {
-            "submission": forms.Select(attrs={"class": INPUT_CSS}),
-            "salary": forms.TextInput(
-                attrs={"class": INPUT_CSS, "placeholder": "제안 연봉"}
-            ),
-            "position_title": forms.TextInput(
-                attrs={"class": INPUT_CSS, "placeholder": "제안 직책"}
-            ),
-            "start_date": forms.DateInput(
-                attrs={"class": INPUT_CSS, "type": "date"},
-                format="%Y-%m-%d",
-            ),
-            "notes": forms.Textarea(
-                attrs={"class": INPUT_CSS, "rows": 3, "placeholder": "협상 메모"}
-            ),
-        }
-        labels = {
-            "submission": "추천 건",
-            "salary": "제안 연봉",
-            "position_title": "제안 직책",
-            "start_date": "출근 예정일",
-            "notes": "메모",
-        }
+# OfferForm removed — Offer model deleted in Phase 1.
+# Phase 3 will replace with ActionItem-based hiring workflow.
+class OfferForm(forms.Form):
+    """Stub — Offer model deleted. Phase 3 will replace."""
 
-    def __init__(self, *args, project=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if project:
-            from projects.services.lifecycle import is_submission_offer_eligible
-
-            # 통과 Submission 중 최신 인터뷰 합격 + Offer 없는 것만
-            passed_submissions = Submission.objects.filter(
-                project=project,
-                status=Submission.Status.PASSED,
-            ).select_related("candidate")
-
-            # 이미 Offer 있는 Submission 제외 (수정 시 자기 submission 포함)
-            existing_offer_sub_ids = Offer.objects.filter(
-                submission__project=project,
-            ).values_list("submission_id", flat=True)
-            if self.instance and self.instance.pk:
-                existing_offer_sub_ids = existing_offer_sub_ids.exclude(
-                    submission_id=self.instance.submission_id,
-                )
-
-            eligible_ids = [
-                s.pk
-                for s in passed_submissions.exclude(pk__in=existing_offer_sub_ids)
-                if is_submission_offer_eligible(s)
-            ]
-            self.fields["submission"].queryset = Submission.objects.filter(
-                pk__in=eligible_ids,
-            ).select_related("candidate")
+    pass
 
 
 # ---------------------------------------------------------------------------

@@ -1,8 +1,16 @@
+from datetime import timedelta
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
 from common.mixins import BaseModel
+
+
+# ---------------------------------------------------------------------------
+# Enums — Project
+# ---------------------------------------------------------------------------
 
 
 class JDSource(models.TextChoices):
@@ -11,17 +19,79 @@ class JDSource(models.TextChoices):
     TEXT = "text", "텍스트 입력"
 
 
+class ProjectPhase(models.TextChoices):
+    SEARCHING = "searching", "서칭"
+    SCREENING = "screening", "심사"
+
+
 class ProjectStatus(models.TextChoices):
-    NEW = "new", "신규"
-    SEARCHING = "searching", "서칭중"
-    RECOMMENDING = "recommending", "추천진행"
-    INTERVIEWING = "interviewing", "면접진행"
-    NEGOTIATING = "negotiating", "오퍼협상"
-    CLOSED_SUCCESS = "closed_success", "클로즈(성공)"
-    CLOSED_FAIL = "closed_fail", "클로즈(실패)"
-    CLOSED_CANCEL = "closed_cancel", "클로즈(취소)"
-    ON_HOLD = "on_hold", "보류"
-    PENDING_APPROVAL = "pending_approval", "승인대기"
+    OPEN = "open", "진행중"
+    CLOSED = "closed", "종료"
+
+
+class ProjectResult(models.TextChoices):
+    SUCCESS = "success", "성공"
+    FAIL = "fail", "실패"
+
+
+# ---------------------------------------------------------------------------
+# Enums — ActionType / ActionItem
+# ---------------------------------------------------------------------------
+
+
+class ActionChannel(models.TextChoices):
+    IN_PERSON = "in_person", "대면"
+    VIDEO = "video", "화상"
+    PHONE = "phone", "전화"
+    KAKAO = "kakao", "카톡"
+    SMS = "sms", "문자"
+    EMAIL = "email", "이메일"
+    LINKEDIN = "linkedin", "LinkedIn"
+    OTHER = "other", "기타"
+
+
+class ActionOutputKind(models.TextChoices):
+    NONE = "", "없음"
+    SUBMISSION = "submission", "서류 패키지"
+    INTERVIEW = "interview", "면접"
+    MEETING = "meeting", "사전미팅"
+
+
+class ActionItemStatus(models.TextChoices):
+    PENDING = "pending", "대기"
+    DONE = "done", "완료"
+    SKIPPED = "skipped", "건너뜀"
+    CANCELLED = "cancelled", "취소"
+
+
+# ---------------------------------------------------------------------------
+# Enums — Application
+# ---------------------------------------------------------------------------
+
+
+class DropReason(models.TextChoices):
+    UNFIT = "unfit", "부적합"
+    CANDIDATE_DECLINED = "candidate_declined", "후보자 거절/포기"
+    CLIENT_REJECTED = "client_rejected", "클라이언트 탈락"
+    OTHER = "other", "기타"
+
+
+# ---------------------------------------------------------------------------
+# State mapping — Application.current_state derives from latest ActionItem
+# ---------------------------------------------------------------------------
+
+STATE_FROM_ACTION_TYPE: dict[str, str] = {
+    "pre_meeting": "pre_met",
+    "submit_to_client": "submitted",
+    "interview_round": "interviewing",
+    "confirm_hire": "hired",
+    # Phase 2: complete mapping for all 23 action types
+}
+
+
+# ===========================================================================
+# Project
+# ===========================================================================
 
 
 class Project(BaseModel):
@@ -44,11 +114,35 @@ class Project(BaseModel):
     jd_drive_file_id = models.CharField(max_length=255, blank=True)
     jd_raw_text = models.TextField(blank=True)
     jd_analysis = models.JSONField(default=dict, blank=True)
-    status = models.CharField(
-        max_length=30,
-        choices=ProjectStatus.choices,
-        default=ProjectStatus.NEW,
+
+    # --- New fields (FINAL-SPEC 2.1) ---
+    phase = models.CharField(
+        max_length=20,
+        choices=ProjectPhase.choices,
+        default=ProjectPhase.SEARCHING,
+        db_index=True,
     )
+    # Auto-derived field. Phase 2 signal: compute_project_phase.
+    # Rule: if any active Application has a completed submit_to_client
+    # ActionItem → screening. All dropped → back to searching.
+    # See FINAL-SPEC 3.1 / 6.2.
+
+    status = models.CharField(
+        max_length=20,
+        choices=ProjectStatus.choices,
+        default=ProjectStatus.OPEN,
+        db_index=True,
+    )
+    deadline = models.DateField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    result = models.CharField(
+        max_length=20,
+        choices=ProjectResult.choices,
+        blank=True,
+        default="",
+    )
+    note = models.TextField(blank=True)
+
     assigned_consultants = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         blank=True,
@@ -66,81 +160,270 @@ class Project(BaseModel):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["phase", "status"]),
+            models.Index(fields=["deadline"]),
+            models.Index(fields=["organization", "status"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(status="open", closed_at__isnull=False),
+                name="project_open_implies_no_closed_at",
+            ),
+            models.CheckConstraint(
+                check=~models.Q(status="open") | models.Q(result=""),
+                name="project_open_implies_empty_result",
+            ),
+            models.CheckConstraint(
+                check=models.Q(result="") | models.Q(status="closed"),
+                name="project_result_implies_closed",
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.title
+
+    @property
+    def is_closed(self) -> bool:
+        return self.status == ProjectStatus.CLOSED
 
     @property
     def days_elapsed(self) -> int:
         return (timezone.now().date() - self.created_at.date()).days
 
 
-class Contact(BaseModel):
-    """컨택 이력."""
+# ===========================================================================
+# ActionType (DB table — replaces old TextChoices enum)
+# ===========================================================================
 
-    class Channel(models.TextChoices):
-        PHONE = "전화", "전화"
-        SMS = "문자", "문자"
-        KAKAO = "카톡", "카톡"
-        EMAIL = "이메일", "이메일"
-        LINKEDIN = "LinkedIn", "LinkedIn"
 
-    class Result(models.TextChoices):
-        RESPONDED = "응답", "응답"
-        NO_RESPONSE = "미응답", "미응답"
-        REJECTED = "거절", "거절"
-        INTERESTED = "관심", "관심"
-        ON_HOLD = "보류", "보류"
-        RESERVED = "예정", "예정"  # P06: 컨택 예정(잠금)
+class ActionType(BaseModel):
+    """액션 종류 마스터 테이블. 관리자 페이지에서 추가/비활성화 가능."""
+
+    code = models.CharField(max_length=40, unique=True)
+    label_ko = models.CharField(max_length=100)
+    phase = models.CharField(max_length=20, blank=True, default="")
+    default_channel = models.CharField(
+        max_length=20,
+        choices=ActionChannel.choices,
+        blank=True,
+        default="",
+    )
+    output_kind = models.CharField(
+        max_length=20,
+        choices=ActionOutputKind.choices,
+        blank=True,
+        default="",
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    is_protected = models.BooleanField(default=False)
+    description = models.TextField(blank=True)
+    suggests_next = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ["sort_order", "code"]
+
+    def __str__(self) -> str:
+        return f"{self.code} ({self.label_ko})"
+
+
+# ===========================================================================
+# Application
+# ===========================================================================
+
+
+class ApplicationQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(dropped_at__isnull=True, hired_at__isnull=True)
+
+    def submitted(self):
+        return (
+            self.active()
+            .filter(
+                action_items__action_type__code="submit_to_client",
+                action_items__status=ActionItemStatus.DONE,
+            )
+            .distinct()
+        )
+
+    def for_project(self, project):
+        return self.filter(project=project)
+
+
+class Application(BaseModel):
+    """프로젝트-후보자 매칭. 진행 상태는 ActionItem에서 파생."""
 
     project = models.ForeignKey(
         Project,
         on_delete=models.CASCADE,
-        related_name="contacts",
+        related_name="applications",
     )
     candidate = models.ForeignKey(
         "candidates.Candidate",
         on_delete=models.CASCADE,
-        related_name="project_contacts",
+        related_name="applications",
     )
-    consultant = models.ForeignKey(
+    notes = models.TextField(blank=True)
+    hired_at = models.DateTimeField(null=True, blank=True)
+    dropped_at = models.DateTimeField(null=True, blank=True)
+    drop_reason = models.CharField(
+        max_length=30,
+        choices=DropReason.choices,
+        blank=True,
+        default="",
+    )
+    drop_note = models.TextField(blank=True)
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="contacts",
+        related_name="created_applications",
     )
-    channel = models.CharField(
-        max_length=20, choices=Channel.choices, blank=True
-    )  # P06: blank for reserved
-    contacted_at = models.DateTimeField(
-        null=True, blank=True
-    )  # P06: nullable for reserved
-    result = models.CharField(max_length=20, choices=Result.choices)
-    notes = models.TextField(blank=True)
-    locked_until = models.DateTimeField(null=True, blank=True)
-    next_contact_date = models.DateField(null=True, blank=True)  # 재컨택 예정일
+
+    objects = ApplicationQuerySet.as_manager()
 
     class Meta:
-        ordering = ["-contacted_at"]
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "candidate"],
+                name="unique_application_per_project_candidate",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["project", "dropped_at", "hired_at"]),
+            models.Index(fields=["candidate"]),
+        ]
 
     def __str__(self) -> str:
-        return f"{self.project} - {self.candidate} ({self.channel})"
+        return f"{self.project} - {self.candidate}"
 
     @property
-    def is_reserved(self) -> bool:
-        """예정 상태이고 잠금이 유효한지."""
-        return (
-            self.result == self.Result.RESERVED
-            and self.locked_until is not None
-            and self.locked_until > timezone.now()
-        )
+    def is_active(self) -> bool:
+        return self.dropped_at is None and self.hired_at is None
 
     @property
-    def is_expired_reservation(self) -> bool:
-        """만료된 예정인지."""
-        return self.result == self.Result.RESERVED and (
-            self.locked_until is None or self.locked_until <= timezone.now()
+    def current_state(self) -> str:
+        """UI display state derived from latest completed ActionItem."""
+        if self.dropped_at:
+            return "dropped"
+        if self.hired_at:
+            return "hired"
+        latest_done = (
+            self.action_items.filter(status=ActionItemStatus.DONE)
+            .order_by("-completed_at")
+            .first()
         )
+        if not latest_done:
+            return "matched"
+        return STATE_FROM_ACTION_TYPE.get(latest_done.action_type.code, "in_progress")
+
+
+# ===========================================================================
+# ActionItem
+# ===========================================================================
+
+
+class ActionItemQuerySet(models.QuerySet):
+    def pending(self):
+        return self.filter(status=ActionItemStatus.PENDING)
+
+    def done(self):
+        return self.filter(status=ActionItemStatus.DONE)
+
+    def overdue(self):
+        return self.pending().filter(due_at__lt=timezone.now())
+
+    def due_soon(self, days: int = 3):
+        soon = timezone.now() + timedelta(days=days)
+        return self.pending().filter(due_at__lte=soon, due_at__gte=timezone.now())
+
+    def for_user(self, user):
+        return self.filter(assigned_to=user)
+
+
+class ActionItem(BaseModel):
+    """헤드헌터 업무의 기본 단위. Application에 여러 개 달림."""
+
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="action_items",
+    )
+    action_type = models.ForeignKey(
+        ActionType,
+        on_delete=models.PROTECT,
+        related_name="items",
+    )
+    title = models.CharField(max_length=300)
+    channel = models.CharField(
+        max_length=20,
+        choices=ActionChannel.choices,
+        blank=True,
+        default="",
+    )
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+    due_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=ActionItemStatus.choices,
+        default=ActionItemStatus.PENDING,
+        db_index=True,
+    )
+    result = models.TextField(blank=True)
+    note = models.TextField(blank=True)
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_action_items",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_action_items",
+    )
+    parent_action = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="children",
+    )
+
+    objects = ActionItemQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["due_at", "created_at"]
+        indexes = [
+            models.Index(fields=["application", "status"]),
+            models.Index(fields=["assigned_to", "status", "due_at"]),
+            models.Index(fields=["action_type", "status"]),
+            models.Index(
+                fields=["application", "status", "-completed_at"]
+            ),  # E1-8: current_state query support
+        ]
+
+    def __str__(self) -> str:
+        return self.title
+
+    @property
+    def is_overdue(self) -> bool:
+        if self.status != ActionItemStatus.PENDING:
+            return False
+        if self.due_at is None:
+            return False
+        return self.due_at < timezone.now()
+
+
+# ===========================================================================
+# Submission (modified — now hangs off ActionItem)
+# ===========================================================================
 
 
 class SubmissionTemplate(models.TextChoices):
@@ -151,34 +434,19 @@ class SubmissionTemplate(models.TextChoices):
 
 
 class Submission(BaseModel):
-    """고객사 제출 서류."""
+    """고객사 제출 서류. ActionItem(submit_to_client)에 1:1 연결."""
 
-    class Status(models.TextChoices):
-        DRAFTING = "작성중", "작성중"
-        SUBMITTED = "제출", "제출"
-        PASSED = "통과", "통과"
-        REJECTED = "탈락", "탈락"
-
-    project = models.ForeignKey(
-        Project,
+    # Phase 2: clean()/save() validates action_type.code == "submit_to_client"
+    action_item = models.OneToOneField(
+        ActionItem,
         on_delete=models.CASCADE,
-        related_name="submissions",
-    )
-    candidate = models.ForeignKey(
-        "candidates.Candidate",
-        on_delete=models.CASCADE,
-        related_name="submissions",
+        related_name="submission",
     )
     consultant = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         related_name="submissions",
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.DRAFTING,
     )
     template = models.CharField(
         max_length=20,
@@ -194,15 +462,14 @@ class Submission(BaseModel):
 
     class Meta:
         ordering = ["-created_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["project", "candidate"],
-                name="unique_submission_per_project_candidate",
-            )
-        ]
 
     def __str__(self) -> str:
-        return f"{self.project} - {self.candidate} ({self.status})"
+        return f"Submission: {self.action_item.title}"
+
+
+# ===========================================================================
+# SubmissionDraft (unchanged)
+# ===========================================================================
 
 
 class DraftStatus(models.TextChoices):
@@ -288,8 +555,13 @@ class SubmissionDraft(BaseModel):
         super().save(*args, **kwargs)
 
 
+# ===========================================================================
+# Interview (modified — now hangs off ActionItem)
+# ===========================================================================
+
+
 class Interview(BaseModel):
-    """면접 단계."""
+    """면접 단계. ActionItem(interview_round)에 1:1 연결."""
 
     class Type(models.TextChoices):
         IN_PERSON = "대면", "대면"
@@ -302,10 +574,11 @@ class Interview(BaseModel):
         ON_HOLD = "보류", "보류"
         FAILED = "탈락", "탈락"
 
-    submission = models.ForeignKey(
-        Submission,
+    # Phase 2: clean()/save() validates action_type.code == "interview_round"
+    action_item = models.OneToOneField(
+        ActionItem,
         on_delete=models.CASCADE,
-        related_name="interviews",
+        related_name="interview",
     )
     round = models.PositiveSmallIntegerField()
     scheduled_at = models.DateTimeField()
@@ -320,48 +593,86 @@ class Interview(BaseModel):
     notes = models.TextField(blank=True)
 
     class Meta:
-        ordering = ["submission", "round"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["submission", "round"],
-                name="unique_interview_per_submission_round",
-            )
-        ]
+        ordering = ["round"]
 
     def __str__(self) -> str:
-        return f"{self.submission} - {self.round}차 면접"
+        return f"{self.action_item.title} - {self.round}차 면접"
+
+    def clean(self):
+        """Validate no duplicate round within the same Application."""
+        super().clean()
+        if self.action_item_id:
+            dup = (
+                Interview.objects.filter(
+                    action_item__application=self.action_item.application,
+                    round=self.round,
+                )
+                .exclude(pk=self.pk)
+                .exists()
+            )
+            if dup:
+                raise ValidationError(
+                    f"이 Application에 이미 {self.round}차 면접이 존재합니다."
+                )
 
 
-class Offer(BaseModel):
-    """오퍼 조율."""
+# ===========================================================================
+# MeetingRecord (modified — now hangs off ActionItem)
+# ===========================================================================
+
+
+class MeetingRecord(BaseModel):
+    """미팅 녹음 분석 레코드. ActionItem(pre_meeting)에 1:1 연결."""
 
     class Status(models.TextChoices):
-        NEGOTIATING = "협상중", "협상중"
-        ACCEPTED = "수락", "수락"
-        REJECTED = "거절", "거절"
+        UPLOADED = "uploaded", "업로드됨"
+        TRANSCRIBING = "transcribing", "전사 중"
+        ANALYZING = "analyzing", "분석 중"
+        READY = "ready", "분석 완료"
+        APPLIED = "applied", "반영 완료"
+        FAILED = "failed", "실패"
 
-    submission = models.OneToOneField(
-        Submission,
+    # Phase 2: clean()/save() validates action_type.code == "pre_meeting"
+    action_item = models.OneToOneField(
+        ActionItem,
         on_delete=models.CASCADE,
-        related_name="offer",
+        related_name="meeting_record",
     )
-    salary = models.CharField(max_length=100, blank=True)
-    position_title = models.CharField(max_length=200, blank=True)
-    start_date = models.DateField(null=True, blank=True)
+    audio_file = models.FileField(upload_to="meetings/audio/")
+    transcript = models.TextField(blank=True)
+    analysis_json = models.JSONField(default=dict, blank=True)
+    edited_json = models.JSONField(default=dict, blank=True)
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.NEGOTIATING,
+        default=Status.UPLOADED,
     )
-    terms = models.JSONField(default=dict, blank=True)
-    notes = models.TextField(blank=True)
-    decided_at = models.DateTimeField(null=True, blank=True)
+    error_message = models.TextField(blank=True)
+    applied_at = models.DateTimeField(null=True, blank=True)
+    applied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="applied_meeting_records",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_meeting_records",
+    )
 
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return f"Offer: {self.submission}"
+        return f"Meeting: {self.action_item.title} ({self.status})"
+
+
+# ===========================================================================
+# ProjectApproval (unchanged)
+# ===========================================================================
 
 
 class ConflictType(models.TextChoices):
@@ -427,6 +738,11 @@ class ProjectApproval(BaseModel):
         return f"Approval: {self.project} ({self.status})"
 
 
+# ===========================================================================
+# ProjectContext (unchanged)
+# ===========================================================================
+
+
 class ProjectContext(BaseModel):
     """업무 연속성 컨텍스트."""
 
@@ -455,6 +771,11 @@ class ProjectContext(BaseModel):
 
     def __str__(self) -> str:
         return f"Context: {self.project} - {self.consultant}"
+
+
+# ===========================================================================
+# Notification (unchanged)
+# ===========================================================================
 
 
 class Notification(BaseModel):
@@ -495,6 +816,11 @@ class Notification(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.title} ({self.status})"
+
+
+# ===========================================================================
+# PostingSite (unchanged)
+# ===========================================================================
 
 
 class PostingSiteChoice(models.TextChoices):
@@ -538,69 +864,12 @@ class PostingSite(BaseModel):
         return f"{self.project} - {self.get_site_display()}"
 
 
-class MeetingRecord(BaseModel):
-    """미팅 녹음 분석 레코드."""
-
-    class Status(models.TextChoices):
-        UPLOADED = "uploaded", "업로드됨"
-        TRANSCRIBING = "transcribing", "전사 중"
-        ANALYZING = "analyzing", "분석 중"
-        READY = "ready", "분석 완료"
-        APPLIED = "applied", "반영 완료"
-        FAILED = "failed", "실패"
-
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name="meeting_records",
-    )
-    candidate = models.ForeignKey(
-        "candidates.Candidate",
-        on_delete=models.CASCADE,
-        related_name="meeting_records",
-    )
-    audio_file = models.FileField(upload_to="meetings/audio/")
-    transcript = models.TextField(blank=True)
-    analysis_json = models.JSONField(default=dict, blank=True)
-    edited_json = models.JSONField(default=dict, blank=True)
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.UPLOADED,
-    )
-    error_message = models.TextField(blank=True)
-    applied_at = models.DateTimeField(null=True, blank=True)
-    applied_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="applied_meeting_records",
-    )
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="created_meeting_records",
-    )
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self) -> str:
-        return f"Meeting: {self.candidate} ({self.status})"
+# ===========================================================================
+# AutoAction (preserved — action_type choices removed per Phase 6 plan)
+# ===========================================================================
 
 
-class ActionType(models.TextChoices):
-    POSTING_DRAFT = "posting_draft", "공지 초안"
-    CANDIDATE_SEARCH = "candidate_search", "후보자 자동 서칭"
-    SUBMISSION_DRAFT = "submission_draft", "제출 서류 초안"
-    OFFER_TEMPLATE = "offer_template", "오퍼 템플릿"
-    FOLLOWUP_REMINDER = "followup_reminder", "팔로업 리마인더"
-    RECONTACT_REMINDER = "recontact_reminder", "재컨택 리마인더"
-
-
-class ActionStatus(models.TextChoices):
+class ActionStatusChoice(models.TextChoices):
     PENDING = "pending", "대기"
     APPLIED = "applied", "적용됨"
     DISMISSED = "dismissed", "무시됨"
@@ -615,13 +884,15 @@ class AutoAction(BaseModel):
         related_name="auto_actions",
     )
     trigger_event = models.CharField(max_length=100)
-    action_type = models.CharField(max_length=30, choices=ActionType.choices)
+    # choices removed — was old ActionType(TextChoices).
+    # Phase 6 will redesign this model entirely.
+    action_type = models.CharField(max_length=30)
     title = models.CharField(max_length=300)
     data = models.JSONField(default=dict, blank=True)
     status = models.CharField(
         max_length=20,
-        choices=ActionStatus.choices,
-        default=ActionStatus.PENDING,
+        choices=ActionStatusChoice.choices,
+        default=ActionStatusChoice.PENDING,
     )
     due_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(
@@ -651,6 +922,11 @@ class AutoAction(BaseModel):
 
     def __str__(self) -> str:
         return f"AutoAction: {self.title} ({self.status})"
+
+
+# ===========================================================================
+# News (unchanged)
+# ===========================================================================
 
 
 class NewsSourceType(models.TextChoices):
@@ -762,6 +1038,11 @@ class NewsArticleRelevance(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.article.title} -> {self.project.title} ({self.score:.2f})"
+
+
+# ===========================================================================
+# ResumeUpload (unchanged)
+# ===========================================================================
 
 
 class ResumeUpload(BaseModel):

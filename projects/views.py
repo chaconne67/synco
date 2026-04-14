@@ -33,11 +33,9 @@ from .forms import (
     SubmissionForm,
 )
 from .models import (
-    Contact,
     DEFAULT_MASKING_CONFIG,
     DraftStatus,
     Interview,
-    Offer,
     OutputLanguage,
     PostingSite,
     Project,

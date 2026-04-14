@@ -1,4 +1,8 @@
-"""AutoAction management: create (idempotent), apply, dismiss, validate."""
+"""AutoAction management: create (idempotent), apply, dismiss, validate.
+
+Phase 1: Updated to use ActionStatusChoice (old ActionStatus/ActionType TextChoices deleted).
+Phase 6: AutoAction model itself will be redesigned or removed.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +10,7 @@ import logging
 
 from django.db import transaction
 
-from projects.models import ActionStatus, ActionType, AutoAction
+from projects.models import ActionStatusChoice, AutoAction
 
 logger = logging.getLogger(__name__)
 
@@ -23,22 +27,23 @@ class ValidationError(Exception):
 
 # --- Validation ---
 
+# Old ActionType TextChoices values used as string keys
 ACTION_DATA_SCHEMA: dict[str, dict] = {
-    ActionType.POSTING_DRAFT: {"required": [], "optional": ["text"]},
-    ActionType.CANDIDATE_SEARCH: {"required": [], "optional": ["candidate_ids"]},
-    ActionType.SUBMISSION_DRAFT: {
+    "posting_draft": {"required": [], "optional": ["text"]},
+    "candidate_search": {"required": [], "optional": ["candidate_ids"]},
+    "submission_draft": {
         "required": ["candidate_id"],
         "optional": ["draft_json"],
     },
-    ActionType.OFFER_TEMPLATE: {
+    "offer_template": {
         "required": ["submission_id"],
         "optional": ["salary", "terms"],
     },
-    ActionType.FOLLOWUP_REMINDER: {
+    "followup_reminder": {
         "required": ["submission_id"],
         "optional": ["message"],
     },
-    ActionType.RECONTACT_REMINDER: {
+    "recontact_reminder": {
         "required": ["contact_id"],
         "optional": ["message"],
     },
@@ -64,7 +69,7 @@ def get_pending_actions(project) -> list[AutoAction]:
     return list(
         AutoAction.objects.filter(
             project=project,
-            status=ActionStatus.PENDING,
+            status=ActionStatusChoice.PENDING,
         ).order_by("-created_at")
     )
 
@@ -88,40 +93,17 @@ def _apply_candidate_search(action, user):
 
 def _apply_submission_draft(action, user):
     """Create or update SubmissionDraft with auto_draft_json."""
-    from projects.models import Submission, SubmissionDraft
+    from projects.models import SubmissionDraft
 
-    candidate_id = action.data.get("candidate_id")
-    draft_json = action.data.get("draft_json", {})
-    if not candidate_id or not draft_json:
-        return
-    submission = Submission.objects.filter(
-        project=action.project,
-        candidate_id=candidate_id,
-    ).first()
-    if submission:
-        SubmissionDraft.objects.update_or_create(
-            submission=submission,
-            defaults={"auto_draft_json": draft_json},
-        )
+    # Phase 1: Submission no longer has project/candidate FK.
+    # This handler is legacy and will be removed in Phase 6.
+    logger.warning("_apply_submission_draft is legacy — skipping in Phase 1.")
 
 
 def _apply_offer_template(action, user):
-    """Create Offer from template data."""
-    from projects.models import Offer, Submission
-
-    submission_id = action.data.get("submission_id")
-    if not submission_id:
-        return
-    submission = Submission.objects.filter(pk=submission_id).first()
-    if not submission:
-        return
-    if hasattr(submission, "offer"):
-        return
-    Offer.objects.create(
-        submission=submission,
-        salary=action.data.get("salary", ""),
-        terms=action.data.get("terms", {}),
-    )
+    """Create Offer from template data. NOOP — Offer model deleted."""
+    # Phase 1: Offer model deleted. Phase 6 will remove this handler.
+    logger.warning("_apply_offer_template is legacy — Offer model deleted.")
 
 
 def _apply_followup_reminder(action, user):
@@ -155,12 +137,12 @@ def _apply_recontact_reminder(action, user):
 
 
 _APPLY_HANDLERS = {
-    ActionType.POSTING_DRAFT: _apply_posting_draft,
-    ActionType.CANDIDATE_SEARCH: _apply_candidate_search,
-    ActionType.SUBMISSION_DRAFT: _apply_submission_draft,
-    ActionType.OFFER_TEMPLATE: _apply_offer_template,
-    ActionType.FOLLOWUP_REMINDER: _apply_followup_reminder,
-    ActionType.RECONTACT_REMINDER: _apply_recontact_reminder,
+    "posting_draft": _apply_posting_draft,
+    "candidate_search": _apply_candidate_search,
+    "submission_draft": _apply_submission_draft,
+    "offer_template": _apply_offer_template,
+    "followup_reminder": _apply_followup_reminder,
+    "recontact_reminder": _apply_recontact_reminder,
 }
 
 
@@ -171,16 +153,18 @@ def apply_action(action_id, user) -> AutoAction:
     """Apply a pending action with type-specific dispatch. Raises ConflictError if not pending."""
     with transaction.atomic():
         action = AutoAction.objects.select_for_update().get(pk=action_id)
-        if action.status != ActionStatus.PENDING:
+        if action.status != ActionStatusChoice.PENDING:
             raise ConflictError("이미 처리된 액션입니다.")
 
         if not validate_action_data(action.action_type, action.data):
             raise ValidationError("액션 데이터가 유효하지 않습니다.")
 
         # Type-specific dispatch
-        _APPLY_HANDLERS[action.action_type](action, user)
+        handler = _APPLY_HANDLERS.get(action.action_type)
+        if handler:
+            handler(action, user)
 
-        action.status = ActionStatus.APPLIED
+        action.status = ActionStatusChoice.APPLIED
         action.applied_by = user
         action.save(update_fields=["status", "applied_by", "updated_at"])
     return action
@@ -190,9 +174,9 @@ def dismiss_action(action_id, user) -> AutoAction:
     """Dismiss a pending action. Raises ConflictError if not pending."""
     with transaction.atomic():
         action = AutoAction.objects.select_for_update().get(pk=action_id)
-        if action.status != ActionStatus.PENDING:
+        if action.status != ActionStatusChoice.PENDING:
             raise ConflictError("이미 처리된 액션입니다.")
-        action.status = ActionStatus.DISMISSED
+        action.status = ActionStatusChoice.DISMISSED
         action.dismissed_by = user
         action.save(update_fields=["status", "dismissed_by", "updated_at"])
     return action

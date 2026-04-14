@@ -9,7 +9,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from data_extraction.services.extraction.sanitizers import parse_llm_json
-from projects.models import Contact, MeetingRecord
+from projects.models import MeetingRecord
 from projects.services.voice.transcriber import TranscribeMode, transcribe
 
 logger = logging.getLogger(__name__)
@@ -36,11 +36,12 @@ FIELD_LABELS = {
     "notes": "기타 메모",
 }
 
-# Amendment A11: Interest level -> Contact.result mapping
+# Amendment A11: Interest level -> result mapping
+# Phase 1: Contact model deleted, using string values directly
 INTEREST_TO_RESULT = {
-    "높음": Contact.Result.INTERESTED,
-    "보통": Contact.Result.RESPONDED,
-    "낮음": Contact.Result.ON_HOLD,
+    "높음": "관심",
+    "보통": "응답",
+    "낮음": "보류",
 }
 
 ANALYSIS_PROMPT = """\
@@ -207,84 +208,10 @@ def apply_meeting_insights(
 ) -> None:
     """Apply selected analysis fields to the database.
 
-    Field-specific handling:
-    - interest_level -> Updates Contact.result
-    - action_items -> Creates RESERVED Contact with next_contact_date
-    - mood -> Skip (stays in analysis_json only)
-    - All other fields -> Append to Contact.notes with provenance tag
+    Phase 1: Contact model deleted. Only updates MeetingRecord status.
+    Phase 2-6: Will create ActionItems from meeting insights.
     """
-    analysis = record.edited_json if record.edited_json else record.analysis_json
-    note_parts: list[str] = [f"[미팅녹음분석 {record.pk}]"]
-
-    for field in selected_fields:
-        value = analysis.get(field, "")
-        if not value:
-            continue
-
-        if field == "interest_level":
-            result_val = INTEREST_TO_RESULT.get(value)
-            if result_val:
-                contact = (
-                    Contact.objects.filter(
-                        project=record.project,
-                        candidate=record.candidate,
-                    )
-                    .exclude(result=Contact.Result.RESERVED)
-                    .order_by("-contacted_at")
-                    .first()
-                )
-                if contact:
-                    contact.result = result_val
-                    contact.save(update_fields=["result"])
-
-        elif field == "action_items":
-            from datetime import timedelta
-
-            Contact.objects.create(
-                project=record.project,
-                candidate=record.candidate,
-                consultant=user,
-                result=Contact.Result.RESERVED,
-                locked_until=timezone.now() + timedelta(days=7),
-                next_contact_date=(timezone.now() + timedelta(days=3)).date(),
-                notes=f"[미팅녹음분석 {record.pk}] 액션 아이템: {value}",
-            )
-
-        elif field == "mood":
-            continue  # mood not applied to DB
-
-        else:
-            label = FIELD_LABELS.get(field, field)
-            note_parts.append(f"- {label}: {value}")
-
-    # Append notes for non-special fields
-    if len(note_parts) > 1:
-        notes_text = "\n".join(note_parts)
-        existing_contact = (
-            Contact.objects.filter(
-                project=record.project,
-                candidate=record.candidate,
-            )
-            .exclude(result=Contact.Result.RESERVED)
-            .order_by("-contacted_at")
-            .first()
-        )
-        if existing_contact:
-            existing_contact.notes = (
-                existing_contact.notes + "\n\n" + notes_text
-            ).strip()
-            existing_contact.save(update_fields=["notes"])
-        else:
-            Contact.objects.create(
-                project=record.project,
-                candidate=record.candidate,
-                consultant=user,
-                channel=Contact.Channel.PHONE,
-                result=Contact.Result.RESPONDED,
-                contacted_at=timezone.now(),
-                notes=notes_text,
-            )
-
+    # Phase 1: only mark record as applied, skip Contact-based logic
     record.status = MeetingRecord.Status.APPLIED
     record.applied_at = timezone.now()
     record.applied_by = user

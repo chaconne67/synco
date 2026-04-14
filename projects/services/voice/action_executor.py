@@ -22,9 +22,7 @@ from accounts.models import Organization, User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import (
-    Contact,
     Interview,
-    Offer,
     Project,
     Submission,
 )
@@ -44,21 +42,23 @@ from projects.services.voice.entity_resolver import (
 # Mapping helpers — Korean UI labels to model constants
 # ---------------------------------------------------------------------------
 
+# Phase 1: Contact model deleted. Maps use string values directly.
+# Phase 2-6 will redesign with ActionChannel-based flow.
 CHANNEL_MAP: dict[str, str] = {
-    "전화": Contact.Channel.PHONE,
-    "문자": Contact.Channel.SMS,
-    "카톡": Contact.Channel.KAKAO,
-    "이메일": Contact.Channel.EMAIL,
-    "LinkedIn": Contact.Channel.LINKEDIN,
+    "전화": "전화",
+    "문자": "문자",
+    "카톡": "카톡",
+    "이메일": "이메일",
+    "LinkedIn": "LinkedIn",
 }
 
 RESULT_MAP: dict[str, str] = {
-    "응답": Contact.Result.RESPONDED,
-    "미응답": Contact.Result.NO_RESPONSE,
-    "거절": Contact.Result.REJECTED,
-    "관심": Contact.Result.INTERESTED,
-    "보류": Contact.Result.ON_HOLD,
-    "예정": Contact.Result.RESERVED,
+    "응답": "응답",
+    "미응답": "미응답",
+    "거절": "거절",
+    "관심": "관심",
+    "보류": "보류",
+    "예정": "예정",
 }
 
 INTERVIEW_TYPE_MAP: dict[str, str] = {

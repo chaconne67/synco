@@ -1,4 +1,7 @@
-"""Link extracted resume to candidate + create Contact."""
+"""Link extracted resume to candidate.
+
+Phase 1: Contact model deleted. Phase 2 will add Application creation here.
+"""
 
 import logging
 
@@ -6,7 +9,7 @@ from django.db import transaction
 
 from candidates.models import Category
 from data_extraction.services.save import save_pipeline_result
-from projects.models import Contact, ResumeUpload
+from projects.models import ResumeUpload
 from projects.services.resume.identity import identify_candidate_for_org
 from projects.services.resume.transitions import transition_status
 
@@ -67,15 +70,7 @@ def link_resume_to_candidate(
         upload.save(update_fields=["candidate", "updated_at"])
         transition_status(upload, ResumeUpload.Status.LINKED)
 
-        if upload.project:
-            Contact.objects.get_or_create(
-                project=upload.project,
-                candidate=candidate,
-                defaults={
-                    "consultant": user,
-                    "result": Contact.Result.INTERESTED,
-                    "notes": f"이력서 업로드로 추가 ({upload.file_name})",
-                },
-            )
+        # Phase 2 TODO: create Application + initial ActionItem here
+        # (Contact model was deleted in Phase 1)
 
     return upload

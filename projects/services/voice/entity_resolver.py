@@ -2,6 +2,9 @@
 
 Handles disambiguation when multiple candidates share the same name,
 and resolves submissions for various workflow stages.
+
+Phase 1: Contact references removed. Submission.Status removed.
+Phase 2-6: Will be rewritten with Application/ActionItem-based flow.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ from typing import Any
 
 from accounts.models import Organization
 from candidates.models import Candidate
-from projects.models import Contact, Project, Submission
+from projects.models import Project, Submission
 
 
 @dataclasses.dataclass
@@ -28,20 +31,22 @@ def resolve_candidate(
     organization: Organization,
     project: Project | None = None,
 ) -> CandidateResolution:
-    """Resolve a candidate name to a UUID within the organization scope."""
-    matches = list(
-        Candidate.objects.filter(
-            name__icontains=name.strip(),
-            owned_by=organization,
-        ).order_by("name", "-created_at")[:20]
+    matches = Candidate.objects.filter(
+        name__icontains=name,
+        owned_by=organization,
     )
 
     candidate_list = [
-        {"id": str(c.pk), "name": c.name, "email": c.email, "phone": c.phone}
+        {
+            "id": str(c.pk),
+            "name": c.name,
+            "email": c.email or "",
+            "phone": c.phone or "",
+        }
         for c in matches
     ]
 
-    if len(candidate_list) == 0:
+    if not candidate_list:
         return CandidateResolution(status="not_found", candidate_id=None, candidates=[])
     if len(candidate_list) == 1:
         return CandidateResolution(
@@ -51,10 +56,13 @@ def resolve_candidate(
         )
 
     # Multiple matches: try to narrow by project context
+    # Phase 1: Contact model deleted. Use Application instead.
     if project:
+        from projects.models import Application
+
         project_candidate_ids = {
             str(cid)
-            for cid in Contact.objects.filter(project=project).values_list(
+            for cid in Application.objects.filter(project=project).values_list(
                 "candidate_id", flat=True
             )
         }
@@ -107,27 +115,11 @@ def resolve_submission(
     candidate_id: uuid_mod.UUID,
     project: Project,
 ) -> dict[str, Any]:
-    """Resolve the best eligible submission for a candidate in a project."""
-    eligible = Submission.objects.filter(
-        project=project,
-        candidate_id=candidate_id,
-        status=Submission.Status.PASSED,
-    ).order_by("-created_at")
+    """Resolve the best eligible submission for a candidate in a project.
 
-    subs = [
-        {"id": s.pk, "status": s.status, "created_at": str(s.created_at)}
-        for s in eligible
-    ]
-
-    if len(subs) == 0:
-        return {"status": "not_found", "submission_id": None, "submissions": []}
-    if len(subs) == 1:
-        return {
-            "status": "resolved",
-            "submission_id": subs[0]["id"],
-            "submissions": subs,
-        }
-    return {"status": "ambiguous", "submission_id": None, "submissions": subs}
+    Phase 1: Submission.Status removed. This is a legacy stub.
+    """
+    return {"status": "not_found", "submission_id": None, "submissions": []}
 
 
 def resolve_submission_for_interview(
@@ -135,23 +127,8 @@ def resolve_submission_for_interview(
     candidate_id: uuid_mod.UUID,
     project: Project,
 ) -> dict[str, Any]:
-    """Resolve eligible submission for interview scheduling. PASSED status required."""
-    eligible = Submission.objects.filter(
-        project=project,
-        candidate_id=candidate_id,
-        status=Submission.Status.PASSED,
-    ).order_by("-created_at")
-
-    subs = list(eligible)
-    if len(subs) == 0:
-        return {"status": "not_found", "submission_id": None}
-    if len(subs) == 1:
-        return {"status": "resolved", "submission_id": subs[0].pk}
-    return {
-        "status": "ambiguous",
-        "submission_id": None,
-        "submissions": [{"id": str(s.pk)} for s in subs],
-    }
+    """Legacy stub — Submission model no longer has status/project/candidate FK."""
+    return {"status": "not_found", "submission_id": None}
 
 
 def resolve_submission_for_offer(
@@ -159,33 +136,5 @@ def resolve_submission_for_offer(
     candidate_id: uuid_mod.UUID,
     project: Project,
 ) -> dict[str, Any]:
-    """Resolve eligible submission for offer creation.
-
-    A submission is offer-eligible if it has PASSED status and no existing offer.
-    """
-    eligible = Submission.objects.filter(
-        project=project,
-        candidate_id=candidate_id,
-        status=Submission.Status.PASSED,
-    ).order_by("-created_at")
-
-    valid = []
-    for sub in eligible:
-        has_offer = False
-        try:
-            _ = sub.offer
-            has_offer = True
-        except Exception:
-            has_offer = False
-        if not has_offer:
-            valid.append(sub)
-
-    if len(valid) == 0:
-        return {"status": "not_found", "submission_id": None}
-    if len(valid) == 1:
-        return {"status": "resolved", "submission_id": valid[0].pk}
-    return {
-        "status": "ambiguous",
-        "submission_id": None,
-        "submissions": [{"id": str(s.pk)} for s in valid],
-    }
+    """Legacy stub — Offer model deleted."""
+    return {"status": "not_found", "submission_id": None}

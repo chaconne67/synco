@@ -1,10 +1,10 @@
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 
 from .models import (
-    Contact,
+    ActionType,
     Interview,
     Notification,
-    Offer,
     Project,
     ProjectApproval,
     ProjectContext,
@@ -15,42 +15,21 @@ from .models import (
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("title", "client", "status", "created_by", "created_at")
-    list_filter = ("status",)
+    list_display = ("title", "client", "phase", "status", "created_by", "created_at")
+    list_filter = ("phase", "status")
     search_fields = ("title", "client__name")
-
-
-@admin.register(Contact)
-class ContactAdmin(admin.ModelAdmin):
-    list_display = (
-        "project",
-        "candidate",
-        "consultant",
-        "channel",
-        "result",
-        "contacted_at",
-    )
-    list_filter = ("channel", "result")
-    search_fields = ("project__title", "candidate__name")
 
 
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ("project", "candidate", "consultant", "status", "submitted_at")
-    list_filter = ("status",)
-    search_fields = ("project__title", "candidate__name")
+    list_display = ("action_item", "consultant", "submitted_at")
+    search_fields = ("action_item__title",)
 
 
 @admin.register(Interview)
 class InterviewAdmin(admin.ModelAdmin):
-    list_display = ("submission", "round", "type", "result", "scheduled_at")
+    list_display = ("action_item", "round", "type", "result", "scheduled_at")
     list_filter = ("type", "result")
-
-
-@admin.register(Offer)
-class OfferAdmin(admin.ModelAdmin):
-    list_display = ("submission", "salary", "position_title", "status", "start_date")
-    list_filter = ("status",)
 
 
 @admin.register(ProjectApproval)
@@ -95,3 +74,37 @@ class ResumeUploadAdmin(admin.ModelAdmin):
     list_filter = ("status", "source", "file_type")
     search_fields = ("file_name", "email_from", "email_subject")
     raw_id_fields = ("candidate", "project", "organization", "created_by")
+
+
+# T1.14 — ActionType admin registration
+@admin.register(ActionType)
+class ActionTypeAdmin(admin.ModelAdmin):
+    list_display = [
+        "code",
+        "label_ko",
+        "phase",
+        "output_kind",
+        "is_active",
+        "is_protected",
+        "sort_order",
+    ]
+    list_filter = ["phase", "output_kind", "is_active", "is_protected"]
+    search_fields = ["code", "label_ko"]
+    list_editable = ["is_active", "sort_order"]
+    readonly_fields = ["is_protected"]
+
+    def delete_model(self, request, obj):
+        if obj.is_protected:
+            raise ValidationError(
+                f"ActionType '{obj.code}' is protected and cannot be deleted."
+            )
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        protected = queryset.filter(is_protected=True)
+        if protected.exists():
+            codes = ", ".join(protected.values_list("code", flat=True))
+            raise ValidationError(
+                f"Cannot delete protected ActionTypes: {codes}"
+            )
+        super().delete_queryset(request, queryset)
