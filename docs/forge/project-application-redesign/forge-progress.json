@@ -43,14 +43,16 @@
     },
     {
       "slug": "phase-2a-services-core",
-      "tempering_status": "running",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "artifacts": [],
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
       "committed": false,
       "depends_on": [
         "phase-1-models"

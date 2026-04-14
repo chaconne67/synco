@@ -1,0 +1,188 @@
+{
+  "topic": "phase-2a-services-core",
+  "document": "docs/forge/project-application-redesign/phase-2a-services-core/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-01",
+              "severity": "CRITICAL",
+              "title": "HIRED auto-drop misses pending ActionItem cancellation + hire() non-atomic",
+              "attack": "on_application_hired does per-row save() bypassing drop() service, so pending ActionItems remain. hire() itself lacks transaction boundary with signal.",
+              "action": "accepted",
+              "response": "Move HIRED logic entirely to hire() service with transaction.atomic() + select_for_update(). Losers drop via drop() call or equivalent bulk op.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-02",
+              "severity": "CRITICAL",
+              "title": "Concurrent hire race condition",
+              "attack": "No lock on project.closed_at check. Double-click or concurrent requests can create multiple hired_at rows.",
+              "action": "accepted",
+              "response": "Add select_for_update() to hire(). Add DB partial UniqueConstraint on (project) where hired_at IS NOT NULL.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-03",
+              "severity": "CRITICAL",
+              "title": "sync_project_status_field missing result reset → DB crash",
+              "attack": "Signal only updates status, not result. FINAL-SPEC requires result='' when open.",
+              "action": "accepted",
+              "response": "Worse than expected: project_open_implies_empty_result CheckConstraint already exists in models.py:174. Updating status=open without result='' causes IntegrityError.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-04",
+              "severity": "MAJOR",
+              "title": "on_application_hired doesn't detect transition",
+              "attack": "Only checks hired_at is not None, fires on every save of hired Application.",
+              "action": "accepted",
+              "response": "Resolved by I-01 fix (move to service). Signal becomes unnecessary.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-05",
+              "severity": "MAJOR",
+              "title": "drop() lacks atomic transaction",
+              "attack": "application.save() and ActionItem.update() run in separate autocommit transactions.",
+              "action": "accepted",
+              "response": "Wrap in transaction.atomic().",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-06",
+              "severity": "MAJOR",
+              "title": "Auto-drop per-row save() loop causes signal storm",
+              "attack": "Per-row save() triggers post_save cascade and N+1 queries.",
+              "action": "partial",
+              "response": "Signal cascade: accepted, switch to bulk update(). Performance at 5-20 scale: rebutted, not a real concern at headhunting volumes.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-07",
+              "severity": "MAJOR",
+              "title": "Application state machine incomplete",
+              "attack": "Double drop, double hire, restore on closed project all unguarded.",
+              "action": "accepted",
+              "response": "Add explicit transition guards to all lifecycle functions.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-08",
+              "severity": "MAJOR",
+              "title": "ActionItem state machine undefined",
+              "attack": "create_action ignores application.is_active and project.closed_at. Status transitions unvalidated.",
+              "action": "accepted",
+              "response": "Add application.is_active + project.closed_at guards. Validate pending→done/skipped/cancelled only.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-09",
+              "severity": "CRITICAL",
+              "title": "Test file location and fixture scope mismatch",
+              "attack": "projects/tests/ doesn't exist. Existing tests in tests/. conftest.py scope undefined.",
+              "action": "accepted",
+              "response": "Confirmed projects/tests/ not found. Specify conftest location explicitly.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-10",
+              "severity": "CRITICAL",
+              "title": "Full test suite regression not gated",
+              "attack": "Only single-file run + manage.py check. Legacy tests may silently break.",
+              "action": "partial",
+              "response": "Accepted: add uv run pytest -v gate with xfail for known breakages. Rebutted: fixing legacy tests is Phase 2b/5 scope.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-11",
+              "severity": "MAJOR",
+              "title": "Signal chain only manually tested",
+              "attack": "Most dangerous change (signal rewrite) has no automated tests.",
+              "action": "accepted",
+              "response": "Add 4 signal integration tests in Phase 2a.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-12",
+              "severity": "MAJOR",
+              "title": "Service lifecycle tests missing",
+              "attack": "drop/restore/hire tests deferred to Phase 5 is too late.",
+              "action": "accepted",
+              "response": "Add service-level DB tests in Phase 2a.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-13",
+              "severity": "MAJOR",
+              "title": "ActionType seed integrity untested",
+              "attack": "Seed failure causes ambiguous DoesNotExist, hard to diagnose.",
+              "action": "rebutted",
+              "response": "Django test runner applies all migrations including data migration. DoesNotExist error message includes lookup params. Separate integrity test is redundant.",
+              "evidence_type": "execution_result",
+              "author_accepted": false
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "issues": [
+            {
+              "id": "I-06",
+              "severity": "MAJOR",
+              "title": "Auto-drop per-row save() performance (disputed portion)",
+              "attack": "N+1 at 5-20 scale is not MAJOR given bulk update already accepted.",
+              "action": "accepted",
+              "response": "Red team conceded. Performance concern withdrawn.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-10",
+              "severity": "CRITICAL",
+              "title": "Legacy test fix scope (disputed portion)",
+              "attack": "Legacy refs are widespread beyond Phase 2a scope. xfail + green gate is appropriate.",
+              "action": "accepted",
+              "response": "Red team conceded after codebase verification.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-13",
+              "severity": "MAJOR",
+              "title": "ActionType seed integrity untested",
+              "attack": "Django get() exception message is fixed string without kwargs. Author's evidence was wrong.",
+              "action": "accepted",
+              "response": "Author accepts. Django query.py:635 confirmed: DoesNotExist message does not include lookup params. Seed integrity test will be added.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 2,
+        "issues": 13,
+        "accepted": 12,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
