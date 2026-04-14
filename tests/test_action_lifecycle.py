@@ -164,13 +164,9 @@ class TestCreateActionGuards:
         action_type_reach_out.is_active = True
         action_type_reach_out.save(update_fields=["is_active"])
 
-    def test_dropped_application_raises(self, application, action_type_reach_out):
-        """Dropped application -> ValueError."""
-        from projects.services.application_lifecycle import drop
-
-        drop(application, "unfit", None)
-        with pytest.raises(ValueError, match="inactive application"):
-            create_action(application, action_type_reach_out, None)
+    # NOTE: "create_action on dropped application" is already covered by
+    # test_phase2a_services.py::test_create_action_on_dropped_raises.
+    # Omitted here per plan principle: "중복 금지, 확장만".
 
     def test_closed_project_raises(self, application, action_type_reach_out):
         """Closed project -> ValueError."""
