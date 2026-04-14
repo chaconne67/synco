@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1534012,
+  "last_pid": 1543672,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
@@ -102,7 +102,7 @@
       "slug": "phase-3b-views-crud",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "verification_status": "pending",
+      "verification_status": "running",
       "impl_commit": "8d88286",
       "verification_result": null,
       "entry_point": "impl",

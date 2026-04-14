@@ -141,3 +141,31 @@
 [19:28:53] SESSION_START pid=1534608 mode=continue
 [19:28:53] SKILL_LOADED impl-forge-batch mode=continue
 [19:28:53] TODO_PICKED phase-3b-views-crud action=impl
+[19:29:44] WORKTREE_CREATED phase-3b-views-crud base_sha=7acfcb5 path=.worktrees/phase-3b-views-crud
+[19:29:44] PROGRESS_UPDATED phase-3b-views-crud impl_status=running
+[19:29:54] SUBAGENT_DISPATCHED subagent-driven-dev slug=phase-3b-views-crud
+[2026-04-14T19:45:00Z] T3b.0 create_application service added to application_lifecycle.py
+[2026-04-14T19:45:00Z] T3b.1 project_add_candidate view implemented (GET/POST)
+[2026-04-14T19:45:00Z] T3b.2 application_drop/restore/hire views implemented
+[2026-04-14T19:45:00Z] T3b.3 application_actions_partial view implemented
+[2026-04-14T19:45:00Z] T3b.4 action_create view implemented (GET/POST)
+[2026-04-14T19:45:00Z] T3b.5 action_complete view implemented (GET/POST + propose_next)
+[2026-04-14T19:45:00Z] T3b.6 action_skip/reschedule/propose_next views implemented
+[2026-04-14T19:45:00Z] T3b.7 voice service: removed contact_record/reserve/offer_create intents
+[2026-04-14T19:45:00Z] T3b.8 removed legacy offer_*/contact_*/status_update views + _DeletedModelSentinel
+[2026-04-14T19:45:00Z] T3b.9 removed legacy URL routes (status, 5 offer, 6 contact CRUD)
+[2026-04-14T19:45:00Z] T3b.10 cleaned detail_tab_bar.html + tab_overview.html (contacts/offers removed)
+[2026-04-14T19:45:00Z] T3b.11 created 10 placeholder partial templates
+[2026-04-14T19:45:00Z] T3b.12 verified views.py Contact/Offer grep = 0 (only comment)
+[2026-04-14T19:45:00Z] T3b.13 manage.py check: 0 issues. ruff: clean. pytest: 595 passed
+[2026-04-14T19:45:00Z] T3b.COMPLETE phase-3b-views-crud implementation done. commit dd03801
+[19:50:25] SUBAGENT_RETURNED phase-3b-views-crud result=success
+[19:50:25] SQUASH_MERGE phase-3b-views-crud commit=8d88286
+[19:50:25] PROGRESS_UPDATED phase-3b-views-crud impl_status=completed impl_commit=8d88286
+[19:50:35] SESSION_CHAIN_SPAWN next=phase-3b-views-crud action=verify
+[19:50:35] SESSION_CHAIN_SPAWN pid=1543672
+[19:50:38] SESSION_END
+[19:51:42] SESSION_START pid=1544354 mode=continue
+[19:51:42] SKILL_LOADED impl-forge-batch mode=continue
+[19:51:42] TODO_PICKED phase-3b-views-crud action=verify
+[19:51:58] PROGRESS_UPDATED phase-3b-views-crud verification_status=running
