@@ -1,0 +1,153 @@
+{
+  "topic": "phase-4b-templates-modals",
+  "document": "docs/forge/project-application-redesign/phase-4b-templates-modals/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Modal container hidden lifecycle",
+              "attack": "#modal-container has 'hidden' class; innerHTML swap won't make content visible. Inner overlay also duplicates fixed/z-50.",
+              "action": "accepted",
+              "response": "Verified. Plan must define open/close lifecycle toggling hidden class.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "No post-submit response contract",
+              "attack": "Endpoints return 204+HX-Trigger, rendered partials, or redirects — plan treats all the same with hx-target=#modal-container.",
+              "action": "accepted",
+              "response": "Verified against 6 view functions. Each has different success response pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "project_close GET vs POST conflict",
+              "attack": "View is @require_http_methods(['POST']) but template uses hx-get. Will 405.",
+              "action": "accepted",
+              "response": "Confirmed. Need GET handler for modal form rendering or split into separate endpoint.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "action_complete/propose_next overlap + due_at",
+              "attack": "Complete modal has next_action checkboxes duplicating propose_next modal. due_at input not consumed by backend.",
+              "action": "accepted",
+              "response": "Verified. action_propose_next reads only next_action_type_ids. Remove checkboxes from complete modal.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "Filter bar backend gap + phase/status confusion",
+              "attack": "종료 is status=closed not phase. Backend doesn't support proposed filters. Template-only change creates false UI.",
+              "action": "accepted",
+              "response": "Verified. ProjectPhase only has searching/screening. Must align filter UI with backend capability.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "CRITICAL",
+              "title": "Wrong template target for candidate detail",
+              "attack": "Plan targets candidate_detail.html but actual content renders in candidate_detail_content.html partial.",
+              "action": "accepted",
+              "response": "Verified. HTMX navigation renders content partial directly.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "CRITICAL",
+              "title": "N+1 optimization path incorrect",
+              "attack": "select_related on reverse FK is invalid. current_state does additional queries per Application.",
+              "action": "accepted",
+              "response": "Verified. Must use Prefetch() and address current_state query pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "action_skip/reschedule modals omitted",
+              "attack": "action_item_card.html has skip/reschedule buttons but plan doesn't include these modal templates.",
+              "action": "accepted",
+              "response": "Verified. Views exist, templates are stubs. Must include or disable buttons.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MAJOR",
+              "title": "No accessibility contract",
+              "attack": "No role=dialog, aria-modal, focus management, max-h/overflow, Escape handling.",
+              "action": "partial",
+              "response": "ACCEPT aria/dialog/overflow/Escape. REBUT focus trap and inert — disproportionate for v1 internal tool.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-10",
+              "severity": "MAJOR",
+              "title": "Timeline tab disabled",
+              "attack": "project_detail.html has timeline tab disabled. Creating partial without enabling tab is unreachable.",
+              "action": "accepted",
+              "response": "Verified. Must enable tab and wire hx-get.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-11",
+              "severity": "MAJOR",
+              "title": "Partial views missing prefetch",
+              "attack": "HTMX reload partials need prefetch to avoid N+1 on every trigger.",
+              "action": "accepted",
+              "response": "Verified. hx-trigger reloads hit partial views without proper queryset optimization.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-12",
+              "severity": "MAJOR",
+              "title": "action_items ordering not specified",
+              "attack": "Model default ordering is [due_at, created_at]. Timeline needs -created_at.",
+              "action": "accepted",
+              "response": "Verified. Must specify ordering per context.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-13",
+              "severity": "MINOR",
+              "title": "ProjectStatus in legacy grep",
+              "attack": "ProjectStatus is valid current enum, not legacy. Grep check would flag valid code.",
+              "action": "accepted",
+              "response": "Verified. Remove ProjectStatus from legacy check targets.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 13,
+        "accepted": 12,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
