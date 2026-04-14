@@ -83,3 +83,70 @@ def second_application(db, project, user):
         candidate=candidate2,
         created_by=user,
     )
+
+
+# --- Phase 5 fixtures ---
+
+
+@pytest.fixture
+def action_type_reach_out(db):
+    """Migration-seeded ActionType."""
+    from projects.models import ActionType
+
+    return ActionType.objects.get(code="reach_out")
+
+
+@pytest.fixture
+def action_type_submit(db):
+    from projects.models import ActionType
+
+    return ActionType.objects.get(code="submit_to_client")
+
+
+@pytest.fixture
+def action_type_confirm_hire(db):
+    from projects.models import ActionType
+
+    return ActionType.objects.get(code="confirm_hire")
+
+
+@pytest.fixture
+def logged_in_client(client, user):
+    """pytest-django client with force_login."""
+    client.force_login(user)
+    return client
+
+
+@pytest.fixture
+def other_org_client(client, other_org_user):
+    """Different-org user logged-in client."""
+    client.force_login(other_org_user)
+    return client
+
+
+@pytest.fixture
+def third_candidate(db):
+    from candidates.models import Candidate
+
+    return Candidate.objects.create(name="박후보")
+
+
+@pytest.fixture
+def third_application(db, project, third_candidate, user):
+    from projects.models import Application
+
+    return Application.objects.create(
+        project=project,
+        candidate=third_candidate,
+        created_by=user,
+    )
+
+
+@pytest.fixture(autouse=True)
+def _disable_manifest_storage(settings):
+    """Use plain static storage for tests (no collectstatic needed)."""
+    settings.STORAGES = {
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
