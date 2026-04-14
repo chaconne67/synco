@@ -45,9 +45,9 @@
       "slug": "phase-2a-services-core",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "verification_status": "running",
+      "verification_status": "completed",
       "impl_commit": "632fccb",
-      "verification_result": null,
+      "verification_result": "PASS 9/9",
       "entry_point": "impl",
       "complexity": "medium",
       "artifacts": [
