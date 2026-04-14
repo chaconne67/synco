@@ -5,6 +5,8 @@
 **예상 시간**: 0.5-1일
 **리스크**: 중
 
+> **⚠️ 기존 디자인 스타일 유지, UI/UX 변경 최소화**: 현재 구현되어 있는 디자인 스타일을 변경하지 않는다. UI/UX도 데이터 모델 변경에 따라 불가피한 부분만 최소한으로 변경한다.
+
 ---
 
 ## 1. 목표 상태
@@ -20,7 +22,7 @@
 ## 2. 사전 조건
 
 - Phase 4a 커밋 완료
-- 디자인 토큰(다크 네이비) 확립
+- 기존 디자인 스타일 확인 완료 (Phase 4a에서 기존 CSS 클래스 패턴 파악)
 - `#modal-container`가 base.html 또는 project_detail.html에 존재
 
 ## 3. 영향 범위
@@ -396,7 +398,7 @@ grep -rn "ProjectStatus\|Contact\|Offer" projects/templates/
 |---|---|
 | 모달 swap 후 카드 갱신이 비동기적으로 어긋남 | HTMX OOB(out-of-band) swap 또는 `hx-swap-oob` 사용. 또는 페이지 redirect로 단순화 |
 | 후보자 검색 select가 너무 많은 옵션 (DB 후보자 수천 명) | Django select widget 대신 autocomplete 위젯 또는 ajax 검색. v1은 ModelChoiceField + select 기본 위젯으로 시작 |
-| candidate_detail.html 기존 디자인이 다른 톤 | 일관성 위해 다크 네이비로 통일하되, 기존 페이지 전체 재작성은 범위 밖. 새 섹션만 일관 |
+| candidate_detail.html 기존 디자인이 다른 톤 | 기존 스타일 유지. 새 섹션 추가 시 기존 페이지와 동일한 톤 사용 |
 | 필터 변경 시 URL 업데이트 안 됨 | HTMX `hx-push-url="true"` 사용 |
 | 레거시 템플릿 삭제로 다른 페이지 깨짐 | grep으로 모든 참조 확인 후 함께 정리 |
 

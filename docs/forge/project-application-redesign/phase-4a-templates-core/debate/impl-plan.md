@@ -1,9 +1,11 @@
 # Phase 4a — 핵심 레이아웃 템플릿 (대시보드 + 칸반 + 상세 + 카드)
 
 **전제**: [Phase 3b](phase-3b-views-crud.md) 완료. 모든 뷰가 동작하고 템플릿 경로 확정.
-**목표**: 대시보드, 2-phase 칸반, 프로젝트 상세 본체, Application 카드, ActionItem 카드 등 **메인 시각 구조**를 구현. Stellate 다크 네이비 톤으로 일관성 확립.
+**목표**: 대시보드, 2-phase 칸반, 프로젝트 상세 본체, Application 카드, ActionItem 카드 등 **메인 시각 구조**를 구현.
 **예상 시간**: 1일
-**리스크**: 중 (디자인 일관성 + HTMX 동작)
+**리스크**: 중 (HTMX 동작)
+
+> **⚠️ 기존 디자인 스타일 유지, UI/UX 변경 최소화**: 현재 구현되어 있는 디자인 스타일을 변경하지 않는다. UI/UX도 데이터 모델 변경에 따라 불가피한 부분만 최소한으로 변경한다.
 **범위**: 모달과 후보자 상세 Level 3, 레거시 정리는 [Phase 4b](phase-4b-templates-modals.md).
 
 ---
@@ -50,22 +52,11 @@
 
 ## 4. 태스크 분할
 
-### T4a.1 — 디자인 토큰 확립 (CSS 클래스 컨벤션)
-**파일**: 별도 파일 없음, 각 템플릿에서 직접 사용
-**작업**: 기존 Stellate 스타일(`48dbea3` 커밋)을 참조하여 다음 컨벤션 합의:
+### T4a.1 — 기존 디자인 스타일 파악
+**파일**: 별도 파일 없음
+**작업**: 기존 템플릿(`templates/base.html`, 기존 projects 템플릿 등)에서 사용 중인 스타일을 파악하고, 새 템플릿에서 동일한 스타일을 따른다.
 
-```
-배경:        bg-slate-950, bg-slate-900
-카드:        bg-slate-900/80 border border-slate-800 rounded-2xl
-액센트:      bg-teal-600 hover:bg-teal-500 (primary), bg-slate-700 (secondary)
-경고/위험:   bg-red-950/30 border-red-500/50 text-red-300
-성공:        bg-emerald-950/30 border-emerald-500/50 text-emerald-300
-텍스트:      text-slate-100 (heading), text-slate-300 (body), text-slate-500 (muted)
-배지:        rounded-full px-2.5 py-0.5 text-xs font-medium
-폰트:        Pretendard (전역 적용 가정)
-```
-
-기존 base 템플릿(`templates/base.html` 또는 유사 경로)에 Pretendard와 Tailwind가 이미 로드되어 있다고 가정. 없으면 Phase 4a에서 추가.
+기존 base 템플릿에 Pretendard와 Tailwind가 이미 로드되어 있다고 가정.
 
 ---
 
@@ -478,7 +469,7 @@ uv run python manage.py runserver 0.0.0.0:8000
 | 모달 컨테이너 (`#modal-container`)가 base.html에 없음 | `base.html`에 `<div id="modal-container"></div>` 추가 |
 | 기존 `view_filters.html`이 ProjectStatus 기반이라 import 시 깨짐 | Phase 4a에서는 빈 placeholder로 교체. Phase 4b에서 본격 구현 |
 | 캔들레이트 모델의 필드명(`birth_year`, `current_company`) 실제와 다름 | candidates/models.py 확인 후 정확한 필드명 사용. 없으면 생략 |
-| 다크 톤 일관성이 기존 페이지와 충돌 | `base.html`이 이미 다크 모드일 가능성 높음. Stellate 커밋 참조 |
+| 새 템플릿 스타일이 기존 페이지와 불일치 | 기존 템플릿의 스타일을 그대로 따른다 |
 
 ## 7. 커밋 포인트
 
@@ -496,7 +487,7 @@ Refs: FINAL-SPEC.md §5
 
 ## 8. Phase 4b로 넘기는 인터페이스
 
-- 메인 시각 구조 확립 + 디자인 토큰 일관 적용
+- 메인 시각 구조 확립 (기존 디자인 스타일 유지)
 - HTMX 모달 트리거 버튼은 `#modal-container`로 swap (Phase 4b가 모달 partial 작성)
 - Application/ActionItem 카드의 인터랙션 흐름이 Phase 4b 모달과 자연스럽게 이어지도록 hx-target/swap 일관성 유지
 

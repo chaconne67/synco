@@ -62,14 +62,16 @@
     },
     {
       "slug": "phase-2b-services-cleanup",
-      "tempering_status": "running",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
-      "artifacts": [],
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
       "committed": false,
       "depends_on": [
         "phase-2a-services-core"

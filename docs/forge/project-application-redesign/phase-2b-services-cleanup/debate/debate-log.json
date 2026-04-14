@@ -1,0 +1,103 @@
+{
+  "topic": "phase-2b-services-cleanup",
+  "document": "docs/forge/project-application-redesign/phase-2b-services-cleanup/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "dashboard.py org 스코프 누락 + 기존 API 계약 파괴",
+              "attack": "새 ActionItem 쿼리가 org 필터 없이 assigned_to=user만 사용. 기존 함수(get_weekly_schedule 등) 삭제 시 views.py/voice 소비자 파괴.",
+              "action": "partial",
+              "response": "org 파라미터 수용. API 파괴는 Phase 3 전면 재작성 예정이므로 의도적 — views.py lazy import라 import-time 오류 없음.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "ProjectStatus grep 검증 규칙 자기모순",
+              "attack": "grep ProjectStatus → 0건 요구하면서 동시에 ProjectStatus.OPEN 사용 예시. 자기모순.",
+              "action": "accepted",
+              "response": "grep 대상을 삭제된 레거시 멤버 패턴으로 한정.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "approval.py 기계적 치환 불가, 서비스 경계 재정의 필요",
+              "attack": "ProjectStatus.NEW 사라짐, contacts.exists() 삭제된 관계. signal과 충돌 가능. 별도 태스크 분리 필요.",
+              "action": "partial",
+              "response": "NEW→OPEN, contacts→applications 수정 수용. 별도 태스크 분리는 불필요 — 기계적 치환 수준.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "auto_actions.py cleanup 범위 부족, 기존 소비자 무시",
+              "attack": "views.py가 get_pending_actions/apply_action/dismiss_action을 사용 중. suggest_initial_action만 추가하면 기존 API 파괴.",
+              "action": "partial",
+              "response": "기존 공개 API 보존 명시. ACTION_DATA_SCHEMA 정리는 Phase 6 범위.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "lifecycle.py 삭제 시 voice/action_executor.py ImportError",
+              "attack": "voice/action_executor.py top-level import from lifecycle. 삭제 시 앱 부팅 실패.",
+              "action": "accepted",
+              "response": "apply_interview_result를 action_lifecycle으로 이동, legacy stub shim 유지, voice/ import 업데이트.",
+              "evidence_type": "execution_result",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "CRITICAL",
+              "title": "submission.py 새 helper만으로는 소유권 공백",
+              "attack": "get_or_create_for_action만으로는 submit_to_client 완료→Submission 생성 오케스트레이션이 빠짐.",
+              "action": "rebutted",
+              "response": "submission.py는 Submission.Status 삭제로 이미 broken. 새 함수가 FINAL-SPEC 반영. 오케스트레이션은 Phase 3 view 로직.",
+              "evidence_type": "execution_result",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-07",
+              "severity": "MAJOR",
+              "title": "get_today_actions/overdue 날짜 조건 중복",
+              "attack": "due_at이 오늘이면서 이미 지난 경우 양쪽 결과에 중복 포함.",
+              "action": "accepted",
+              "response": "get_today_actions에서 overdue 제외.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "get_upcoming_actions scheduled_at 무시",
+              "attack": "면접류 ActionItem은 scheduled_at만 있을 수 있음. due_at만 보면 누락.",
+              "action": "accepted",
+              "response": "scheduled_at OR due_at 조건으로 확장.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 8,
+        "accepted": 7,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
