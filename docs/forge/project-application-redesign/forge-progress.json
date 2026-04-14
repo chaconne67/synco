@@ -120,7 +120,7 @@
     {
       "slug": "phase-4a-templates-core",
       "tempering_status": "completed",
-      "impl_status": "running",
+      "impl_status": "completed",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
