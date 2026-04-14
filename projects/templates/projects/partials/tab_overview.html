@@ -100,22 +100,6 @@
   <section class="bg-white rounded-lg border border-gray-100 p-5">
     <h2 class="text-[15px] font-semibold text-gray-500 mb-4">진행 현황</h2>
     <div class="flex items-center gap-3 text-[14px]">
-      <a hx-get="{% url 'projects:project_tab_contacts' project.pk %}"
-         hx-target="#tab-content"
-         hx-push-url="false"
-         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'contacts'}}))"
-         class="text-gray-600 hover:text-primary cursor-pointer transition">
-        컨택 <span class="font-semibold text-gray-800">{{ funnel.contacts }}</span>
-      </a>
-      <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      <a hx-get="{% url 'projects:project_tab_contacts' project.pk %}?result=관심"
-         hx-target="#tab-content"
-         hx-push-url="false"
-         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'contacts'}}))"
-         class="text-gray-600 hover:text-primary cursor-pointer transition">
-        관심 <span class="font-semibold text-gray-800">{{ funnel.interested }}</span>
-      </a>
-      <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       <a hx-get="{% url 'projects:project_tab_submissions' project.pk %}"
          hx-target="#tab-content"
          hx-push-url="false"
@@ -131,22 +115,12 @@
          class="text-gray-600 hover:text-primary cursor-pointer transition">
         면접 <span class="font-semibold text-gray-800">{{ funnel.interviews }}</span>
       </a>
-      <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-      <a hx-get="{% url 'projects:project_tab_offers' project.pk %}"
-         hx-target="#tab-content"
-         hx-push-url="false"
-         hx-on::after-request="document.body.dispatchEvent(new CustomEvent('tabChanged', {detail: {activeTab: 'offers'}}))"
-         class="text-gray-600 hover:text-primary cursor-pointer transition">
-        오퍼 <span class="font-semibold text-gray-800">{{ funnel.offers }}</span>
-      </a>
     </div>
-    {% with total=funnel.contacts %}
+    {% with total=funnel.submissions %}
     {% if total > 0 %}
     <div class="mt-3 flex h-2 rounded-full bg-gray-100 overflow-hidden">
-      {% if funnel.contacts %}<div class="bg-blue-400" style="width: {{ funnel.contacts }}0%"></div>{% endif %}
       {% if funnel.submissions %}<div class="bg-purple-400" style="width: {{ funnel.submissions }}0%"></div>{% endif %}
       {% if funnel.interviews %}<div class="bg-indigo-400" style="width: {{ funnel.interviews }}0%"></div>{% endif %}
-      {% if funnel.offers %}<div class="bg-green-400" style="width: {{ funnel.offers }}0%"></div>{% endif %}
     </div>
     {% endif %}
     {% endwith %}
@@ -171,24 +145,8 @@
   <!-- 최근 진행 현황 -->
   <section class="bg-white rounded-lg border border-gray-100 p-5">
     <h2 class="text-[15px] font-semibold text-gray-500 mb-4">최근 진행 현황</h2>
-    {% if recent_contacts or recent_submissions %}
+    {% if recent_submissions %}
     <div class="space-y-2">
-      {% for contact in recent_contacts %}
-      <div class="flex items-center justify-between text-[14px]">
-        <div class="flex items-center gap-2">
-          <span class="text-gray-400 w-16 shrink-0">{{ contact.contacted_at|date:"m/d" }}</span>
-          <span class="text-gray-800 font-medium">{{ contact.candidate.name }}</span>
-          <span class="text-gray-500">컨택 ({{ contact.get_channel_display }})</span>
-        </div>
-        <span class="text-[13px] px-1.5 py-0.5 rounded
-          {% if contact.result == '관심' %}bg-green-50 text-green-600
-          {% elif contact.result == '미응답' %}bg-gray-50 text-gray-500
-          {% elif contact.result == '거절' %}bg-red-50 text-red-500
-          {% else %}bg-blue-50 text-blue-600{% endif %}">
-          {{ contact.get_result_display }}
-        </span>
-      </div>
-      {% endfor %}
       {% for submission in recent_submissions %}
       <div class="flex items-center justify-between text-[14px]">
         <div class="flex items-center gap-2">

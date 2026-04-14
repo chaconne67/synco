@@ -9,18 +9,29 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
-    HttpResponseNotAllowed,
-    JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.decorators import membership_required, role_required
 from accounts.helpers import _get_org
 from accounts.models import Membership
 
 from projects.services import posting as posting_service
+from projects.services.action_lifecycle import (
+    complete_action as complete_action_item,
+    create_action as create_action_item,
+    propose_next as propose_next_actions,
+    reschedule_action as reschedule_action_item,
+    skip_action as skip_action_item,
+)
+from projects.services.application_lifecycle import (
+    create_application,
+    drop as drop_application,
+    hire as hire_application,
+    restore as restore_application,
+)
 from projects.services.resume.linker import link_resume_to_candidate
 from projects.services.resume.transitions import transition_status
 from projects.services.resume.uploader import (
@@ -30,10 +41,14 @@ from projects.services.resume.uploader import (
 )
 
 from .forms import (
-    ContactForm,
+    ActionItemCompleteForm,
+    ActionItemCreateForm,
+    ActionItemRescheduleForm,
+    ActionItemSkipForm,
+    ApplicationCreateForm,
+    ApplicationDropForm,
     InterviewForm,
     InterviewResultForm,
-    OfferForm,
     PostingEditForm,
     PostingSiteForm,
     ProjectCloseForm,
@@ -44,6 +59,7 @@ from .forms import (
 from .models import (
     ActionItem,
     ActionItemStatus,
+    ActionType,
     Application,
     DEFAULT_MASKING_CONFIG,
     DraftStatus,
@@ -57,30 +73,6 @@ from .models import (
     Submission,
     SubmissionDraft,
 )
-
-# Legacy model stubs — Contact/Offer deleted in Phase 1.
-# These sentinel classes prevent NameError in legacy views preserved for Phase 3b.
-# Phase 3b will remove these views and the sentinel classes.
-
-
-class _DeletedModelSentinel:
-    """Sentinel for deleted models. Attribute access raises clear error."""
-
-    def __init__(self, name: str):
-        self._name = name
-
-    def __getattr__(self, attr):
-        raise AttributeError(
-            f"{self._name} model was deleted in Phase 1. "
-            f"This view will be removed in Phase 3b."
-        )
-
-    def __call__(self, *args, **kwargs):
-        raise TypeError(f"{self._name} model was deleted in Phase 1.")
-
-
-Contact = _DeletedModelSentinel("Contact")  # noqa: N816
-Offer = _DeletedModelSentinel("Offer")  # noqa: N816
 
 PAGE_SIZE = 20
 
@@ -156,25 +148,6 @@ def project_list(request):
 
     context["view_template"] = "projects/partials/view_board.html"
     return render(request, "projects/project_list.html", context)
-
-
-@login_required
-@membership_required
-@require_http_methods(["PATCH"])
-def status_update(request, pk):
-    """Update project status via PATCH (kanban drag-and-drop)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-
-    data = json.loads(request.body)
-    new_status = data.get("status")
-
-    if new_status not in ProjectStatus.values:
-        return JsonResponse({"error": "invalid status"}, status=400)
-
-    project.status = new_status
-    project.save(update_fields=["status"])
-    return HttpResponse(status=204)
 
 
 @login_required
@@ -619,14 +592,9 @@ def project_tab_overview(request, pk):
 @login_required
 @membership_required
 def project_tab_search(request, pk):
-    """서칭: 매칭 결과 + 컨택 상태 표시 + 예정 등록."""
+    """서칭: 매칭 결과 + Application 상태 표시."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
-
-    # 만료 예정 건 해제
-    from projects.services.contact import release_expired_reservations
-
-    release_expired_reservations()
 
     results = []
     if project.requirements:
@@ -634,51 +602,22 @@ def project_tab_search(request, pk):
 
         results = match_candidates(project.requirements, organization=org, limit=50)
 
-        from django.utils import timezone as tz
-
-        now = tz.now()
-
-        # 이 프로젝트의 컨택 이력
-        project_contacts = {
-            c.candidate_id: c
-            for c in project.contacts.select_related("consultant").all()
+        # Application-based status lookup (replaces Contact)
+        project_applications = {
+            a.candidate_id: a
+            for a in project.applications.select_related("candidate").all()
         }
-
-        # 다른 프로젝트의 컨택 이력 (같은 org)
-        candidate_ids = [item["candidate"].pk for item in results]
-        other_contacts = (
-            Contact.objects.filter(candidate_id__in=candidate_ids)
-            .exclude(project=project)
-            .exclude(result=Contact.Result.RESERVED)
-            .select_related("project", "consultant")
-        )
-        other_contacts_map: dict = {}
-        for c in other_contacts:
-            other_contacts_map.setdefault(c.candidate_id, []).append(c)
 
         for item in results:
             cid = item["candidate"].pk
-            contact = project_contacts.get(cid)
+            app = project_applications.get(cid)
 
-            if contact:
-                if contact.result == Contact.Result.RESERVED:
-                    if contact.locked_until and contact.locked_until > now:
-                        item["contact_status"] = "reserved"
-                        item["reserved_by"] = contact.consultant
-                        item["locked_until"] = contact.locked_until
-                        item["disabled"] = contact.consultant != request.user
-                    else:
-                        item["contact_status"] = "expired"
-                        item["disabled"] = False
-                else:
-                    item["contact_status"] = "contacted"
-                    item["contact_result"] = contact.get_result_display()
-                    item["disabled"] = True
+            if app:
+                item["application_status"] = app.current_state
+                item["disabled"] = True
             else:
-                item["contact_status"] = None
+                item["application_status"] = None
                 item["disabled"] = False
-
-            item["other_project_contacts"] = other_contacts_map.get(cid, [])
 
     resume_uploads = ResumeUpload.objects.filter(project=project).exclude(
         status=ResumeUpload.Status.DISCARDED
@@ -696,57 +635,11 @@ def project_tab_search(request, pk):
     )
 
 
-@login_required
 @membership_required
 def project_tab_contacts(request, pk):
-    """컨택 탭: 완료 목록 + 예정 목록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-
-    # 만료 예정 건 잠금 해제
-    from projects.services.contact import release_expired_reservations
-
-    release_expired_reservations()
-
-    from django.utils import timezone as tz
-
-    now = tz.now()
-
-    # 실제 컨택 완료 목록 (예정 제외)
-    completed_contacts = (
-        project.contacts.exclude(result=Contact.Result.RESERVED)
-        .select_related("candidate", "consultant")
-        .order_by("-contacted_at")
-    )
-
-    # 퍼널에서 결과 필터 클릭 시
-    result_filter = request.GET.get("result")
-    if result_filter and result_filter in Contact.Result.values:
-        completed_contacts = completed_contacts.filter(result=result_filter)
-
-    # 컨택 예정(잠금) 목록 — 유효한 것만
-    reserved_contacts = (
-        project.contacts.filter(result=Contact.Result.RESERVED, locked_until__gt=now)
-        .select_related("candidate", "consultant")
-        .order_by("-created_at")
-    )
-
-    # 이미 Submission이 있는 후보자 ID (추천 서류 작성 링크 표시 판단용)
-    submitted_candidate_ids = set(
-        project.submissions.values_list("candidate_id", flat=True)
-    )
-
-    return render(
-        request,
-        "projects/partials/tab_contacts.html",
-        {
-            "project": project,
-            "completed_contacts": completed_contacts,
-            "reserved_contacts": reserved_contacts,
-            "can_release": request.user in project.assigned_consultants.all(),
-            "submitted_candidate_ids": submitted_candidate_ids,
-            "result_filter": result_filter,
-        },
+    """Legacy: 컨택 탭 제거됨. ActionItem으로 대체."""
+    return HttpResponse(
+        '<div class="p-4 text-gray-500">이 기능은 ActionItem으로 대체되었습니다.</div>'
     )
 
 
@@ -816,25 +709,11 @@ def project_tab_interviews(request, pk):
     )
 
 
-@login_required
 @membership_required
 def project_tab_offers(request, pk):
-    """오퍼 탭: 목록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    offers = (
-        Offer.objects.filter(submission__project=project)
-        .select_related("submission__candidate", "submission__consultant")
-        .order_by("-created_at")
-    )
-    return render(
-        request,
-        "projects/partials/tab_offers.html",
-        {
-            "project": project,
-            "offers": offers,
-            "total_count": offers.count(),
-        },
+    """Legacy: 오퍼 탭 제거됨. ActionItem으로 대체."""
+    return HttpResponse(
+        '<div class="p-4 text-gray-500">이 기능은 ActionItem으로 대체되었습니다.</div>'
     )
 
 
@@ -1041,283 +920,6 @@ def jd_matching_results(request, pk):
 
 
 # ---------------------------------------------------------------------------
-# P06: Contact Management
-# ---------------------------------------------------------------------------
-
-
-@login_required
-@membership_required
-def contact_create(request, pk):
-    """컨택 기록 등록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-
-    if _has_pending_approval(project):
-        return HttpResponse(status=403)
-
-    # P16: Resume support
-    initial = {}
-    resume_id = request.GET.get("resume")
-    if resume_id:
-        from projects.services.context import get_active_context
-
-        ctx = get_active_context(project, request.user)
-        if ctx and str(ctx.pk) == resume_id:
-            initial = ctx.draft_data.get("fields", {})
-
-    if request.method == "POST":
-        form = ContactForm(request.POST, organization=org)
-        if form.is_valid():
-            # 중복 체크
-            from projects.services.contact import check_duplicate
-
-            dup = check_duplicate(project, form.cleaned_data["candidate"])
-            if dup["blocked"]:
-                return render(
-                    request,
-                    "projects/partials/contact_form.html",
-                    {
-                        "form": form,
-                        "project": project,
-                        "is_edit": False,
-                        "duplicate_warnings": dup["warnings"],
-                        "blocked": True,
-                    },
-                )
-
-            contact = form.save(commit=False)
-            contact.project = project
-            contact.consultant = request.user
-            contact.save()
-
-            # 같은 후보자의 예정 건이 있으면 해제 (결과 기록 시 잠금 자동 해제)
-            Contact.objects.filter(
-                project=project,
-                candidate=contact.candidate,
-                result=Contact.Result.RESERVED,
-            ).exclude(pk=contact.pk).update(
-                locked_until=None,
-            )
-
-            return HttpResponse(
-                status=204,
-                headers={"HX-Trigger": "contactChanged"},
-            )
-    else:
-        form = ContactForm(initial=initial, organization=org)
-
-    # 프리필: query param으로 candidate 전달 시
-    dup = None
-    candidate_id = request.GET.get("candidate")
-    if candidate_id and request.method != "POST":
-        form.initial["candidate"] = candidate_id
-        from candidates.models import Candidate
-        from projects.services.contact import check_duplicate
-
-        try:
-            candidate_obj = Candidate.objects.get(pk=candidate_id, owned_by=org)
-            dup = check_duplicate(project, candidate_obj)
-        except Candidate.DoesNotExist:
-            pass
-
-    return render(
-        request,
-        "projects/partials/contact_form.html",
-        {
-            "form": form,
-            "project": project,
-            "is_edit": False,
-            "duplicate_warnings": dup["warnings"] if dup else [],
-            "other_project_contacts": dup["other_projects"] if dup else [],
-            "blocked": dup["blocked"] if dup else False,
-        },
-    )
-
-
-@login_required
-@membership_required
-def contact_update(request, pk, contact_pk):
-    """컨택 기록 수정."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    contact = get_object_or_404(Contact, pk=contact_pk, project=project)
-
-    if request.method == "POST":
-        old_result = contact.result  # form이 instance를 수정하기 전에 보존
-        form = ContactForm(request.POST, instance=contact, organization=org)
-        if form.is_valid():
-            contact = form.save()
-
-            # "관심"으로 전환되었고 아직 Submission이 없으면 유도 배너 포함 탭 리렌더링
-            if (
-                old_result != Contact.Result.INTERESTED
-                and contact.result == Contact.Result.INTERESTED
-                and not project.submissions.filter(candidate=contact.candidate).exists()
-            ):
-                from projects.services.contact import release_expired_reservations
-
-                release_expired_reservations()
-
-                from django.utils import timezone as tz
-
-                now = tz.now()
-
-                completed_contacts = (
-                    project.contacts.exclude(result=Contact.Result.RESERVED)
-                    .select_related("candidate", "consultant")
-                    .order_by("-contacted_at")
-                )
-                reserved_contacts = (
-                    project.contacts.filter(
-                        result=Contact.Result.RESERVED,
-                        locked_until__gt=now,
-                    )
-                    .select_related("candidate", "consultant")
-                    .order_by("-created_at")
-                )
-                submitted_candidate_ids = set(
-                    project.submissions.values_list("candidate_id", flat=True)
-                )
-
-                response = render(
-                    request,
-                    "projects/partials/tab_contacts.html",
-                    {
-                        "project": project,
-                        "completed_contacts": completed_contacts,
-                        "reserved_contacts": reserved_contacts,
-                        "can_release": request.user
-                        in project.assigned_consultants.all(),
-                        "submitted_candidate_ids": submitted_candidate_ids,
-                        "interest_banner": {
-                            "candidate_name": contact.candidate.name,
-                            "candidate_id": contact.candidate.pk,
-                        },
-                    },
-                )
-                response["HX-Retarget"] = "#tab-content"
-                response["HX-Reswap"] = "innerHTML"
-                response["HX-Trigger"] = "contactChanged"
-                return response
-
-            return HttpResponse(
-                status=204,
-                headers={"HX-Trigger": "contactChanged"},
-            )
-    else:
-        form = ContactForm(instance=contact, organization=org)
-
-    return render(
-        request,
-        "projects/partials/contact_form.html",
-        {
-            "form": form,
-            "project": project,
-            "contact": contact,
-            "is_edit": True,
-        },
-    )
-
-
-@login_required
-@membership_required
-@require_http_methods(["POST"])
-def contact_delete(request, pk, contact_pk):
-    """컨택 기록 삭제."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    contact = get_object_or_404(Contact, pk=contact_pk, project=project)
-    contact.delete()
-    return HttpResponse(
-        status=204,
-        headers={"HX-Trigger": "contactChanged"},
-    )
-
-
-@login_required
-@membership_required
-@require_http_methods(["POST"])
-def contact_reserve(request, pk):
-    """컨택 예정 등록 (잠금). 서칭 탭에서 체크박스 선택 후 호출."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-
-    candidate_ids = request.POST.getlist("candidate_ids")
-    if not candidate_ids:
-        return HttpResponse("후보자를 선택해주세요.", status=400)
-
-    from projects.services.contact import reserve_candidates
-
-    reserve_candidates(project, candidate_ids, request.user)
-
-    return HttpResponse(
-        status=204,
-        headers={"HX-Trigger": "contactChanged"},
-    )
-
-
-@login_required
-@membership_required
-@require_http_methods(["POST"])
-def contact_release_lock(request, pk, contact_pk):
-    """잠금 해제. 담당 컨설턴트 또는 잠금 본인만 가능."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    contact = get_object_or_404(
-        Contact,
-        pk=contact_pk,
-        project=project,
-        result=Contact.Result.RESERVED,
-    )
-
-    # 권한 체크: 담당 컨설턴트이거나 잠금 본인
-    if (
-        request.user not in project.assigned_consultants.all()
-        and request.user != contact.consultant
-    ):
-        return HttpResponse("잠금 해제 권한이 없습니다.", status=403)
-
-    contact.locked_until = None
-    contact.save(update_fields=["locked_until"])
-
-    return HttpResponse(
-        status=204,
-        headers={"HX-Trigger": "contactChanged"},
-    )
-
-
-@login_required
-@membership_required
-def contact_check_duplicate(request, pk):
-    """중복 체크 (HTMX partial). 후보자 드롭다운 변경 시 호출."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-
-    candidate_id = request.GET.get("candidate")
-    if not candidate_id:
-        return HttpResponse("")
-
-    from candidates.models import Candidate
-    from projects.services.contact import check_duplicate
-
-    try:
-        candidate = Candidate.objects.get(pk=candidate_id, owned_by=org)
-    except Candidate.DoesNotExist:
-        return HttpResponse("")
-
-    dup = check_duplicate(project, candidate)
-
-    return render(
-        request,
-        "projects/partials/duplicate_check_result.html",
-        {
-            "duplicate": dup,
-            "project": project,
-        },
-    )
-
-
-# ---------------------------------------------------------------------------
 # P07: Submission Management
 # ---------------------------------------------------------------------------
 
@@ -1427,18 +1029,10 @@ def submission_delete(request, pk, sub_pk):
     project = get_object_or_404(Project, pk=pk, organization=org)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
-    # 삭제 보호: 면접 또는 오퍼 존재 시 차단
-    has_interviews = submission.interviews.exists()
-    has_offer = hasattr(submission, "offer")
-    try:
-        submission.offer
-        has_offer = True
-    except Offer.DoesNotExist:
-        has_offer = False
-
-    if has_interviews or has_offer:
+    # 삭제 보호: 면접 존재 시 차단
+    if submission.interviews.exists():
         return HttpResponse(
-            "면접 또는 오퍼 이력이 있어 삭제할 수 없습니다.",
+            "면접 이력이 있어 삭제할 수 없습니다.",
             status=400,
         )
 
@@ -1962,7 +1556,7 @@ def interview_update(request, pk, interview_pk):
 @membership_required
 @require_http_methods(["POST"])
 def interview_delete(request, pk, interview_pk):
-    """면접 삭제. 삭제 보호: Offer가 연결된 Submission의 Interview는 삭제 불가."""
+    """면접 삭제."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
     interview = get_object_or_404(
@@ -1970,13 +1564,6 @@ def interview_delete(request, pk, interview_pk):
         pk=interview_pk,
         submission__project=project,
     )
-
-    # 삭제 보호: Offer가 연결된 Submission의 Interview는 삭제 불가
-    if hasattr(interview.submission, "offer"):
-        return HttpResponse(
-            "오퍼가 등록된 추천 건의 면접은 삭제할 수 없습니다.",
-            status=400,
-        )
 
     interview.delete()
     return HttpResponse(
@@ -2029,169 +1616,6 @@ def interview_result(request, pk, interview_pk):
             "project": project,
             "interview": interview,
         },
-    )
-
-
-# ---------------------------------------------------------------------------
-# P09: Offer CRUD
-# ---------------------------------------------------------------------------
-
-
-@login_required
-@membership_required
-def offer_create(request, pk):
-    """오퍼 등록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-
-    if _has_pending_approval(project):
-        return HttpResponse(status=403)
-
-    if request.method == "POST":
-        form = OfferForm(request.POST, project=project)
-        if form.is_valid():
-            form.save()
-
-            # 프로젝트 status 자동 전환
-            from projects.services.lifecycle import maybe_advance_to_negotiating
-
-            maybe_advance_to_negotiating(project)
-
-            return HttpResponse(
-                status=204,
-                headers={"HX-Trigger": "offerChanged"},
-            )
-    else:
-        form = OfferForm(project=project)
-
-    return render(
-        request,
-        "projects/partials/offer_form.html",
-        {
-            "form": form,
-            "project": project,
-            "is_edit": False,
-        },
-    )
-
-
-@login_required
-@membership_required
-def offer_update(request, pk, offer_pk):
-    """오퍼 수정. 협상중 상태에서만."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    offer = get_object_or_404(
-        Offer,
-        pk=offer_pk,
-        submission__project=project,
-    )
-
-    if request.method == "POST":
-        form = OfferForm(request.POST, instance=offer, project=project)
-        if form.is_valid():
-            form.save()
-            return HttpResponse(
-                status=204,
-                headers={"HX-Trigger": "offerChanged"},
-            )
-    else:
-        form = OfferForm(instance=offer, project=project)
-
-    return render(
-        request,
-        "projects/partials/offer_form.html",
-        {
-            "form": form,
-            "project": project,
-            "offer": offer,
-            "is_edit": True,
-        },
-    )
-
-
-@login_required
-@membership_required
-@require_http_methods(["POST"])
-def offer_delete(request, pk, offer_pk):
-    """오퍼 삭제. 수락/거절 상태에서는 삭제 불가."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    offer = get_object_or_404(
-        Offer,
-        pk=offer_pk,
-        submission__project=project,
-    )
-
-    if offer.status != Offer.Status.NEGOTIATING:
-        return HttpResponse(
-            "수락 또는 거절된 오퍼는 삭제할 수 없습니다.",
-            status=400,
-        )
-
-    offer.delete()
-    return HttpResponse(
-        status=204,
-        headers={"HX-Trigger": "offerChanged"},
-    )
-
-
-@login_required
-@membership_required
-@require_http_methods(["POST"])
-def offer_accept(request, pk, offer_pk):
-    """오퍼 수락 (협상중 → 수락)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    offer = get_object_or_404(
-        Offer,
-        pk=offer_pk,
-        submission__project=project,
-    )
-
-    from projects.services.lifecycle import (
-        InvalidTransition,
-        accept_offer,
-        maybe_advance_to_closed_success,
-    )
-
-    try:
-        accept_offer(offer)
-    except InvalidTransition as e:
-        return HttpResponse(str(e), status=400)
-
-    # 프로젝트 status 자동 전환
-    maybe_advance_to_closed_success(project)
-
-    return HttpResponse(
-        status=204,
-        headers={"HX-Trigger": "offerChanged"},
-    )
-
-
-@login_required
-@membership_required
-@require_http_methods(["POST"])
-def offer_reject(request, pk, offer_pk):
-    """오퍼 거절 (협상중 → 거절)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
-    offer = get_object_or_404(
-        Offer,
-        pk=offer_pk,
-        submission__project=project,
-    )
-
-    from projects.services.lifecycle import InvalidTransition, reject_offer
-
-    try:
-        reject_offer(offer)
-    except InvalidTransition as e:
-        return HttpResponse(str(e), status=400)
-
-    return HttpResponse(
-        status=204,
-        headers={"HX-Trigger": "offerChanged"},
     )
 
 
@@ -3120,45 +2544,469 @@ def resume_assign_project(request, resume_pk, project_pk):
 
 
 # ===========================================================================
-# Phase 3b stubs — actual implementation in Phase 3b
+# Phase 3b: Application / ActionItem CRUD views
 # ===========================================================================
 
 
+@membership_required
 def project_add_candidate(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """POST /projects/<pk>/add_candidate/ — Application 생성.
+    GET: 후보자 추가 모달 폼 렌더링.
+    POST: Application 생성 → HX-Trigger: applicationChanged.
+    """
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    if request.method == "GET":
+        form = ApplicationCreateForm(organization=org)
+        return render(
+            request,
+            "projects/partials/add_candidate_modal.html",
+            {"form": form, "project": project},
+        )
+
+    # POST
+    form = ApplicationCreateForm(request.POST, organization=org)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/add_candidate_modal.html",
+            {"form": form, "project": project},
+            status=400,
+        )
+
+    try:
+        create_application(
+            project=project,
+            candidate=form.cleaned_data["candidate"],
+            actor=request.user,
+            notes=form.cleaned_data.get("notes", ""),
+        )
+    except ValueError as e:
+        form.add_error(None, str(e))
+        return render(
+            request,
+            "projects/partials/add_candidate_modal.html",
+            {"form": form, "project": project},
+            status=400,
+        )
+
+    if request.headers.get("HX-Request"):
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "applicationChanged"
+        return response
+    return redirect("projects:project_detail", pk=project.pk)
 
 
+@membership_required
 def application_drop(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """GET: 드롭 사유 모달 렌더링. POST: Application 드롭."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application,
+        pk=pk,
+        project__organization=org,
+    )
+
+    if request.method == "GET":
+        form = ApplicationDropForm()
+        return render(
+            request,
+            "projects/partials/drop_application_modal.html",
+            {"form": form, "application": application},
+        )
+
+    # POST
+    form = ApplicationDropForm(request.POST)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/drop_application_modal.html",
+            {"form": form, "application": application},
+            status=400,
+        )
+    try:
+        drop_application(
+            application,
+            reason=form.cleaned_data["drop_reason"],
+            actor=request.user,
+            note=form.cleaned_data.get("drop_note", ""),
+        )
+    except ValueError as e:
+        form.add_error(None, str(e))
+        return render(
+            request,
+            "projects/partials/drop_application_modal.html",
+            {"form": form, "application": application},
+            status=400,
+        )
+
+    if request.headers.get("HX-Request"):
+        response = render(
+            request,
+            "projects/partials/application_card.html",
+            {"application": application},
+        )
+        response["HX-Trigger"] = "applicationChanged"
+        return response
+    return redirect("projects:project_detail", pk=application.project.pk)
 
 
+@membership_required
+@require_POST
 def application_restore(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """POST: Application 드롭 복구."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application,
+        pk=pk,
+        project__organization=org,
+    )
+    try:
+        restore_application(application, actor=request.user)
+    except ValueError as e:
+        if request.headers.get("HX-Request"):
+            return HttpResponse(str(e), status=400)
+        return HttpResponseBadRequest(str(e))
+
+    if request.headers.get("HX-Request"):
+        response = render(
+            request,
+            "projects/partials/application_card.html",
+            {"application": application},
+        )
+        response["HX-Trigger"] = "applicationChanged"
+        return response
+    return redirect("projects:project_detail", pk=application.project.pk)
 
 
+@membership_required
+@require_POST
 def application_hire(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """POST: 입사 확정. Signal이 프로젝트 자동 종료 + 나머지 드롭."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application,
+        pk=pk,
+        project__organization=org,
+    )
+    try:
+        hire_application(application, actor=request.user)
+    except ValueError as e:
+        if request.headers.get("HX-Request"):
+            return HttpResponse(str(e), status=409)
+        return HttpResponseBadRequest(str(e))
+
+    # Hire changes entire project state -> full page redirect
+    if request.headers.get("HX-Request"):
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = f"/projects/{application.project.pk}/"
+        return response
+    return redirect("projects:project_detail", pk=application.project.pk)
 
 
+@membership_required
 def application_actions_partial(request, pk):
-    return HttpResponseNotAllowed(["GET"])
+    """GET: Application의 ActionItem 목록."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application,
+        pk=pk,
+        project__organization=org,
+    )
+    return render(
+        request,
+        "projects/partials/application_actions_list.html",
+        {"application": application, "actions": application.action_items.all()},
+    )
 
 
+@membership_required
 def action_create(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """GET: 액션 생성 모달. POST: ActionItem 생성."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application,
+        pk=pk,
+        project__organization=org,
+    )
+    active_types = ActionType.objects.filter(is_active=True).order_by("sort_order")
+
+    if request.method == "GET":
+        form = ActionItemCreateForm()
+        return render(
+            request,
+            "projects/partials/action_create_modal.html",
+            {"form": form, "application": application, "action_types": active_types},
+        )
+
+    # POST
+    form = ActionItemCreateForm(request.POST)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/action_create_modal.html",
+            {"form": form, "application": application, "action_types": active_types},
+            status=400,
+        )
+
+    action_type = get_object_or_404(
+        ActionType, pk=form.cleaned_data["action_type_id"], is_active=True
+    )
+    try:
+        create_action_item(
+            application,
+            action_type,
+            actor=request.user,
+            title=form.cleaned_data.get("title", ""),
+            channel=form.cleaned_data.get("channel", ""),
+            scheduled_at=form.cleaned_data.get("scheduled_at"),
+            due_at=form.cleaned_data.get("due_at"),
+            note=form.cleaned_data.get("note", ""),
+        )
+    except ValueError as e:
+        form.add_error(None, str(e))
+        return render(
+            request,
+            "projects/partials/action_create_modal.html",
+            {"form": form, "application": application, "action_types": active_types},
+            status=400,
+        )
+
+    if request.headers.get("HX-Request"):
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "actionChanged"
+        return response
+    return redirect("projects:project_detail", pk=application.project.pk)
 
 
+@membership_required
 def action_complete(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """GET: 완료 모달 렌더링. POST: ActionItem 완료 + 후속 제안."""
+    org = _get_org(request)
+    action = get_object_or_404(
+        ActionItem,
+        pk=pk,
+        application__project__organization=org,
+    )
+
+    if request.method == "GET":
+        form = ActionItemCompleteForm()
+        suggestions = propose_next_actions(action) if action.status == "pending" else []
+        return render(
+            request,
+            "projects/partials/action_complete_modal.html",
+            {"form": form, "action": action, "suggestions": suggestions},
+        )
+
+    # POST
+    form = ActionItemCompleteForm(request.POST)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/action_complete_modal.html",
+            {"form": form, "action": action},
+            status=400,
+        )
+
+    try:
+        complete_action_item(
+            action,
+            actor=request.user,
+            result=form.cleaned_data.get("result", ""),
+            note=form.cleaned_data.get("note", ""),
+        )
+    except ValueError as e:
+        form.add_error(None, str(e))
+        return render(
+            request,
+            "projects/partials/action_complete_modal.html",
+            {"form": form, "action": action},
+            status=400,
+        )
+
+    suggestions = propose_next_actions(action)
+    if suggestions:
+        response = render(
+            request,
+            "projects/partials/action_propose_next_modal.html",
+            {"completed_action": action, "suggestions": suggestions},
+        )
+        response["HX-Trigger"] = "actionChanged"
+        return response
+
+    if request.headers.get("HX-Request"):
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "actionChanged"
+        return response
+    return redirect("projects:project_detail", pk=action.application.project.pk)
 
 
+@membership_required
 def action_skip(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """GET: 건너뛰기 사유 모달. POST: ActionItem 건너뛰기."""
+    org = _get_org(request)
+    action = get_object_or_404(
+        ActionItem,
+        pk=pk,
+        application__project__organization=org,
+    )
+
+    if request.method == "GET":
+        form = ActionItemSkipForm()
+        return render(
+            request,
+            "projects/partials/action_skip_modal.html",
+            {"form": form, "action": action},
+        )
+
+    # POST
+    form = ActionItemSkipForm(request.POST)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/action_skip_modal.html",
+            {"form": form, "action": action},
+            status=400,
+        )
+
+    try:
+        skip_action_item(
+            action, actor=request.user, note=form.cleaned_data.get("note", "")
+        )
+    except ValueError as e:
+        form.add_error(None, str(e))
+        return render(
+            request,
+            "projects/partials/action_skip_modal.html",
+            {"form": form, "action": action},
+            status=400,
+        )
+
+    if request.headers.get("HX-Request"):
+        response = render(
+            request,
+            "projects/partials/action_item_card.html",
+            {"action": action},
+        )
+        response["HX-Trigger"] = "actionChanged"
+        return response
+    return redirect("projects:project_detail", pk=action.application.project.pk)
 
 
+@membership_required
 def action_reschedule(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """GET: 일정 변경 모달. POST: ActionItem 일정 변경."""
+    org = _get_org(request)
+    action = get_object_or_404(
+        ActionItem,
+        pk=pk,
+        application__project__organization=org,
+    )
+
+    if request.method == "GET":
+        form = ActionItemRescheduleForm()
+        return render(
+            request,
+            "projects/partials/action_reschedule_modal.html",
+            {"form": form, "action": action},
+        )
+
+    # POST
+    form = ActionItemRescheduleForm(request.POST)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/action_reschedule_modal.html",
+            {"form": form, "action": action},
+            status=400,
+        )
+
+    try:
+        reschedule_action_item(
+            action,
+            actor=request.user,
+            new_due_at=form.cleaned_data.get("new_due_at"),
+            new_scheduled_at=form.cleaned_data.get("new_scheduled_at"),
+        )
+    except ValueError as e:
+        form.add_error(None, str(e))
+        return render(
+            request,
+            "projects/partials/action_reschedule_modal.html",
+            {"form": form, "action": action},
+            status=400,
+        )
+
+    if request.headers.get("HX-Request"):
+        response = render(
+            request,
+            "projects/partials/action_item_card.html",
+            {"action": action},
+        )
+        response["HX-Trigger"] = "actionChanged"
+        return response
+    return redirect("projects:project_detail", pk=action.application.project.pk)
 
 
+@membership_required
+@require_POST
 def action_propose_next(request, pk):
-    return HttpResponseNotAllowed(["POST"])
+    """POST: 완료된 액션 다음에 컨설턴트가 선택한 후속 액션들을 생성.
+    선택된 type IDs를 propose_next() 결과와 교차검증.
+    """
+    org = _get_org(request)
+    action = get_object_or_404(
+        ActionItem,
+        pk=pk,
+        application__project__organization=org,
+    )
+
+    # Guard: parent action must be completed
+    if action.status != ActionItemStatus.DONE:
+        if request.headers.get("HX-Request"):
+            return HttpResponse("완료된 액션에서만 후속 생성이 가능합니다.", status=400)
+        return HttpResponseBadRequest("완료된 액션에서만 후속 생성이 가능합니다.")
+
+    selected_ids = request.POST.getlist("next_action_type_ids")
+    if not selected_ids:
+        if request.headers.get("HX-Request"):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "actionChanged"
+            return response
+        return redirect("projects:project_detail", pk=action.application.project.pk)
+
+    # Validate selected IDs against allowed suggestions
+    allowed_types = propose_next_actions(action)
+    allowed_ids = {str(at.pk) for at in allowed_types}
+    invalid_ids = set(selected_ids) - allowed_ids
+    if invalid_ids:
+        if request.headers.get("HX-Request"):
+            return HttpResponse("선택한 액션 유형이 허용 목록에 없습니다.", status=400)
+        return HttpResponseBadRequest("선택한 액션 유형이 허용 목록에 없습니다.")
+
+    # Atomic batch creation
+    from django.db import transaction
+
+    with transaction.atomic():
+        for type_id in selected_ids:
+            at = ActionType.objects.get(pk=type_id, is_active=True)
+            create_action_item(
+                action.application,
+                at,
+                actor=request.user,
+                parent_action=action,
+            )
+
+    if request.headers.get("HX-Request"):
+        response = render(
+            request,
+            "projects/partials/application_actions_list.html",
+            {
+                "application": action.application,
+                "actions": action.application.action_items.all(),
+            },
+        )
+        response["HX-Trigger"] = "actionChanged"
+        return response
+    return redirect("projects:project_detail", pk=action.application.project.pk)

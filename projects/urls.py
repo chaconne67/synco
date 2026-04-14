@@ -16,7 +16,6 @@ urlpatterns = [
     path("<uuid:pk>/", views.project_detail, name="project_detail"),
     path("<uuid:pk>/edit/", views.project_update, name="project_update"),
     path("<uuid:pk>/delete/", views.project_delete, name="project_delete"),
-    path("<uuid:pk>/status/", views.status_update, name="status_update"),
     # Phase 3a: Project lifecycle
     path("<uuid:pk>/close/", views.project_close, name="project_close"),
     path("<uuid:pk>/reopen/", views.project_reopen, name="project_reopen"),
@@ -123,37 +122,6 @@ urlpatterns = [
         views.project_tab_offers,
         name="project_tab_offers",
     ),
-    # P06: 컨택 관리
-    path(
-        "<uuid:pk>/contacts/new/",
-        views.contact_create,
-        name="contact_create",
-    ),
-    path(
-        "<uuid:pk>/contacts/<uuid:contact_pk>/edit/",
-        views.contact_update,
-        name="contact_update",
-    ),
-    path(
-        "<uuid:pk>/contacts/<uuid:contact_pk>/delete/",
-        views.contact_delete,
-        name="contact_delete",
-    ),
-    path(
-        "<uuid:pk>/contacts/reserve/",
-        views.contact_reserve,
-        name="contact_reserve",
-    ),
-    path(
-        "<uuid:pk>/contacts/<uuid:contact_pk>/release/",
-        views.contact_release_lock,
-        name="contact_release_lock",
-    ),
-    path(
-        "<uuid:pk>/contacts/check-duplicate/",
-        views.contact_check_duplicate,
-        name="contact_check_duplicate",
-    ),
     # P07: Submission 관리
     path(
         "<uuid:pk>/submissions/new/",
@@ -246,32 +214,6 @@ urlpatterns = [
         "<uuid:pk>/interviews/<uuid:interview_pk>/result/",
         views.interview_result,
         name="interview_result",
-    ),
-    # P09: Offer 관리
-    path(
-        "<uuid:pk>/offers/new/",
-        views.offer_create,
-        name="offer_create",
-    ),
-    path(
-        "<uuid:pk>/offers/<uuid:offer_pk>/edit/",
-        views.offer_update,
-        name="offer_update",
-    ),
-    path(
-        "<uuid:pk>/offers/<uuid:offer_pk>/delete/",
-        views.offer_delete,
-        name="offer_delete",
-    ),
-    path(
-        "<uuid:pk>/offers/<uuid:offer_pk>/accept/",
-        views.offer_accept,
-        name="offer_accept",
-    ),
-    path(
-        "<uuid:pk>/offers/<uuid:offer_pk>/reject/",
-        views.offer_reject,
-        name="offer_reject",
     ),
     # P10: Posting 관리
     path(

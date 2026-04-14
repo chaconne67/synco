@@ -16,11 +16,8 @@ GEMINI_MODEL = "gemini-2.5-flash-preview-05-20"
 
 VALID_INTENTS = {
     "project_create",
-    "contact_record",
-    "contact_reserve",
     "submission_create",
     "interview_schedule",
-    "offer_create",
     "status_query",
     "todo_query",
     "search_candidate",
@@ -35,11 +32,8 @@ INTENT_SYSTEM_PROMPT = """\
 
 가능한 intent 목록:
 - project_create: 프로젝트 등록. 엔티티: client(str), title(str)
-- contact_record: 컨택 결과 기록. 엔티티: candidate_name(str), channel(전화|문자|카톡|이메일|LinkedIn), contacted_at(ISO datetime, 없으면 null), result(응답|미응답|거절|관심|보류), notes(str, optional)
-- contact_reserve: 컨택 예정 등록. 엔티티: candidate_names(list[str])
 - submission_create: 추천 서류 생성. 엔티티: candidate_name(str), template(str, optional)
 - interview_schedule: 면접 일정 등록. 엔티티: candidate_name(str), scheduled_at(ISO datetime), type(대면|화상|전화), location(str, optional)
-- offer_create: 오퍼 등록. 엔티티: candidate_name(str), salary(str), position_title(str, optional)
 - status_query: 현황 조회. 엔티티: project_name(str, optional)
 - todo_query: 오늘 할 일. 엔티티: 없음
 - search_candidate: 후보자 검색. 엔티티: keywords(str)
@@ -49,9 +43,7 @@ INTENT_SYSTEM_PROMPT = """\
 규칙:
 1. 확실하지 않으면 intent를 "unknown"으로 설정
 2. 엔티티에서 이름은 원래 발화 그대로 유지 (UUID 변환하지 않음)
-3. channel은 정확히 매칭되는 값 사용 (전화/문자/카톡/이메일/LinkedIn)
-4. contacted_at이 명시되지 않으면 null
-5. confidence는 0.0~1.0 사이 값
+3. confidence는 0.0~1.0 사이 값
 
 반드시 아래 JSON 형식으로만 응답:
 {"intent": "string", "entities": {}, "confidence": 0.0}
@@ -81,14 +73,10 @@ class IntentResult:
 
 
 # Required entities per intent (for missing field detection)
-# AMENDMENT A2: contacted_at added to contact_record, template added to submission_create
 REQUIRED_ENTITIES: dict[str, list[str]] = {
     "project_create": ["client", "title"],
-    "contact_record": ["candidate_name", "channel", "contacted_at", "result"],
-    "contact_reserve": ["candidate_names"],
     "submission_create": ["candidate_name", "template"],
     "interview_schedule": ["candidate_name", "scheduled_at", "type"],
-    "offer_create": ["candidate_name", "salary"],
     "search_candidate": ["keywords"],
     "navigate": ["target_page"],
 }

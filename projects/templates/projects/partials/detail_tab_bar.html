@@ -17,19 +17,6 @@
     서칭
   </button>
 
-  <button data-tab="contacts"
-          hx-get="{% url 'projects:project_tab_contacts' project.pk %}"
-          hx-target="#tab-content"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition flex items-center gap-1
-            {% if active == 'contacts' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-    컨택
-    {% if tab_counts.contacts %}
-    <span class="text-[11px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full"
-          data-badge-count
-          data-latest="{{ tab_latest.contacts|date:'c' }}">{{ tab_counts.contacts }}</span>
-    {% endif %}
-  </button>
-
   <button data-tab="submissions"
           hx-get="{% url 'projects:project_tab_submissions' project.pk %}"
           hx-target="#tab-content"
@@ -54,14 +41,6 @@
           data-badge-count
           data-latest="{{ tab_latest.interviews|date:'c' }}">{{ tab_counts.interviews }}</span>
     {% endif %}
-  </button>
-
-  <button data-tab="offers"
-          hx-get="{% url 'projects:project_tab_offers' project.pk %}"
-          hx-target="#tab-content"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'offers' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-    오퍼
   </button>
 
   {% endwith %}

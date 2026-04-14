@@ -71,17 +71,6 @@ def discard_context(project, user) -> bool:
 # --- Form Registry ---
 
 FORM_REGISTRY: dict[str, dict[str, Any]] = {
-    "contact_create": {
-        "url_name": "projects:contact_create",
-        "url_kwargs": lambda ctx: {"pk": str(ctx.project_id)},
-    },
-    "contact_update": {
-        "url_name": "projects:contact_update",
-        "url_kwargs": lambda ctx: {
-            "pk": str(ctx.project_id),
-            "contact_pk": ctx.draft_data.get("fields", {}).get("contact_id", ""),
-        },
-    },
     "submission_create": {
         "url_name": "projects:submission_create",
         "url_kwargs": lambda ctx: {"pk": str(ctx.project_id)},

@@ -1,5 +1,5 @@
 {% load static %}
-<div class="space-y-4" hx-trigger="contactChanged from:body" hx-get="{% url 'projects:project_tab_search' project.pk %}" hx-target="#tab-content">
+<div class="space-y-4" hx-trigger="applicationChanged from:body" hx-get="{% url 'projects:project_tab_search' project.pk %}" hx-target="#tab-content">
 
   <!-- P18: Resume upload toggle -->
   <div class="bg-white rounded-lg border border-gray-100 p-4">
@@ -150,16 +150,13 @@
   </div>
 
   {% else %}
-  <form hx-post="{% url 'projects:contact_reserve' project.pk %}"
-        hx-target="#tab-content"
-        class="bg-white rounded-lg border border-gray-100 p-5">
-    {% csrf_token %}
-
+  <div class="bg-white rounded-lg border border-gray-100 p-5">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-[15px] font-semibold text-gray-700">매칭 후보자 ({{ results|length }}명)</h2>
-      <button type="submit"
-              class="text-[13px] bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 transition">
-        컨택 예정 등록
+      <button hx-get="{% url 'projects:project_add_candidate' project.pk %}"
+              hx-target="#modal-container"
+              class="text-[13px] bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition">
+        후보자 추가
       </button>
     </div>
 
@@ -167,11 +164,6 @@
       {% for item in results %}
       <div class="flex items-center justify-between py-2 {% if not forloop.last %}border-b border-gray-50{% endif %}">
         <div class="flex items-center gap-3">
-          <!-- 체크박스 -->
-          <input type="checkbox" name="candidate_ids" value="{{ item.candidate.pk }}"
-                 {% if item.disabled %}disabled{% endif %}
-                 class="rounded border-gray-300 text-primary focus:ring-primary
-                   {% if item.disabled %}opacity-50 cursor-not-allowed{% endif %}">
           <div>
             <span class="text-[14px] font-medium {% if item.disabled %}text-gray-400{% else %}text-gray-800{% endif %}">
               {{ item.candidate.name }}
@@ -183,22 +175,8 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <!-- 컨택 상태 표시 -->
-          {% if item.contact_status == "contacted" %}
-          <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500"
-                title="{{ item.contact_result }}">컨택됨</span>
-          {% elif item.contact_status == "reserved" %}
-          <span class="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-600"
-                title="잠금 만료: {{ item.locked_until|date:'m/d H:i' }}">
-            컨택 예정 ({{ item.reserved_by.get_full_name|default:item.reserved_by.username }})
-          </span>
-          {% endif %}
-
-          {% if item.other_project_contacts %}
-          <span class="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-500"
-                title="{% for c in item.other_project_contacts %}{{ c.project.title }}: {{ c.get_result_display }}&#10;{% endfor %}">
-            타 프로젝트 이력
-          </span>
+          {% if item.application_status %}
+          <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{{ item.application_status }}</span>
           {% endif %}
 
           <!-- 매칭 점수 -->
@@ -212,7 +190,7 @@
       </div>
       {% endfor %}
     </div>
-  </form>
+  </div>
   {% endif %}
 
 </div>

@@ -6,7 +6,8 @@ from projects.services.voice.intent_parser import parse_intent, IntentResult
 
 
 @patch("projects.services.voice.intent_parser._get_gemini_client")
-def test_parse_contact_record_intent(mock_client_fn):
+def test_removed_contact_record_intent_falls_back_to_unknown(mock_client_fn):
+    """contact_record was removed in Phase 3b. LLM returning it should map to unknown."""
     mock_client = MagicMock()
     mock_response = MagicMock()
     mock_response.text = '{"intent": "contact_record", "entities": {"candidate_name": "홍길동", "channel": "전화", "result": "관심"}, "confidence": 0.95}'
@@ -23,10 +24,7 @@ def test_parse_contact_record_intent(mock_client_fn):
     )
 
     assert isinstance(result, IntentResult)
-    assert result.intent == "contact_record"
-    assert result.entities["candidate_name"] == "홍길동"
-    assert result.entities["channel"] == "전화"
-    assert result.confidence >= 0.9
+    assert result.intent == "unknown"
 
 
 @patch("projects.services.voice.intent_parser._get_gemini_client")

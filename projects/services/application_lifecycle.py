@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from projects.models import (
@@ -11,6 +11,30 @@ from projects.models import (
     ProjectStatus,
 )
 from projects.services.phase import compute_project_phase
+
+
+def create_application(
+    project: Project,
+    candidate,
+    actor,
+    *,
+    notes: str = "",
+) -> Application:
+    """Create Application with guards. Single entry point for web + voice."""
+    if project.closed_at is not None:
+        raise ValueError("cannot add candidate to a closed project")
+
+    try:
+        with transaction.atomic():
+            application = Application.objects.create(
+                project=project,
+                candidate=candidate,
+                notes=notes,
+                created_by=actor,
+            )
+    except IntegrityError:
+        raise ValueError("이미 매칭된 후보자입니다.")
+    return application
 
 
 def drop(application: Application, reason: str, actor, note: str = "") -> Application:

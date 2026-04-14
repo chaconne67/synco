@@ -104,13 +104,13 @@ class TestGetResumeUrl:
         ctx = save_context(
             project=project,
             user=user,
-            last_step="contact_create",
+            last_step="submission_create",
             pending_action="test",
-            draft_data={"form": "contact_create"},
+            draft_data={"form": "submission_create"},
         )
         url = get_resume_url(ctx)
         assert url is not None
-        assert f"/projects/{project.pk}/contacts/new/" in url
+        assert f"/projects/{project.pk}/submissions/new/" in url
         assert f"resume={ctx.pk}" in url
 
     def test_unknown_form_returns_none(self, project, user):
@@ -126,5 +126,5 @@ class TestGetResumeUrl:
 
 class TestFormRegistry:
     def test_registry_has_expected_keys(self):
-        assert "contact_create" in FORM_REGISTRY
         assert "submission_create" in FORM_REGISTRY
+        assert "contact_create" not in FORM_REGISTRY  # removed in Phase 3b

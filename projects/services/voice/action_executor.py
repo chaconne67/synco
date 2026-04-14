@@ -1,16 +1,18 @@
-"""Voice action executor — preview + confirm for all 11 voice intents.
+"""Voice action executor — preview + confirm for voice intents.
 
 Two entry points:
     preview_action()  — dry-run, no DB mutations
     confirm_action()  — commits to DB
 
 Dispatches to intent-specific handlers via _PREVIEW_HANDLERS / _CONFIRM_HANDLERS.
+
+Note: contact_record, contact_reserve, offer_create intents removed in Phase 3b.
+TODO: Add application_add intent in Phase 4+.
 """
 
 from __future__ import annotations
 
 import uuid as uuid_mod
-from datetime import date
 from typing import Any
 
 from django.db import models as db_models
@@ -26,40 +28,13 @@ from projects.models import (
     Project,
     Submission,
 )
-from projects.services.contact import check_duplicate, reserve_candidates
 from projects.services.dashboard import get_today_actions
-from projects.services.lifecycle import (
-    is_submission_offer_eligible,
-    maybe_advance_to_interviewing,
-    maybe_advance_to_negotiating,
-)
-from projects.services.voice.entity_resolver import (
-    resolve_submission_for_interview,
-    resolve_submission_for_offer,
-)
+from projects.services.lifecycle import maybe_advance_to_interviewing
+from projects.services.voice.entity_resolver import resolve_submission_for_interview
 
 # ---------------------------------------------------------------------------
 # Mapping helpers — Korean UI labels to model constants
 # ---------------------------------------------------------------------------
-
-# Phase 1: Contact model deleted. Maps use string values directly.
-# Phase 2-6 will redesign with ActionChannel-based flow.
-CHANNEL_MAP: dict[str, str] = {
-    "전화": "전화",
-    "문자": "문자",
-    "카톡": "카톡",
-    "이메일": "이메일",
-    "LinkedIn": "LinkedIn",
-}
-
-RESULT_MAP: dict[str, str] = {
-    "응답": "응답",
-    "미응답": "미응답",
-    "거절": "거절",
-    "관심": "관심",
-    "보류": "보류",
-    "예정": "예정",
-}
 
 INTERVIEW_TYPE_MAP: dict[str, str] = {
     "대면": Interview.Type.IN_PERSON,
@@ -89,110 +64,7 @@ def _error(intent: str, message: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# 1. contact_record
-# ---------------------------------------------------------------------------
-
-
-def _preview_contact_record(
-    *, entities: dict, project: Project, user: User, organization: Organization
-) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
-    channel = entities.get("channel", "")
-    result_val = entities.get("result", "")
-    return {
-        "ok": True,
-        "intent": "contact_record",
-        "summary": (
-            f"{candidate.name}님에게 {channel} 컨택 ({result_val}) 기록을 저장합니다."
-        ),
-        "candidate_id": str(candidate.pk),
-        "candidate_name": candidate.name,
-    }
-
-
-def _confirm_contact_record(
-    *, entities: dict, project: Project, user: User, organization: Organization
-) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
-    channel = CHANNEL_MAP.get(entities.get("channel", ""), entities.get("channel", ""))
-    result_val = RESULT_MAP.get(entities.get("result", ""), entities.get("result", ""))
-    contacted_at_raw = entities.get("contacted_at")
-    contacted_at = (
-        parse_datetime(contacted_at_raw) if contacted_at_raw else timezone.now()
-    )
-
-    dup_check = check_duplicate(project, candidate)
-    if dup_check["blocked"]:
-        return _error("contact_record", dup_check["warnings"][0])
-
-    contact = Contact.objects.create(
-        project=project,
-        candidate=candidate,
-        consultant=user,
-        channel=channel,
-        result=result_val,
-        contacted_at=contacted_at,
-        notes=entities.get("notes", ""),
-    )
-
-    # Release overlapping RESERVED locks
-    Contact.objects.filter(
-        project=project,
-        candidate=candidate,
-        result=Contact.Result.RESERVED,
-        locked_until__gt=timezone.now(),
-    ).update(locked_until=timezone.now())
-
-    return {
-        "ok": True,
-        "intent": "contact_record",
-        "summary": f"{candidate.name}님 컨택 기록이 저장되었습니다.",
-        "record_id": str(contact.pk),
-        "warnings": dup_check["warnings"],
-    }
-
-
-# ---------------------------------------------------------------------------
-# 2. contact_reserve
-# ---------------------------------------------------------------------------
-
-
-def _preview_contact_reserve(
-    *, entities: dict, project: Project, user: User, organization: Organization
-) -> dict[str, Any]:
-    candidate_ids = entities.get("candidate_ids", [])
-    names: list[str] = []
-    for cid in candidate_ids:
-        try:
-            c = _get_candidate(cid, organization)
-            names.append(c.name)
-        except Candidate.DoesNotExist:
-            names.append(f"(unknown: {cid})")
-    return {
-        "ok": True,
-        "intent": "contact_reserve",
-        "summary": f"{', '.join(names)}를 컨택 예정으로 등록합니다.",
-        "candidate_names": names,
-    }
-
-
-def _confirm_contact_reserve(
-    *, entities: dict, project: Project, user: User, organization: Organization
-) -> dict[str, Any]:
-    candidate_ids = entities.get("candidate_ids", [])
-    result = reserve_candidates(project, candidate_ids, user)
-    created_names = [c.candidate.name for c in result["created"]]
-    return {
-        "ok": True,
-        "intent": "contact_reserve",
-        "summary": f"컨택 예정 등록 완료: {', '.join(created_names) or '없음'}",
-        "created": [str(c.pk) for c in result["created"]],
-        "skipped": result["skipped"],
-    }
-
-
-# ---------------------------------------------------------------------------
-# 3. project_create (Amendment A1)
+# 1. project_create (Amendment A1)
 # ---------------------------------------------------------------------------
 
 
@@ -248,18 +120,6 @@ def _preview_submission_create(
 ) -> dict[str, Any]:
     candidate = _get_candidate(entities["candidate_id"], organization)
 
-    # Check preconditions: INTERESTED contact must exist
-    interested = Contact.objects.filter(
-        project=project,
-        candidate=candidate,
-        result=Contact.Result.INTERESTED,
-    ).exists()
-    if not interested:
-        return _error(
-            "submission_create",
-            f"{candidate.name}님은 '관심' 컨택 이력이 없어 제출서류를 생성할 수 없습니다.",
-        )
-
     # Check for duplicate submission
     existing = Submission.objects.filter(
         project=project,
@@ -283,17 +143,6 @@ def _confirm_submission_create(
     *, entities: dict, project: Project, user: User, organization: Organization
 ) -> dict[str, Any]:
     candidate = _get_candidate(entities["candidate_id"], organization)
-
-    interested = Contact.objects.filter(
-        project=project,
-        candidate=candidate,
-        result=Contact.Result.INTERESTED,
-    ).exists()
-    if not interested:
-        return _error(
-            "submission_create",
-            f"{candidate.name}님은 '관심' 컨택 이력이 없어 제출서류를 생성할 수 없습니다.",
-        )
 
     existing = Submission.objects.filter(
         project=project,
@@ -399,109 +248,20 @@ def _confirm_interview_schedule(
 
 
 # ---------------------------------------------------------------------------
-# 6. offer_create (Amendment A1)
-# ---------------------------------------------------------------------------
-
-
-def _preview_offer_create(
-    *, entities: dict, project: Project, user: User, organization: Organization
-) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
-
-    resolution = resolve_submission_for_offer(
-        candidate_id=candidate.pk,
-        project=project,
-    )
-    if resolution["status"] != "resolved":
-        return _error(
-            "offer_create",
-            f"{candidate.name}님에게 오퍼 생성 가능한 제출서류가 없습니다.",
-        )
-
-    sub = Submission.objects.get(pk=resolution["submission_id"])
-    if not is_submission_offer_eligible(sub):
-        return _error(
-            "offer_create",
-            f"{candidate.name}님의 최종 면접 결과가 합격이 아닙니다.",
-        )
-
-    return {
-        "ok": True,
-        "intent": "offer_create",
-        "summary": f"{candidate.name}님의 오퍼를 생성합니다.",
-        "submission_id": str(sub.pk),
-        "candidate_name": candidate.name,
-    }
-
-
-def _confirm_offer_create(
-    *, entities: dict, project: Project, user: User, organization: Organization
-) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
-
-    resolution = resolve_submission_for_offer(
-        candidate_id=candidate.pk,
-        project=project,
-    )
-    if resolution["status"] != "resolved":
-        return _error(
-            "offer_create",
-            f"{candidate.name}님에게 오퍼 생성 가능한 제출서류가 없습니다.",
-        )
-
-    sub = Submission.objects.get(pk=resolution["submission_id"])
-    if not is_submission_offer_eligible(sub):
-        return _error(
-            "offer_create",
-            f"{candidate.name}님의 최종 면접 결과가 합격이 아닙니다.",
-        )
-
-    start_date_raw = entities.get("start_date")
-    start_date_val: date | None = None
-    if start_date_raw:
-        parsed_dt = parse_datetime(start_date_raw)
-        if parsed_dt:
-            start_date_val = parsed_dt.date()
-        else:
-            try:
-                start_date_val = date.fromisoformat(start_date_raw)
-            except (ValueError, TypeError):
-                pass
-
-    offer = Offer.objects.create(
-        submission=sub,
-        salary=entities.get("salary", ""),
-        position_title=entities.get("position_title", ""),
-        start_date=start_date_val,
-        terms=entities.get("terms", {}),
-        notes=entities.get("notes", ""),
-    )
-
-    maybe_advance_to_negotiating(project)
-
-    return {
-        "ok": True,
-        "intent": "offer_create",
-        "summary": f"{candidate.name}님의 오퍼가 생성되었습니다.",
-        "offer_id": str(offer.pk),
-    }
-
-
-# ---------------------------------------------------------------------------
-# 7. status_query (read-only)
+# 6. status_query (read-only)
 # ---------------------------------------------------------------------------
 
 
 def _preview_status_query(
     *, entities: dict, project: Project, user: User, organization: Organization
 ) -> dict[str, Any]:
-    contact_count = (
-        Contact.objects.filter(project=project)
-        .exclude(
-            result=Contact.Result.RESERVED,
-        )
-        .count()
-    )
+    from projects.models import Application
+
+    application_count = Application.objects.filter(
+        project=project,
+        dropped_at__isnull=True,
+        hired_at__isnull=True,
+    ).count()
     submission_count = Submission.objects.filter(project=project).count()
     interview_count = Interview.objects.filter(
         submission__project=project,
@@ -512,10 +272,10 @@ def _preview_status_query(
         "intent": "status_query",
         "summary": (
             f"'{project.title}' 현황: "
-            f"컨택 {contact_count}건, 제출 {submission_count}건, 면접 {interview_count}건"
+            f"매칭 {application_count}건, 제출 {submission_count}건, 면접 {interview_count}건"
         ),
         "stats": {
-            "contacts": contact_count,
+            "applications": application_count,
             "submissions": submission_count,
             "interviews": interview_count,
             "status": project.status,
@@ -630,12 +390,9 @@ _confirm_meeting_navigate = _preview_meeting_navigate
 # ---------------------------------------------------------------------------
 
 _PREVIEW_HANDLERS: dict[str, Any] = {
-    "contact_record": _preview_contact_record,
-    "contact_reserve": _preview_contact_reserve,
     "project_create": _preview_project_create,
     "submission_create": _preview_submission_create,
     "interview_schedule": _preview_interview_schedule,
-    "offer_create": _preview_offer_create,
     "status_query": _preview_status_query,
     "todo_query": _preview_todo_query,
     "search_candidate": _preview_search,
@@ -644,12 +401,9 @@ _PREVIEW_HANDLERS: dict[str, Any] = {
 }
 
 _CONFIRM_HANDLERS: dict[str, Any] = {
-    "contact_record": _confirm_contact_record,
-    "contact_reserve": _confirm_contact_reserve,
     "project_create": _confirm_project_create,
     "submission_create": _confirm_submission_create,
     "interview_schedule": _confirm_interview_schedule,
-    "offer_create": _confirm_offer_create,
     "status_query": _confirm_status_query,
     "todo_query": _confirm_todo_query,
     "search_candidate": _confirm_search,
