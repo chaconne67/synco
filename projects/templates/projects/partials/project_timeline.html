@@ -1,0 +1,9 @@
+{% if actions %}
+<ul>
+{% for action in actions %}
+  <li>{{ action.title }} — {{ action.application.candidate }} ({{ action.get_status_display }})</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>타임라인이 없습니다.</p>
+{% endif %}

@@ -17,6 +17,71 @@ urlpatterns = [
     path("<uuid:pk>/edit/", views.project_update, name="project_update"),
     path("<uuid:pk>/delete/", views.project_delete, name="project_delete"),
     path("<uuid:pk>/status/", views.status_update, name="status_update"),
+    # Phase 3a: Project lifecycle
+    path("<uuid:pk>/close/", views.project_close, name="project_close"),
+    path("<uuid:pk>/reopen/", views.project_reopen, name="project_reopen"),
+    path(
+        "<uuid:pk>/applications/",
+        views.project_applications_partial,
+        name="project_applications",
+    ),
+    path(
+        "<uuid:pk>/timeline/",
+        views.project_timeline_partial,
+        name="project_timeline",
+    ),
+    # Phase 3b: Application CRUD (stub views)
+    path(
+        "<uuid:pk>/add_candidate/",
+        views.project_add_candidate,
+        name="project_add_candidate",
+    ),
+    path(
+        "applications/<uuid:pk>/drop/",
+        views.application_drop,
+        name="application_drop",
+    ),
+    path(
+        "applications/<uuid:pk>/restore/",
+        views.application_restore,
+        name="application_restore",
+    ),
+    path(
+        "applications/<uuid:pk>/hire/",
+        views.application_hire,
+        name="application_hire",
+    ),
+    # Phase 3b: ActionItem CRUD (stub views)
+    path(
+        "applications/<uuid:pk>/actions/",
+        views.application_actions_partial,
+        name="application_actions",
+    ),
+    path(
+        "applications/<uuid:pk>/actions/new/",
+        views.action_create,
+        name="action_create",
+    ),
+    path(
+        "actions/<uuid:pk>/complete/",
+        views.action_complete,
+        name="action_complete",
+    ),
+    path(
+        "actions/<uuid:pk>/skip/",
+        views.action_skip,
+        name="action_skip",
+    ),
+    path(
+        "actions/<uuid:pk>/reschedule/",
+        views.action_reschedule,
+        name="action_reschedule",
+    ),
+    path(
+        "actions/<uuid:pk>/propose_next/",
+        views.action_propose_next,
+        name="action_propose_next",
+    ),
     # P03a: JD 분석
     path("<uuid:pk>/analyze-jd/", views.analyze_jd, name="analyze_jd"),
     path("<uuid:pk>/jd-results/", views.jd_results, name="jd_results"),

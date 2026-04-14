@@ -1,0 +1,9 @@
+{% if applications %}
+<ul>
+{% for app in applications %}
+  <li>{{ app.candidate }} — {{ app.current_state }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>지원자가 없습니다.</p>
+{% endif %}

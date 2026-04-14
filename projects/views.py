@@ -3,14 +3,22 @@ import os
 import uuid
 
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Count, Max, Q
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.db import models as db_models
+from django.db.models import Max
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseNotAllowed,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from accounts.decorators import membership_required, role_required
 from accounts.helpers import _get_org
+from accounts.models import Membership
 
 from projects.services import posting as posting_service
 from projects.services.resume.linker import link_resume_to_candidate
@@ -28,11 +36,15 @@ from .forms import (
     OfferForm,
     PostingEditForm,
     PostingSiteForm,
+    ProjectCloseForm,
     ProjectForm,
     SubmissionFeedbackForm,
     SubmissionForm,
 )
 from .models import (
+    ActionItem,
+    ActionItemStatus,
+    Application,
     DEFAULT_MASKING_CONFIG,
     DraftStatus,
     Interview,
@@ -46,13 +58,42 @@ from .models import (
     SubmissionDraft,
 )
 
-from accounts.models import Membership
+# Legacy model stubs — Contact/Offer deleted in Phase 1.
+# These sentinel classes prevent NameError in legacy views preserved for Phase 3b.
+# Phase 3b will remove these views and the sentinel classes.
+
+
+class _DeletedModelSentinel:
+    """Sentinel for deleted models. Attribute access raises clear error."""
+
+    def __init__(self, name: str):
+        self._name = name
+
+    def __getattr__(self, attr):
+        raise AttributeError(
+            f"{self._name} model was deleted in Phase 1. "
+            f"This view will be removed in Phase 3b."
+        )
+
+    def __call__(self, *args, **kwargs):
+        raise TypeError(f"{self._name} model was deleted in Phase 1.")
+
+
+Contact = _DeletedModelSentinel("Contact")  # noqa: N816
+Offer = _DeletedModelSentinel("Offer")  # noqa: N816
 
 PAGE_SIZE = 20
 
 # days_elapsed thresholds for list view urgency
 URGENCY_RED_DAYS = 20
 URGENCY_YELLOW_DAYS = 10
+
+
+def _has_pending_approval(project):
+    """Check if the project has a pending approval (replaces PENDING_APPROVAL status)."""
+    return ProjectApproval.objects.filter(
+        project=project, status=ProjectApproval.Status.PENDING
+    ).exists()
 
 
 def _filter_params_string(request, exclude=None):
@@ -71,105 +112,49 @@ def _filter_params_string(request, exclude=None):
 @login_required
 @membership_required
 def project_list(request):
-    """List projects with scope/client/status filters, sorting, and multi-view."""
+    """List projects as 2-phase kanban (searching / screening / closed)."""
     org = _get_org(request)
-    view_type = request.GET.get("view", "board")
-    if view_type not in ("board", "list", "table"):
-        view_type = "board"
 
-    # Role-based filtering: consultant/viewer see only assigned projects
+    from projects.services.dashboard import get_project_kanban_cards
+
+    # Role-based filtering (existing pattern preserved)
     membership = request.user.membership
-    if membership.role == "owner":
-        projects = Project.objects.filter(organization=org)
-    else:
-        projects = Project.objects.filter(
-            organization=org, assigned_consultants=request.user
-        )
+    is_owner = membership.role == "owner"
 
-    # scope filter (default: mine)
-    scope = request.GET.get("scope", "mine")
-    if scope == "mine":
-        projects = projects.filter(
-            Q(assigned_consultants=request.user) | Q(created_by=request.user)
-        ).distinct()
+    cards = get_project_kanban_cards(org)
 
-    # client filter
-    client_id = request.GET.get("client", "")
-    if client_id:
-        projects = projects.filter(client_id=client_id)
+    # Consultant sees only assigned projects
+    if not is_owner:
+        for phase_key in list(cards.keys()):
+            cards[phase_key] = [
+                card
+                for card in cards[phase_key]
+                if request.user in card["project"].assigned_consultants.all()
+            ]
 
-    # status filter
-    status = request.GET.get("status", "")
-    if status:
-        projects = projects.filter(status=status)
-
-    # sorting: days_desc = oldest first (created_at asc), days_asc = newest first
-    sort = request.GET.get("sort", "days_desc")
-    if sort == "days_asc":
-        projects = projects.order_by("-created_at")
-    elif sort == "created":
-        projects = projects.order_by("-created_at")
-    else:  # days_desc (default) -- most elapsed days first = oldest created_at
-        projects = projects.order_by("created_at")
+    # Filter query parameters
+    phase_filter = request.GET.get("phase")
+    consultant_filter = request.GET.get("consultant") if is_owner else ""
+    client_filter = request.GET.get("client")
 
     context = {
-        "scope": scope,
-        "current_client": client_id,
-        "current_status": status,
-        "current_sort": sort,
+        "kanban": cards,
+        "phase_filter": phase_filter,
+        "consultant_filter": consultant_filter,
+        "client_filter": client_filter,
+        "is_owner": is_owner,
         "clients": org.clients.all(),
+        "scope": request.GET.get("scope", "mine"),
+        "view_type": "board",
         "status_choices": ProjectStatus.choices,
-        "view_type": view_type,
         "filter_params": _filter_params_string(request),
     }
 
-    if view_type == "board":
-        # Group projects by status -- all 10 statuses shown
-        status_groups = {}
-        for status_value, status_label in ProjectStatus.choices:
-            status_groups[status_value] = {
-                "label": status_label,
-                "projects": list(projects.filter(status=status_value)),
-            }
-        context["status_groups"] = status_groups
-
-    elif view_type == "list":
-        # Urgency groups based on days_elapsed
-        from django.utils import timezone
-
-        now = timezone.now()
-        threshold_red = now - timezone.timedelta(days=URGENCY_RED_DAYS)
-        threshold_yellow = now - timezone.timedelta(days=URGENCY_YELLOW_DAYS)
-
-        red = projects.filter(created_at__lte=threshold_red)
-        yellow = projects.filter(
-            created_at__gt=threshold_red, created_at__lte=threshold_yellow
-        )
-        green = projects.filter(created_at__gt=threshold_yellow)
-
-        context["urgency_groups"] = [
-            {"level": "red", "label": "긴급", "projects": list(red)},
-            {"level": "yellow", "label": "이번 주", "projects": list(yellow)},
-            {"level": "green", "label": "정상 진행", "projects": list(green)},
-        ]
-
-    elif view_type == "table":
-        # Annotate counts + paginate
-        projects = projects.annotate(
-            contact_count=Count("contacts", distinct=True),
-            submission_count=Count("submissions", distinct=True),
-            interview_count=Count("submissions__interviews", distinct=True),
-        )
-        paginator = Paginator(projects, PAGE_SIZE)
-        context["page_obj"] = paginator.get_page(request.GET.get("page"))
-
-    template = f"projects/partials/view_{view_type}.html"
-
     # HTMX tab switch -> partial only
     if request.headers.get("HX-Request") and request.GET.get("tab_switch"):
-        return render(request, template, context)
+        return render(request, "projects/partials/view_board.html", context)
 
-    context["view_template"] = template
+    context["view_template"] = "projects/partials/view_board.html"
     return render(request, "projects/project_list.html", context)
 
 
@@ -181,18 +166,10 @@ def status_update(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    # Block any status change for pending_approval projects
-    if project.status == ProjectStatus.PENDING_APPROVAL:
-        return HttpResponse(status=403)
-
     data = json.loads(request.body)
     new_status = data.get("status")
 
     if new_status not in ProjectStatus.values:
-        return JsonResponse({"error": "invalid status"}, status=400)
-
-    # Block transition TO pending_approval
-    if new_status == ProjectStatus.PENDING_APPROVAL:
         return JsonResponse({"error": "invalid status"}, status=400)
 
     project.status = new_status
@@ -258,8 +235,7 @@ def project_create(request):
                 project.created_by = request.user
 
                 if high_collisions:
-                    # Collision detected -> pending_approval
-                    project.status = ProjectStatus.PENDING_APPROVAL
+                    # Collision detected -> create with OPEN + approval record
                     project.save()
                     form.save_m2m()
                     if not project.assigned_consultants.exists():
@@ -278,8 +254,8 @@ def project_create(request):
                     # A1: Send Telegram approval notification to org owners
                     from projects.models import Notification
                     from projects.services.notification import send_notification
-                    from projects.telegram.keyboards import build_approval_keyboard
                     from projects.telegram.formatters import format_approval_request
+                    from projects.telegram.keyboards import build_approval_keyboard
 
                     owner_memberships = Membership.objects.filter(
                         organization=org,
@@ -344,20 +320,18 @@ def project_create(request):
 def _build_tab_context(project):
     """Build tab_counts and tab_latest for project detail template."""
     tab_counts = {
-        "contacts": project.contacts.count(),
+        "applications": Application.objects.filter(project=project).count(),
         "submissions": project.submissions.count(),
         "interviews": Interview.objects.filter(submission__project=project).count(),
-        "offers": Offer.objects.filter(submission__project=project).count(),
     }
     tab_latest = {
-        "contacts": project.contacts.aggregate(latest=Max("created_at"))["latest"],
+        "applications": Application.objects.filter(project=project).aggregate(
+            latest=Max("created_at")
+        )["latest"],
         "submissions": project.submissions.aggregate(latest=Max("created_at"))[
             "latest"
         ],
         "interviews": Interview.objects.filter(submission__project=project).aggregate(
-            latest=Max("created_at")
-        )["latest"],
-        "offers": Offer.objects.filter(submission__project=project).aggregate(
             latest=Max("created_at")
         )["latest"],
     }
@@ -367,25 +341,70 @@ def _build_tab_context(project):
 @login_required
 @membership_required
 def project_detail(request, pk):
-    """Project detail — tab wrapper + overview tab inline."""
+    """Project detail — Application-based view."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    tab_counts, tab_latest = _build_tab_context(project)
+    applications = (
+        Application.objects.filter(project=project)
+        .select_related("candidate")
+        .prefetch_related("action_items__action_type")
+        .order_by(
+            db_models.Case(
+                db_models.When(dropped_at__isnull=True, hired_at__isnull=True, then=0),
+                db_models.When(hired_at__isnull=False, then=1),
+                default=2,
+            ),
+            "-created_at",
+        )
+    )
 
-    # 개요 탭 데이터 인라인 (초기 로드 시 추가 요청 없이)
-    overview_context = _build_overview_context(project)
+    tab_counts, tab_latest = _build_tab_context(project)
 
     return render(
         request,
         "projects/project_detail.html",
         {
             "project": project,
+            "applications": applications,
             "tab_counts": tab_counts,
             "tab_latest": tab_latest,
             "active_tab": "overview",
-            **overview_context,
         },
+    )
+
+
+@login_required
+@membership_required
+def project_applications_partial(request, pk):
+    """HTMX partial: application list for a project."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    applications = Application.objects.filter(project=project).select_related(
+        "candidate"
+    )
+    return render(
+        request,
+        "projects/partials/project_applications_list.html",
+        {"project": project, "applications": applications},
+    )
+
+
+@login_required
+@membership_required
+def project_timeline_partial(request, pk):
+    """HTMX partial: action timeline for a project."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    actions = (
+        ActionItem.objects.filter(application__project=project)
+        .select_related("application__candidate", "action_type", "assigned_to")
+        .order_by("-created_at")[:100]
+    )
+    return render(
+        request,
+        "projects/partials/project_timeline.html",
+        {"project": project, "actions": actions},
     )
 
 
@@ -396,7 +415,11 @@ def project_update(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    if project.status == ProjectStatus.PENDING_APPROVAL:
+    # Block edit if pending approval exists
+    has_pending_approval = ProjectApproval.objects.filter(
+        project=project, status=ProjectApproval.Status.PENDING
+    ).exists()
+    if has_pending_approval:
         return HttpResponse(status=403)
 
     if request.method == "POST":
@@ -419,23 +442,26 @@ def project_update(request, pk):
 @login_required
 @role_required("owner")
 def project_delete(request, pk):
-    """Delete a project. Block if contacts or submissions exist."""
+    """Delete a project. Block if applications or submissions exist."""
     if request.method != "POST":
         return HttpResponse(status=405)
 
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    if project.status == ProjectStatus.PENDING_APPROVAL:
+    # Block delete if pending approval exists
+    has_pending_approval = ProjectApproval.objects.filter(
+        project=project, status=ProjectApproval.Status.PENDING
+    ).exists()
+    if has_pending_approval:
         return HttpResponse(status=403)
 
-    # Check for related contacts or submissions
-    has_contacts = project.contacts.exists()
+    # Check for related applications or submissions
+    has_applications = project.applications.exists()
     has_submissions = project.submissions.exists()
 
-    if has_contacts or has_submissions:
+    if has_applications or has_submissions:
         tab_counts, tab_latest = _build_tab_context(project)
-        overview_context = _build_overview_context(project)
         return render(
             request,
             "projects/project_detail.html",
@@ -444,8 +470,7 @@ def project_delete(request, pk):
                 "tab_counts": tab_counts,
                 "tab_latest": tab_latest,
                 "active_tab": "overview",
-                "error_message": "컨택 또는 제출 이력이 있어 삭제할 수 없습니다.",
-                **overview_context,
+                "error_message": "지원 또는 제출 이력이 있어 삭제할 수 없습니다.",
             },
         )
 
@@ -454,23 +479,102 @@ def project_delete(request, pk):
 
 
 # ---------------------------------------------------------------------------
+# Phase 3a: Project close / reopen
+# ---------------------------------------------------------------------------
+
+
+@login_required
+@membership_required
+@require_http_methods(["POST"])
+def project_close(request, pk):
+    """Close a project. Cancels all pending ActionItems."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    # Permission: owner or assigned consultant
+    membership = request.user.membership
+    is_owner = membership.role == "owner"
+    is_assigned = project.assigned_consultants.filter(pk=request.user.pk).exists()
+    if not (is_owner or is_assigned):
+        return HttpResponseForbidden("권한이 없습니다.")
+
+    form = ProjectCloseForm(request.POST)
+    if not form.is_valid():
+        return render(
+            request,
+            "projects/partials/project_close_modal.html",
+            {"form": form, "project": project},
+        )
+
+    # Set status and closed_at together (CHECK constraint: open implies no closed_at)
+    project.closed_at = timezone.now()
+    project.status = ProjectStatus.CLOSED
+    project.result = form.cleaned_data["result"]
+    project.note = form.cleaned_data["note"]
+    project.save(update_fields=["closed_at", "status", "result", "note", "updated_at"])
+
+    # Cancel all pending ActionItems (prevent dashboard residuals)
+    ActionItem.objects.filter(
+        application__project=project,
+        status=ActionItemStatus.PENDING,
+    ).update(status=ActionItemStatus.CANCELLED)
+
+    return redirect("projects:project_detail", pk=project.pk)
+
+
+@login_required
+@membership_required
+@require_http_methods(["POST"])
+def project_reopen(request, pk):
+    """Reopen a closed project."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+
+    # Permission: owner or assigned consultant
+    membership = request.user.membership
+    is_owner = membership.role == "owner"
+    is_assigned = project.assigned_consultants.filter(pk=request.user.pk).exists()
+    if not (is_owner or is_assigned):
+        return HttpResponseForbidden("권한이 없습니다.")
+
+    project.closed_at = None
+    project.status = ProjectStatus.OPEN
+    project.result = ""
+    project.save(update_fields=["closed_at", "status", "result", "updated_at"])
+
+    # Recompute phase (signal only fires on ActionItem/Application changes)
+    from projects.services.phase import compute_project_phase
+
+    new_phase = compute_project_phase(project)
+    if project.phase != new_phase:
+        project.phase = new_phase
+        project.save(update_fields=["phase"])
+
+    return redirect("projects:project_detail", pk=project.pk)
+
+
+# ---------------------------------------------------------------------------
 # P05: Project Detail Tabs
 # ---------------------------------------------------------------------------
 
 
 def _build_overview_context(project):
-    """개요 탭 공통 컨텍스트."""
+    """개요 탭 공통 컨텍스트 (Application-based)."""
+    active_apps = Application.objects.filter(
+        project=project, dropped_at__isnull=True, hired_at__isnull=True
+    )
     funnel = {
-        "contacts": project.contacts.exclude(result=Contact.Result.RESERVED).count(),
-        "interested": project.contacts.filter(result=Contact.Result.INTERESTED).count(),
+        "applications": Application.objects.filter(project=project).count(),
+        "active": active_apps.count(),
         "submissions": project.submissions.count(),
         "interviews": Interview.objects.filter(submission__project=project).count(),
-        "offers": Offer.objects.filter(submission__project=project).count(),
     }
 
-    recent_contacts = project.contacts.select_related(
-        "candidate", "consultant"
-    ).order_by("-contacted_at")[:3]
+    recent_applications = (
+        Application.objects.filter(project=project)
+        .select_related("candidate")
+        .order_by("-created_at")[:3]
+    )
     recent_submissions = project.submissions.select_related(
         "candidate", "consultant"
     ).order_by("-created_at")[:2]
@@ -483,7 +587,7 @@ def _build_overview_context(project):
 
     return {
         "funnel": funnel,
-        "recent_contacts": recent_contacts,
+        "recent_applications": recent_applications,
         "recent_submissions": recent_submissions,
         "consultants": consultants,
         "posting_sites": posting_sites,
@@ -948,7 +1052,7 @@ def contact_create(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    if project.status == ProjectStatus.PENDING_APPROVAL:
+    if _has_pending_approval(project):
         return HttpResponse(status=403)
 
     # P16: Resume support
@@ -1225,7 +1329,7 @@ def submission_create(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    if project.status == ProjectStatus.PENDING_APPROVAL:
+    if _has_pending_approval(project):
         return HttpResponse(status=403)
 
     if request.method == "POST":
@@ -1748,7 +1852,7 @@ def interview_create(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    if project.status == ProjectStatus.PENDING_APPROVAL:
+    if _has_pending_approval(project):
         return HttpResponse(status=403)
 
     if request.method == "POST":
@@ -1940,7 +2044,7 @@ def offer_create(request, pk):
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
-    if project.status == ProjectStatus.PENDING_APPROVAL:
+    if _has_pending_approval(project):
         return HttpResponse(status=403)
 
     if request.method == "POST":
@@ -2488,7 +2592,7 @@ def approval_cancel(request, pk):
 
 
 # ---------------------------------------------------------------------------
-# P13: Dashboard
+# P13: Dashboard (Phase 3a: rewritten with Application/ActionItem services)
 # ---------------------------------------------------------------------------
 
 
@@ -2500,18 +2604,15 @@ def dashboard(request):
     user = request.user
 
     from projects.services.dashboard import (
+        get_overdue_actions,
         get_pending_approvals,
-        get_pipeline_summary,
-        get_recent_activities,
-        get_team_summary,
         get_today_actions,
-        get_weekly_schedule,
+        get_upcoming_actions,
     )
 
     today_actions = get_today_actions(user, org)
-    weekly_schedule = get_weekly_schedule(user, org)
-    pipeline = get_pipeline_summary(user, org)
-    activities = get_recent_activities(user, org, limit=10)
+    overdue_actions = get_overdue_actions(user, org)
+    upcoming_actions = get_upcoming_actions(user, org, days=3)
 
     is_owner = False
     try:
@@ -2533,9 +2634,8 @@ def dashboard(request):
 
     context = {
         "today_actions": today_actions,
-        "weekly_schedule": weekly_schedule,
-        "pipeline": pipeline,
-        "activities": activities,
+        "overdue_actions": overdue_actions,
+        "upcoming_actions": upcoming_actions,
         "is_owner": is_owner,
         "has_projects": has_projects,
         "has_clients": has_clients,
@@ -2543,7 +2643,6 @@ def dashboard(request):
 
     if is_owner:
         context["pending_approvals"] = get_pending_approvals(org)
-        context["team_summary"] = get_team_summary(user, org)
 
     if getattr(request, "htmx", None):
         return render(request, "projects/partials/dash_full.html", context)
@@ -2572,16 +2671,42 @@ def dashboard_actions(request):
 
 
 @login_required
+@membership_required
+def dashboard_todo_partial(request):
+    """HTMX partial: 할 일 리스트만 반환."""
+    org = _get_org(request)
+    user = request.user
+
+    from projects.services.dashboard import (
+        get_overdue_actions,
+        get_today_actions,
+        get_upcoming_actions,
+    )
+
+    scope = request.GET.get("scope", "today")
+    if scope == "overdue":
+        actions = get_overdue_actions(user, org)
+    elif scope == "upcoming":
+        actions = get_upcoming_actions(user, org)
+    else:
+        actions = get_today_actions(user, org)
+    return render(
+        request,
+        "projects/partials/dashboard_todo_list.html",
+        {"actions": actions, "scope": scope},
+    )
+
+
+@login_required
 @role_required("owner")
 def dashboard_team(request):
     """팀 현황 HTMX partial (OWNER 전용)."""
     org = _get_org(request)
 
-    from projects.services.dashboard import get_pending_approvals, get_team_summary
+    from projects.services.dashboard import get_pending_approvals
 
     context = {
         "pending_approvals": get_pending_approvals(org),
-        "team_summary": get_team_summary(request.user, org),
     }
     return render(request, "projects/partials/dash_admin.html", context)
 
@@ -2953,11 +3078,7 @@ def resume_unassigned(request):
         project__isnull=True,
     ).exclude(status=ResumeUpload.Status.DISCARDED)
     projects = Project.objects.filter(organization=org).exclude(
-        status__in=[
-            ProjectStatus.CLOSED_SUCCESS,
-            ProjectStatus.CLOSED_FAIL,
-            ProjectStatus.CLOSED_CANCEL,
-        ],
+        status=ProjectStatus.CLOSED,
     )
 
     return render(
@@ -2996,3 +3117,48 @@ def resume_assign_project(request, resume_pk, project_pk):
             "uploads": uploads,
         },
     )
+
+
+# ===========================================================================
+# Phase 3b stubs — actual implementation in Phase 3b
+# ===========================================================================
+
+
+def project_add_candidate(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def application_drop(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def application_restore(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def application_hire(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def application_actions_partial(request, pk):
+    return HttpResponseNotAllowed(["GET"])
+
+
+def action_create(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def action_complete(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def action_skip(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def action_reschedule(request, pk):
+    return HttpResponseNotAllowed(["POST"])
+
+
+def action_propose_next(request, pk):
+    return HttpResponseNotAllowed(["POST"])

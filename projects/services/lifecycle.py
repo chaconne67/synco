@@ -25,3 +25,13 @@ def maybe_advance_to_closed_success(project) -> bool:
 
 def is_submission_offer_eligible(submission) -> bool:
     return False
+
+
+def accept_offer(offer, admin_user=None):
+    """Legacy stub — Offer model deleted."""
+    raise NotImplementedError("Offer model deleted in Phase 1")
+
+
+def reject_offer(offer, admin_user=None):
+    """Legacy stub — Offer model deleted."""
+    raise NotImplementedError("Offer model deleted in Phase 1")

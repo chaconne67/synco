@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+<p>Today: {{ today_actions|length }}</p>
+<p>Overdue: {{ overdue_actions|length }}</p>
+<p>Upcoming: {{ upcoming_actions|length }}</p>
+{% endblock %}

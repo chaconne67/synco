@@ -1,0 +1,5 @@
+<form method="post" action="{% url 'projects:project_close' project.pk %}">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">프로젝트 종료</button>
+</form>

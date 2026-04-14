@@ -352,3 +352,74 @@ class NewsSourceForm(forms.ModelForm):
         if url and not url.startswith(("http://", "https://")):
             raise forms.ValidationError("http:// 또는 https:// URL만 허용됩니다.")
         return url
+
+
+# ========================================
+# Phase 3a: New forms (added below existing forms)
+# ========================================
+
+from projects.models import (
+    Application,
+    DropReason,
+    ProjectResult,
+)
+
+
+class ApplicationCreateForm(forms.ModelForm):
+    class Meta:
+        model = Application
+        fields = ["candidate", "notes"]
+        widgets = {
+            "notes": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, organization=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if organization:
+            from candidates.models import Candidate
+
+            self.fields["candidate"].queryset = Candidate.objects.filter(
+                owned_by=organization
+            )
+
+
+class ApplicationDropForm(forms.Form):
+    drop_reason = forms.ChoiceField(choices=DropReason.choices, label="드롭 사유")
+    drop_note = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 3}),
+        required=False,
+        label="메모",
+    )
+
+
+class ProjectCloseForm(forms.Form):
+    result = forms.ChoiceField(choices=ProjectResult.choices, label="결과")
+    note = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 3}),
+        required=True,
+        label="사유·메모",
+    )
+
+
+class ActionItemCreateForm(forms.Form):
+    action_type_id = forms.UUIDField()
+    title = forms.CharField(max_length=300, required=False)
+    channel = forms.CharField(max_length=20, required=False)
+    scheduled_at = forms.DateTimeField(required=False)
+    due_at = forms.DateTimeField(required=False)
+    note = forms.CharField(widget=forms.Textarea, required=False)
+
+
+class ActionItemCompleteForm(forms.Form):
+    result = forms.CharField(widget=forms.Textarea, required=False)
+    note = forms.CharField(widget=forms.Textarea, required=False)
+    next_action_type_ids = forms.CharField(required=False)
+
+
+class ActionItemSkipForm(forms.Form):
+    note = forms.CharField(widget=forms.Textarea, required=False)
+
+
+class ActionItemRescheduleForm(forms.Form):
+    new_due_at = forms.DateTimeField(required=False)
+    new_scheduled_at = forms.DateTimeField(required=False)
