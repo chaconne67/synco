@@ -45,3 +45,21 @@
 [18:12:00] TODO_PICKED phase-2b-services-cleanup action=impl
 [18:12:00] WORKTREE_CREATED phase-2b-services-cleanup base_sha=6071e57 path=.worktrees/phase-2b-services-cleanup
 [18:12:00] PROGRESS_UPDATED phase-2b-services-cleanup impl_status=running
+[18:12:19] SUBAGENT_DISPATCHED subagent-driven-dev slug=phase-2b-services-cleanup
+[09:18:22] T2b.1 reference inventory: 11 legacy ProjectStatus refs, 0 Contact/Offer refs in services (excl voice/)
+[09:18:22] T2b.2 lifecycle.py: moved apply_interview_result+InvalidTransition+INTERVIEW_RESULT_TRANSITIONS to action_lifecycle.py, lifecycle.py reduced to shim
+[09:18:22] T2b.3 collision.py: CLOSED_STATUSES {CLOSED_SUCCESS,CLOSED_FAIL,CLOSED_CANCEL} -> {CLOSED}
+[09:18:22] T2b.4 dashboard.py: rewritten with ActionItem-based get_today_actions, get_overdue_actions, get_upcoming_actions, get_project_kanban_cards, get_pending_approvals
+[09:18:22] T2b.5 auto_actions.py: added suggest_initial_action, preserved existing public API
+[09:18:22] T2b.6 submission.py: rewritten for ActionItem 1:1 (get_or_create_for_action)
+[09:18:22] T2b.7 urgency.py: rewritten with ActionItem-based collect_all_actions + compute_project_urgency
+[09:18:22] T2b.8 approval.py: ProjectStatus.NEW->OPEN, contacts.exists()->applications.exists()
+[09:18:22] T2b.9 news/matcher.py: ACTIVE_STATUSES=[NEW,SEARCHING,...] -> [OPEN]
+[09:18:22] T2b.10 ruff check --fix: 3 auto-fixed (unused imports), entity_resolver.py unused Submission import removed
+[09:18:22] T2b.11 final grep: 0 legacy ProjectStatus members, 0 Contact refs, 0 Offer refs in services/ (excl voice/)
+[09:18:22] T2b.12 manage.py check: 0 issues. all service modules import OK
+[09:18:22] T2b.13 pytest: 16/16 phase2a tests pass, 591/591 full suite pass
+[09:18:22] T2b.COMMIT 5a64f59 chore(projects): clean up legacy refs in services, move lifecycle logic
+[18:19:40] SUBAGENT_RETURNED phase-2b-services-cleanup result=success
+[18:19:40] SQUASH_MERGE phase-2b-services-cleanup commit=ddd7bf0
+[18:19:40] PROGRESS_UPDATED phase-2b-services-cleanup impl_status=completed impl_commit=ddd7bf0
