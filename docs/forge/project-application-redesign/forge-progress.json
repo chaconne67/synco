@@ -100,14 +100,16 @@
     },
     {
       "slug": "phase-3b-views-crud",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "artifacts": [],
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
       "committed": false,
       "depends_on": [
         "phase-3a-views-base"

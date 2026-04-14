@@ -1,0 +1,184 @@
+{
+  "topic": "phase-3b-views-crud",
+  "document": "docs/forge/project-application-redesign/phase-3b-views-crud/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "I-01",
+              "severity": "CRITICAL",
+              "title": "Missing organization scoping in ApplicationCreateForm",
+              "attack": "Plan never passes organization= to ApplicationCreateForm, leaving candidate queryset unscoped across tenants.",
+              "action": "accepted",
+              "response": "Valid. Existing codebase uses @membership_required + _get_org(). Plan must follow same pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-02",
+              "severity": "CRITICAL",
+              "title": "Race condition in check-then-create for Application",
+              "attack": "exists() then create() without atomic block. Concurrent requests bypass duplicate check.",
+              "action": "partial",
+              "response": "DB UniqueConstraint exists as safety net preventing data corruption. Accept fix: use atomic+IntegrityError instead of exists().",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-03",
+              "severity": "CRITICAL",
+              "title": "No service layer for Application creation",
+              "attack": "Direct Application.objects.create() in view bypasses closed-project guard and creates architectural inconsistency.",
+              "action": "accepted",
+              "response": "Valid. Create create_application() service. Both web and voice views must call it.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-04",
+              "severity": "CRITICAL",
+              "title": "No error handling for lifecycle service exceptions",
+              "attack": "drop/restore/hire/complete/skip/reschedule raise ValueError but plan has zero try/except.",
+              "action": "accepted",
+              "response": "Valid. All lifecycle calls must be wrapped in try/except ValueError returning 400/409.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-05",
+              "severity": "CRITICAL",
+              "title": "Silent success on invalid form in skip/reschedule",
+              "attack": "Invalid form followed by unconditional 200 card response makes user think action succeeded.",
+              "action": "accepted",
+              "response": "Valid. Invalid form must return 400 with form errors.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-06",
+              "severity": "CRITICAL",
+              "title": "action_propose_next lacks validation and transaction",
+              "attack": "No parent-action status check, no transaction wrapping, silent skip of invalid types allows partial state.",
+              "action": "accepted",
+              "response": "Valid. Must verify action.status==DONE, validate IDs, wrap in atomic().",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-07",
+              "severity": "CRITICAL",
+              "title": "HTMX redirect breaks modal/partial flows",
+              "attack": "Django redirect() in HTMX context swaps full page into modal target.",
+              "action": "accepted",
+              "response": "Valid. Use HX-Redirect header for HTMX requests.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-08",
+              "severity": "CRITICAL",
+              "title": "Missing placeholder templates",
+              "attack": "Plan renders 8+ partials that don't exist. TemplateDoesNotExist on first call.",
+              "action": "accepted",
+              "response": "Valid. Add task to create minimal placeholder partials, matching Phase 3a pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-09",
+              "severity": "CRITICAL",
+              "title": "Modal GET endpoints missing",
+              "attack": "Views are @require_POST but HTMX modals need GET to render form.",
+              "action": "accepted",
+              "response": "Valid. Add GET method branches following existing codebase pattern.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-10",
+              "severity": "MAJOR",
+              "title": "No HX-Trigger strategy for dependent regions",
+              "attack": "Mutations don't emit HX-Trigger events. Timeline, badges, lists stay stale.",
+              "action": "accepted",
+              "response": "Valid. Define applicationChanged, actionChanged triggers.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-11",
+              "severity": "CRITICAL",
+              "title": "Incomplete legacy removal — tab views still reference deleted routes",
+              "attack": "Removing URL routes while templates still have {% url %} tags → NoReverseMatch.",
+              "action": "partial",
+              "response": "Accept route removal must be paired with tab view/template updates. Remove/stub tab_contacts, tab_offers. Full template migration stays Phase 4.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-12",
+              "severity": "MAJOR",
+              "title": "Voice service layer not addressed",
+              "attack": "action_executor.py has active contact_record, contact_reserve, offer_create handlers using deleted models.",
+              "action": "partial",
+              "response": "Accept scope expansion needed. Disable legacy voice intents in action_executor.py and intent_parser.py. Full migration is future work.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-13",
+              "severity": "MAJOR",
+              "title": "Incorrect ProjectStatus grep criterion",
+              "attack": "Plan says grep ProjectStatus → 0 but it's a valid live enum used in project_close/reopen.",
+              "action": "accepted",
+              "response": "Valid. Narrow to Contact/Offer references only.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "I-14",
+              "severity": "CRITICAL",
+              "title": "Weak verification/test plan",
+              "attack": "Only manage.py check + 200 smoke. No tests for error paths.",
+              "action": "partial",
+              "response": "Accept basic error-path tests needed. Full test suite is Phase 5.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-15",
+              "severity": "MINOR",
+              "title": "Inconsistent GET/POST context in action_create",
+              "attack": "GET sends action_types, POST sends form. Template gets different shapes.",
+              "action": "accepted",
+              "response": "Valid minor issue. Use consistent form object.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "I-16",
+              "severity": "CRITICAL",
+              "title": "Response shapes don't match HTMX target/swap strategy",
+              "attack": "No defined contract for what DOM node each response updates.",
+              "action": "partial",
+              "response": "Accept need for response contracts in view docstrings. Detailed hx-target/hx-swap is Phase 4.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 16,
+        "accepted": 10,
+        "rebutted": 0,
+        "escalated": 0,
+        "partial": 6
+      }
+    }
+  }
+}
