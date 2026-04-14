@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1543672,
+  "last_pid": 1546832,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
@@ -119,14 +119,16 @@
     },
     {
       "slug": "phase-4a-templates-core",
-      "tempering_status": "pending",
+      "tempering_status": "completed",
       "impl_status": "pending",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "medium",
-      "artifacts": [],
+      "artifacts": [
+        "impl-plan-agreed.md"
+      ],
       "committed": false,
       "depends_on": [
         "phase-3b-views-crud"

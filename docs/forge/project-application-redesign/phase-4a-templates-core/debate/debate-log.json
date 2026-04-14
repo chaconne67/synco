@@ -1,0 +1,133 @@
+{
+  "topic": "phase-4a-templates-core",
+  "document": "docs/forge/project-application-redesign/phase-4a-templates-core/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "Template path + inheritance mismatch",
+              "attack": "Document uses extends 'base.html' and dashboard/index.html path, but actual templates use common/base.html with HTMX partial pattern.",
+              "action": "accepted",
+              "response": "Verified. Existing templates use extends request.htmx|yesno pattern. View renders projects/dashboard.html, not dashboard/index.html.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "complete/skip hx-post vs modal GET",
+              "attack": "Document has hx-post for complete/skip buttons, but views use GET=modal render, POST=form submit pattern.",
+              "action": "accepted",
+              "response": "Verified at views.py:2784. action_complete GET renders modal, POST processes form. Direct hx-post bypasses required modal input.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "Wrong URL names + # placeholders",
+              "attack": "project_edit doesn't exist (correct: project_update). Close/drop use hx-get='#' placeholder.",
+              "action": "accepted",
+              "response": "Verified in urls.py. Correct names: project_update, project_close, application_drop.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "Swap boundary too small",
+              "attack": "Card-level hx-target + outerHTML doesn't refresh parent state (dashboard counts, application state).",
+              "action": "partial",
+              "response": "Card-level swap removed by modal adoption. Accepted: must define HX-Trigger refresh contract for parent containers. Rebutted: card-level swap itself irrelevant with modal pattern.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "Missing tab structure in project_detail",
+              "attack": "Current template has tab_bar + tab_content + tab-navigation.js. Document removes all tabs.",
+              "action": "accepted",
+              "response": "Verified. project_detail.html has detail_tab_bar.html, tab-content div. Tab skeleton must be preserved.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MAJOR",
+              "title": "hired_at state unhandled in application_card",
+              "attack": "Template branches on dropped_at only. hired_at is also a termination flag.",
+              "action": "accepted",
+              "response": "Verified at models.py:308-309. is_active checks both dropped_at and hired_at.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MAJOR",
+              "title": "N+1 performance misdiagnosis",
+              "attack": "current_state calls filter().order_by().first() — new queryset. action_item_card traverses action.application.project.client.name.",
+              "action": "accepted",
+              "response": "Verified at models.py:312-325. prefetch_related alone won't prevent N+1.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "Missing reschedule button",
+              "attack": "FINAL-SPEC: [완료] [건너뛰기] [나중에]. Document only has 완료/건너뛰기.",
+              "action": "accepted",
+              "response": "Verified. action_reschedule URL exists. FINAL-SPEC §5.2 shows 나중에 as core triage action.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MAJOR",
+              "title": "Navigation not HTMX-compatible",
+              "attack": "Existing templates use hx-get + hx-target + hx-push-url. Document uses plain <a href>.",
+              "action": "accepted",
+              "response": "Verified at project_list.html:13. Existing pattern uses progressive enhancement.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-10",
+              "severity": "MAJOR",
+              "title": "#modal-container duplicated",
+              "attack": "base.html:77 already has modal-container. Document adds another in project_detail.html.",
+              "action": "accepted",
+              "response": "Verified. common/base.html has the container. Remove duplicate.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-11",
+              "severity": "MINOR",
+              "title": "Missing empty state for pending actions",
+              "attack": "Application card filters by pending status with no empty handling.",
+              "action": "accepted",
+              "response": "Valid. Should show explicit message when 0 pending actions.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 11,
+        "accepted": 10,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
