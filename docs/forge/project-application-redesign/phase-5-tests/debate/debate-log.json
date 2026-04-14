@@ -1,0 +1,164 @@
+{
+  "topic": "phase-5-tests",
+  "document": "docs/forge/project-application-redesign/phase-5-tests/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "HIRED ownership: signal vs hire() service",
+              "attack": "HIRED 처리를 signal 책임으로 테스트하나 실제 구현은 hire() 서비스가 프로젝트 종료, 패자 드롭, 액션 취소를 직접 수행. 두 번째 hire도 ValueError로 차단.",
+              "action": "accepted",
+              "response": "사실 확인됨. signals.py 주석에도 명시. HIRED 테스트를 hire() 서비스 테스트로 이동.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Test directory structure incompatible",
+              "attack": "projects/tests.py 파일이 존재하여 projects/tests/ 디렉토리 생성 불가. root conftest의 collect_ignore로 인해 새 테스트가 전체 pytest 통과와 괴리.",
+              "action": "accepted",
+              "response": "사실 확인됨. projects/tests.py는 리다이렉트 코멘트만 포함. tests/ 루트에 배치하고 projects/tests.py 삭제.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "conftest fixtures incompatible with auth model",
+              "attack": "user.organization 패턴이 Membership 모델과 불일치. seed_action_types 커맨드가 존재하지 않음.",
+              "action": "accepted",
+              "response": "사실 확인됨. 기존 tests/conftest.py가 올바른 패턴(Membership, username) 사용. seed는 migration에서 수행.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "Lifecycle guard/invalid-transition tests missing",
+              "attack": "Application/ActionItem lifecycle가 happy path만 테스트. 실제 서비스의 가드 조건(already dropped, hire dropped 등) 전부 누락.",
+              "action": "accepted",
+              "response": "사실 확인됨. 기존 test_phase2a_services.py도 일부 가드만 커버. 종합 negative case 추가.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "Permission/filter expectations mismatch",
+              "attack": "deadline_range 필터 미구현. Phase 3b+ 뷰에 @login_required 누락. 실제 권한 모델과 테스트 기대 불일치.",
+              "action": "accepted",
+              "response": "사실 확인됨. deadline_range 제거. @login_required 누락은 Phase 6 수정 범위이나 테스트에서 현재 동작 검증.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MAJOR",
+              "title": "View HTMX contract untested",
+              "attack": "GET modal, invalid POST 400, HX-Trigger, HX-Redirect 등 HTMX 계약이 테스트에서 빠짐.",
+              "action": "accepted",
+              "response": "유효. 핵심 CRUD 엔드포인트에 HTMX 헤더 + 응답 포맷 assertion 추가.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MAJOR",
+              "title": "Signal tests can false-positive",
+              "attack": "기본값이 올바를 때 signal이 없어도 통과하는 테스트. stale state correction 검증 필요.",
+              "action": "accepted",
+              "response": "유효. stale state correction 패턴으로 변경.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "DB constraint/transaction tests missing",
+              "attack": "CheckConstraint, UniqueConstraint, select_for_update 테스트 누락.",
+              "action": "accepted",
+              "response": "유효. constraint 위반 테스트 + transaction 테스트 추가.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MAJOR",
+              "title": "Existing test_phase2a_services.py overlap",
+              "attack": "기존 16개 테스트와 중복 구현 위험.",
+              "action": "partial",
+              "response": "기존 테스트 확장 형태로 작성. 중복 금지. 기존 conftest도 재사용.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-10",
+              "severity": "MAJOR",
+              "title": "ORM query performance testing",
+              "attack": "대시보드/칸반의 N+1 쿼리를 query count 테스트로 고정해야.",
+              "action": "partial",
+              "response": "Phase 5 목표는 기능 정확성. 대시보드 칸반 경로에만 1개 query count smoke test 추가. 종합 budget은 별도 태스크.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-11",
+              "severity": "MAJOR",
+              "title": "hire() loser pending ActionItem cancellation",
+              "attack": "패자 후보의 pending ActionItem 취소 검증 누락.",
+              "action": "accepted",
+              "response": "기존 test_phase2a_services.py가 이미 커버하나 명시적 assertion 강화.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-12",
+              "severity": "MAJOR",
+              "title": "No full lifecycle integration test",
+              "attack": "§6.1의 완전한 프로젝트 라이프사이클을 1개 통합 테스트로 재현해야.",
+              "action": "accepted",
+              "response": "유효. 핵심 마일스톤만 검증하는 1개 통합 테스트 추가.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-13",
+              "severity": "MAJOR",
+              "title": "Case D: closed project reopen + add",
+              "attack": "§6.2 Case D 시나리오 테스트 누락.",
+              "action": "accepted",
+              "response": "유효. reopen 시 result 초기화 + phase 재계산 포함 테스트 추가.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-14",
+              "severity": "MINOR",
+              "title": "Application post_delete phase recompute",
+              "attack": "Application 삭제 시 phase 재계산 signal 테스트 누락.",
+              "action": "accepted",
+              "response": "유효. 1개 테스트 추가.",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 14,
+        "accepted": 11,
+        "rebutted": 0,
+        "partial": 2,
+        "escalated": 0
+      }
+    }
+  }
+}
