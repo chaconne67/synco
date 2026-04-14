@@ -1,0 +1,153 @@
+{
+  "project": "project-application-redesign",
+  "total_todos": 9,
+  "created_at": "2026-04-14T00:00:00Z",
+  "batch_status": "running",
+  "execution_mode": "background",
+  "scope": "verify",
+  "last_pid": null,
+  "execution_order": [
+    "phase-1-models",
+    "phase-2a-services-core",
+    "phase-2b-services-cleanup",
+    "phase-3a-views-base",
+    "phase-3b-views-crud",
+    "phase-4a-templates-core",
+    "phase-4b-templates-modals",
+    "phase-5-tests",
+    "phase-6-cleanup"
+  ],
+  "redteam_config": {
+    "models": ["codex"],
+    "env": "local"
+  },
+  "todos": [
+    {
+      "slug": "phase-1-models",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": []
+    },
+    {
+      "slug": "phase-2a-services-core",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-1-models"]
+    },
+    {
+      "slug": "phase-2b-services-cleanup",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-2a-services-core"]
+    },
+    {
+      "slug": "phase-3a-views-base",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-2b-services-cleanup"]
+    },
+    {
+      "slug": "phase-3b-views-crud",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-3a-views-base"]
+    },
+    {
+      "slug": "phase-4a-templates-core",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-3b-views-crud"]
+    },
+    {
+      "slug": "phase-4b-templates-modals",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-4a-templates-core"]
+    },
+    {
+      "slug": "phase-5-tests",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "medium",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-4b-templates-modals"]
+    },
+    {
+      "slug": "phase-6-cleanup",
+      "tempering_status": "pending",
+      "impl_status": "pending",
+      "verification_status": "pending",
+      "impl_commit": null,
+      "verification_result": null,
+      "entry_point": "impl",
+      "complexity": "small",
+      "artifacts": [],
+      "committed": false,
+      "depends_on": ["phase-5-tests"]
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Phase 2/3/4 분할: 6→9 할일. views.py(3,030줄)와 14개 신규 템플릿이 단일 세션 처리에 무리.",
+      "timestamp": "2026-04-14T00:00:00Z"
+    },
+    {
+      "decision": "scope=verify, execution_mode=background, redteam=codex 단독(전문가 패널)",
+      "timestamp": "2026-04-14T00:00:00Z"
+    }
+  ]
+}
