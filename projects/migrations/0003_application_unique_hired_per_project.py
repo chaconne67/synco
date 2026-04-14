@@ -5,16 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('candidates', '0022_candidate_consent_status_and_more'),
-        ('projects', '0002_seed_action_types'),
+        ("candidates", "0022_candidate_consent_status_and_more"),
+        ("projects", "0002_seed_action_types"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='application',
-            constraint=models.UniqueConstraint(condition=models.Q(('hired_at__isnull', False)), fields=('project',), name='unique_hired_per_project'),
+            model_name="application",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("hired_at__isnull", False)),
+                fields=("project",),
+                name="unique_hired_per_project",
+            ),
         ),
     ]

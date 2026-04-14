@@ -212,23 +212,23 @@ def preprocess_resume_text(text: str) -> str:
     lines = text.split("\n")
 
     # 1) Remove blank lines, compress whitespace
-    lines = [re.sub(r"\s{2,}", " ", l).strip() for l in lines if l.strip()]
+    lines = [re.sub(r"\s{2,}", " ", line).strip() for line in lines if line.strip()]
 
     # 2) Remove exact duplicate lines (preserve order)
     seen: set[str] = set()
     unique: list[str] = []
-    for l in lines:
-        normalized = l.strip().lower()
+    for line in lines:
+        normalized = line.strip().lower()
         if normalized and normalized not in seen:
             seen.add(normalized)
-            unique.append(l)
+            unique.append(line)
 
     # 3) Remove near-duplicate lines (70%+ word overlap with recent lines)
     final: list[str] = []
-    for l in unique:
-        words = set(l.lower().split())
+    for line in unique:
+        words = set(line.lower().split())
         if len(words) < 3:
-            final.append(l)
+            final.append(line)
             continue
         is_dup = False
         for existing in final[-10:]:
@@ -241,7 +241,7 @@ def preprocess_resume_text(text: str) -> str:
                     is_dup = True
                     break
         if not is_dup:
-            final.append(l)
+            final.append(line)
 
     # 4) Remove noise patterns (basic PC skills, etc.)
     # Only remove short lines that are purely noise — skip lines with dates
@@ -257,17 +257,17 @@ def preprocess_resume_text(text: str) -> str:
     date_pattern = re.compile(r"\d{4}")
     company_suffixes = ("㈜", "주식회사", "(주)", "co.", "corp", "inc")
     cleaned: list[str] = []
-    for l in final:
-        lower = l.lower()
+    for line in final:
+        lower = line.lower()
         if any(n in lower for n in noise):
             # Preserve lines that look like career entries
-            if date_pattern.search(l) or any(s in lower for s in company_suffixes):
-                cleaned.append(l)
+            if date_pattern.search(line) or any(s in lower for s in company_suffixes):
+                cleaned.append(line)
                 continue
             # Only drop short noise lines (< 40 chars)
-            if len(l.strip()) < 40:
+            if len(line.strip()) < 40:
                 continue
-        cleaned.append(l)
+        cleaned.append(line)
     final = cleaned
 
     return "\n".join(final)

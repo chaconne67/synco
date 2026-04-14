@@ -34,7 +34,9 @@ class TestSettingsProfileTab:
         response = client.get("/accounts/settings/profile/")
         assert response.status_code == 200
         assert "accounts/settings.html" in [t.name for t in response.templates]
-        assert "accounts/partials/settings_tab_bar.html" in [t.name for t in response.templates]
+        assert "accounts/partials/settings_tab_bar.html" in [
+            t.name for t in response.templates
+        ]
         content = response.content.decode()
         # Tab bar buttons present
         assert "프로필" in content
@@ -133,6 +135,7 @@ class TestSettingsNotifyTab:
         )
         assert response.status_code == 200
         from accounts.models import NotificationPreference
+
         pref = NotificationPreference.objects.get(user=active_user)
         assert pref.preferences["contact_result"]["telegram"] is False
 

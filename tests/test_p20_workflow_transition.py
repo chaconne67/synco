@@ -302,9 +302,7 @@ class TestFunnelNavigation:
     """개요 탭 퍼널의 각 단계가 클릭 가능한 링크로 렌더링되어야 한다."""
 
     @pytest.mark.django_db
-    def test_overview_funnel_has_clickable_links(
-        self, auth_client, project
-    ):
+    def test_overview_funnel_has_clickable_links(self, auth_client, project):
         """퍼널 항목에 hx-get 링크가 포함되어야 한다."""
         resp = auth_client.get(
             f"/projects/{project.pk}/tab/overview/",
@@ -381,7 +379,10 @@ class TestFunnelNavigation:
         )
         content = resp.content.decode()
         # RESERVED만 있으므로 퍼널 컨택 카운트는 0이어야 함
-        assert '>컨택 <span class="font-semibold text-gray-800">0</span>' in content.replace("\n", "").replace("  ", "")
+        assert (
+            '>컨택 <span class="font-semibold text-gray-800">0</span>'
+            in content.replace("\n", "").replace("  ", "")
+        )
 
     @pytest.mark.django_db
     def test_contacts_tab_result_filter(
@@ -424,14 +425,21 @@ class TestTabBadgeNewIndicator:
     """탭 뱃지 data 속성 렌더링 검증 (마크업 회귀 테스트)."""
 
     @pytest.mark.django_db
-    def test_all_tabs_have_data_tab_attributes(
-        self, auth_client, project
-    ):
+    def test_all_tabs_have_data_tab_attributes(self, auth_client, project):
         """탭바의 모든 6개 버튼에 data-tab 속성이 있어야 한다."""
         resp = auth_client.get(f"/projects/{project.pk}/")
         content = resp.content.decode()
-        for tab_name in ["overview", "search", "contacts", "submissions", "interviews", "offers"]:
-            assert f'data-tab="{tab_name}"' in content, f'data-tab="{tab_name}" not found'
+        for tab_name in [
+            "overview",
+            "search",
+            "contacts",
+            "submissions",
+            "interviews",
+            "offers",
+        ]:
+            assert f'data-tab="{tab_name}"' in content, (
+                f'data-tab="{tab_name}" not found'
+            )
 
     @pytest.mark.django_db
     def test_badge_present_with_data_attrs_when_count_positive(
@@ -455,13 +463,13 @@ class TestTabBadgeNewIndicator:
         # 다음 탭 버튼까지의 범위로 한정
         contacts_end = content.find('data-tab="submissions"', contacts_start)
         contacts_block = content[contacts_start:contacts_end]
-        assert "data-badge-count" in contacts_block, "data-badge-count not in contacts tab"
+        assert "data-badge-count" in contacts_block, (
+            "data-badge-count not in contacts tab"
+        )
         assert "data-latest" in contacts_block, "data-latest not in contacts tab"
 
     @pytest.mark.django_db
-    def test_badge_absent_when_count_zero(
-        self, auth_client, project
-    ):
+    def test_badge_absent_when_count_zero(self, auth_client, project):
         """컨택이 없으면 contacts 탭 뱃지 span이 렌더링되지 않아야 한다."""
         resp = auth_client.get(f"/projects/{project.pk}/")
         content = resp.content.decode()
@@ -471,7 +479,9 @@ class TestTabBadgeNewIndicator:
         assert contacts_start != -1, "contacts tab button not found"
         contacts_end = content.find('data-tab="submissions"', contacts_start)
         contacts_block = content[contacts_start:contacts_end]
-        assert "data-badge-count" not in contacts_block, "badge should not render when count=0"
+        assert "data-badge-count" not in contacts_block, (
+            "badge should not render when count=0"
+        )
 
 
 # --- Workflow edge case tests (t25) ---
@@ -503,9 +513,9 @@ class TestWorkflowEdgeCases:
         assert resp.status_code == 200
         assert "HX-Retarget" not in resp.headers
         # 중복이 실제로 방지되었는지 확인
-        assert Submission.objects.filter(
-            project=project, candidate=candidate
-        ).count() == 1
+        assert (
+            Submission.objects.filter(project=project, candidate=candidate).count() == 1
+        )
 
     @pytest.mark.django_db
     def test_contact_update_interest_banner_disappears_on_tab_reload(

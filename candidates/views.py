@@ -159,7 +159,7 @@ def review_detail(request, pk):
         "educations": [{"institution": e.institution} for e in educations],
         "skills": candidate.skills or [],
         "certifications": [{"name": c.name} for c in certifications],
-        "language_skills": [{"language": l.language} for l in language_skills],
+        "language_skills": [{"language": ls.language} for ls in language_skills],
     }
     field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
     fc = field_scores
@@ -477,7 +477,7 @@ def candidate_detail(request, pk):
         "educations": [{"institution": e.institution} for e in educations],
         "skills": candidate.skills or [],
         "certifications": [{"name": c.name} for c in certifications],
-        "language_skills": [{"language": l.language} for l in language_skills],
+        "language_skills": [{"language": ls.language} for ls in language_skills],
     }
     field_scores, category_scores = compute_field_confidences(extracted_snapshot, {})
     fc = field_scores

@@ -201,12 +201,17 @@ class Candidate(BaseModel):
     phone = models.CharField(max_length=255, blank=True)
     phone_normalized = models.CharField(max_length=20, blank=True, db_index=True)
     external_profile_url = models.CharField(
-        max_length=500, blank=True, default="", db_index=True,
-        help_text="LinkedIn/잡코리아/사람인 프로필 URL (정규화)"
+        max_length=500,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text="LinkedIn/잡코리아/사람인 프로필 URL (정규화)",
     )
     consent_status = models.CharField(
-        max_length=20, blank=True, default="not_requested",
-        help_text="not_requested | requested | granted | denied"
+        max_length=20,
+        blank=True,
+        default="not_requested",
+        help_text="not_requested | requested | granted | denied",
     )
     address = models.CharField(max_length=500, blank=True)
 
@@ -1187,7 +1192,8 @@ class ExtractionLog(BaseModel):
     actor = models.ForeignKey(
         "accounts.User",
         on_delete=models.SET_NULL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         related_name="extraction_logs",
     )
     details = models.JSONField(default=dict, blank=True)

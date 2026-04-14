@@ -143,9 +143,7 @@ def test_drop_cancels_pending_actions(application):
     from projects.services.action_lifecycle import create_action
     from projects.services.application_lifecycle import drop
 
-    action = create_action(
-        application, ActionType.objects.get(code="reach_out"), None
-    )
+    action = create_action(application, ActionType.objects.get(code="reach_out"), None)
     drop(application, "unfit", None)
     action.refresh_from_db()
     assert action.status == ActionItemStatus.CANCELLED
@@ -171,7 +169,9 @@ def test_restore_blocked_on_closed_project(application, second_application):
         pk=second_application.pk
     )
     # now try to restore second_application in closed project
-    with pytest.raises(ValueError, match="cannot restore application in a closed project"):
+    with pytest.raises(
+        ValueError, match="cannot restore application in a closed project"
+    ):
         restore(second_application, None)
 
 
@@ -188,14 +188,18 @@ def test_create_action_on_dropped_raises(application):
     from projects.services.application_lifecycle import drop
 
     drop(application, "unfit", None)
-    with pytest.raises(ValueError, match="cannot create action on inactive application"):
-        create_action(
-            application, ActionType.objects.get(code="reach_out"), None
-        )
+    with pytest.raises(
+        ValueError, match="cannot create action on inactive application"
+    ):
+        create_action(application, ActionType.objects.get(code="reach_out"), None)
 
 
 def test_complete_then_propose_next(application):
-    from projects.services.action_lifecycle import complete_action, create_action, propose_next
+    from projects.services.action_lifecycle import (
+        complete_action,
+        create_action,
+        propose_next,
+    )
 
     reach_out = ActionType.objects.get(code="reach_out")
     action = create_action(application, reach_out, None)

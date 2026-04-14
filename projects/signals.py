@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 def _sync_phase(project: Project) -> None:
     new_phase = compute_project_phase(project)
     # Read current phase from DB — the in-memory object may be stale
-    current_phase = Project.objects.filter(pk=project.pk).values_list(
-        "phase", flat=True
-    ).first()
+    current_phase = (
+        Project.objects.filter(pk=project.pk).values_list("phase", flat=True).first()
+    )
     if current_phase != new_phase:
         Project.objects.filter(pk=project.pk).update(phase=new_phase)
 

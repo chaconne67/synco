@@ -11,7 +11,9 @@ User = get_user_model()
 def owner_client(db):
     org = Organization.objects.create(name="Test Org")
     owner = User.objects.create_user(username="nav_owner", password="pass")
-    Membership.objects.create(user=owner, organization=org, role="owner", status="active")
+    Membership.objects.create(
+        user=owner, organization=org, role="owner", status="active"
+    )
     client = TestClient()
     client.force_login(owner)
     return client
@@ -21,7 +23,9 @@ def owner_client(db):
 def consultant_client(db):
     org = Organization.objects.create(name="Test Org")
     consultant = User.objects.create_user(username="nav_cons", password="pass")
-    Membership.objects.create(user=consultant, organization=org, role="consultant", status="active")
+    Membership.objects.create(
+        user=consultant, organization=org, role="consultant", status="active"
+    )
     client = TestClient()
     client.force_login(consultant)
     return client

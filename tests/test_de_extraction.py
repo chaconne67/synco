@@ -134,7 +134,7 @@ class TestStep1Extract:
                 "educations": [],
             },
         ]
-        result = extract_raw_data(
+        extract_raw_data(
             "이력서 텍스트",
             feedback="일문 섹션이 누락되었습니다.",
         )

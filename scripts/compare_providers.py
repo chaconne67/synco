@@ -54,8 +54,8 @@ def run():
 
     results = []
     total_time = 0
-    total_input_tokens = 0
-    total_output_tokens = 0
+    total_input_tokens = 0  # noqa: F841
+    total_output_tokens = 0  # noqa: F841
     errors = 0
 
     print(f"\n{'=' * 70}")

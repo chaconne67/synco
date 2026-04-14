@@ -178,7 +178,7 @@
       "slug": "phase-6-cleanup",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "verification_status": "pending",
+      "verification_status": "running",
       "impl_commit": "ca961a6",
       "verification_result": null,
       "entry_point": "impl",

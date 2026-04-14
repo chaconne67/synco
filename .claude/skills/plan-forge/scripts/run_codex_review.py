@@ -25,8 +25,12 @@ import sys
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Run codex exec with structured JSONL parsing")
-    p.add_argument("--repo-dir", required=True, help="Repository root for codex -C flag")
+    p = argparse.ArgumentParser(
+        description="Run codex exec with structured JSONL parsing"
+    )
+    p.add_argument(
+        "--repo-dir", required=True, help="Repository root for codex -C flag"
+    )
     p.add_argument("--prompt-file", help="Path to prompt file (reads stdin if omitted)")
     p.add_argument(
         "--reasoning-effort",
@@ -49,14 +53,20 @@ def read_prompt(prompt_file):
             return f.read()
     else:
         if sys.stdin.isatty():
-            print("ERROR: No prompt provided. Pipe via stdin or use --prompt-file.", file=sys.stderr)
+            print(
+                "ERROR: No prompt provided. Pipe via stdin or use --prompt-file.",
+                file=sys.stderr,
+            )
             sys.exit(1)
         return sys.stdin.read()
 
 
 def run_codex(prompt, repo_dir, reasoning_effort, web_search):
     if not shutil.which("codex"):
-        print("ERROR: codex binary not found. Install: npm install -g @openai/codex", file=sys.stderr)
+        print(
+            "ERROR: codex binary not found. Install: npm install -g @openai/codex",
+            file=sys.stderr,
+        )
         sys.exit(2)
 
     # Prompt is passed as a direct argv element via subprocess (no shell=True),
@@ -84,7 +94,9 @@ def run_codex(prompt, repo_dir, reasoning_effort, web_search):
     if web_search:
         cmd.extend(["--enable", "web_search_cached"])
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
     return proc
 
 
@@ -164,11 +176,17 @@ def main():
         sys.exit(1)
 
     if not saw_turn_completed:
-        print("ERROR: No turn.completed event received — codex may have crashed", file=sys.stderr)
+        print(
+            "ERROR: No turn.completed event received — codex may have crashed",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     if not agent_messages:
-        print("ERROR: No agent_message received — codex returned empty review", file=sys.stderr)
+        print(
+            "ERROR: No agent_message received — codex returned empty review",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # Output: join all agent messages

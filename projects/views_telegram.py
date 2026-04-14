@@ -396,7 +396,10 @@ def telegram_bind_partial(request):
             return render(
                 request,
                 template,
-                {"error": "코드 생성에 실패했습니다. 다시 시도해주세요.", "active_tab": "telegram"},
+                {
+                    "error": "코드 생성에 실패했습니다. 다시 시도해주세요.",
+                    "active_tab": "telegram",
+                },
             )
 
         TelegramVerification.objects.create(
@@ -414,7 +417,12 @@ def telegram_bind_partial(request):
         return render(
             request,
             template,
-            {"code": code, "is_bound": is_bound, "expires_minutes": 5, "active_tab": "telegram"},
+            {
+                "code": code,
+                "is_bound": is_bound,
+                "expires_minutes": 5,
+                "active_tab": "telegram",
+            },
         )
 
     # GET
@@ -487,27 +495,39 @@ def telegram_test_partial(request):
     try:
         binding = TelegramBinding.objects.get(user=request.user, is_active=True)
     except TelegramBinding.DoesNotExist:
-        return render(request, template, {
-            "is_bound": False,
-            "error": "텔레그램이 연결되어 있지 않습니다.",
-            "active_tab": "telegram",
-        })
+        return render(
+            request,
+            template,
+            {
+                "is_bound": False,
+                "error": "텔레그램이 연결되어 있지 않습니다.",
+                "active_tab": "telegram",
+            },
+        )
 
     try:
         _send_telegram_message(binding.chat_id, "🤖 synco 테스트 메시지입니다!")
-        return render(request, template, {
-            "is_bound": True,
-            "verified_at": binding.verified_at,
-            "message": "테스트 메시지가 전송되었습니다.",
-            "active_tab": "telegram",
-        })
+        return render(
+            request,
+            template,
+            {
+                "is_bound": True,
+                "verified_at": binding.verified_at,
+                "message": "테스트 메시지가 전송되었습니다.",
+                "active_tab": "telegram",
+            },
+        )
     except Exception:
-        return render(request, template, {
-            "is_bound": True,
-            "verified_at": binding.verified_at,
-            "error": "메시지 전송에 실패했습니다.",
-            "active_tab": "telegram",
-        })
+        return render(
+            request,
+            template,
+            {
+                "is_bound": True,
+                "verified_at": binding.verified_at,
+                "error": "메시지 전송에 실패했습니다.",
+                "active_tab": "telegram",
+            },
+        )
 
 
 @login_required
@@ -523,8 +543,12 @@ def telegram_unbind_partial(request):
     except TelegramBinding.DoesNotExist:
         pass
 
-    return render(request, template, {
-        "is_bound": False,
-        "message": "텔레그램 연동이 해제되었습니다.",
-        "active_tab": "telegram",
-    })
+    return render(
+        request,
+        template,
+        {
+            "is_bound": False,
+            "message": "텔레그램 연동이 해제되었습니다.",
+            "active_tab": "telegram",
+        },
+    )

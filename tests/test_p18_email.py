@@ -264,9 +264,7 @@ class TestGmailClientErrorHandling:
     def test_history_404_falls_back_to_search(self, gmail_client):
         """History API returns 404 -> falls back to _poll_via_search."""
         gmail_client.config.last_history_id = "old_history_id"
-        gmail_client._poll_via_history = MagicMock(
-            side_effect=_make_http_error(404)
-        )
+        gmail_client._poll_via_history = MagicMock(side_effect=_make_http_error(404))
         gmail_client._poll_via_search = MagicMock(return_value=[{"id": "msg1"}])
 
         result = gmail_client.get_new_messages()
@@ -277,9 +275,7 @@ class TestGmailClientErrorHandling:
     def test_401_deactivates_config(self, gmail_client):
         """401 Unauthorized -> is_active=False + re-raise."""
         gmail_client.config.last_history_id = "some_id"
-        gmail_client._poll_via_history = MagicMock(
-            side_effect=_make_http_error(401)
-        )
+        gmail_client._poll_via_history = MagicMock(side_effect=_make_http_error(401))
 
         with pytest.raises(Exception):
             gmail_client.get_new_messages()
@@ -299,7 +295,9 @@ class TestGmailClientErrorHandling:
         def history_side_effect():
             nonlocal call_count
             call_count += 1
-            if call_count <= 2:  # Fail on calls 1 (get_new_messages) and 2 (first backoff attempt)
+            if (
+                call_count <= 2
+            ):  # Fail on calls 1 (get_new_messages) and 2 (first backoff attempt)
                 raise _make_http_error(429)
             return [{"id": "msg1", "subject": "test", "from": "a@b.com"}]
 
@@ -313,9 +311,7 @@ class TestGmailClientErrorHandling:
     def test_5xx_returns_empty(self, gmail_client):
         """5xx server error -> returns empty list, no raise."""
         gmail_client.config.last_history_id = "some_id"
-        gmail_client._poll_via_history = MagicMock(
-            side_effect=_make_http_error(500)
-        )
+        gmail_client._poll_via_history = MagicMock(side_effect=_make_http_error(500))
 
         result = gmail_client.get_new_messages()
 
@@ -363,7 +359,9 @@ class TestGmailTokenRefresh:
         mock_creds = MagicMock()
         mock_creds.expired = True
         mock_creds.refresh_token = "1//refresh"
-        mock_creds.to_json.return_value = '{"token": "new_token", "refresh_token": "1//refresh"}'
+        mock_creds.to_json.return_value = (
+            '{"token": "new_token", "refresh_token": "1//refresh"}'
+        )
         mock_from_info.return_value = mock_creds
 
         client = GmailClient(email_config)

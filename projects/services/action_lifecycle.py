@@ -153,7 +153,5 @@ def propose_next(action: ActionItem) -> list[ActionType]:
         return []
     codes = action.action_type.suggests_next or []
     return list(
-        ActionType.objects.filter(code__in=codes, is_active=True).order_by(
-            "sort_order"
-        )
+        ActionType.objects.filter(code__in=codes, is_active=True).order_by("sort_order")
     )

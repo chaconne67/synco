@@ -26,14 +26,18 @@ def get_today_actions(user: User, org: Organization):
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = today_start + timedelta(days=1)
 
-    return ActionItem.objects.filter(
-        assigned_to=user,
-        application__project__organization=org,
-        status=ActionItemStatus.PENDING,
-    ).filter(
-        Q(scheduled_at__gte=today_start, scheduled_at__lt=today_end)
-        | Q(due_at__gte=max(now, today_start), due_at__lt=today_end)
-    ).select_related("application__project", "application__candidate", "action_type")
+    return (
+        ActionItem.objects.filter(
+            assigned_to=user,
+            application__project__organization=org,
+            status=ActionItemStatus.PENDING,
+        )
+        .filter(
+            Q(scheduled_at__gte=today_start, scheduled_at__lt=today_end)
+            | Q(due_at__gte=max(now, today_start), due_at__lt=today_end)
+        )
+        .select_related("application__project", "application__candidate", "action_type")
+    )
 
 
 def get_overdue_actions(user: User, org: Organization):
@@ -61,9 +65,7 @@ def get_upcoming_actions(user: User, org: Organization, days=3):
             Q(scheduled_at__gte=now, scheduled_at__lte=soon)
             | Q(due_at__gte=now, due_at__lte=soon)
         )
-        .select_related(
-            "application__project", "application__candidate", "action_type"
-        )
+        .select_related("application__project", "application__candidate", "action_type")
         .distinct()
     )
 
