@@ -11,6 +11,7 @@ from django.http import (
     HttpResponseForbidden,
 )
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -517,6 +518,13 @@ def project_close(request, pk):
         status=ActionItemStatus.PENDING,
     ).update(status=ActionItemStatus.CANCELLED)
 
+    # R1-03: HTMX requests use HX-Redirect for full page navigation
+    if request.headers.get("HX-Request"):
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = reverse(
+            "projects:project_detail", args=[project.pk]
+        )
+        return response
     return redirect("projects:project_detail", pk=project.pk)
 
 

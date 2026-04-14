@@ -276,3 +276,12 @@
 [21:14:34] SUBAGENT_RETURNED phase-4b-templates-modals result=success
 [21:14:34] SQUASH_MERGE phase-4b-templates-modals commit=88dcc87
 [21:14:34] PROGRESS_UPDATED phase-4b-templates-modals impl_status=completed impl_commit=88dcc87
+[21:15:05] SESSION_CHAIN_SPAWN next=phase-4b-templates-modals action=verify
+[21:15:05] SESSION_CHAIN_SPAWN pid=1580559
+[21:15:10] SESSION_END
+[21:16:16] SESSION_START pid=1581269 mode=continue
+[21:16:16] SKILL_LOADED impl-forge-batch mode=continue
+[21:16:16] TODO_PICKED phase-4b-templates-modals action=verify
+[21:16:30] PROGRESS_UPDATED phase-4b-templates-modals verification_status=running
+[21:17:03] SUBAGENT_DISPATCHED impl-check slug=phase-4b-templates-modals
+[2026-04-14T12:24:20Z] IMPL_CHECK phase-4b-templates-modals: 14 checklist items verified. Fixed: (1) max-h-[85vh]->max-h-[90vh] in 8 modals, (2) project_close HX-Redirect for HTMX POST, (3) toast-container z-[60]. Accepted deviations: dash_full.html kept (in active use), kanban.js emptied not deleted (plan allows). 595/595 tests PASS, manage.py check clean, ruff clean.
