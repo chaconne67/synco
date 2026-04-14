@@ -427,12 +427,23 @@ def candidate_list(request):
 @login_required
 def candidate_detail(request, pk):
     """Candidate detail page."""
+    from django.db.models import Prefetch
+
+    from projects.models import Application
+
     candidate = get_object_or_404(
         Candidate.objects.select_related(
             "primary_category", "current_resume"
         ).prefetch_related(
             "careers",
             _self_consistency_prefetch(),
+            Prefetch(
+                "applications",
+                queryset=Application.objects.select_related("project__client").order_by(
+                    "-created_at"
+                ),
+                to_attr="prefetched_applications",
+            ),
         ),
         pk=pk,
     )
@@ -509,6 +520,7 @@ def candidate_detail(request, pk):
         template,
         {
             "candidate": candidate,
+            "candidate_applications": candidate.prefetched_applications,
             "careers": careers,
             "educations": educations,
             "certifications": certifications,

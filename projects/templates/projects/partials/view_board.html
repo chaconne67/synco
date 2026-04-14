@@ -1,43 +1,6 @@
-<!-- Board (Kanban) View -->
-<div class="flex gap-4 overflow-x-auto pb-4" id="kanban-board">
-  {% for status_value, group in status_groups.items %}
-  <div class="kanban-column flex-shrink-0 w-64 bg-gray-50 rounded-lg p-3"
-       data-status="{{ status_value }}"
-       {% if status_value == "closed_success" or status_value == "closed_fail" or status_value == "closed_cancel" %}
-       x-data="{ collapsed: true }"
-       {% endif %}>
-
-    <!-- Column Header -->
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-[13px] font-semibold text-gray-600 uppercase tracking-wide">
-        {% if status_value == "new" %}<span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5"></span>
-        {% elif status_value == "searching" %}<span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1.5"></span>
-        {% elif status_value == "recommending" %}<span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-1.5"></span>
-        {% elif status_value == "interviewing" %}<span class="inline-block w-2 h-2 rounded-full bg-indigo-500 mr-1.5"></span>
-        {% elif status_value == "negotiating" %}<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
-        {% elif status_value == "on_hold" %}<span class="inline-block w-2 h-2 rounded-full bg-orange-500 mr-1.5"></span>
-        {% elif status_value == "pending_approval" %}<span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>
-        {% elif status_value == "closed_success" %}<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
-        {% elif status_value == "closed_fail" %}<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5"></span>
-        {% elif status_value == "closed_cancel" %}<span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-1.5"></span>
-        {% endif %}
-        {{ group.label }}
-      </h3>
-      <span class="text-[12px] text-gray-400 bg-gray-200 rounded-full px-2 py-0.5">{{ group.projects|length }}</span>
-    </div>
-
-    <!-- Cards -->
-    <div class="kanban-cards space-y-2 min-h-[60px]" data-status="{{ status_value }}">
-      {% for project in group.projects %}
-      {% include "projects/partials/view_board_card.html" %}
-      {% empty %}
-      <div class="text-[13px] text-gray-400 text-center py-4">-</div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endfor %}
+{# Legacy board view — kept for tab_switch compatibility but uses new kanban columns #}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="kanban-board">
+  {% include "projects/partials/kanban_column.html" with title="서칭" cards=kanban.searching column_key="searching" %}
+  {% include "projects/partials/kanban_column.html" with title="심사" cards=kanban.screening column_key="screening" %}
+  {% include "projects/partials/kanban_column.html" with title="종료" cards=kanban.closed column_key="closed" %}
 </div>
-
-<!-- Sortable.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="/static/js/kanban.js"></script>

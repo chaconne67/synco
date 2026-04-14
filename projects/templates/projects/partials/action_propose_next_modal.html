@@ -1,4 +1,56 @@
-{# Phase 3b placeholder — real UI in Phase 4 #}
-<div class="p-4 text-gray-400 text-sm">
-  [placeholder: action_propose_next_modal]
+{# Modal: Propose next actions after completing an ActionItem #}
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-propose-next"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm"
+     hx-on:click="if (event.target === this) document.getElementById('modal-container').innerHTML = ''"
+     hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
+  <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+    <header class="mb-4 flex items-center justify-between">
+      <h2 id="modal-title-propose-next" class="text-lg font-semibold text-slate-100">후속 액션 제안</h2>
+      <button type="button"
+              onclick="document.getElementById('modal-container').innerHTML = ''"
+              class="text-slate-500 hover:text-slate-300">&#10005;</button>
+    </header>
+
+    <div class="mb-4 rounded-lg border border-slate-800 bg-slate-800/50 p-3">
+      <p class="text-xs text-slate-400">완료된 액션</p>
+      <p class="mt-1 text-sm text-slate-200">{{ completed_action.action_type.label_ko }} — {{ completed_action.title }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ completed_action.application.candidate.name }}</p>
+    </div>
+
+    <p class="mb-4 text-sm text-slate-300">다음에 진행할 액션을 선택하세요.</p>
+
+    <form hx-post="{% url 'projects:action_propose_next' completed_action.id %}"
+          hx-target="#modal-container"
+          hx-swap="innerHTML">
+      {% csrf_token %}
+      <div class="space-y-3">
+        {% for suggestion in suggestions %}
+          <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+            <input type="checkbox" name="next_action_type_ids" value="{{ suggestion.pk }}"
+                   class="rounded border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+            <span class="text-sm text-slate-200">{{ suggestion.label_ko }}</span>
+            {% if suggestion.description %}
+              <span class="text-xs text-slate-500">{{ suggestion.description }}</span>
+            {% endif %}
+          </label>
+        {% empty %}
+          <p class="text-sm text-slate-500">제안할 후속 액션이 없습니다.</p>
+        {% endfor %}
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button"
+                onclick="document.getElementById('modal-container').innerHTML = ''"
+                class="rounded-md bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">
+          건너뛰기
+        </button>
+        {% if suggestions %}
+          <button type="submit"
+                  class="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
+            선택한 액션 생성
+          </button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
 </div>

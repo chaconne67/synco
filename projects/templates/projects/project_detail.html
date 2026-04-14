@@ -61,7 +61,10 @@
         후보자 ({{ applications|length }})
       </button>
       <button class="py-3 text-sm font-medium text-slate-500 hover:text-slate-300"
-              data-tab="timeline" disabled>
+              data-tab="timeline"
+              hx-get="{% url 'projects:project_timeline' project.id %}"
+              hx-target="#tab-content"
+              hx-swap="innerHTML">
         타임라인
       </button>
       <button class="py-3 text-sm font-medium text-slate-500 hover:text-slate-300"

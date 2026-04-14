@@ -350,11 +350,21 @@ def project_detail(request, pk):
 @login_required
 @membership_required
 def project_applications_partial(request, pk):
-    """HTMX partial: application list for a project."""
+    """HTMX partial: application list for a project. R1-11: explicit prefetch."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
-    applications = Application.objects.filter(project=project).select_related(
-        "candidate"
+    applications = (
+        Application.objects.filter(project=project)
+        .select_related("candidate")
+        .prefetch_related("action_items__action_type")
+        .order_by(
+            db_models.Case(
+                db_models.When(dropped_at__isnull=True, hired_at__isnull=True, then=0),
+                db_models.When(hired_at__isnull=False, then=1),
+                default=2,
+            ),
+            "-created_at",
+        )
     )
     return render(
         request,
@@ -458,9 +468,8 @@ def project_delete(request, pk):
 
 @login_required
 @membership_required
-@require_http_methods(["POST"])
 def project_close(request, pk):
-    """Close a project. Cancels all pending ActionItems."""
+    """GET: render close modal form. POST: close the project."""
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
 
@@ -471,12 +480,28 @@ def project_close(request, pk):
     if not (is_owner or is_assigned):
         return HttpResponseForbidden("권한이 없습니다.")
 
-    form = ProjectCloseForm(request.POST)
-    if not form.is_valid():
+    # R1-03: GET handler for modal form
+    if request.method == "GET":
+        form = ProjectCloseForm()
+        active_count = Application.objects.filter(
+            project=project, dropped_at__isnull=True, hired_at__isnull=True
+        ).count()
         return render(
             request,
             "projects/partials/project_close_modal.html",
-            {"form": form, "project": project},
+            {"form": form, "project": project, "active_count": active_count},
+        )
+
+    # POST
+    form = ProjectCloseForm(request.POST)
+    if not form.is_valid():
+        active_count = Application.objects.filter(
+            project=project, dropped_at__isnull=True, hired_at__isnull=True
+        ).count()
+        return render(
+            request,
+            "projects/partials/project_close_modal.html",
+            {"form": form, "project": project, "active_count": active_count},
         )
 
     # Set status and closed_at together (CHECK constraint: open implies no closed_at)
@@ -2642,11 +2667,7 @@ def application_drop(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = render(
-            request,
-            "projects/partials/application_card.html",
-            {"application": application},
-        )
+        response = HttpResponse(status=204)
         response["HX-Trigger"] = "applicationChanged"
         return response
     return redirect("projects:project_detail", pk=application.project.pk)
@@ -2707,17 +2728,27 @@ def application_hire(request, pk):
 
 @membership_required
 def application_actions_partial(request, pk):
-    """GET: Application의 ActionItem 목록."""
+    """GET: Application의 ActionItem 목록. R1-11/R1-12: prefetch + ordering."""
     org = _get_org(request)
     application = get_object_or_404(
-        Application,
+        Application.objects.select_related("candidate", "project"),
         pk=pk,
         project__organization=org,
+    )
+    actions = application.action_items.select_related(
+        "action_type", "assigned_to"
+    ).order_by(
+        db_models.Case(
+            db_models.When(status=ActionItemStatus.PENDING, then=0),
+            default=1,
+        ),
+        "due_at",
+        "created_at",
     )
     return render(
         request,
         "projects/partials/application_actions_list.html",
-        {"application": application, "actions": application.action_items.all()},
+        {"application": application, "actions": actions},
     )
 
 
@@ -2884,11 +2915,7 @@ def action_skip(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = render(
-            request,
-            "projects/partials/action_item_card.html",
-            {"action": action},
-        )
+        response = HttpResponse(status=204)
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)
@@ -2939,11 +2966,7 @@ def action_reschedule(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = render(
-            request,
-            "projects/partials/action_item_card.html",
-            {"action": action},
-        )
+        response = HttpResponse(status=204)
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)

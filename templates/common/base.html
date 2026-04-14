@@ -73,8 +73,8 @@
   <!-- Mobile bottom nav (< lg) -->
   {% block bottom_nav %}{% include "common/nav_bottom.html" %}{% endblock %}
 
-  <!-- Modal overlay container -->
-  <div id="modal-container" class="fixed inset-0 z-50 hidden"></div>
+  <!-- Modal overlay container — content swapped in by HTMX; each modal provides its own overlay -->
+  <div id="modal-container"></div>
 
   <!-- Toast container -->
   <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 lg:bottom-8"></div>

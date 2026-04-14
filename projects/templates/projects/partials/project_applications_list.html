@@ -1,9 +1,9 @@
-{% if applications %}
-<ul>
-{% for app in applications %}
-  <li>{{ app.candidate }} — {{ app.current_state }}</li>
-{% endfor %}
-</ul>
-{% else %}
-<p>지원자가 없습니다.</p>
-{% endif %}
+{# Partial: Application list for a project — swapped via HX-Trigger #}
+<h2 class="mb-4 text-base font-semibold text-slate-200">매칭된 후보자</h2>
+<div class="space-y-3">
+  {% for application in applications %}
+    {% include "projects/partials/application_card.html" with application=application %}
+  {% empty %}
+    <p class="text-sm text-slate-500">아직 매칭된 후보자가 없습니다. 우측 상단의 [후보자 추가] 버튼을 사용하세요.</p>
+  {% endfor %}
+</div>

@@ -1,4 +1,79 @@
-{# Phase 3b placeholder — real UI in Phase 4 #}
-<div class="p-4 text-gray-400 text-sm">
-  [placeholder: drop_application_modal]
+{# Modal: Drop an Application #}
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-drop-application"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm"
+     hx-on:click="if (event.target === this) document.getElementById('modal-container').innerHTML = ''"
+     hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
+  <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+    <header class="mb-4 flex items-center justify-between">
+      <h2 id="modal-title-drop-application" class="text-lg font-semibold text-slate-100">드롭 처리</h2>
+      <button type="button"
+              onclick="document.getElementById('modal-container').innerHTML = ''"
+              class="text-slate-500 hover:text-slate-300">&#10005;</button>
+    </header>
+
+    <div class="mb-4 rounded-lg border border-slate-800 bg-slate-800/50 p-3">
+      <p class="text-sm text-slate-200">{{ application.candidate.name }}</p>
+      <p class="mt-1 text-xs text-slate-400">{{ application.project.title }}</p>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="mb-3 rounded-md border border-red-500/30 bg-red-950/20 p-3 text-xs text-red-300">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form hx-post="{% url 'projects:application_drop' application.id %}"
+          hx-target="#modal-container"
+          hx-swap="innerHTML">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <div>
+          <span class="text-sm text-slate-300">드롭 사유</span>
+          <div class="mt-2 space-y-2">
+            <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+              <input type="radio" name="drop_reason" value="unfit" {% if form.drop_reason.value == "unfit" %}checked{% endif %}
+                     class="border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+              <span class="text-sm text-slate-200">부적합</span>
+            </label>
+            <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+              <input type="radio" name="drop_reason" value="candidate_declined" {% if form.drop_reason.value == "candidate_declined" %}checked{% endif %}
+                     class="border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+              <span class="text-sm text-slate-200">후보자 거절/포기</span>
+            </label>
+            <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+              <input type="radio" name="drop_reason" value="client_rejected" {% if form.drop_reason.value == "client_rejected" %}checked{% endif %}
+                     class="border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+              <span class="text-sm text-slate-200">클라이언트 탈락</span>
+            </label>
+            <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+              <input type="radio" name="drop_reason" value="other" {% if form.drop_reason.value == "other" %}checked{% endif %}
+                     class="border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+              <span class="text-sm text-slate-200">기타</span>
+            </label>
+          </div>
+          {% if form.drop_reason.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ form.drop_reason.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <label class="block">
+          <span class="text-sm text-slate-300">메모 (선택)</span>
+          <textarea name="drop_note" rows="2"
+                    class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">{{ form.drop_note.value|default:"" }}</textarea>
+        </label>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button"
+                onclick="document.getElementById('modal-container').innerHTML = ''"
+                class="rounded-md bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">
+          취소
+        </button>
+        <button type="submit"
+                class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500">
+          드롭
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

@@ -591,6 +591,35 @@
   </section>
   {% endif %}
 
+  <!-- Application section (R1-06) -->
+  {% if candidate_applications is not None %}
+  <section class="bg-white rounded-lg border border-gray-100 p-4 mt-4 mb-3">
+    <h2 class="text-[15px] font-semibold text-gray-800 mb-3">매칭된 프로젝트 ({{ candidate_applications|length }})</h2>
+    <div class="space-y-2">
+      {% for app in candidate_applications %}
+        <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+          <a href="{% url 'projects:project_detail' app.project.id %}"
+             hx-get="{% url 'projects:project_detail' app.project.id %}"
+             hx-target="#main-content" hx-push-url="true"
+             class="text-[14px] font-medium text-gray-900 hover:text-blue-600">
+            {{ app.project.client.name }} &middot; {{ app.project.title }}
+          </a>
+          <p class="mt-1 text-[12px] text-gray-500">
+            상태: {{ app.current_state }}
+            {% if app.dropped_at %}
+              &middot; 드롭 ({{ app.get_drop_reason_display }})
+            {% elif app.hired_at %}
+              &middot; 입사 확정
+            {% endif %}
+          </p>
+        </div>
+      {% empty %}
+        <p class="text-[13px] text-gray-400">아직 매칭된 프로젝트가 없습니다.</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   <!-- Comment section -->
   <div class="mt-6 space-y-4">
     {% include "candidates/partials/_comment_section.html" %}

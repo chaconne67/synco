@@ -1,4 +1,96 @@
-{# Phase 3b placeholder — real UI in Phase 4 #}
-<div class="p-4 text-gray-400 text-sm">
-  [placeholder: action_create_modal]
+{# Modal: Create new ActionItem for an Application #}
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-action-create"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm"
+     hx-on:click="if (event.target === this) document.getElementById('modal-container').innerHTML = ''"
+     hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
+  <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+    <header class="mb-4 flex items-center justify-between">
+      <h2 id="modal-title-action-create" class="text-lg font-semibold text-slate-100">액션 생성</h2>
+      <button type="button"
+              onclick="document.getElementById('modal-container').innerHTML = ''"
+              class="text-slate-500 hover:text-slate-300">&#10005;</button>
+    </header>
+
+    <p class="mb-4 text-xs text-slate-400">{{ application.candidate.name }} · {{ application.project.title }}</p>
+
+    {% if form.non_field_errors %}
+      <div class="mb-3 rounded-md border border-red-500/30 bg-red-950/20 p-3 text-xs text-red-300">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form hx-post="{% url 'projects:action_create' application.id %}"
+          hx-target="#modal-container"
+          hx-swap="innerHTML">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <label class="block">
+          <span class="text-sm text-slate-300">액션 유형</span>
+          <select name="action_type_id"
+                  class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+            <option value="">선택하세요</option>
+            {% for at in action_types %}
+              <option value="{{ at.pk }}" {% if form.action_type_id.value|slugify == at.pk|slugify %}selected{% endif %}>{{ at.label_ko }}</option>
+            {% endfor %}
+          </select>
+          {% if form.action_type_id.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ form.action_type_id.errors.0 }}</p>
+          {% endif %}
+        </label>
+
+        <label class="block">
+          <span class="text-sm text-slate-300">제목 (선택, 비워두면 자동 생성)</span>
+          <input type="text" name="title" value="{{ form.title.value|default:"" }}"
+                 class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+        </label>
+
+        <label class="block">
+          <span class="text-sm text-slate-300">채널</span>
+          <select name="channel"
+                  class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+            <option value="">선택 안 함</option>
+            <option value="in_person" {% if form.channel.value == "in_person" %}selected{% endif %}>대면</option>
+            <option value="video" {% if form.channel.value == "video" %}selected{% endif %}>화상</option>
+            <option value="phone" {% if form.channel.value == "phone" %}selected{% endif %}>전화</option>
+            <option value="kakao" {% if form.channel.value == "kakao" %}selected{% endif %}>카톡</option>
+            <option value="sms" {% if form.channel.value == "sms" %}selected{% endif %}>문자</option>
+            <option value="email" {% if form.channel.value == "email" %}selected{% endif %}>이메일</option>
+            <option value="linkedin" {% if form.channel.value == "linkedin" %}selected{% endif %}>LinkedIn</option>
+            <option value="other" {% if form.channel.value == "other" %}selected{% endif %}>기타</option>
+          </select>
+        </label>
+
+        <div class="grid grid-cols-2 gap-4">
+          <label class="block">
+            <span class="text-sm text-slate-300">예정일</span>
+            <input type="datetime-local" name="scheduled_at" value="{{ form.scheduled_at.value|default:"" }}"
+                   class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+          </label>
+          <label class="block">
+            <span class="text-sm text-slate-300">마감일</span>
+            <input type="datetime-local" name="due_at" value="{{ form.due_at.value|default:"" }}"
+                   class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="text-sm text-slate-300">메모 (선택)</span>
+          <textarea name="note" rows="2"
+                    class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">{{ form.note.value|default:"" }}</textarea>
+        </label>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button"
+                onclick="document.getElementById('modal-container').innerHTML = ''"
+                class="rounded-md bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">
+          취소
+        </button>
+        <button type="submit"
+                class="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
+          생성
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

@@ -1,5 +1,80 @@
-<form method="post" action="{% url 'projects:project_close' project.pk %}">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">프로젝트 종료</button>
-</form>
+{# Modal: Close a project — R1-03: GET handler serves this template #}
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-project-close"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm"
+     hx-on:click="if (event.target === this) document.getElementById('modal-container').innerHTML = ''"
+     hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
+  <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+    <header class="mb-4 flex items-center justify-between">
+      <h2 id="modal-title-project-close" class="text-lg font-semibold text-slate-100">프로젝트 종료</h2>
+      <button type="button"
+              onclick="document.getElementById('modal-container').innerHTML = ''"
+              class="text-slate-500 hover:text-slate-300">&#10005;</button>
+    </header>
+
+    <div class="mb-4 rounded-lg border border-slate-800 bg-slate-800/50 p-3">
+      <p class="text-sm text-slate-200">{{ project.title }}</p>
+      <p class="mt-1 text-xs text-slate-400">{{ project.client.name }}</p>
+    </div>
+
+    {% if active_count %}
+      <div class="mb-4 rounded-md border border-amber-500/30 bg-amber-950/20 p-3 text-xs text-amber-300">
+        현재 활성 Application이 {{ active_count }}건 있습니다. 종료 시 대기 중인 모든 액션이 취소됩니다.
+      </div>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="mb-3 rounded-md border border-red-500/30 bg-red-950/20 p-3 text-xs text-red-300">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form hx-post="{% url 'projects:project_close' project.id %}"
+          hx-target="#modal-container"
+          hx-swap="innerHTML">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <div>
+          <span class="text-sm text-slate-300">결과</span>
+          <div class="mt-2 space-y-2">
+            <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+              <input type="radio" name="result" value="success" {% if form.result.value == "success" %}checked{% endif %}
+                     class="border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+              <span class="text-sm text-slate-200">성공</span>
+            </label>
+            <label class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 p-3 cursor-pointer hover:bg-slate-800/60">
+              <input type="radio" name="result" value="fail" {% if form.result.value == "fail" %}checked{% endif %}
+                     class="border-slate-600 bg-slate-700 text-teal-500 focus:ring-teal-500">
+              <span class="text-sm text-slate-200">실패</span>
+            </label>
+          </div>
+          {% if form.result.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ form.result.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <label class="block">
+          <span class="text-sm text-slate-300">사유 / 메모</span>
+          <textarea name="note" rows="3"
+                    class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                    placeholder="종료 사유를 입력하세요"
+                    required>{{ form.note.value|default:"" }}</textarea>
+          {% if form.note.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ form.note.errors.0 }}</p>
+          {% endif %}
+        </label>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button"
+                onclick="document.getElementById('modal-container').innerHTML = ''"
+                class="rounded-md bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">
+          취소
+        </button>
+        <button type="submit"
+                class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500">
+          프로젝트 종료
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
