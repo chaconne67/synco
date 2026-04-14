@@ -202,3 +202,25 @@
 [20:16:29] TODO_PICKED phase-4a-templates-core action=impl
 [20:16:59] WORKTREE_CREATED phase-4a-templates-core base_sha=c748c16 path=.worktrees/phase-4a-templates-core
 [20:16:59] PROGRESS_UPDATED phase-4a-templates-core impl_status=running
+[20:17:33] SUBAGENT_DISPATCHED subagent-driven-dev slug=phase-4a-templates-core
+[11:25:35] T4a.1 style audit completed — dark theme (bg-slate-950), HTMX patterns, #modal-container in base.html confirmed
+[11:25:35] T4a.2 dashboard.html rewritten — dark-themed overdue/today/upcoming sections
+[11:25:35] T4a.3 dashboard_todo_list.html rewritten — HTMX partial for action lists
+[11:25:35] T4a.4 action_item_card.html rewritten — complete/skip/reschedule buttons with modal triggers
+[11:25:35] T4a.5 project_list.html rewritten — 2-phase kanban (searching/screening/closed)
+[11:25:35] T4a.6 kanban_column.html created — reusable kanban column partial
+[11:25:35] T4a.7 project_card.html created — kanban project card with deadline/action indicators
+[11:25:35] T4a.8 project_detail.html rewritten — header + tab nav + applications list with HX-Trigger refresh
+[11:25:35] T4a.9 application_card.html rewritten — 3-state (active/dropped/hired) with nested actions
+[11:25:35] T4a.model Application.pending_actions property added for N+1-safe template rendering
+[11:25:35] T4a.10 verification: check=PASS, pytest=PASS (595/595), tailwind=PASS, no modal-container dupes
+[11:25:35] T4a.COMMIT 3bbea3d tts(phase-4a-templates-core): build core dashboard/kanban/detail templates
+[20:26:33] SUBAGENT_RETURNED phase-4a-templates-core result=success
+[20:26:33] PROGRESS_UPDATED phase-4a-templates-core impl_status=completed
+[20:26:50] SESSION_CHAIN_SPAWN next=phase-4a-templates-core action=verify
+[20:26:50] SESSION_CHAIN_SPAWN pid=1559737
+[20:26:54] SESSION_END
+[20:29:49] SESSION_START pid=1561263 mode=continue
+[20:29:49] SKILL_LOADED impl-forge-batch mode=continue
+[20:29:49] TODO_PICKED phase-4a-templates-core action=verify
+[20:29:49] PROGRESS_UPDATED phase-4a-templates-core verification_status=running

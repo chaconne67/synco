@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1554757,
+  "last_pid": 1559737,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
@@ -121,7 +121,7 @@
       "slug": "phase-4a-templates-core",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "verification_status": "pending",
+      "verification_status": "running",
       "impl_commit": null,
       "verification_result": null,
       "entry_point": "impl",
