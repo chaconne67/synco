@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1546832,
+  "last_pid": 1554757,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
@@ -120,7 +120,7 @@
     {
       "slug": "phase-4a-templates-core",
       "tempering_status": "completed",
-      "impl_status": "pending",
+      "impl_status": "running",
       "verification_status": "pending",
       "impl_commit": null,
       "verification_result": null,
@@ -132,7 +132,9 @@
       "committed": false,
       "depends_on": [
         "phase-3b-views-crud"
-      ]
+      ],
+      "worktree_path": ".worktrees/phase-4a-templates-core",
+      "base_sha": "c748c16f61bf7b73c790ddd5b5d72c30556d2d56"
     },
     {
       "slug": "phase-4b-templates-modals",
