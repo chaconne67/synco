@@ -1,0 +1,123 @@
+{
+  "topic": "phase-3a-views-base",
+  "document": "docs/forge/project-application-redesign/phase-3a-views-base/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "@membership_required + _get_org() + service signatures",
+              "attack": "All views use @login_required only, missing @membership_required. request.user.organization doesn't exist. Dashboard services require (user, org).",
+              "action": "accepted",
+              "response": "Fully accepted. All views must use @membership_required + _get_org(request). Service calls need org parameter.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "Dashboard URL routing",
+              "attack": "Dashboard routes in projects/urls.py create /projects/dashboard/ instead of /dashboard/. main/urls.py already routes /dashboard/.",
+              "action": "accepted",
+              "response": "Accepted. Dashboard views managed in main/urls.py, not projects/urls.py.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "project_close DB CHECK constraint",
+              "attack": "Saving closed_at without updating status violates project_open_implies_no_closed_at constraint.",
+              "action": "accepted",
+              "response": "Accepted. Must set status=CLOSED explicitly before save.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "forms.py destruction + IDOR",
+              "attack": "Full rewrite deletes forms used by existing views. Missing org-scoped querysets enable IDOR.",
+              "action": "accepted",
+              "response": "Accepted. Preserve existing forms, add org-scoped querysets to new forms.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "project_create drops collision/approval",
+              "attack": "Simplified create drops collision detection and approval workflow. FINAL-SPEC preserves ProjectApproval.",
+              "action": "accepted",
+              "response": "Accepted. Preserve existing collision + approval workflow.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "CRITICAL",
+              "title": "Kanban role-based scoping",
+              "attack": "get_project_kanban_cards(org) returns all org projects. Consultants should see assigned only.",
+              "action": "accepted",
+              "response": "Accepted. Apply owner/consultant filtering in view.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MAJOR",
+              "title": "URL name compatibility",
+              "attack": "Renaming project_update to project_edit breaks existing templates and tests.",
+              "action": "accepted",
+              "response": "Accepted. Keep existing URL names. Add new URLs only.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "project_reopen phase recalculation",
+              "attack": "Phase signal only fires on ActionItem/Application changes, not Project save.",
+              "action": "accepted",
+              "response": "Accepted. Call compute_project_phase() explicitly on reopen.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MAJOR",
+              "title": "project_close pending ActionItem cleanup",
+              "attack": "Manual close leaves pending ActionItems in dashboard.",
+              "action": "accepted",
+              "response": "Accepted. Add closed_at filter to dashboard queries.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-10",
+              "severity": "MAJOR",
+              "title": "close/reopen/edit permission model",
+              "attack": "No permission rules defined for sensitive state changes.",
+              "action": "accepted",
+              "response": "Accepted. Define: create/edit/close/reopen = owner + assigned consultant. delete = owner only.",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 10,
+        "accepted": 10,
+        "rebutted": 0,
+        "escalated": 0
+      }
+    }
+  }
+}
