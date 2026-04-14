@@ -66,3 +66,4 @@ docs/inspection/multi-agent/
 # Local PDFs / binaries
 *.pdf
 !docs/**/*.pdf
+.tts-base-sha

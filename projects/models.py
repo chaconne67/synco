@@ -290,6 +290,11 @@ class Application(BaseModel):
                 fields=["project", "candidate"],
                 name="unique_application_per_project_candidate",
             ),
+            models.UniqueConstraint(
+                fields=["project"],
+                condition=models.Q(hired_at__isnull=False),
+                name="unique_hired_per_project",
+            ),
         ]
         indexes = [
             models.Index(fields=["project", "dropped_at", "hired_at"]),

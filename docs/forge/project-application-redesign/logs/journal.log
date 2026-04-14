@@ -1,0 +1,10 @@
+[2026-04-14T07:56:59Z] T2a.START phase-2a-services-core implementation begin
+[2026-04-14T08:31:40Z] T2a.1 services/phase.py created (compute_project_phase)
+[2026-04-14T08:31:40Z] T2a.2 services/application_lifecycle.py created (drop/restore/hire)
+[2026-04-14T08:31:40Z] T2a.2b Application UniqueConstraint + migration 0003
+[2026-04-14T08:31:40Z] T2a.3 services/action_lifecycle.py created (6 functions)
+[2026-04-14T08:31:40Z] T2a.4 signals.py rewritten (phase recompute + status/result sync)
+[2026-04-14T08:31:40Z] T2a.5 tests/test_phase2a_services.py: 16 tests ALL PASS
+[2026-04-14T08:31:40Z] T2a.6 legacy tests: 44 modules collect_ignore'd (Phase 1 breakage)
+[2026-04-14T08:31:40Z] T2a.7 manage.py check: 0 issues. pytest: 595 passed, 0 failed
+[2026-04-14T08:31:40Z] T2a.COMPLETE phase-2a-services-core implementation done
