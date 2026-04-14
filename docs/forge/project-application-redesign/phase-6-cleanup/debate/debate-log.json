@@ -1,0 +1,123 @@
+{
+  "topic": "phase-6-cleanup",
+  "document": "docs/forge/project-application-redesign/phase-6-cleanup/debate/impl-plan.md",
+  "stages": {
+    "impl-plan": {
+      "status": "completed",
+      "rounds": [
+        {
+          "round": 1,
+          "issues": [
+            {
+              "id": "R1-01",
+              "severity": "CRITICAL",
+              "title": "ProjectStatus를 레거시로 취급 (active enum 삭제 위험)",
+              "attack": "계획서가 ProjectStatus 전체 0건을 목표로 하나, OPEN/CLOSED는 활성 enum이므로 삭제하면 런타임 import/signal/view 전부 파손",
+              "action": "accepted",
+              "response": "models.py:27, views.py:72,510,547 등 20+ 활성 참조 확인. 제거된 10-state 멤버만 대상으로 수정",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-02",
+              "severity": "CRITICAL",
+              "title": "스캔 범위 projects/만 — tests, conftest, commands 누락",
+              "attack": "grep 범위가 projects/에 한정, tests/ 20개 파일과 management commands에 Contact/Offer 참조 잔존",
+              "action": "accepted",
+              "response": "tests/ 20파일, check_due_actions.py, send_reminders.py 확인. 레포 전체 스캔으로 확대",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-03",
+              "severity": "CRITICAL",
+              "title": "Management commands 정리 범위 미포함",
+              "attack": "check_due_actions.py에서 Contact import, send_reminders.py에서 Contact/Interview/Submission import. 비-HTTP 진입점 크래시 위험",
+              "action": "accepted",
+              "response": "T6.9로 별도 태스크 추가. telegram, voice services도 포함",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-04",
+              "severity": "CRITICAL",
+              "title": "업그레이드 경로 미검증 — fresh DB만 테스트",
+              "attack": "docker compose down -v로 DB 재생성만 검증. 기존 DB 업그레이드 시 stale content type/permission 잔존 위험",
+              "action": "partial",
+              "response": "remove_stale_contenttypes --dry-run 추가 수용. 전체 업그레이드 리허설은 Phase 6 범위 밖, deploy.sh가 이미 migration 검증",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-05",
+              "severity": "CRITICAL",
+              "title": "템플릿 삭제 시 역참조 맵 없음",
+              "attack": "dash_full.html이 dashboard.html:12와 views.py:2105에서 활성 사용 중인데 삭제 대상에 포함",
+              "action": "accepted",
+              "response": "역참조 스캔 필수 선행 추가. dash_full.html 삭제 금지로 변경",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-06",
+              "severity": "MAJOR",
+              "title": "makemigrations --check 게이트 누락",
+              "attack": "Phase 6이 실수로 모델 변경하면 migration drift 발생. 계획서에 검증 단계 없음",
+              "action": "accepted",
+              "response": "T6.10a로 별도 단계 추가",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-07",
+              "severity": "MAJOR",
+              "title": "레거시 데이터 페이로드 (JSON callback_data) 미처리",
+              "attack": "AutoAction.data, Notification.callback_data에 레거시 contact/offer 참조 잔존. 백그라운드 잡 크래시 가능",
+              "action": "rebutted",
+              "response": "코드 경로 제거로 old data는 inert. 테이블은 Phase 6에서 삭제하지 않으므로 data migration은 별도 단계 분리가 안전",
+              "evidence_type": "logical_reasoning",
+              "author_accepted": false
+            },
+            {
+              "id": "R1-08",
+              "severity": "MAJOR",
+              "title": "Contact/Offer grep 패턴 불완전",
+              "attack": "line-based grep이 멀티라인 import 미감지. rg word boundary 스캔 필요",
+              "action": "accepted",
+              "response": "rg -n '\\b(Contact|Offer)\\b'로 교체",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-09",
+              "severity": "MAJOR",
+              "title": "레거시 status 문자열 스캔 불완전",
+              "attack": "new, searching, interviewing 등 누락. view_filters.html:13에 searching 잔존",
+              "action": "accepted",
+              "response": "전체 10-state 제거 대상 목록으로 확대",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            },
+            {
+              "id": "R1-10",
+              "severity": "MAJOR",
+              "title": "URL 정리 범위 미흡",
+              "attack": "reverse(), {% url %}, hx-get 역참조 미분석. 레거시 라우트 삭제 시 NoReverseMatch 위험",
+              "action": "accepted",
+              "response": "T6.8 확장: 역참조 분석 포함",
+              "evidence_type": "code_reference",
+              "author_accepted": true
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "rounds": 1,
+        "issues": 10,
+        "accepted": 8,
+        "rebutted": 1,
+        "escalated": 0
+      }
+    }
+  }
+}
