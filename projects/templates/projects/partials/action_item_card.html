@@ -1,4 +1,66 @@
-{# Phase 3b placeholder — real UI in Phase 4 #}
-<div class="p-4 text-gray-400 text-sm">
-  [placeholder: action_item_card]
+{% load humanize %}
+<div id="action-{{ action.id }}"
+     class="rounded-xl border border-slate-800 bg-slate-900/80 p-4
+            {% if variant == 'overdue' %}border-red-500/40{% endif %}">
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex-1">
+      <div class="flex items-center gap-2">
+        <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
+          {{ action.action_type.label_ko }}
+        </span>
+        {% if action.channel %}
+          <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            {{ action.get_channel_display }}
+          </span>
+        {% endif %}
+      </div>
+      <p class="mt-2 text-sm font-medium text-slate-100">{{ action.title }}</p>
+      {% if action.application %}
+        <p class="mt-1 text-xs text-slate-400">
+          <a href="{% url 'projects:project_detail' action.application.project.id %}"
+             hx-get="{% url 'projects:project_detail' action.application.project.id %}"
+             hx-target="#main-content" hx-push-url="true"
+             class="hover:text-teal-300">
+            {{ action.application.project.client.name }} · {{ action.application.project.title }}
+          </a>
+          · {{ action.application.candidate.name }}
+        </p>
+      {% endif %}
+      {% if action.due_at %}
+        <p class="mt-2 text-xs {% if variant == 'overdue' %}text-red-300{% else %}text-slate-500{% endif %}">
+          마감 {{ action.due_at|naturaltime }}
+        </p>
+      {% endif %}
+      {% if action.note %}
+        <p class="mt-1 text-xs text-slate-500">{{ action.note }}</p>
+      {% endif %}
+      {% if action.status == 'done' and action.result %}
+        <p class="mt-2 rounded bg-slate-800/50 p-2 text-xs text-slate-300">
+          {{ action.result }}
+        </p>
+      {% endif %}
+    </div>
+    {% if action.status == 'pending' %}
+      <div class="flex flex-col gap-2 shrink-0">
+        <button hx-get="{% url 'projects:action_complete' action.id %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="rounded-md bg-teal-600 px-3 py-1 text-xs font-medium text-white hover:bg-teal-500">
+          완료
+        </button>
+        <button hx-get="{% url 'projects:action_skip' action.id %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="rounded-md bg-slate-700 px-3 py-1 text-xs text-slate-200 hover:bg-slate-600">
+          건너뛰기
+        </button>
+        <button hx-get="{% url 'projects:action_reschedule' action.id %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="rounded-md bg-slate-700 px-3 py-1 text-xs text-slate-200 hover:bg-slate-600">
+          나중에
+        </button>
+      </div>
+    {% endif %}
+  </div>
 </div>

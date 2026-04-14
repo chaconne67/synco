@@ -324,6 +324,18 @@ class Application(BaseModel):
             return "matched"
         return STATE_FROM_ACTION_TYPE.get(latest_done.action_type.code, "in_progress")
 
+    @property
+    def pending_actions(self):
+        """Pending ActionItems. Works with prefetch_related cache."""
+        # If action_items were prefetched, filter in Python to avoid N+1
+        if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
+            return [
+                ai
+                for ai in self.action_items.all()
+                if ai.status == ActionItemStatus.PENDING
+            ]
+        return self.action_items.filter(status=ActionItemStatus.PENDING)
+
 
 # ===========================================================================
 # ActionItem

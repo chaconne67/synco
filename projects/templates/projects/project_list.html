@@ -1,32 +1,33 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+{% block title %}프로젝트 — synco{% endblock %}
 
-{% block title %}프로젝트 관리 — synco{% endblock %}
+{% block breadcrumb_page %}
+<span class="text-slate-500">/</span>
+<span class="text-white font-semibold">프로젝트</span>
+{% endblock %}
 
 {% block content %}
-<div class="p-4 lg:p-8 space-y-6">
+<div class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="flex items-center justify-between border-b border-slate-800 px-8 py-6">
+    <h1 class="text-2xl font-semibold">프로젝트</h1>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'projects:project_create' %}"
+         hx-get="{% url 'projects:project_create' %}"
+         hx-target="#main-content" hx-push-url="true"
+         class="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
+        + 새 프로젝트
+      </a>
+    </div>
+  </header>
 
-  <!-- Page Header -->
-  <div class="flex items-center justify-between">
-    <h1 class="text-heading font-bold">프로젝트</h1>
-    {% if membership and membership.role == 'owner' %}
-    <a href="{% url 'projects:project_create' %}"
-       hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="bg-primary text-white font-semibold py-2 px-4 rounded-lg text-[15px] hover:bg-primary-dark transition">
-      + 등록
-    </a>
-    {% endif %}
-  </div>
-
-  <!-- View Tabs -->
-  {% include "projects/partials/view_tabs.html" %}
-
-  <!-- Filters -->
   {% include "projects/partials/view_filters.html" %}
 
-  <!-- View Content -->
-  <div id="view-content">
-    {% include view_template %}
-  </div>
-
+  <main class="px-8 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {% include "projects/partials/kanban_column.html" with title="서칭" cards=kanban.searching column_key="searching" %}
+      {% include "projects/partials/kanban_column.html" with title="심사" cards=kanban.screening column_key="screening" %}
+      {% include "projects/partials/kanban_column.html" with title="종료" cards=kanban.closed column_key="closed" %}
+    </div>
+  </main>
 </div>
 {% endblock %}

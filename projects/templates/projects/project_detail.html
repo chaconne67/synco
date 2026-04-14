@@ -1,80 +1,92 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+{% load humanize static %}
 
 {% block title %}{{ project.title }} — synco{% endblock %}
 
+{% block breadcrumb_page %}
+<span class="text-slate-500">/</span>
+<a href="{% url 'projects:project_list' %}"
+   hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
+   class="text-slate-400 hover:text-slate-200">프로젝트</a>
+<span class="text-slate-500">/</span>
+<span class="text-white font-semibold">{{ project.title|truncatechars:20 }}</span>
+{% endblock %}
+
 {% block content %}
-<div class="p-4 lg:p-8 space-y-4" data-project-pk="{{ project.pk }}">
-
-  <!-- Back + Actions -->
-  <div class="flex items-center justify-between">
-    <a href="{% url 'projects:project_list' %}"
-       hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
-       class="flex items-center gap-1 text-[15px] text-gray-500 hover:text-gray-700 transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-      목록
-    </a>
-    <div class="flex items-center gap-2">
-      <a href="{% url 'projects:project_update' project.pk %}"
-         hx-get="{% url 'projects:project_update' project.pk %}" hx-target="#main-content" hx-push-url="true"
-         class="text-[15px] text-primary font-medium hover:text-primary-dark transition">
-        수정
-      </a>
-      <form method="post" action="{% url 'projects:project_delete' project.pk %}"
-            onsubmit="return confirm('정말 삭제하시겠습니까?');"
-            class="inline">
-        {% csrf_token %}
-        <button type="submit"
-                class="text-[15px] text-red-500 font-medium hover:text-red-700 transition">
-          삭제
+<div class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="border-b border-slate-800 px-8 py-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-sm text-slate-400">{{ project.client.name }}</p>
+        <h1 class="mt-1 text-2xl font-semibold">{{ project.title }}</h1>
+        <div class="mt-2 flex items-center gap-3 text-xs text-slate-400">
+          <span class="rounded-full bg-slate-800 px-2 py-0.5">
+            {{ project.get_phase_display }}
+          </span>
+          <span class="rounded-full bg-slate-800 px-2 py-0.5">
+            {{ project.get_status_display }}
+          </span>
+          {% if project.deadline %}
+            <span>마감 {{ project.deadline|date:"Y-m-d" }}</span>
+          {% endif %}
+          <span>매칭 {{ applications|length }}건</span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 items-end">
+        <button hx-get="{% url 'projects:project_add_candidate' project.id %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
+          + 후보자 추가
         </button>
-      </form>
+        <a href="{% url 'projects:project_update' project.id %}"
+           hx-get="{% url 'projects:project_update' project.id %}"
+           hx-target="#main-content" hx-push-url="true"
+           class="text-xs text-slate-400 hover:text-slate-200">JD 편집</a>
+        {% if project.status == "open" %}
+          <button hx-get="{% url 'projects:project_close' project.id %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML"
+                  class="text-xs text-slate-400 hover:text-red-300">프로젝트 종료</button>
+        {% endif %}
+      </div>
     </div>
-  </div>
+  </header>
 
-  {% if error_message %}
-  <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-    <p class="text-[15px] text-red-600">{{ error_message }}</p>
-  </div>
-  {% endif %}
-
-  <!-- Project Header -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-[18px] font-bold text-gray-900">
-        {{ project.client.name }} · {{ project.title }}
-      </h1>
-      <p class="text-[14px] text-gray-500 mt-0.5">
-        고객사: {{ project.client.name }} |
-        등록자: {% if project.created_by %}{{ project.created_by.get_full_name|default:project.created_by.username }}{% else %}-{% endif %} |
-        의뢰일: {{ project.created_at|date:"m/d" }}
-      </p>
+  {# Tab structure — Applications tab active, Timeline/JD placeholders #}
+  <nav class="border-b border-slate-800 px-8">
+    <div class="flex gap-6">
+      <button class="py-3 text-sm font-medium text-teal-400 border-b-2 border-teal-400"
+              data-tab="applications">
+        후보자 ({{ applications|length }})
+      </button>
+      <button class="py-3 text-sm font-medium text-slate-500 hover:text-slate-300"
+              data-tab="timeline" disabled>
+        타임라인
+      </button>
+      <button class="py-3 text-sm font-medium text-slate-500 hover:text-slate-300"
+              data-tab="jd" disabled>
+        JD / 메타
+      </button>
     </div>
-    <span class="text-[13px] px-2 py-0.5 rounded-full
-      {% if project.status == 'new' %}bg-blue-50 text-blue-600
-      {% elif project.status == 'searching' %}bg-yellow-50 text-yellow-600
-      {% elif project.status == 'recommending' %}bg-purple-50 text-purple-600
-      {% elif project.status == 'interviewing' %}bg-indigo-50 text-indigo-600
-      {% elif project.status == 'negotiating' %}bg-green-50 text-green-600
-      {% elif project.status == 'closed_success' %}bg-emerald-50 text-emerald-600
-      {% elif project.status == 'closed_fail' %}bg-red-50 text-red-600
-      {% elif project.status == 'closed_cancel' %}bg-gray-50 text-gray-600
-      {% elif project.status == 'on_hold' %}bg-orange-50 text-orange-600
-      {% elif project.status == 'pending_approval' %}bg-amber-50 text-amber-600
-      {% else %}bg-gray-50 text-gray-600{% endif %}">
-      {{ project.get_status_display }}
-    </span>
-  </div>
+  </nav>
 
-  <!-- Tab Bar -->
-  {% include "projects/partials/detail_tab_bar.html" %}
+  <main class="px-8 py-6" id="tab-content">
+    <div id="project-applications-container"
+         hx-get="{% url 'projects:project_applications' project.id %}"
+         hx-trigger="actionChanged from:body, applicationChanged from:body"
+         hx-swap="innerHTML">
+      <h2 class="mb-4 text-base font-semibold text-slate-200">매칭된 후보자</h2>
+      <div class="space-y-3">
+        {% for application in applications %}
+          {% include "projects/partials/application_card.html" with application=application %}
+        {% empty %}
+          <p class="text-sm text-slate-500">아직 매칭된 후보자가 없습니다. 우측 상단의 [후보자 추가] 버튼을 사용하세요.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
 
-  <!-- Tab Content -->
-  <div id="tab-content">
-    {% include "projects/partials/tab_overview.html" %}
-  </div>
-
+  {# modal-container is in common/base.html — no duplicate here #}
 </div>
-{% load static %}
-<script src="{% static 'js/context-autosave.js' %}"></script>
-<script src="{% static 'js/tab-navigation.js' %}"></script>
 {% endblock %}

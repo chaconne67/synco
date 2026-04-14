@@ -1,9 +1,7 @@
-{% if actions %}
-<ul>
-{% for action in actions %}
-  <li>{{ action.title }} ({{ action.get_status_display }})</li>
-{% endfor %}
-</ul>
-{% else %}
-<p>{{ scope }} 일정이 없습니다.</p>
-{% endif %}
+<div class="space-y-3">
+  {% for action in actions %}
+    {% include "projects/partials/action_item_card.html" with action=action variant=scope %}
+  {% empty %}
+    <p class="text-sm text-slate-500">표시할 항목이 없습니다.</p>
+  {% endfor %}
+</div>
