@@ -285,3 +285,5 @@
 [21:16:30] PROGRESS_UPDATED phase-4b-templates-modals verification_status=running
 [21:17:03] SUBAGENT_DISPATCHED impl-check slug=phase-4b-templates-modals
 [2026-04-14T12:24:20Z] IMPL_CHECK phase-4b-templates-modals: 14 checklist items verified. Fixed: (1) max-h-[85vh]->max-h-[90vh] in 8 modals, (2) project_close HX-Redirect for HTMX POST, (3) toast-container z-[60]. Accepted deviations: dash_full.html kept (in active use), kanban.js emptied not deleted (plan allows). 595/595 tests PASS, manage.py check clean, ruff clean.
+[21:25:11] SUBAGENT_RETURNED phase-4b-templates-modals result=success
+[21:25:11] PROGRESS_UPDATED phase-4b-templates-modals verification_status=completed verification_result=PASS_14/14
