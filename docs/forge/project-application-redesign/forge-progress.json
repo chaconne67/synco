@@ -5,7 +5,7 @@
   "batch_status": "running",
   "execution_mode": "background",
   "scope": "full",
-  "last_pid": 1467728,
+  "last_pid": 1484410,
   "execution_order": [
     "phase-1-models",
     "phase-2a-services-core",
@@ -45,7 +45,7 @@
       "slug": "phase-2a-services-core",
       "tempering_status": "completed",
       "impl_status": "completed",
-      "verification_status": "pending",
+      "verification_status": "running",
       "impl_commit": "632fccb",
       "verification_result": null,
       "entry_point": "impl",
