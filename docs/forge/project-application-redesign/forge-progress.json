@@ -177,16 +177,16 @@
     {
       "slug": "phase-6-cleanup",
       "tempering_status": "completed",
-      "impl_status": "running",
+      "impl_status": "completed",
       "verification_status": "pending",
-      "impl_commit": null,
+      "impl_commit": "ca961a6",
       "verification_result": null,
       "entry_point": "impl",
       "complexity": "small",
       "artifacts": [
         "impl-plan-agreed.md"
       ],
-      "committed": false,
+      "committed": true,
       "depends_on": [
         "phase-5-tests"
       ],
