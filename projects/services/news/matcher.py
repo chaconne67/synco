@@ -21,11 +21,7 @@ RELEVANCE_THRESHOLD = 0.5
 
 # Statuses considered "active" for matching
 ACTIVE_STATUSES = [
-    ProjectStatus.NEW,
-    ProjectStatus.SEARCHING,
-    ProjectStatus.RECOMMENDING,
-    ProjectStatus.INTERVIEWING,
-    ProjectStatus.NEGOTIATING,
+    ProjectStatus.OPEN,
 ]
 
 

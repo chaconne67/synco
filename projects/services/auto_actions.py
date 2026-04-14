@@ -10,7 +10,7 @@ import logging
 
 from django.db import transaction
 
-from projects.models import ActionStatusChoice, AutoAction
+from projects.models import ActionStatusChoice, ActionType, Application, AutoAction
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,6 @@ def _apply_candidate_search(action, user):
 
 def _apply_submission_draft(action, user):
     """Create or update SubmissionDraft with auto_draft_json."""
-    from projects.models import SubmissionDraft
 
     # Phase 1: Submission no longer has project/candidate FK.
     # This handler is legacy and will be removed in Phase 6.
@@ -180,3 +179,16 @@ def dismiss_action(action_id, user) -> AutoAction:
         action.dismissed_by = user
         action.save(update_fields=["status", "dismissed_by", "updated_at"])
     return action
+
+
+# --- New helper for Application-based workflow ---
+
+DEFAULT_FIRST_ACTION_CODE = "reach_out"
+
+
+def suggest_initial_action(application: Application) -> ActionType | None:
+    """Application 생성 직후 UI에 제안할 첫 ActionType. 생성은 하지 않음."""
+    try:
+        return ActionType.objects.get(code=DEFAULT_FIRST_ACTION_CODE, is_active=True)
+    except ActionType.DoesNotExist:
+        return None

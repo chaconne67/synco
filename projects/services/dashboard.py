@@ -1,143 +1,128 @@
 """대시보드 데이터 집계 서비스.
 
-Phase 1: Contact model deleted, ProjectStatus changed to 2-state.
-Phase 2-6: Will be rewritten with Application/ActionItem-based queries.
+Phase 2b: Rewritten with Application/ActionItem-based queries.
 """
 
 from __future__ import annotations
 
-from django.db.models import Q, QuerySet
+from datetime import timedelta
+
+from django.db.models import Count, Q
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import Organization, User
 from projects.models import (
-    Interview,
+    ActionItem,
+    ActionItemStatus,
     Project,
-    ProjectApproval,
+    ProjectPhase,
     ProjectStatus,
-    Submission,
 )
 
 
-def _my_active_projects(user: User, org: Organization) -> QuerySet:
-    """현재 사용자의 활성 프로젝트."""
+def get_today_actions(user: User, org: Organization):
+    """해당 사용자의 오늘 할 일 (scheduled_at 오늘 또는 due_at 오늘, overdue 제외)."""
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+
+    return ActionItem.objects.filter(
+        assigned_to=user,
+        application__project__organization=org,
+        status=ActionItemStatus.PENDING,
+    ).filter(
+        Q(scheduled_at__gte=today_start, scheduled_at__lt=today_end)
+        | Q(due_at__gte=max(now, today_start), due_at__lt=today_end)
+    ).select_related("application__project", "application__candidate", "action_type")
+
+
+def get_overdue_actions(user: User, org: Organization):
+    """해당 사용자의 마감 지난 액션."""
+    now = timezone.now()
+    return ActionItem.objects.filter(
+        assigned_to=user,
+        application__project__organization=org,
+        status=ActionItemStatus.PENDING,
+        due_at__lt=now,
+    ).select_related("application__project", "application__candidate", "action_type")
+
+
+def get_upcoming_actions(user: User, org: Organization, days=3):
+    """해당 사용자의 3일 내 예정 액션 (scheduled_at 또는 due_at 기준)."""
+    now = timezone.now()
+    soon = now + timedelta(days=days)
     return (
-        Project.objects.filter(organization=org)
-        .filter(Q(assigned_consultants=user) | Q(created_by=user))
-        .filter(status=ProjectStatus.OPEN)
+        ActionItem.objects.filter(
+            assigned_to=user,
+            application__project__organization=org,
+            status=ActionItemStatus.PENDING,
+        )
+        .filter(
+            Q(scheduled_at__gte=now, scheduled_at__lte=soon)
+            | Q(due_at__gte=now, due_at__lte=soon)
+        )
+        .select_related(
+            "application__project", "application__candidate", "action_type"
+        )
         .distinct()
     )
 
 
-def get_today_actions(user: User, org: Organization) -> list[dict]:
-    """긴급도 자동 산정 후 오늘의 액션 목록 반환.
-
-    Phase 1 stub — urgency system will be rebuilt with ActionItem.
-    """
-    return []
-
-
-def get_weekly_schedule(user: User, org: Organization) -> list[dict]:
-    """이번 주 일정. Phase 1 stub."""
-    return []
-
-
-def get_pipeline_summary(user: User, org: Organization) -> dict:
-    """내 프로젝트 상태별 카운트.
-
-    Phase 1: Simplified to open/closed counts only.
-    """
-    my_projects = (
+def get_project_kanban_cards(org: Organization):
+    """2-phase 칸반에 필요한 카드 데이터."""
+    now = timezone.now()
+    projects = (
         Project.objects.filter(organization=org)
-        .filter(Q(assigned_consultants=user) | Q(created_by=user))
-        .distinct()
+        .annotate(
+            active_count=Count(
+                "applications",
+                filter=Q(
+                    applications__dropped_at__isnull=True,
+                    applications__hired_at__isnull=True,
+                ),
+            ),
+        )
+        .select_related("client")
+        .prefetch_related("assigned_consultants")
     )
 
-    open_count = my_projects.filter(status=ProjectStatus.OPEN).count()
-    closed_count = my_projects.filter(status=ProjectStatus.CLOSED).count()
-
-    return {
-        "status_counts": {ProjectStatus.OPEN: open_count},
-        "total_active": open_count,
-        "month_closed": closed_count,
+    cards = {
+        ProjectPhase.SEARCHING: [],
+        ProjectPhase.SCREENING: [],
+        "closed": [],
     }
 
-
-def get_recent_activities(user: User, org: Organization, limit: int = 10) -> list[dict]:
-    """최근 활동 로그 반환.
-
-    Phase 1: Contact removed, Submission no longer has project/candidate FK.
-    Only recent project creations are returned.
-    """
-    my_projects = (
-        Project.objects.filter(organization=org)
-        .filter(Q(assigned_consultants=user) | Q(created_by=user))
-        .distinct()
-    )
-    activities: list[dict] = []
-
-    recent_projects = (
-        my_projects.select_related("client").order_by("-created_at")[:limit]
-    )
-    for proj in recent_projects:
-        client_name = proj.client.name if proj.client else ""
-        activities.append(
-            {
-                "type": "project",
-                "timestamp": proj.created_at,
-                "description": f"{client_name} {proj.title} 프로젝트 등록",
-            }
+    for project in projects:
+        pending_actions = ActionItem.objects.filter(
+            application__project=project,
+            status=ActionItemStatus.PENDING,
         )
+        overdue_count = pending_actions.filter(due_at__lt=now).count()
+        pending_count = pending_actions.count()
 
-    activities.sort(key=lambda a: a["timestamp"], reverse=True)
-    return activities[:limit]
+        card = {
+            "project": project,
+            "active_count": project.active_count,
+            "pending_actions_count": pending_count,
+            "overdue_count": overdue_count,
+            "deadline": project.deadline,
+            "days_until_deadline": (
+                (project.deadline - now.date()).days if project.deadline else None
+            ),
+        }
 
+        if project.status == ProjectStatus.CLOSED:
+            cards["closed"].append(card)
+        else:
+            cards[project.phase].append(card)
 
-def get_team_summary(admin_user: User, org: Organization) -> dict:
-    """팀 전체 현황 + KPI (OWNER 전용).
-
-    Phase 1: Contact model deleted. Simplified to project counts only.
-    """
-    members = Membership.objects.filter(
-        organization=org,
-        role__in=[Membership.Role.OWNER, Membership.Role.CONSULTANT],
-    ).select_related("user")
-
-    consultants = []
-
-    for member in members:
-        user = member.user
-
-        active_count = (
-            Project.objects.filter(organization=org)
-            .filter(Q(assigned_consultants=user) | Q(created_by=user))
-            .filter(status=ProjectStatus.OPEN)
-            .distinct()
-            .count()
-        )
-
-        consultants.append(
-            {
-                "user": user,
-                "active": active_count,
-                "contacts": 0,
-                "submissions": 0,
-                "interviews": 0,
-                "closed": 0,
-            }
-        )
-
-    return {
-        "consultants": consultants,
-        "kpi": {
-            "contact_to_submission": 0,
-            "submission_to_interview": 0,
-        },
-    }
+    return cards
 
 
-def get_pending_approvals(org: Organization) -> QuerySet:
+def get_pending_approvals(org: Organization):
     """미처리 승인 요청 목록 (OWNER 전용)."""
+    from projects.models import ProjectApproval
+
     return ProjectApproval.objects.filter(
         project__organization=org,
         status=ProjectApproval.Status.PENDING,

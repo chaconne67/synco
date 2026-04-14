@@ -7,7 +7,44 @@ from projects.models import (
     ActionItemStatus,
     ActionType,
     Application,
+    Interview,
 )
+
+
+class InvalidTransition(Exception):
+    """허용되지 않는 상태 전환."""
+
+    pass
+
+
+# --- Interview Result Transition ---
+
+INTERVIEW_RESULT_TRANSITIONS = {
+    Interview.Result.PENDING: {
+        Interview.Result.PASSED,
+        Interview.Result.ON_HOLD,
+        Interview.Result.FAILED,
+    },
+    # 합격/보류/탈락은 종료 상태 — 추가 전환 불가
+}
+
+
+def apply_interview_result(
+    interview: Interview, result: str, feedback: str
+) -> Interview:
+    """대기 -> 합격/보류/탈락. 면접 결과 저장."""
+    allowed = INTERVIEW_RESULT_TRANSITIONS.get(interview.result, set())
+    if result not in allowed:
+        raise InvalidTransition(
+            f"'{interview.get_result_display()}' 상태에서는 결과를 변경할 수 없습니다."
+        )
+    if result not in Interview.Result.values:
+        raise InvalidTransition(f"유효하지 않은 결과입니다: {result}")
+
+    interview.result = result
+    interview.feedback = feedback
+    interview.save(update_fields=["result", "feedback"])
+    return interview
 
 
 def create_action(

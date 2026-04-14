@@ -1,19 +1,49 @@
 """긴급도 자동 산정 로직.
 
-Phase 1: Contact/Offer models deleted, old ProjectStatus replaced.
-Phase 2-6: Will be rewritten with ActionItem-based urgency (due_at, overdue).
+Phase 2b: Stubs updated for ActionItem-based urgency.
+Contact/Offer models deleted, old ProjectStatus replaced.
 """
 
 from __future__ import annotations
 
-from projects.models import Project
+from django.utils import timezone
+
+from projects.models import ActionItem, ActionItemStatus, Project
 
 
 def collect_all_actions(project: Project) -> list[dict]:
-    """Phase 1 stub — urgency system will be rebuilt with ActionItem."""
-    return []
+    """Collect pending action items with urgency metadata."""
+    now = timezone.now()
+    items = ActionItem.objects.filter(
+        application__project=project,
+        status=ActionItemStatus.PENDING,
+    ).select_related("action_type", "application__candidate")
+
+    result = []
+    for item in items:
+        is_overdue = item.due_at is not None and item.due_at < now
+        result.append(
+            {
+                "action_item": item,
+                "title": item.title,
+                "due_at": item.due_at,
+                "overdue": is_overdue,
+            }
+        )
+    return result
 
 
 def compute_project_urgency(project: Project) -> dict | None:
-    """Phase 1 stub — urgency system will be rebuilt with ActionItem."""
-    return None
+    """Compute project urgency based on ActionItem due dates."""
+    actions = collect_all_actions(project)
+    if not actions:
+        return None
+
+    overdue_count = sum(1 for a in actions if a["overdue"])
+    pending_count = len(actions)
+
+    return {
+        "pending_count": pending_count,
+        "overdue_count": overdue_count,
+        "has_overdue": overdue_count > 0,
+    }

@@ -47,7 +47,7 @@ def approve_project(approval: ProjectApproval, admin_user) -> None:
     approval.save(update_fields=["status", "decided_by", "decided_at"])
 
     project = approval.project
-    project.status = ProjectStatus.NEW
+    project.status = ProjectStatus.OPEN
     project.save(update_fields=["status"])
 
     # Notify requester
@@ -163,8 +163,8 @@ def cancel_approval(approval: ProjectApproval) -> None:
 
 def _safe_delete_pending_project(project: Project) -> None:
     """Delete a pending_approval project. Raises if downstream data exists."""
-    if project.contacts.exists() or project.submissions.exists():
+    if project.applications.exists():
         raise InvalidApprovalTransition(
-            "하위 데이터(컨택/제출)가 존재하여 삭제할 수 없습니다."
+            "하위 데이터(지원)가 존재하여 삭제할 수 없습니다."
         )
     project.delete()

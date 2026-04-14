@@ -9,9 +9,7 @@ from projects.models import Project, ProjectStatus
 
 # Closed statuses -- projects with these statuses are excluded from collision checks
 CLOSED_STATUSES = {
-    ProjectStatus.CLOSED_SUCCESS,
-    ProjectStatus.CLOSED_FAIL,
-    ProjectStatus.CLOSED_CANCEL,
+    ProjectStatus.CLOSED,
 }
 
 

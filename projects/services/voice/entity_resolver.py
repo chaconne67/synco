@@ -15,7 +15,7 @@ from typing import Any
 
 from accounts.models import Organization
 from candidates.models import Candidate
-from projects.models import Project, Submission
+from projects.models import Project
 
 
 @dataclasses.dataclass
