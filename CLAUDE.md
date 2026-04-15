@@ -41,14 +41,6 @@ uv run ruff check .         # 린트
 uv run ruff format .        # 포맷
 ```
 
-## 수정 후 검증 — synco 특유 포인트
-
-UI/frontend 수정 시 브라우저로 실제 동작을 확인한 뒤 보고하는 일반 원칙은 기본 시스템 프롬프트에 있다. synco에서는 여기에 다음만 추가된다:
-
-- **UI 수정 시 브라우저 검증은 `/browse` 스킬** 사용 (단순 화면 진입만으로는 부족 — 수정된 요소를 실제로 클릭·전송).
-- **마이그레이션** 적용은 `uv run python manage.py migrate --plan` → 적용 → `showmigrations` 로 최종 상태 보고.
-- **테스트가 없는 백엔드 수정**은 `uv run python manage.py shell` 재현 또는 `/browse` 중 하나로 관찰. 재현이 외부 상태 변경(이메일·텔레그램·Drive 쓰기 등)을 유발하면 재현 대신 "관찰 포인트 + 대안 관찰 방법"을 보고.
-
 ## Conventions
 
 - **UI 텍스트:** 한국어 존대말 ("등록되었습니다")
@@ -114,6 +106,7 @@ uv run python manage.py runserver 0.0.0.0:8000
 - `docker compose up -d`로 DB만 뜸. web 컨테이너는 `profiles: ["deploy"]`로 개발 시 자동 시작 안 됨
 - LLM 호출(`common/llm.py`)이 호스트의 `claude` CLI를 subprocess로 부르기 때문에 Django를 컨테이너가 아닌 호스트에서 실행해야 인증·권한이 그대로 재사용된다
 - 개발 DB는 로컬 컨테이너, 운영 DB와 분리
+- **UI 수정 검증**: 사용자가 SSH 터널링으로 `http://localhost:8000/`을 로컬 브라우저에서 이미 보고 있다. UI 수정 후에는 스크린샷 캡처·판단 루프 대신 **수정된 경로의 URL**(예: `http://localhost:8000/candidates/<id>/`)을 보고해 사용자가 눈으로 확인하게 한다 — 훨씬 빠르다.
 
 ---
 
