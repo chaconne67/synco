@@ -132,30 +132,14 @@ ssh chaconne@49.247.46.171 \
   "docker exec \$(docker ps -qf name=synco_web) python manage.py showmigrations | grep '\[ \]'"
 ```
 
-## Skill routing — synco 로컬 매핑
+## Skill routing — synco 로컬 거절
 
-스킬 호출 일반 규칙(사용자가 `/skill-name`으로 부르거나 트리거와 명확히 일치할 때 호출)은 기본 시스템 프롬프트에 있다. synco에서는 아래 로컬 매핑과 예외만 추가된다.
+스킬 판정·호출은 각 스킬의 description에 맡긴다 (시스템이 자동 주입함). 여기에는 시스템이 모르는 synco 로컬 예외만 기록한다.
 
-**synco 로컬 거절 — 배포 파이프라인과 충돌하는 스킬**
+**배포 파이프라인과 충돌하는 스킬은 거절.** `./deploy.sh`(Docker Swarm + rsync + rolling update)로 고정된 synco 배포는 "PR merge → GitHub release / canary rollout / 원클릭 ship"을 가정하는 스킬과 맞지 않는다.
 
-`./deploy.sh`(Docker Swarm + rsync + rolling update)로 고정된 synco의 배포 파이프라인과 맞지 않는 스킬은 사용자가 직접 호출해도 거절하고 `./deploy.sh`로 안내.
-
-- **거절 대상**: `ship`, `land-and-deploy`, `canary`, `setup-deploy` 및 "PR merge → GitHub release / canary / 원클릭 ship"을 전제로 하는 모든 스킬.
-- **거절 대상 아님**: `document-release`(post-ship 문서), 단순 git 커밋·푸시.
-
-**synco 맥락에서 자발 호출 가능한 스킬**
-
-| 사용자 요청의 성격 | 스킬 |
-|---|---|
-| 아직 코드가 없는 새 아이디어·0→1 기획 논의 | `office-hours` |
-| 버그·500·에러 근본 원인 요구 | `investigate` |
-| "기능 전체 검증해줘" 다회 루프 QA | `qa` |
-| 머지 전 diff 리뷰 | `review` |
-| 새 디자인 시스템 설계 | `design-consultation` |
-| 배포 화면 시각적 폴리싱 감사 | `design-review` |
-| 멀티 앱·모델 변경 사전 아키텍처 검토 | `plan-eng-review` |
-
-표에 없는 스킬은 사용자가 이름으로 직접 호출할 때만 실행한다. 자발 호출은 이 표에 있는 7개로 제한.
+- **거절 대상**: `ship`, `land-and-deploy`, `canary`, `setup-deploy` 및 같은 가정을 가진 모든 스킬. 사용자가 직접 호출해도 거절하고 `./deploy.sh`로 안내.
+- **거절 대상 아님**: `document-release`(post-ship 문서 업데이트), 단순 git 커밋·푸시(Claude Code 기본 워크플로우).
 
 ---
 
