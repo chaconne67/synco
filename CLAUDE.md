@@ -132,13 +132,8 @@ ssh chaconne@49.247.46.171 \
   "docker exec \$(docker ps -qf name=synco_web) python manage.py showmigrations | grep '\[ \]'"
 ```
 
-## Skill routing — synco 로컬 거절
+## Skill routing — 배포 스킬 거절
 
-스킬 판정·호출은 각 스킬의 description에 맡긴다 (시스템이 자동 주입함). 여기에는 시스템이 모르는 synco 로컬 예외만 기록한다.
-
-**배포 파이프라인과 충돌하는 스킬은 거절.** `./deploy.sh`(Docker Swarm + rsync + rolling update)로 고정된 synco 배포는 "PR merge → GitHub release / canary rollout / 원클릭 ship"을 가정하는 스킬과 맞지 않는다.
-
-- **거절 대상**: `ship`, `land-and-deploy`, `canary`, `setup-deploy` 및 같은 가정을 가진 모든 스킬. 사용자가 직접 호출해도 거절하고 `./deploy.sh`로 안내.
-- **거절 대상 아님**: `document-release`(post-ship 문서 업데이트), 단순 git 커밋·푸시(Claude Code 기본 워크플로우).
+`ship`, `land-and-deploy`, `canary`, `setup-deploy` 및 다른 배포 파이프라인(PR merge → release / canary rollout / 원클릭 ship)을 가정하는 스킬은 사용자가 직접 호출해도 거절하고 `./deploy.sh`로 안내. synco 배포는 `./deploy.sh` 고정.
 
 
