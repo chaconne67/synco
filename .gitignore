@@ -52,6 +52,9 @@ node_modules/
 # Superpowers / skill scratch
 .superpowers/
 
+# Claude Code runtime worktrees (isolated per-task, ephemeral)
+.claude/worktrees/
+
 # Forge runtime logs & journals (session-local, not source)
 docs/forge/**/logs/
 docs/forge/**/journal.log
