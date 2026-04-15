@@ -43,9 +43,6 @@ uv run ruff format .        # 포맷
 
 ## Conventions
 
-- **UI 텍스트:** 한국어 존대말 ("등록되었습니다")
-- **코드/커밋:** 영어
-- **Python:** ruff (format + lint)
 - **HTMX 네비게이션:** `hx-get` + `hx-target="main"` + `hx-push-url="true"`
 - **HTMX Form:** `hx-post` + specific target
 - **DB:** UUID primary keys, TimestampMixin (created_at, updated_at)
@@ -82,12 +79,8 @@ ssh -o IdentityFile=~/.ssh/id_ed25519 chaconne@49.247.38.186  # 코코넛 (read-
 | 포트 | 용도 | 환경 |
 |------|------|------|
 | **8000** | 개발 서버 (`runserver`) — **고정** | 호스트 직접 실행 |
-| **8080** | 배포 이미지 로컬 스모크 (릴리스 전 수동 점검) | `docker compose --profile deploy` |
+| **8080** | 배포 이미지 로컬 스모크 | `docker compose --profile deploy` |
 | **443/80** | 운영 (nginx → gunicorn) | Docker Swarm |
-
-8000은 `dev.sh`·`docker-compose.yml`·문서 링크에 하드코딩돼 있어 회피 불가. 점유되어 있으면 `lsof -i :8000`으로 확인하고, **이번 세션의 이전 Bash 출력에 동일 PID가 기록된 내 프로세스가 아니면** 종료하지 않고 사용자에게 보고. "아마 내 것"은 판정이 아니다.
-
-8080은 배포 이미지 로컬 스모크 전용. 일상 개발에는 띄우지 않음.
 
 ### 배포 방식
 
