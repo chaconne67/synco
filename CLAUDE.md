@@ -99,7 +99,7 @@ uv run python manage.py runserver 0.0.0.0:8000
 - `docker compose up -d`로 DB만 뜸. web 컨테이너는 `profiles: ["deploy"]`로 개발 시 자동 시작 안 됨
 - LLM 호출(`common/llm.py`)이 호스트의 `claude` CLI를 subprocess로 부르기 때문에 Django를 컨테이너가 아닌 호스트에서 실행해야 인증·권한이 그대로 재사용된다
 - 개발 DB는 로컬 컨테이너, 운영 DB와 분리
-- **UI 수정 검증**: 사용자가 SSH 터널링으로 `http://localhost:8000/`을 로컬 브라우저에서 이미 보고 있다. UI 수정 후에는 스크린샷 캡처·판단 루프 대신 **수정된 경로의 URL**(예: `http://localhost:8000/candidates/<id>/`)을 보고해 사용자가 눈으로 확인하게 한다 — 훨씬 빠르다.
+- UI 수정 후에는 수정된 경로 URL을 보고한다. 사용자가 로컬 브라우저로 직접 확인한다
 
 ---
 
