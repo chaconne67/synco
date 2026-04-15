@@ -731,8 +731,8 @@ deploy/nginx/{Dockerfile,nginx.conf}
 - 업무 흐름: [02-work-process.md](02-work-process.md)
 - 디자인 시스템: `docs/design-system.md`
 - UI 목업: `assets/ui-sample/*.html`
-- 대시보드 인터랙션: `docs/designs/dashboard-interaction-plan.md`
-- Phase × Application 재설계 스펙: `docs/designs/20260414-project-application-redesign/FINAL-SPEC.md`
+- 대시보드 인터랙션 원본(히스토리): `docs/archive/designs/dashboard-interaction-plan.md`
+- Phase × Application 재설계 스펙 원본(히스토리): `docs/archive/designs/20260414-project-application-redesign/FINAL-SPEC.md` — 내용 요지는 이 문서 5.4절과 `02-work-process.md` 6장에 이미 녹여져 있다
 - AI 코딩 규칙: `CLAUDE.md`
 
-이전의 `docs/plans/headhunting-workflow/P01~P19.md`, forge 기록, inspection 보고서, reviews는 모두 `docs/archive/` 로 이동되어 과거 기록으로 보존된다. 현재 시점의 단일 진실 소스는 이 마스터 3종이다.
+이전의 `docs/plans/headhunting-workflow/P01~P19.md`, forge 기록, inspection 보고서, reviews, Project/Application 재설계 논의 과정은 모두 `docs/archive/` 로 이동되어 과거 기록으로 보존된다. 현재 시점의 단일 진실 소스는 이 마스터 3종이다.

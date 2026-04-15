@@ -9,6 +9,7 @@
 | 폴더 | 원래 역할 | 현재 상태 | 대체 문서 |
 |---|---|---|---|
 | [plans/](plans/) | Phase 기획서 P01~P19, 사업계획서, 온보딩 플랜 | **마스터에 녹음됨** | `master/01-business-plan.md` (business-plan-synco.md 원본), `master/02-work-process.md` (P01~P13 녹음), `master/03-engineering-spec.md` (모델·URL) |
+| [designs/](designs/) | 과거 UI 기획: 대시보드 인터랙션 플랜, Project/Application 재설계(FINAL-SPEC + 01~07 + plans/), 메인 대시보드 초안, 디자인 감사, RBAC 온보딩 플랜 | **마스터에 녹음됨** | `master/02-work-process.md` 6장·7.1절 (3층 모델, 대시보드 인터랙션), `master/03-engineering-spec.md` 5.4절 (모델 스펙) |
 | [forge/](forge/) | plan-forge/impl-forge 담금질 및 구현 실행 추적 | 실행 히스토리로 보존 | 현재 코드 상태 = `master/03-engineering-spec.md` |
 | [inspection/](inspection/) | 파이프라인·E2E·멀티에이전트 점검 보고서 (2026-03~04) | 과거 특정 시점 상태 기록 | 현재 상태는 `master/03-engineering-spec.md` 12장 |
 | [reports/](reports/) | 2026-04-03 프로젝트 변경 리포트 | 시점 기록 | `master/03-engineering-spec.md` |

@@ -15,9 +15,9 @@
 ## 2. 디자인 자료
 
 - [design-system.md](design-system.md) — Pretendard, 컬러 토큰, 컴포넌트 패턴. 모든 신규/리팩터링 화면의 기준
-- [designs/](designs/) — 목업 진화, 대시보드 인터랙션 플랜, Phase×Application 재설계 FINAL-SPEC
+- `../assets/ui-sample/*.html` — 목업. 디자인 단일 진실 소스
 
-`assets/ui-sample/*.html` 의 목업이 디자인 SoT이며, 코드가 이를 기준으로 재정리 중이다.
+과거 기획 자료(대시보드 인터랙션 플랜, Phase×Application 재설계, RBAC 온보딩 플랜, 디자인 감사 등)는 모두 [archive/designs/](archive/designs/) 로 이동되었다. 현재 시점의 디자인 방향은 위 두 파일과 마스터 3종에 전부 녹아 있다.
 
 ## 3. 아카이브
 

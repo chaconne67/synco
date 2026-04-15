@@ -225,7 +225,7 @@ return STATE_FROM_ACTION_TYPE[latest_done.action_type.code] or "in_progress"
 
 **레이아웃 기준**: `assets/ui-sample/dashboard.html` (디자인 시스템의 단일 진실 소스)
 
-**구성 블록** (인터랙션은 `docs/designs/dashboard-interaction-plan.md` 참조):
+**구성 블록**:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -570,7 +570,7 @@ Project.jd_analysis (LLM 산출물)
 추가 참조:
 - UI 디자인 시스템: `docs/design-system.md`
 - 목업 화면: `assets/ui-sample/*.html`
-- 대시보드 인터랙션 맵: `docs/designs/dashboard-interaction-plan.md`
-- Phase × Application 재설계 스펙: `docs/designs/20260414-project-application-redesign/FINAL-SPEC.md`
+- 대시보드 인터랙션 맵 원본(히스토리): `docs/archive/designs/dashboard-interaction-plan.md` — 본 문서 7.1절에 녹음됨
+- Phase × Application 재설계 스펙 원본(히스토리): `docs/archive/designs/20260414-project-application-redesign/FINAL-SPEC.md` — 내용 요지는 이 문서 6장과 `03-engineering-spec.md` 5.4절에 이미 녹여져 있다
 
-이전 버전의 Phase 문서들(`docs/plans/headhunting-workflow/P01~P19.md`)과 forge 기록은 `docs/archive/` 로 이동되었으며, 이 마스터 3종이 현재의 단일 진실 소스이다.
+이전 버전의 Phase 문서들(`docs/plans/headhunting-workflow/P01~P19.md`)과 forge 기록, Project/Application 재설계 논의는 모두 `docs/archive/` 로 이동되었으며, 이 마스터 3종이 현재의 단일 진실 소스이다.
