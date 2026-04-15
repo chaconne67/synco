@@ -102,20 +102,7 @@ Docker Swarm 기반 배포. 배포 자산의 기준은 레포의 `deploy.sh`, `d
 └── docker-stack-synco.yml
 ```
 
-**deploy.sh 파이프라인:**
-
-1. **check_migrations_** — `makemigrations --check --dry-run` (미생성 migration 차단)
-2. **test_** — `uv run pytest -q --create-db` (기본값)
-3. **save_** — 현재 소스/배포 템플릿/런타임 secret을 `/home/docker`로 동기화
-4. **backup_db_** — 운영 DB pg_dump 백업
-5. **build_** — 앱/nginx 이미지 빌드
-6. **validate_** — 릴리스 이미지로 `check --deploy`, `migrate`
-7. **deploy_** — `docker stack deploy`로 Swarm rolling update
-
-**운영 배포 실행:**
-```bash
-./deploy.sh
-```
+배포 실행은 `./deploy.sh`. 파이프라인 단계는 스크립트 본문 참조.
 
 ### 개발 환경
 
