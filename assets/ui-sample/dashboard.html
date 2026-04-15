@@ -55,6 +55,12 @@
     font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
     text-transform: uppercase; color: #94A3B8;
   }
+  .eyebrow-ko {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px;
     padding: 10px 14px; border-radius: 8px;
@@ -223,13 +229,13 @@
     <!-- Top Header: full width of right column -->
     <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
       <div>
-        <div class="eyebrow">데스크 · 헤드헌팅</div>
+        <div class="eyebrow eyebrow-ko">데스크 · 헤드헌팅</div>
         <h1 class="text-[22px] font-bold tracking-tight mt-1">Executive Search Dashboard</h1>
       </div>
       <div class="flex items-center gap-5">
         <div class="text-right">
-          <div class="eyebrow">Wednesday · Oct 25, 2023</div>
-          <div class="text-xs text-muted mt-1 tnum">10:24 AM KST</div>
+          <div class="eyebrow eyebrow-ko">2023년 10월 25일 · 수요일</div>
+          <div class="text-xs text-muted mt-1 tnum">오전 10:24 KST</div>
         </div>
         <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
@@ -239,8 +245,8 @@
         </button>
         <div class="flex items-center gap-3 pl-5 border-l border-hair">
           <div class="text-right">
-            <div class="text-sm font-semibold">Senior Partner</div>
-            <div class="eyebrow">Advisory Board</div>
+            <div class="text-sm font-semibold">수석 파트너</div>
+            <div class="eyebrow eyebrow-ko">자문위원회</div>
           </div>
           <div class="w-10 h-10 rounded-full bg-ink2 text-white flex items-center justify-center text-sm font-semibold">SP</div>
         </div>
@@ -263,15 +269,15 @@
           </div>
           <div class="mt-6 flex items-baseline gap-3">
             <span class="text-[40px] leading-none font-bold tnum">24</span>
-            <span class="text-sm text-muted">Projects Closed</span>
+            <span class="text-sm text-muted">종료된 프로젝트</span>
           </div>
           <div class="mt-6 pt-5 border-t border-line grid grid-cols-2 gap-4">
             <div>
-              <div class="eyebrow">In Progress</div>
+              <div class="eyebrow eyebrow-ko">진행 중</div>
               <div class="mt-1 text-xl font-bold tnum">12</div>
             </div>
             <div>
-              <div class="eyebrow">Success Rate</div>
+              <div class="eyebrow eyebrow-ko">성공률</div>
               <div class="mt-1 text-xl font-bold tnum">82<span class="text-sm text-muted font-medium">%</span></div>
             </div>
           </div>
@@ -288,7 +294,7 @@
           </div>
           <div class="mt-auto pt-6">
             <div class="flex items-center justify-between mb-2">
-              <div class="eyebrow" style="color:#64748B">Target Progress</div>
+              <div class="eyebrow eyebrow-ko" style="color:#64748B">목표 달성률</div>
               <div class="text-xs font-semibold tnum">76%</div>
             </div>
             <div class="progress" style="background:#1E293B"><span style="width:76%; background:#fff"></span></div>
@@ -305,21 +311,21 @@
             <li class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="status-dot" style="background:#10B981"></span>
-                <span class="text-sm">진행 (Active)</span>
+                <span class="text-sm font-medium text-ink2">진행</span>
               </div>
               <span class="text-lg font-bold tnum">42</span>
             </li>
             <li class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="status-dot" style="background:#F59E0B"></span>
-                <span class="text-sm">심사 (Review)</span>
+                <span class="text-sm font-medium text-ink2">심사</span>
               </div>
               <span class="text-lg font-bold tnum">18</span>
             </li>
             <li class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="status-dot" style="background:#6366F1"></span>
-                <span class="text-sm">완료 (Completed)</span>
+                <span class="text-sm font-medium text-ink2">완료</span>
               </div>
               <span class="text-lg font-bold tnum">114</span>
             </li>
@@ -336,7 +342,7 @@
             <div>
               <div class="eyebrow">Team Performance</div>
             </div>
-            <a href="#" class="text-xs font-semibold text-ink3 hover:underline">VIEW ALL MEMBERS →</a>
+            <a href="#" class="text-xs font-semibold text-ink3 hover:underline">전체 멤버 보기 →</a>
           </div>
 
           <ul class="mt-6 space-y-5">
@@ -344,15 +350,15 @@
               <div class="w-11 h-11 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-semibold text-sm">MK</div>
               <div class="w-[180px] shrink-0">
                 <div class="text-sm font-semibold">Min-ho Kim</div>
-                <div class="eyebrow mt-0.5" style="color:#94A3B8">Principal Consultant</div>
+                <div class="eyebrow eyebrow-ko mt-0.5" style="color:#94A3B8">수석 컨설턴트</div>
               </div>
               <div class="w-[140px] shrink-0">
-                <div class="eyebrow">Current Projects</div>
-                <div class="text-sm font-semibold mt-0.5">8 active</div>
+                <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
+                <div class="text-sm font-semibold mt-0.5">8건 진행 중</div>
               </div>
               <div class="flex-1">
                 <div class="flex items-center justify-between mb-1.5">
-                  <div class="eyebrow">Completion</div>
+                  <div class="eyebrow eyebrow-ko">달성률</div>
                   <div class="text-xs font-semibold tnum text-ink3">92%</div>
                 </div>
                 <div class="progress success"><span style="width:92%"></span></div>
@@ -363,15 +369,15 @@
               <div class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex items-center justify-center text-white font-semibold text-sm">SP</div>
               <div class="w-[180px] shrink-0">
                 <div class="text-sm font-semibold">Sarah Park</div>
-                <div class="eyebrow mt-0.5" style="color:#94A3B8">Senior Consultant</div>
+                <div class="eyebrow eyebrow-ko mt-0.5" style="color:#94A3B8">시니어 컨설턴트</div>
               </div>
               <div class="w-[140px] shrink-0">
-                <div class="eyebrow">Current Projects</div>
-                <div class="text-sm font-semibold mt-0.5">5 active</div>
+                <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
+                <div class="text-sm font-semibold mt-0.5">5건 진행 중</div>
               </div>
               <div class="flex-1">
                 <div class="flex items-center justify-between mb-1.5">
-                  <div class="eyebrow">Completion</div>
+                  <div class="eyebrow eyebrow-ko">달성률</div>
                   <div class="text-xs font-semibold tnum text-ink3">75%</div>
                 </div>
                 <div class="progress"><span style="width:75%"></span></div>
@@ -382,15 +388,15 @@
               <div class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">JL</div>
               <div class="w-[180px] shrink-0">
                 <div class="text-sm font-semibold">Ji-won Lee</div>
-                <div class="eyebrow mt-0.5" style="color:#94A3B8">Research Associate</div>
+                <div class="eyebrow eyebrow-ko mt-0.5" style="color:#94A3B8">리서치 어소시에이트</div>
               </div>
               <div class="w-[140px] shrink-0">
-                <div class="eyebrow">Current Projects</div>
-                <div class="text-sm font-semibold mt-0.5">12 active</div>
+                <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
+                <div class="text-sm font-semibold mt-0.5">12건 진행 중</div>
               </div>
               <div class="flex-1">
                 <div class="flex items-center justify-between mb-1.5">
-                  <div class="eyebrow">Completion</div>
+                  <div class="eyebrow eyebrow-ko">달성률</div>
                   <div class="text-xs font-semibold tnum text-ink3">48%</div>
                 </div>
                 <div class="progress info"><span style="width:48%"></span></div>
@@ -413,8 +419,8 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div class="min-w-0">
-                <div class="text-sm font-semibold leading-snug">Candidate placement confirmed</div>
-                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Project Cloud / CTO Search · 2h ago</div>
+                <div class="text-sm font-semibold leading-snug">후보자 배치가 확정되었습니다</div>
+                <div class="eyebrow eyebrow-ko mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">프로젝트 클라우드 / CTO 서치 · 2시간 전</div>
               </div>
             </li>
             <li class="flex gap-3">
@@ -422,8 +428,8 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </div>
               <div class="min-w-0">
-                <div class="text-sm font-semibold leading-snug">New candidate added</div>
-                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Global FinTech Expansion · 5h ago</div>
+                <div class="text-sm font-semibold leading-snug">새 후보자가 추가되었습니다</div>
+                <div class="eyebrow eyebrow-ko mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">글로벌 핀테크 확장 · 5시간 전</div>
               </div>
             </li>
             <li class="flex gap-3">
@@ -431,8 +437,8 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
               </div>
               <div class="min-w-0">
-                <div class="text-sm font-semibold leading-snug">Client meeting notes updated</div>
-                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Samsung Electronics Advisory · Yesterday</div>
+                <div class="text-sm font-semibold leading-snug">고객사 미팅 노트가 업데이트되었습니다</div>
+                <div class="eyebrow eyebrow-ko mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">삼성전자 자문 프로젝트 · 어제</div>
               </div>
             </li>
             <li class="flex gap-3">
@@ -440,8 +446,8 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
               <div class="min-w-0">
-                <div class="text-sm font-semibold leading-snug">Project deadline approaching</div>
-                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Renewable Energy Head Search · 2 days ago</div>
+                <div class="text-sm font-semibold leading-snug">프로젝트 마감일이 가까워지고 있습니다</div>
+                <div class="eyebrow eyebrow-ko mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">재생에너지 헤드 서치 · 2일 전</div>
               </div>
             </li>
           </ul>
@@ -457,35 +463,35 @@
           <div class="space-y-4">
           <div class="bg-surface rounded-card shadow-card p-5">
             <div class="flex items-start justify-between">
-              <div class="eyebrow text-ink3" style="color:#334155">Mon, Oct 23 · 09:00</div>
+            <div class="eyebrow eyebrow-ko text-ink3" style="color:#334155">10월 23일 월요일 · 09:00</div>
               <button class="text-faint hover:text-ink">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
               </button>
             </div>
-            <div class="mt-3 text-[15px] font-semibold leading-snug">Weekly Pipeline Review</div>
-            <div class="text-xs text-muted mt-1">Internal Team Session · Room A</div>
+            <div class="mt-3 text-[15px] font-semibold leading-snug">주간 파이프라인 리뷰</div>
+            <div class="text-xs text-muted mt-1">내부 팀 세션 · A 회의실</div>
           </div>
 
           <div class="bg-surface rounded-card shadow-card p-5">
             <div class="flex items-start justify-between">
-              <div class="eyebrow" style="color:#6366F1">Wed, Oct 25 · 11:00</div>
+              <div class="eyebrow eyebrow-ko" style="color:#6366F1">10월 25일 수요일 · 11:00</div>
               <button class="text-faint hover:text-ink">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
               </button>
             </div>
-            <div class="mt-3 text-[15px] font-semibold leading-snug">Executive Interview</div>
-            <div class="text-xs text-muted mt-1">Candidate: Hae-Joon Park · Zoom</div>
+            <div class="mt-3 text-[15px] font-semibold leading-snug">임원 인터뷰</div>
+            <div class="text-xs text-muted mt-1">후보자: 박해준 · Zoom</div>
           </div>
 
           <div class="bg-surface rounded-card shadow-card p-5">
             <div class="flex items-start justify-between">
-              <div class="eyebrow" style="color:#F59E0B">Fri, Oct 27 · 14:00</div>
+              <div class="eyebrow eyebrow-ko" style="color:#F59E0B">10월 27일 금요일 · 14:00</div>
               <button class="text-faint hover:text-ink">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
               </button>
             </div>
-            <div class="mt-3 text-[15px] font-semibold leading-snug">Client Briefing: SK Hynix</div>
-            <div class="text-xs text-muted mt-1">Strategy Planning · Head Office</div>
+            <div class="mt-3 text-[15px] font-semibold leading-snug">고객사 브리핑: SK하이닉스</div>
+            <div class="text-xs text-muted mt-1">전략기획 · 본사</div>
           </div>
           </div>
         </div>
@@ -497,13 +503,13 @@
 
           <div class="grid grid-cols-7 border-b bg-surface" style="border-bottom-color:#E2E8F0">
             <!-- Weekday headers -->
-            <div class="eyebrow text-center py-3" style="color:#DC2626 !important">Sun</div>
-            <div class="eyebrow text-center py-3 !text-ink2">Mon</div>
-            <div class="eyebrow text-center py-3 !text-ink2">Tue</div>
-            <div class="eyebrow text-center py-3 !text-ink2">Wed</div>
-            <div class="eyebrow text-center py-3 !text-ink2">Thu</div>
-            <div class="eyebrow text-center py-3 !text-ink2">Fri</div>
-            <div class="eyebrow text-center py-3" style="color:#2563EB !important">Sat</div>
+            <div class="eyebrow eyebrow-ko text-center py-3" style="color:#DC2626 !important">일</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">월</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">화</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">수</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">목</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">금</div>
+            <div class="eyebrow eyebrow-ko text-center py-3" style="color:#2563EB !important">토</div>
           </div>
 
           <div class="grid grid-cols-7 [&>*]:-ml-0.5 [&>*]:-mt-0.5">
@@ -522,7 +528,7 @@
             <div class="cal-day"><span class="tnum">3</span></div>
             <div class="cal-day">
               <span class="tnum">4</span>
-              <div class="cal-event">Board Mtg</div>
+              <div class="cal-event">이사회</div>
             </div>
             <div class="cal-day"><span class="tnum">5</span></div>
             <div class="cal-day"><span class="tnum">6</span></div>
@@ -550,17 +556,17 @@
             <div class="cal-day"><span class="tnum">22</span></div>
             <div class="cal-day">
               <span class="tnum">23</span>
-              <div class="cal-event">Weekly Review</div>
+              <div class="cal-event">주간 리뷰</div>
             </div>
             <div class="cal-day"><span class="tnum">24</span></div>
             <div class="cal-day today">
               <span class="tnum">25</span>
-              <div class="cal-event">Interview</div>
+              <div class="cal-event">인터뷰</div>
             </div>
             <div class="cal-day"><span class="tnum">26</span></div>
             <div class="cal-day">
               <span class="tnum">27</span>
-              <div class="cal-event">SK Hynix</div>
+              <div class="cal-event">SK하이닉스</div>
             </div>
             <div class="cal-day"><span class="tnum">28</span></div>
 

@@ -56,15 +56,15 @@ node_modules/
 .claude/worktrees/
 
 # Forge runtime logs & journals (session-local, not source)
-docs/forge/**/logs/
-docs/forge/**/journal.log
-docs/forge/**/watchdog.log
-docs/forge/**/pause-watcher.log
-docs/forge/**/session-prompt.txt
-docs/forge/**/pause-before-*.sh
+docs/**/forge/**/logs/
+docs/**/forge/**/journal.log
+docs/**/forge/**/watchdog.log
+docs/**/forge/**/pause-watcher.log
+docs/**/forge/**/session-prompt.txt
+docs/**/forge/**/pause-before-*.sh
 
 # Multi-agent inspection reports (local-only scratch)
-docs/inspection/multi-agent/
+docs/**/inspection/multi-agent/
 
 # Local PDFs / binaries
 *.pdf
