@@ -3,7 +3,20 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>synco · Candidates</title>
+<title>synco · Clients</title>
+
+<!--
+  NOTE (모델 연결 시 확인):
+  - 상단 카테고리 탭은 "업종 고정 분류"를 가정했다. 현재 Client.industry 는 자유 텍스트(CharField)이므로
+    실제 포팅 시에는 Client 모델에 고정 choices 기반의 industry_category 필드를 추가하거나,
+    기존 industry 를 fixed-vocabulary 로 마이그레이션해야 한다.
+  - 카드의 통계 3종(Offers / Success / Placed)은 각각 아래 집계에 해당한다:
+      Offers  = client.projects.count()
+      Success = client.projects.filter(result=SUCCESS).count()
+      Placed  = Application.objects.filter(project__client=client, hired_at__isnull=False).count()
+  - "Active" 숫자는 client.projects.filter(status=OPEN).count().
+  - "계약중 · 2022년 체결" 같은 contract meta 는 Contract(status=ACTIVE) 중 가장 이른 start_date 기준.
+-->
 
 <!-- Pretendard -->
 <link rel="stylesheet" as="style" crossorigin
@@ -89,23 +102,26 @@
   .cat-chip:hover { background: #F1F5F9; color: #0F172A; }
   .cat-chip.is-active { background: #334155; color: #fff; }
 
-  /* Tag pills inside cards */
-  .skill-tag {
-    display: inline-flex; align-items: center;
+  /* Meta chips inside cards (region, contract) */
+  .meta-tag {
+    display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 10px; border-radius: 6px;
     font-size: 11px; font-weight: 500;
     color: #475569; background: #F1F5F9;
   }
+
+  /* Size badges */
   .badge {
     display: inline-flex; align-items: center;
     padding: 4px 9px; border-radius: 999px;
     font-size: 9px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.06em;
   }
-  .badge.top      { background: #F1F5F9; color: #334155; }
-  .badge.passive  { background: #FEF3C7; color: #92400E; }
-  .badge.active   { background: #DCFCE7; color: #166534; }
-  .badge.hiring   { background: #E0E7FF; color: #3730A3; }
+  .badge.enterprise { background: #F1F5F9; color: #334155; }  /* 대기업 */
+  .badge.midcap     { background: #DBEAFE; color: #1E40AF; }  /* 중견 */
+  .badge.sme        { background: #FFEDD5; color: #9A3412; }  /* 중소 */
+  .badge.foreign    { background: #EDE9FE; color: #5B21B6; }  /* 외국계 */
+  .badge.startup    { background: #DCFCE7; color: #166534; }  /* 스타트업 */
 
   /* Bottom search bar */
   .search-bar {
@@ -134,16 +150,41 @@
   }
   .voice-btn:hover { background: #1E293B; transform: scale(1.04); }
 
-  /* Avatar skeleton — 실제 사진은 이력서 추출 시 바인딩 예정 */
-  .av {
-    width: 56px; height: 56px; border-radius: 999px;
+  /* Company logo tile (rounded square, initial in gradient) */
+  .logo {
+    width: 56px; height: 56px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    background: #E2E8F0;
-    color: #94A3B8;
-    border: 1px solid #E2E8F0;
+    color: #fff; font-weight: 800; font-size: 16px;
+    flex-shrink: 0; letter-spacing: -0.02em;
+    position: relative; overflow: hidden;
   }
-  .av svg { width: 30px; height: 30px; }
+  .logo img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 8px;
+  }
+  .logo-1 { background: linear-gradient(135deg, #60a5fa 0%, #1e3a8a 100%); }
+  .logo-2 { background: linear-gradient(135deg, #f87171 0%, #991b1b 100%); }
+  .logo-3 { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%); }
+  .logo-4 { background: linear-gradient(135deg, #fcd34d 0%, #b45309 100%); }
+  .logo-5 { background: linear-gradient(135deg, #f9a8d4 0%, #9f1239 100%); }
+  .logo-6 { background: linear-gradient(135deg, #fdba74 0%, #c2410c 100%); }
+  .logo-7 { background: linear-gradient(135deg, #5eead4 0%, #115e59 100%); }
+  .logo-8 { background: linear-gradient(135deg, #86efac 0%, #15803d 100%); }
+
+  /* Mini stat block inside card */
+  .stat {
+    display: flex; flex-direction: column;
+    padding: 10px 0;
+  }
+  .stat + .stat { border-left: 1px solid #F1F5F9; padding-left: 16px; }
+  .stat .num { font-size: 20px; font-weight: 800; line-height: 1; color: #0F172A; letter-spacing: -0.01em; }
+  .stat .num .unit { font-size: 11px; font-weight: 600; color: #94A3B8; margin-left: 2px; }
+  .stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-top: 6px; }
+  .stat.is-highlight .num { color: #0F172A; }
+  .stat.is-highlight .lbl { color: #334155; }
 </style>
 </head>
 
@@ -174,7 +215,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
         Dashboard
       </a>
-      <a href="candidate-list.html" class="sidebar-link is-active">
+      <a href="candidate-list.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Candidates
@@ -184,7 +225,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6l5 5v11a2 2 0 0 1-2 2Z"/><path d="M3 15h6"/><path d="M3 18h6"/><path d="M3 12h6"/></svg>
         Projects
       </a>
-      <a href="clients-list.html" class="sidebar-link">
+      <a href="clients-list.html" class="sidebar-link is-active">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
         Clients
@@ -221,8 +262,8 @@
     <!-- Top Header -->
     <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
       <div>
-        <div class="eyebrow">데스크 · 헤드헌팅</div>
-        <h1 class="text-[22px] font-bold tracking-tight mt-1">Talent Pipeline</h1>
+        <div class="eyebrow">의뢰 기업 · 거래 현황</div>
+        <h1 class="text-[22px] font-bold tracking-tight mt-1">Client Portfolio</h1>
       </div>
       <div class="flex items-center gap-5">
         <div class="text-right">
@@ -252,10 +293,10 @@
       <!-- ============ Page header (title + actions) ============ -->
       <section class="flex items-end justify-between gap-4">
         <div>
-          <div class="eyebrow">Global Talent Pool</div>
-          <h2 class="text-[28px] font-bold tracking-tight mt-1">Candidates</h2>
+          <div class="eyebrow">Active Corporate Relationships</div>
+          <h2 class="text-[28px] font-bold tracking-tight mt-1">Clients</h2>
           <p class="text-sm text-muted mt-1">
-            등록된 후보자 <span class="font-semibold text-ink tnum">1,284</span>명을 검색하고 검수하세요
+            등록된 고객사 <span class="font-semibold text-ink tnum">57</span>곳의 거래 이력과 진행 현황을 관리하세요
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -265,75 +306,90 @@
           </button>
           <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Candidate
+            Add Client
           </button>
         </div>
       </section>
 
       <!-- ============ Category chips (horizontal scroll) ============ -->
+      <!--
+        TODO(model): 현재 Client.industry 는 자유 텍스트이므로 아래 카테고리는 목업용 가상 분류.
+        실제 포팅 시 industry_category (choices) 필드로 대체한다.
+      -->
       <section>
         <div class="overflow-x-auto hide-scrollbar -mx-1">
           <div class="flex gap-2 px-1">
-            <button class="cat-chip is-active">전체 · 1,284</button>
-            <button class="cat-chip">기술 · 524</button>
-            <button class="cat-chip">경영 · 187</button>
-            <button class="cat-chip">AI / ML · 142</button>
-            <button class="cat-chip">제품 / 디자인 · 96</button>
-            <button class="cat-chip">마케팅</button>
-            <button class="cat-chip">영업</button>
-            <button class="cat-chip">운영</button>
-            <button class="cat-chip">재무 / 회계</button>
-            <button class="cat-chip">HR</button>
-            <button class="cat-chip">법무</button>
-            <button class="cat-chip">전략 기획</button>
+            <button class="cat-chip is-active">전체 · 57</button>
+            <button class="cat-chip">바이오 / 제약 · 11</button>
+            <button class="cat-chip">헬스케어 / 의료기기 · 8</button>
+            <button class="cat-chip">IT / SW · 9</button>
+            <button class="cat-chip">소재 / 부품 · 7</button>
+            <button class="cat-chip">금융 / 캐피탈 · 4</button>
+            <button class="cat-chip">소비재 / 패션 · 4</button>
+            <button class="cat-chip">환경 / 유틸리티 · 2</button>
+            <button class="cat-chip">모빌리티 / 제조</button>
+            <button class="cat-chip">미디어 / 엔터</button>
+            <button class="cat-chip">건설 / 부동산</button>
+            <button class="cat-chip">기타</button>
           </div>
         </div>
       </section>
 
-      <!-- ============ Candidate cards grid (2-col) ============ -->
+      <!-- ============ Client cards grid (3-col) ============ -->
+      <!--
+        NOTE: 카드 내용은 assets/ui-sample/work-sample.xlsx (실제 컨설턴트 4인 업무 스프레드시트)에서
+        집계한 실제 데이터를 반영한다. Offers = unique positions, Success = "입사확정/최종합격" 마커가
+        있는 position 수, Placed = 해당 candidate 수. 미해결 포지션이 많은 대형 고객사는 Success 0.
+      -->
       <section class="grid grid-cols-12 gap-6">
 
-        <!-- ===== CARD 1 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 1 — SKBP (SK바이오팜) ===== -->
+        <a href="https://www.skbp.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-1">SK<img src="logos/skbp.png" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">김민호</h3>
-                    <span class="badge top">TOP TALENT</span>
-                    <span class="text-xs text-faint tnum">(41세 · 1985년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">SKBP</h3>
+                    <span class="badge enterprise">대기업</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">카카오엔터프라이즈</span>
+                    <span class="font-semibold text-ink3">바이오 / 제약</span>
                     <span class="mx-1 text-faint">·</span>
-                    VP of Engineering
+                    서울
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">15<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">6<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">기술</span>
-              <span class="skill-tag">분산시스템</span>
-              <span class="skill-tag">MSA</span>
-              <span class="skill-tag">Kubernetes</span>
-              <span class="skill-tag">팀 빌딩</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              엔지니어링 팀을 20명에서 150명으로 스케일업. 글로벌 분산 시스템 아키텍처 설계와 멀티 클라우드 마이그레이션 리드.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              신약 개발 바이오텍. IT보안·회계·전략·Global Alliance 등 백오피스 핵심 포지션 다수 의뢰. 의뢰 규모 가장 크나 성사 기준은 보수적.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                서울 · KAIST · 전 네이버
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">50</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">최대 거래처</span>
+                <span class="meta-tag">담당 4인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -343,46 +399,53 @@
           </div>
         </a>
 
-        <!-- ===== CARD 2 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 2 — Vatech 그룹 ===== -->
+        <a href="https://www.vatech.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-2">VT<img src="logos/vatech.png" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">박수진</h3>
-                    <span class="badge passive">PASSIVE</span>
-                    <span class="text-xs text-faint tnum">(46세 · 1980년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">Vatech 그룹</h3>
+                    <span class="badge midcap">중견</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">토스페이먼츠</span>
+                    <span class="font-semibold text-ink3">헬스케어 / 의료기기</span>
                     <span class="mx-1 text-faint">·</span>
-                    Chief Technology Officer
+                    경기 화성
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">18<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">4<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">경영</span>
-              <span class="skill-tag">결제 인프라</span>
-              <span class="skill-tag">PCI-DSS</span>
-              <span class="skill-tag">조직 빌딩</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              핀테크 결제 인프라 0→1 구축. 일 거래액 1조원 규모 운영. CISO 겸직, 감독원 라이선스 대응 경험.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              글로벌 덴탈 이미징 리더(Vatech / Rayence / EMX 포함). CFO·마케팅총괄·인사실장 등 C-level 중심. 최근 2건 성사.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                서울 · 서울대 · 전 SK텔레콤
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">35</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">2</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">2<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">C-level 중심</span>
+                <span class="meta-tag">담당 2인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -392,46 +455,53 @@
           </div>
         </a>
 
-        <!-- ===== CARD 3 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 3 — ASICS (Onitsuka Tiger 포함) ===== -->
+        <a href="https://www.asics.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-3">AS<img src="logos/asics.svg" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">이지원</h3>
-                    <span class="badge top">TOP TALENT</span>
-                    <span class="text-xs text-faint tnum">(38세 · 1988년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">ASICS Korea</h3>
+                    <span class="badge foreign">외국계</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">네이버랩스</span>
+                    <span class="font-semibold text-ink3">소비재 / 패션</span>
                     <span class="mx-1 text-faint">·</span>
-                    Head of AI Research
+                    서울 중구
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">12<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">3<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">AI / ML</span>
-              <span class="skill-tag">LLM</span>
-              <span class="skill-tag">RLHF</span>
-              <span class="skill-tag">논문 12편</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              한국어 LLM 사전학습 리드. NeurIPS, ACL 등 top-tier 컨퍼런스 게재. 카카오브레인 출신, KAIST PhD.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              일본계 스포츠 브랜드 (ASICS + Onitsuka Tiger). Footwear MD·CPS Merchandiser·HR/GA Manager 등 머천다이징 전문 포지션. 최다 성사 계정.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                성남 · KAIST PhD · 전 카카오브레인
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">29</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">4</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">4<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">최다 성사 계정</span>
+                <span class="meta-tag">담당 5인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -441,46 +511,53 @@
           </div>
         </a>
 
-        <!-- ===== CARD 4 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 4 — 한독 ===== -->
+        <a href="https://www.handok.co.kr" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-4">HD<img src="logos/handok.ico" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">정태영</h3>
-                    <span class="badge hiring">HIRING SOON</span>
-                    <span class="text-xs text-faint tnum">(42세 · 1984년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">한독</h3>
+                    <span class="badge midcap">중견</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">쿠팡</span>
+                    <span class="font-semibold text-ink3">바이오 / 제약</span>
                     <span class="mx-1 text-faint">·</span>
-                    Director of Product, Logistics
+                    서울 강남
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">14<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">3<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">제품</span>
-              <span class="skill-tag">물류 SaaS</span>
-              <span class="skill-tag">B2B</span>
-              <span class="skill-tag">PMF</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              쿠팡 물류 자동화 PM 리드. 0→1 SaaS 제품 출시 후 ARR 50억 달성. 전 우아한형제들 시니어 PM.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              국내 중견 제약사. 건기식 신설법인 영업마케팅 총괄·Life Science 마케팅·사내변호사·Market Access 등 전략 포지션 중심.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                서울 · 연세대 · 전 우아한형제들
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">28</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">1</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">1<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">리드 포지션</span>
+                <span class="meta-tag">담당 4인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -490,46 +567,53 @@
           </div>
         </a>
 
-        <!-- ===== CARD 5 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 5 — 덕산 그룹 ===== -->
+        <a href="https://www.dsnl.co.kr" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-5">DS<img src="logos/dsneolux.png" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">최서연</h3>
-                    <span class="badge active">ACTIVE</span>
-                    <span class="text-xs text-faint tnum">(44세 · 1982년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">덕산 그룹</h3>
+                    <span class="badge midcap">중견</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">우아한형제들</span>
+                    <span class="font-semibold text-ink3">소재 / 부품</span>
                     <span class="mx-1 text-faint">·</span>
-                    Principal Engineer, Platform
+                    충남 천안
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">16<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">2<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">기술</span>
-              <span class="skill-tag">백엔드 플랫폼</span>
-              <span class="skill-tag">Java / Kotlin</span>
-              <span class="skill-tag">DevEx</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              주문 플랫폼 트래픽 100배 스케일링. 사내 DevEx 표준 정립으로 배포 리드타임 70% 단축. JPA 한국 사용자 모임 운영.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              디스플레이 소재(덕산네오룩스) + 방산 전자(덕산넵코어스) 복합 기업. 제조 임원·재료연구·RF 탐색기 HW개발·구매 등 기술직 중심.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                서울 · 한양대 · 전 NHN
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">21</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">제조 / R&amp;D</span>
+                <span class="meta-tag">담당 2인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -539,46 +623,53 @@
           </div>
         </a>
 
-        <!-- ===== CARD 6 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 6 — Veolia ===== -->
+        <a href="https://www.veolia.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-6">VE<img src="logos/veolia.ico" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">한재훈</h3>
-                    <span class="badge passive">PASSIVE</span>
-                    <span class="text-xs text-faint tnum">(40세 · 1986년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">Veolia Korea</h3>
+                    <span class="badge foreign">외국계</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">마켓컬리</span>
+                    <span class="font-semibold text-ink3">환경 / 유틸리티</span>
                     <span class="mx-1 text-faint">·</span>
-                    VP of Operations
+                    서울 중구
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">13<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">2<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">운영</span>
-              <span class="skill-tag">콜드체인</span>
-              <span class="skill-tag">SCM</span>
-              <span class="skill-tag">물류센터</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              새벽배송 콜드체인 SCM 설계 및 운영. 5개 권역 물류센터 동시 오픈 프로젝트 PM. 배송 지연율 0.3%까지 개선.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              프랑스계 환경·유틸리티 글로벌. IT Support Manager·Technical Manager·EBL Manager 등 글로벌 기준의 기술 리드 포지션.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                서울 · 고려대 · 전 CJ대한통운
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">13</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">Global Tech</span>
+                <span class="meta-tag">담당 4인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -588,46 +679,53 @@
           </div>
         </a>
 
-        <!-- ===== CARD 7 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 7 — 한미 그룹 ===== -->
+        <a href="https://www.hanmipharm.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-7">HM<img src="logos/hanmi.svg" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">조유진</h3>
-                    <span class="badge top">TOP TALENT</span>
-                    <span class="text-xs text-faint tnum">(37세 · 1989년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">한미 그룹</h3>
+                    <span class="badge enterprise">대기업</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">토스</span>
+                    <span class="font-semibold text-ink3">바이오 / 제약</span>
                     <span class="mx-1 text-faint">·</span>
-                    Head of Design
+                    서울 송파
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">11<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">2<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">디자인</span>
-              <span class="skill-tag">디자인 시스템</span>
-              <span class="skill-tag">Figma</span>
-              <span class="skill-tag">B2C 모바일</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              토스 디자인 시스템 v2 구축 리드. 디자이너 3명 → 35명 조직 빌딩. iF Design Award 2회 수상.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              국내 대표 제약 그룹사(한미약품 + 한미그룹). IT 정보전략·PMS·MI/MSL·경영관리 등 전략·임상·의학 포지션 장기 파트너십.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                서울 · 홍익대 · 전 SK플래닛
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">10</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">장기 파트너십</span>
+                <span class="meta-tag">담당 5인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -637,46 +735,109 @@
           </div>
         </a>
 
-        <!-- ===== CARD 8 ===== -->
-        <a href="candidate-detail.html" class="col-span-6 bg-surface rounded-card shadow-card p-6 block">
+        <!-- ===== CARD 8 — 이우소프트 ===== -->
+        <a href="https://www.ewoosoft.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
           <div class="flex items-start gap-4">
-            <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="logo logo-8">EW<img src="logos/ewoosoft.png" alt="" onerror="this.remove()" loading="lazy" /></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-bold tracking-tight">윤성호</h3>
-                    <span class="badge passive">PASSIVE</span>
-                    <span class="text-xs text-faint tnum">(54세 · 1972년생)</span>
+                    <h3 class="text-base font-bold tracking-tight">이우소프트</h3>
+                    <span class="badge sme">중소</span>
                   </div>
                   <p class="text-sm text-muted mt-1 truncate">
-                    <span class="font-semibold text-ink3">신한은행</span>
+                    <span class="font-semibold text-ink3">IT / SW</span>
                     <span class="mx-1 text-faint">·</span>
-                    Chief Information Officer
+                    서울 광화문
                   </p>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-[22px] font-bold leading-none tnum">22<span class="text-sm text-muted ml-0.5">년</span></div>
-                  <div class="eyebrow mt-1">Total Exp</div>
+                  <div class="text-[22px] font-bold leading-none tnum">3<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-5 pt-5 border-t border-line">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="skill-tag font-semibold text-ink3">경영</span>
-              <span class="skill-tag">은행 IT</span>
-              <span class="skill-tag">디지털 전환</span>
-              <span class="skill-tag">레거시 모더나이즈</span>
-            </div>
-            <p class="text-sm text-ink3 mt-3 leading-relaxed line-clamp-2">
-              차세대 코어뱅킹 시스템 구축 PM. 메인프레임 → MSA 전환 5년 프로젝트 완수. 임원 8년차, 전 IBM 컨설턴트.
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              덴탈 소프트웨어 SaaS. 인사팀장·SW 개발실장·Cloud Infra Engineer(K8s/AWS)·Backend(Node.js) 등 기술 리드 중심 채용.
             </p>
-            <div class="flex items-center justify-between mt-4">
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                서울 · 서강대 MBA · 전 IBM
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">10</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">SaaS 성장기</span>
+                <span class="meta-tag">담당 3인</span>
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
+                <button class="hover:text-warning"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </a>
+
+        <!-- ===== CARD 9 — 현대커머셜 ===== -->
+        <a href="https://www.hyundaicommercial.com" target="_blank" rel="noopener" class="col-span-4 bg-surface rounded-card shadow-card p-6 block group" aria-label="Open company website">
+          <div class="flex items-start gap-4">
+            <div class="logo logo-1">HC<img src="logos/hyundaicommercial.png" alt="" onerror="this.remove()" loading="lazy" /></div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-base font-bold tracking-tight">현대커머셜</h3>
+                    <span class="badge enterprise">대기업</span>
+                  </div>
+                  <p class="text-sm text-muted mt-1 truncate">
+                    <span class="font-semibold text-ink3">금융 / 캐피탈</span>
+                    <span class="mx-1 text-faint">·</span>
+                    서울 여의도
+                  </p>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-[22px] font-bold leading-none tnum">2<span class="text-sm text-muted ml-0.5">건</span></div>
+                  <div class="eyebrow mt-1">Active</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              현대차그룹 금융 자회사. 사모대체투자 검토·리스크 Manager·기업금융심사·리스크 모델러 등 투자심사 전문가 의뢰 집중.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">8</div>
+                <div class="lbl">Offers</div>
+              </div>
+              <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">Success</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="meta-tag">투자심사 전문</span>
+                <span class="meta-tag">담당 1인</span>
               </div>
               <div class="flex items-center gap-3 text-faint">
                 <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
@@ -692,7 +853,7 @@
       <div class="py-6 text-center">
         <div class="inline-flex items-center gap-2 text-xs font-semibold text-faint uppercase tracking-widest">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>
-          Loading more candidates…
+          Loading more clients…
         </div>
       </div>
 
@@ -705,7 +866,7 @@
 <div class="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
   <div class="search-bar pointer-events-auto">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" placeholder="후보자 이름, 회사, 직군 검색 — 또는 마이크로 말해보세요" />
+    <input type="text" placeholder="회사명, 업종, 담당자 검색 — 또는 마이크로 말해보세요" />
     <button class="voice-btn" aria-label="Voice search">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </button>

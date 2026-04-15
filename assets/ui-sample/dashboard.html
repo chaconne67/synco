@@ -120,6 +120,11 @@
   .cal-day:nth-child(7n+1)    { border-left: 0; }
   .cal-day:nth-child(7n)      { border-right: 0; }
   .cal-day:nth-last-child(-n+7) { border-bottom: 0; }
+  /* Weekend colors — Sunday red, Saturday blue */
+  .cal-day:nth-child(7n+1):not(.today) > .tnum { color: #DC2626; }
+  .cal-day:nth-child(7n):not(.today)   > .tnum { color: #2563EB; }
+  .cal-day.muted:nth-child(7n+1) > .tnum { color: #FCA5A5; }
+  .cal-day.muted:nth-child(7n)   > .tnum { color: #93C5FD; }
 
   /* Card hover — top/position 기반. transform 을 쓰면 hover 시 텍스트가 흐려진다. */
   .rounded-card {
@@ -165,37 +170,37 @@
 
     <!-- Nav -->
     <nav class="px-4 py-6 space-y-1 flex-1">
-      <a href="#" class="sidebar-link is-active">
+      <a href="dashboard.html" class="sidebar-link is-active">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
         Dashboard
       </a>
-      <a href="#" class="sidebar-link">
+      <a href="candidate-list.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Candidates
       </a>
-      <a href="#" class="sidebar-link">
+      <a href="projects.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6l5 5v11a2 2 0 0 1-2 2Z"/><path d="M3 15h6"/><path d="M3 18h6"/><path d="M3 12h6"/></svg>
         Projects
       </a>
-      <a href="#" class="sidebar-link">
+      <a href="clients-list.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
         Clients
       </a>
-      <a href="#" class="sidebar-link">
+      <a href="references.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/></svg>
         References
       </a>
-      <a href="#" class="sidebar-link">
+      <a href="newsfeed.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-3-2-3 2-3-2-3 2Z"/><path d="M18 14h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M8 6h4"/><path d="M8 10h4"/></svg>
         Newsfeed
       </a>
-      <a href="#" class="sidebar-link">
+      <a href="team.html" class="sidebar-link">
         <span class="dot"></span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>
         Team
@@ -490,15 +495,15 @@
           <div class="eyebrow mb-4">Monthly Schedule</div>
           <article class="bg-surface rounded-card shadow-card overflow-hidden">
 
-          <div class="grid grid-cols-7 border-b-2 bg-canvas" style="border-bottom-color:#EEF2F7">
+          <div class="grid grid-cols-7 border-b bg-surface" style="border-bottom-color:#E2E8F0">
             <!-- Weekday headers -->
-            <div class="eyebrow text-center py-3 !text-ink3">Sun</div>
-            <div class="eyebrow text-center py-3 !text-ink3">Mon</div>
-            <div class="eyebrow text-center py-3 !text-ink3">Tue</div>
-            <div class="eyebrow text-center py-3 !text-ink3">Wed</div>
-            <div class="eyebrow text-center py-3 !text-ink3">Thu</div>
-            <div class="eyebrow text-center py-3 !text-ink3">Fri</div>
-            <div class="eyebrow text-center py-3 !text-ink3">Sat</div>
+            <div class="eyebrow text-center py-3" style="color:#DC2626 !important">Sun</div>
+            <div class="eyebrow text-center py-3 !text-ink2">Mon</div>
+            <div class="eyebrow text-center py-3 !text-ink2">Tue</div>
+            <div class="eyebrow text-center py-3 !text-ink2">Wed</div>
+            <div class="eyebrow text-center py-3 !text-ink2">Thu</div>
+            <div class="eyebrow text-center py-3 !text-ink2">Fri</div>
+            <div class="eyebrow text-center py-3" style="color:#2563EB !important">Sat</div>
           </div>
 
           <div class="grid grid-cols-7 [&>*]:-ml-0.5 [&>*]:-mt-0.5">

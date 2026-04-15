@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>synco · Team</title>
+
+<!--
+  NOTE:
+  - 팀 카드 데이터는 assets/ui-sample/work-sample.xlsx 에서 시트(컨설턴트)별로 집계한 실제 수치.
+  - Role / 입사년도 등은 xlsx Contact 컬럼의 earliest_year 로 tenure 를 추정.
+  - 모델 매핑 (accounts.Organization / accounts.Membership):
+      Role: owner / consultant / viewer (3단계). 화면에서는 Managing Partner / Senior Consultant /
+            Consultant / Junior Consultant / Associate 등의 직함으로 presentation.
+      Status: active / pending / rejected.
+  - 상단 요약 카드 수치는 xlsx 전체 집계:
+      팀 구성원 6 · 누적 후보자 5,989 · 거래 고객사 57 · 성사 7.
+-->
+
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system',
+                 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        },
+        colors: {
+          canvas:  '#F8FAFC', surface: '#FFFFFF',
+          ink: '#0F172A', ink2: '#1E293B', ink3: '#334155',
+          muted: '#64748B', faint: '#94A3B8',
+          hair: '#E2E8F0', line: '#F1F5F9',
+          success: '#10B981', warning: '#F59E0B',
+          info: '#6366F1', danger: '#EF4444',
+        },
+        boxShadow: {
+          'card': '0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06)',
+          'lift': '0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.04)',
+          'fab':  '0 10px 15px -3px rgba(15,23,42,0.15), 0 4px 6px -2px rgba(15,23,42,0.08)',
+        },
+        borderRadius: { 'card': '16px' }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { font-family: 'Pretendard Variable', Pretendard, -apple-system, sans-serif; }
+  body { background: #F8FAFC; color: #0F172A; -webkit-font-smoothing: antialiased; }
+  .tnum { font-feature-settings: "tnum" 1, "ss01" 1; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 8px;
+    color: #94A3B8; font-size: 13px; font-weight: 500;
+    transition: background .15s ease, color .15s ease;
+  }
+  .sidebar-link:hover { background: #1E293B; color: #fff; }
+  .sidebar-link.is-active { background: #1E293B; color: #fff; }
+  .sidebar-link .dot { width: 3px; height: 18px; border-radius: 2px; background: transparent; margin-right: -8px; }
+  .sidebar-link.is-active .dot { background: #fff; }
+
+  .rounded-card {
+    position: relative; top: 0;
+    transition: top 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .rounded-card:hover {
+    top: -2px;
+    box-shadow: 0 12px 24px -10px rgba(15, 23, 42, 0.18),
+                0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  }
+
+  /* Avatar (same as candidate-list) */
+  .av {
+    width: 64px; height: 64px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 20px;
+    flex-shrink: 0; letter-spacing: -0.02em;
+    position: relative;
+  }
+  .av .status-dot {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 14px; height: 14px;
+    border: 2px solid #fff; border-radius: 999px;
+    background: #10B981;
+  }
+  .av-1 { background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%); }
+  .av-2 { background: linear-gradient(135deg, #fcd34d 0%, #d97706 100%); }
+  .av-3 { background: linear-gradient(135deg, #c4b5fd 0%, #6366f1 100%); }
+  .av-4 { background: linear-gradient(135deg, #6ee7b7 0%, #059669 100%); }
+  .av-5 { background: linear-gradient(135deg, #fda4af 0%, #be123c 100%); }
+  .av-6 { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%); }
+
+  /* Role badges */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .badge.owner      { background: #0F172A; color: #ffffff; }
+  .badge.senior     { background: #DBEAFE; color: #1E40AF; }
+  .badge.consultant { background: #F1F5F9; color: #334155; }
+  .badge.junior     { background: #FFEDD5; color: #9A3412; }
+  .badge.associate  { background: #DCFCE7; color: #166534; }
+
+  /* Meta tag (client tags inside card) */
+  .meta-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 500;
+    color: #475569; background: #F1F5F9;
+  }
+
+  /* Mini stat block */
+  .stat { display: flex; flex-direction: column; padding: 10px 0; }
+  .stat + .stat { border-left: 1px solid #F1F5F9; padding-left: 16px; }
+  .stat .num { font-size: 22px; font-weight: 800; line-height: 1; color: #0F172A; letter-spacing: -0.01em; }
+  .stat .num .unit { font-size: 11px; font-weight: 600; color: #94A3B8; margin-left: 2px; }
+  .stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-top: 6px; }
+
+  /* KPI row at top */
+  .kpi { padding: 22px 24px; }
+  .kpi .num { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: #0F172A; line-height: 1; }
+  .kpi .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-top: 8px; }
+  .kpi .delta { font-size: 11px; font-weight: 600; color: #64748B; margin-top: 6px; }
+  .kpi .delta.up    { color: #10B981; }
+  .kpi .delta.down  { color: #EF4444; }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<div class="flex min-h-screen">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="w-[260px] shrink-0 bg-ink text-white flex flex-col">
+    <div class="px-6 py-6 border-b border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        </div>
+        <div>
+          <div class="text-lg font-bold tracking-tight leading-none">synco</div>
+          <div class="eyebrow mt-1" style="color:#64748B">Executive Search v2.4</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="px-4 py-6 space-y-1 flex-1">
+      <a href="dashboard.html" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="candidate-list.html" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Candidates
+      </a>
+      <a href="projects.html" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6l5 5v11a2 2 0 0 1-2 2Z"/><path d="M3 15h6"/><path d="M3 18h6"/><path d="M3 12h6"/></svg>
+        Projects
+      </a>
+      <a href="clients-list.html" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+        Clients
+      </a>
+      <a href="references.html" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/></svg>
+        References
+      </a>
+      <a href="newsfeed.html" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-3-2-3 2-3-2-3 2Z"/><path d="M18 14h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M8 6h4"/><path d="M8 10h4"/></svg>
+        Newsfeed
+      </a>
+      <a href="team.html" class="sidebar-link is-active"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>
+        Team
+      </a>
+    </nav>
+
+    <div class="px-4 pb-6 space-y-1">
+      <a href="#" class="sidebar-link"><span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </div>
+  </aside>
+
+  <!-- ===== RIGHT COLUMN ===== -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">조직 · 컨설턴트 팀</div>
+        <h1 class="text-[22px] font-bold tracking-tight mt-1">Team</h1>
+      </div>
+      <div class="flex items-center gap-5">
+        <div class="text-right">
+          <div class="eyebrow">Wednesday · Oct 25, 2023</div>
+          <div class="text-xs text-muted mt-1 tnum">10:24 AM KST</div>
+        </div>
+        <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        </button>
+        <div class="flex items-center gap-3 pl-5 border-l border-hair">
+          <div class="text-right">
+            <div class="text-sm font-semibold">Senior Partner</div>
+            <div class="eyebrow">Advisory Board</div>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-ink2 text-white flex items-center justify-center text-sm font-semibold">SP</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="w-full max-w-[1280px] flex flex-col">
+    <div class="px-8 py-8 space-y-6 flex-1 pb-32">
+
+      <!-- ============ Page header ============ -->
+      <section class="flex items-end justify-between gap-4">
+        <div>
+          <div class="eyebrow">Search Firm Members</div>
+          <h2 class="text-[28px] font-bold tracking-tight mt-1">Team</h2>
+          <p class="text-sm text-muted mt-1">
+            <span class="font-semibold text-ink tnum">6</span>명의 컨설턴트가 함께 일하고 있습니다. 각자의 전문 영역과 실적을 한눈에 확인하세요.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            조직 설정
+          </button>
+          <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            멤버 초대
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ KPI summary row ============ -->
+      <section class="grid grid-cols-4 gap-6">
+        <article class="bg-surface rounded-card shadow-card kpi">
+          <div class="num tnum">6</div>
+          <div class="lbl">팀 구성원</div>
+          <div class="delta up">+2 최근 90일</div>
+        </article>
+        <article class="bg-surface rounded-card shadow-card kpi">
+          <div class="num tnum">5,989</div>
+          <div class="lbl">누적 후보자 컨택</div>
+          <div class="delta">전체 기간</div>
+        </article>
+        <article class="bg-surface rounded-card shadow-card kpi">
+          <div class="num tnum">57</div>
+          <div class="lbl">거래 고객사</div>
+          <div class="delta">25 활성</div>
+        </article>
+        <article class="bg-surface rounded-card shadow-card kpi">
+          <div class="num tnum">7</div>
+          <div class="lbl">성사 건수</div>
+          <div class="delta up">2025 누적</div>
+        </article>
+      </section>
+
+      <!-- ============ Team cards grid (3-col, 6 cards) ============ -->
+      <section class="grid grid-cols-12 gap-6">
+
+        <!-- ===== CARD 1 — 정호열 (Owner / Managing Partner) ===== -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="av av-1">정호
+              <span class="status-dot"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[16px] font-bold tracking-tight">정호열</h3>
+                <span class="badge owner">Managing Partner</span>
+              </div>
+              <p class="text-sm text-muted mt-1 truncate">
+                Jeong Ho-yeol
+                <span class="mx-1 text-faint">·</span>
+                <span class="text-ink3 font-semibold">Partner</span>
+              </p>
+              <p class="text-xs text-faint mt-1">2021년 합류 · <span class="tnum">5</span>년차</p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              헬스케어/의료기기·바이오 분야 임원급 서치 전문. Vatech CFO·본부장 포지션 연속 성사. 팀 내 최장 근속.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">1,457</div>
+                <div class="lbl">Candidates</div>
+              </div>
+              <div class="stat">
+                <div class="num">94</div>
+                <div class="lbl">Positions</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="eyebrow mb-2">Top Clients</div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="meta-tag">Vatech</span>
+                <span class="meta-tag">SKBP</span>
+                <span class="meta-tag">일진홀딩스</span>
+                <span class="meta-tag">한독</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                jeong@synco.kr
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== CARD 2 — 김현정 (Senior / 최다 성사) ===== -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="av av-5">김현
+              <span class="status-dot"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[16px] font-bold tracking-tight">김현정</h3>
+                <span class="badge senior">Senior Consultant</span>
+              </div>
+              <p class="text-sm text-muted mt-1 truncate">
+                Kim Hyun-jung
+                <span class="mx-1 text-faint">·</span>
+                <span class="text-ink3 font-semibold">Healthcare Desk</span>
+              </p>
+              <p class="text-xs text-faint mt-1">2024년 합류 · <span class="tnum">2</span>년차</p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              바이오/제약·헬스케어·소비재 중심. 팀 내 최대 후보자 풀을 운영, 최다 성사 기록 보유. SKBP·Vatech 주력.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">2,200</div>
+                <div class="lbl">Candidates</div>
+              </div>
+              <div class="stat">
+                <div class="num">80</div>
+                <div class="lbl">Positions</div>
+              </div>
+              <div class="stat">
+                <div class="num">5<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="eyebrow mb-2">Top Clients</div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="meta-tag">SKBP</span>
+                <span class="meta-tag">Vatech</span>
+                <span class="meta-tag">나노신소재</span>
+                <span class="meta-tag">ASICS</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                kim@synco.kr
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== CARD 3 — 박정일 (Senior) ===== -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="av av-6">박정
+              <span class="status-dot"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[16px] font-bold tracking-tight">박정일</h3>
+                <span class="badge senior">Senior Consultant</span>
+              </div>
+              <p class="text-sm text-muted mt-1 truncate">
+                Park Jeong-il
+                <span class="mx-1 text-faint">·</span>
+                <span class="text-ink3 font-semibold">Industrials Desk</span>
+              </p>
+              <p class="text-xs text-faint mt-1">2023년 합류 · <span class="tnum">3</span>년차</p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              제약·금융·소재 분야 리드. 한독 건기식 신설법인·현대커머셜 투자심사 포지션 다수 진행. 꾸준한 성사율.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">1,955</div>
+                <div class="lbl">Candidates</div>
+              </div>
+              <div class="stat">
+                <div class="num">89</div>
+                <div class="lbl">Positions</div>
+              </div>
+              <div class="stat">
+                <div class="num">2<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="eyebrow mb-2">Top Clients</div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="meta-tag">한독</span>
+                <span class="meta-tag">현대커머셜</span>
+                <span class="meta-tag">SKBP</span>
+                <span class="meta-tag">덕산네오룩스</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                park.j@synco.kr
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== CARD 4 — 박지영 (Consultant) ===== -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="av av-3">박지
+              <span class="status-dot"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[16px] font-bold tracking-tight">박지영</h3>
+                <span class="badge consultant">Consultant</span>
+              </div>
+              <p class="text-sm text-muted mt-1 truncate">
+                Park Ji-young
+                <span class="mx-1 text-faint">·</span>
+                <span class="text-ink3 font-semibold">Materials Desk</span>
+              </p>
+              <p class="text-xs text-faint mt-1">2024년 합류 · <span class="tnum">2</span>년차</p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              소재·제약·소비재 지원 역할. 덕산네오룩스 제조/연구 포지션 전담. 박정일 Desk와 협업하며 고객사 레퍼런스 확대 중.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">280</div>
+                <div class="lbl">Candidates</div>
+              </div>
+              <div class="stat">
+                <div class="num">34</div>
+                <div class="lbl">Positions</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="eyebrow mb-2">Top Clients</div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="meta-tag">덕산네오룩스</span>
+                <span class="meta-tag">한독</span>
+                <span class="meta-tag">AsicsOT</span>
+                <span class="meta-tag">SKBP</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                park.jy@synco.kr
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== CARD 5 — 전병권 (Junior) ===== -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="av av-2">전병
+              <span class="status-dot"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[16px] font-bold tracking-tight">전병권</h3>
+                <span class="badge junior">Junior Consultant</span>
+              </div>
+              <p class="text-sm text-muted mt-1 truncate">
+                Jeon Byeong-kwon
+                <span class="mx-1 text-faint">·</span>
+                <span class="text-ink3 font-semibold">Cross-Sector</span>
+              </p>
+              <p class="text-xs text-faint mt-1">2026년 합류 · 신규 · <span class="tnum">3</span>개월차</p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              다양한 산업 크로스섹터 서치 중. Veolia 외국계 기술직·스파크엑스 IT 등 12개 고객사 오픈 파이프라인.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">86</div>
+                <div class="lbl">Candidates</div>
+              </div>
+              <div class="stat">
+                <div class="num">31</div>
+                <div class="lbl">Positions</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="eyebrow mb-2">Top Clients</div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="meta-tag">Veolia</span>
+                <span class="meta-tag">스파크엑스</span>
+                <span class="meta-tag">ASICS</span>
+                <span class="meta-tag">오에스피</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                jeon@synco.kr
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===== CARD 6 — 임성민 (Associate) ===== -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="av av-4">임성
+              <span class="status-dot"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[16px] font-bold tracking-tight">임성민</h3>
+                <span class="badge associate">Associate</span>
+              </div>
+              <p class="text-sm text-muted mt-1 truncate">
+                Lim Sung-min
+                <span class="mx-1 text-faint">·</span>
+                <span class="text-ink3 font-semibold">Tech Desk</span>
+              </p>
+              <p class="text-xs text-faint mt-1">2026년 합류 · 신규 · <span class="tnum">1</span>개월차</p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-5 border-t border-line">
+            <p class="text-sm text-ink3 leading-relaxed line-clamp-2">
+              IT/SW 분야 전담. 이우소프트 Cloud Infra·Backend 엔지니어 채용 오픈. 온보딩 진행 중으로 첫 파이프라인 구축 단계.
+            </p>
+            <div class="grid grid-cols-3 gap-1 mt-4">
+              <div class="stat">
+                <div class="num">11</div>
+                <div class="lbl">Candidates</div>
+              </div>
+              <div class="stat">
+                <div class="num">2</div>
+                <div class="lbl">Positions</div>
+              </div>
+              <div class="stat">
+                <div class="num">0<span class="unit">명</span></div>
+                <div class="lbl">Placed</div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="eyebrow mb-2">Top Clients</div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="meta-tag">이우소프트</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-line">
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                lim@synco.kr
+              </div>
+              <div class="flex items-center gap-3 text-faint">
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+    </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>
