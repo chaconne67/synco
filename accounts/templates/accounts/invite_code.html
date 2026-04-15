@@ -5,51 +5,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>synco -- 초대코드 입력</title>
+  <title>synco — 초대코드 입력</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
-<body class="bg-slate-50 font-sans min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-sm px-6">
-    <div class="text-center mb-8">
-      <h1 class="text-2xl font-bold text-primary mb-2">synco</h1>
-      <p class="text-gray-500 text-[15px]">조직에 참여하려면 초대코드를 입력하세요.</p>
+<body class="bg-canvas font-sans text-ink min-h-screen flex items-center justify-center px-6 py-10">
+  <div class="w-full max-w-md">
+    <div class="flex flex-col items-center mb-8">
+      <div class="w-12 h-12 bg-primary rounded flex items-center justify-center text-white font-black text-2xl tracking-tighter mb-4">S</div>
+      <h1 class="text-lg font-black uppercase tracking-tight text-slate-900">Synco</h1>
+      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-1">Invite Code</p>
     </div>
 
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
-      <div>
-        <input
-          type="text"
-          name="code"
-          placeholder="초대코드 8자리"
-          maxlength="8"
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-lg tracking-widest font-mono uppercase focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          autocomplete="off"
-          autofocus
-          required
+    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
+      <h2 class="text-xl font-black text-slate-900 tracking-tight mb-2 text-center">조직에 참여하기</h2>
+      <p class="text-sm text-slate-500 text-center mb-6">관리자에게 받은 초대코드 8자리를 입력하세요.</p>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Invite Code</label>
+          <input
+            type="text"
+            name="code"
+            placeholder="XXXXXXXX"
+            maxlength="8"
+            class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-4 text-center text-xl font-mono font-bold tracking-[0.3em] uppercase text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/10 transition"
+            autocomplete="off"
+            autofocus
+            required
+          >
+        </div>
+
+        {% if error %}
+        <div class="rounded-xl bg-rose-50 border border-rose-100 px-4 py-3 text-xs font-semibold text-rose-600 text-center">
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <button
+          type="submit"
+          class="w-full rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all"
         >
-      </div>
-
-      {% if error %}
-      <p class="text-red-500 text-sm text-center">{{ error }}</p>
-      {% endif %}
-
-      <button
-        type="submit"
-        class="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition"
-      >
-        참여하기
-      </button>
-    </form>
-
-    <div class="mt-6 text-center">
-      <p class="text-gray-400 text-sm">초대코드가 없으신가요?</p>
-      <p class="text-gray-400 text-sm">조직 관리자에게 문의하세요.</p>
+          참여하기
+        </button>
+      </form>
     </div>
 
-    <div class="mt-8 text-center">
-      <a href="{% url 'logout' %}" class="text-gray-400 text-sm hover:text-gray-600">로그아웃</a>
+    <div class="mt-6 text-center space-y-2">
+      <p class="text-xs text-slate-400">초대코드가 없으신가요? 조직 관리자에게 문의하세요.</p>
+      <a href="{% url 'logout' %}" class="inline-block text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition">Logout</a>
     </div>
   </div>
 </body>

@@ -1,10 +1,10 @@
-<section id="posting-section" class="bg-white rounded-lg border border-gray-100 p-5">
+<section id="posting-section" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-[15px] font-semibold text-gray-500">공지</h2>
+    <h2 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">공지</h2>
   </div>
 
   {% if error %}
-  <div class="text-[14px] text-red-500 mb-3">{{ error }}</div>
+  <div class="text-[14px] text-rose-600 mb-3">{{ error }}</div>
   {% endif %}
 
   {% if confirm_overwrite %}
@@ -23,12 +23,12 @@
       <button hx-get="{% url 'projects:project_tab_overview' project.pk %}"
               hx-target="#tab-content"
               type="button"
-              class="px-3 py-1.5 text-gray-500 text-[13px] hover:text-gray-700 transition">
+              class="px-3 py-1.5 text-slate-500 text-[13px] hover:text-slate-700 transition">
         취소
       </button>
     </div>
     <div id="posting-loading" class="htmx-indicator mt-2">
-      <span class="text-[13px] text-gray-400">생성 중...</span>
+      <span class="text-[13px] text-slate-400">생성 중...</span>
     </div>
   </div>
   {% endif %}
@@ -36,7 +36,7 @@
   {% if project.posting_text %}
     <!-- 파일명 + 액션 버튼 -->
     <div class="flex items-center justify-between mb-3">
-      <span class="text-[14px] text-gray-600 truncate">
+      <span class="text-[14px] text-slate-600 truncate">
         {{ project.posting_file_name|default:"posting.txt" }}
       </span>
       <div class="flex items-center gap-2">
@@ -51,21 +51,21 @@
           다운로드
         </a>
         <button onclick="navigator.clipboard.writeText(document.getElementById('posting-preview-text').innerText)"
-                class="text-[13px] text-gray-500 hover:text-gray-700 font-medium transition">
+                class="text-[13px] text-slate-500 hover:text-slate-700 font-medium transition">
           클립보드 복사
         </button>
       </div>
     </div>
 
     <!-- 공지 미리보기 -->
-    <div class="bg-gray-50 rounded-lg p-4 mb-4">
-      <p id="posting-preview-text" class="text-[14px] text-gray-700 whitespace-pre-wrap">{{ project.posting_text }}</p>
+    <div class="bg-slate-50 rounded-lg p-4 mb-4">
+      <p id="posting-preview-text" class="text-[14px] text-slate-700 whitespace-pre-wrap">{{ project.posting_text }}</p>
     </div>
   {% elif not confirm_overwrite %}
     <!-- 공지 미생성 상태 -->
     {% if project.jd_text or project.jd_raw_text %}
     <div class="text-center py-4">
-      <p class="text-[14px] text-gray-400 mb-3">공지가 아직 생성되지 않았습니다.</p>
+      <p class="text-[14px] text-slate-400 mb-3">공지가 아직 생성되지 않았습니다.</p>
       <button hx-post="{% url 'projects:posting_generate' project.pk %}"
               hx-target="#posting-section"
               hx-swap="outerHTML"
@@ -74,16 +74,16 @@
         공지 생성
       </button>
       <div id="posting-loading" class="htmx-indicator mt-2">
-        <span class="text-[13px] text-gray-400">생성 중...</span>
+        <span class="text-[13px] text-slate-400">생성 중...</span>
       </div>
     </div>
     {% else %}
-    <p class="text-[14px] text-gray-400">JD를 먼저 등록해주세요.</p>
+    <p class="text-[14px] text-slate-400">JD를 먼저 등록해주세요.</p>
     {% endif %}
   {% endif %}
 
   <!-- 포스팅 현황 -->
-  <div class="border-t border-gray-100 pt-4 mt-4"
+  <div class="border-t border-slate-100 pt-4 mt-4"
        hx-get="{% url 'projects:posting_sites' project.pk %}"
        hx-trigger="postingSiteChanged from:body"
        hx-target="#posting-sites-area">

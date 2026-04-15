@@ -1,6 +1,8 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
-{% block title %}{{ candidate.name }} 검토 - synco{% endblock %}
+{% block title %}{{ candidate.name }} 검토 — synco{% endblock %}
+{% block breadcrumb_current %}Review · {{ candidate.name }}{% endblock %}
+{% block page_title %}{{ candidate.name }}{% endblock %}
 
 {% block content %}
 {% include "candidates/partials/review_detail_content.html" %}

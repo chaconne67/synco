@@ -1,5 +1,5 @@
 <div class="flex items-center justify-between mb-3">
-  <h3 class="text-[14px] font-medium text-gray-500">포스팅 현황</h3>
+  <h3 class="text-[14px] font-medium text-slate-500">포스팅 현황</h3>
   <button hx-get="{% url 'projects:posting_site_add' project.pk %}"
           hx-target="#posting-site-form-area"
           hx-swap="innerHTML"
@@ -15,21 +15,21 @@
   {% for site in posting_sites %}
   <div class="flex items-center justify-between text-[14px] py-1.5">
     <div class="flex items-center gap-3">
-      <span class="text-green-500">&#10003;</span>
-      <span class="text-gray-800 font-medium w-20">{{ site.get_site_display }}</span>
-      <span class="text-gray-400">{{ site.posted_at|date:"m/d"|default:"미게시" }}</span>
-      <span class="text-gray-600">지원자: {{ site.applicant_count }}명</span>
+      <span class="text-emerald-500">&#10003;</span>
+      <span class="text-slate-800 font-medium w-20">{{ site.get_site_display }}</span>
+      <span class="text-slate-400">{{ site.posted_at|date:"m/d"|default:"미게시" }}</span>
+      <span class="text-slate-600">지원자: {{ site.applicant_count }}명</span>
     </div>
     <div class="flex items-center gap-2">
       <button hx-get="{% url 'projects:posting_site_update' project.pk site.pk %}"
               hx-target="#posting-site-form-area"
               hx-swap="innerHTML"
-              class="text-[13px] text-gray-500 hover:text-primary transition">
+              class="text-[13px] text-slate-500 hover:text-primary transition">
         수정
       </button>
       <button hx-post="{% url 'projects:posting_site_delete' project.pk site.pk %}"
               hx-confirm="이 포스팅 사이트를 비활성화하시겠습니까?"
-              class="text-[13px] text-gray-400 hover:text-red-500 transition">
+              class="text-[13px] text-slate-400 hover:text-rose-600 transition">
         삭제
       </button>
     </div>
@@ -37,9 +37,9 @@
   {% endfor %}
 </div>
 
-<div class="mt-3 pt-2 border-t border-gray-50 text-[14px] text-gray-600">
-  합계 지원자: <span class="font-semibold text-gray-800">{{ total_applicants }}명</span>
+<div class="mt-3 pt-2 border-t border-slate-50 text-[14px] text-slate-600">
+  합계 지원자: <span class="font-semibold text-slate-800">{{ total_applicants }}명</span>
 </div>
 {% else %}
-<p class="text-[14px] text-gray-400">등록된 포스팅 사이트가 없습니다.</p>
+<p class="text-[14px] text-slate-400">등록된 포스팅 사이트가 없습니다.</p>
 {% endif %}

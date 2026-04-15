@@ -4,7 +4,8 @@ from . import views
 
 urlpatterns = [
     # Note: home is now in main/urls.py as root entry point
-    path("accounts/login/", views.login_page, name="login"),
+    # Path stays "accounts/login/" for kakao OAuth redirect + Django LOGIN_URL compat.
+    path("accounts/login/", views.landing_page, name="landing"),
     path("accounts/chaconne67-login/", views.staff_login_page, name="staff_login"),
     path("accounts/ceo-login/", views.ceo_login_page, name="ceo_login"),
     path("accounts/kakao/login/", views.kakao_login, name="kakao_login"),

@@ -2,9 +2,9 @@
 <div class="space-y-4">
 
   {# 직접 입력 #}
-  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-    <h2 class="text-lg font-semibold text-gray-900">상담 내용 입력</h2>
-    <p class="text-sm text-gray-600">
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
+    <h2 class="text-lg font-bold text-slate-900">상담 내용 입력</h2>
+    <p class="text-sm text-slate-600">
       후보자와의 상담 내용을 입력하세요. AI가 자동으로 구조화합니다.
     </p>
     <form hx-post="{% url 'projects:draft_consultation' project.pk submission.pk %}"
@@ -13,7 +13,7 @@
       {% csrf_token %}
       <textarea name="consultation_input"
                 rows="6"
-                class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary"
+                class="w-full border border-slate-100 rounded-xl px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="이직 동기, 희망 연봉, 입사 가능 시기, 강점/우려사항 등을 자유롭게 입력하세요...">{{ draft.consultation_input }}</textarea>
       <div class="flex justify-end mt-3">
         <button type="submit"
@@ -25,9 +25,9 @@
   </div>
 
   {# 녹음 파일 업로드 #}
-  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-    <h3 class="text-sm font-semibold text-gray-700">또는 녹음 파일 업로드</h3>
-    <p class="text-xs text-gray-500">
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
+    <h3 class="text-sm font-semibold text-slate-700">또는 녹음 파일 업로드</h3>
+    <p class="text-xs text-slate-500">
       녹음 파일을 업로드하면 Whisper AI가 텍스트로 변환합니다.
       (지원 형식: webm, mp4, m4a, ogg, wav, mp3 / 최대 25MB)
     </p>
@@ -39,9 +39,9 @@
       {% csrf_token %}
       <div class="flex items-center gap-3">
         <input type="file" name="audio_file" accept=".webm,.mp4,.m4a,.ogg,.wav,.mp3"
-               class="text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
+               class="text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
         <button type="submit"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition">
           업로드
           <span id="audio-spinner" class="htmx-indicator">
             <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -56,17 +56,17 @@
 
   {# 딕테이션 결과 #}
   {% if draft.consultation_transcript %}
-  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
-    <h3 class="text-sm font-semibold text-gray-700">음성 인식 결과</h3>
-    <p class="text-sm text-gray-600 bg-gray-50 rounded-lg p-4">{{ draft.consultation_transcript }}</p>
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-3">
+    <h3 class="text-sm font-semibold text-slate-700">음성 인식 결과</h3>
+    <p class="text-sm text-slate-600 bg-slate-50 rounded-xl p-4">{{ draft.consultation_transcript }}</p>
   </div>
   {% endif %}
 
   {# 상담 요약 결과 #}
   {% if draft.consultation_summary %}
-  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
-    <h3 class="text-sm font-semibold text-gray-700">AI 상담 정리 결과</h3>
-    <div class="text-sm text-gray-600 space-y-2">
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-3">
+    <h3 class="text-sm font-semibold text-slate-700">AI 상담 정리 결과</h3>
+    <div class="text-sm text-slate-600 space-y-2">
       {% if draft.consultation_summary.motivation %}
       <p><strong>이직 동기:</strong> {{ draft.consultation_summary.motivation }}</p>
       {% endif %}

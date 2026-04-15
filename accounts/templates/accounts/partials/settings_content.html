@@ -1,53 +1,52 @@
 {% load static %}
 
-<!-- My Info -->
-<section class="bg-white rounded-lg border border-gray-100 p-5">
-  <h2 class="text-[15px] font-semibold text-gray-500 mb-4">내 정보</h2>
+<div class="space-y-4">
+  <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">내 정보 · Profile</h3>
 
-  <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <span class="text-[15px] text-gray-500">이름</span>
-      <span class="text-[15px] font-medium">{{ user.first_name|default:"-" }}</span>
-    </div>
-    <div class="flex items-center justify-between">
-      <span class="text-[15px] text-gray-500">소속</span>
-      <span class="text-[15px] font-medium">{{ user.company_name|default:"-" }}</span>
-    </div>
-    <div class="flex items-center justify-between">
-      <span class="text-[15px] text-gray-500">전화번호</span>
-      <span class="text-[15px] font-medium">{{ user.phone|default:"-" }}</span>
-    </div>
-  </div>
-</section>
+    <dl class="space-y-4">
+      <div class="flex items-center justify-between">
+        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">이름</dt>
+        <dd class="text-sm font-bold text-slate-900">{{ user.first_name|default:"-" }}</dd>
+      </div>
+      <div class="flex items-center justify-between">
+        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">소속</dt>
+        <dd class="text-sm font-bold text-slate-900">{{ user.company_name|default:"-" }}</dd>
+      </div>
+      <div class="flex items-center justify-between">
+        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">전화번호</dt>
+        <dd class="text-sm font-bold text-slate-900">{{ user.phone|default:"-" }}</dd>
+      </div>
+    </dl>
+  </section>
 
-<!-- App Info -->
-<section class="bg-white rounded-lg border border-gray-100 p-5">
-  <h2 class="text-[15px] font-semibold text-gray-500 mb-4">앱 정보</h2>
+  <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">앱 정보 · App</h3>
 
-  <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <span class="text-[15px] text-gray-500">버전</span>
-      <span class="text-[15px] text-gray-500">1.0.0</span>
+    <div class="divide-y divide-slate-100">
+      <div class="flex items-center justify-between py-3 first:pt-0">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">버전</span>
+        <span class="text-sm font-bold text-slate-900">1.0.0</span>
+      </div>
+      <a href="{% url 'terms' %}" class="flex items-center justify-between py-3 group hover:text-primary transition-colors">
+        <span class="text-sm font-semibold text-slate-700 group-hover:text-primary">이용약관</span>
+        <svg class="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <a href="{% url 'privacy' %}" class="flex items-center justify-between py-3 last:pb-0 group hover:text-primary transition-colors">
+        <span class="text-sm font-semibold text-slate-700 group-hover:text-primary">개인정보처리방침</span>
+        <svg class="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
     </div>
-    <a href="{% url 'terms' %}" class="flex items-center justify-between group">
-      <span class="text-[15px] text-gray-500 group-hover:text-gray-700">이용약관</span>
-      <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-      </svg>
+  </section>
+
+  <div class="pt-4">
+    <a href="{% url 'logout' %}"
+       class="block w-full text-center rounded-xl bg-white border border-rose-200 text-rose-600 font-bold text-xs uppercase tracking-widest py-4 hover:bg-rose-50 transition-all">
+      로그아웃
     </a>
-    <a href="{% url 'privacy' %}" class="flex items-center justify-between group">
-      <span class="text-[15px] text-gray-500 group-hover:text-gray-700">개인정보처리방침</span>
-      <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-      </svg>
-    </a>
   </div>
-</section>
-
-<!-- Logout -->
-<div class="pt-2 pb-4">
-  <a href="{% url 'logout' %}"
-     class="block w-full text-center text-[15px] font-medium text-red-500 py-3 rounded-lg hover:bg-red-50 transition">
-    로그아웃
-  </a>
 </div>

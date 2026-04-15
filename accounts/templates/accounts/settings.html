@@ -1,20 +1,20 @@
 {# accounts/templates/accounts/settings.html #}
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
-{% block title %}synco - 설정{% endblock %}
+{% block title %}설정 — synco{% endblock %}
+{% block breadcrumb_current %}Settings{% endblock %}
+{% block page_title %}설정{% endblock %}
 
 {% block content %}
-<div class="p-4 lg:p-8 space-y-6">
-  <!-- Page Header -->
-  <div>
-    <h1 class="text-heading font-bold">설정</h1>
+<div class="px-10 py-10 max-w-4xl">
+  <div class="mb-10">
+    <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Account Settings</span>
+    <h2 class="text-4xl font-black text-slate-900 tracking-tight">설정</h2>
   </div>
 
-  <!-- Tab Bar -->
   {% include "accounts/partials/settings_tab_bar.html" %}
 
-  <!-- Tab Content -->
-  <div id="settings-content">
+  <div id="settings-content" class="mt-6">
     {% if tab_template %}
       {% include tab_template %}
     {% else %}

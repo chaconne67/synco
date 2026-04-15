@@ -1,14 +1,14 @@
 {# 대기 상태 — AI 초안 생성 버튼 #}
-<div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-  <h2 class="text-lg font-semibold text-gray-900">AI 초안 생성</h2>
-  <p class="text-sm text-gray-600">
-    {{ candidate.name }} 후보자의 데이터를 기반으로 AI가 추천 서류 초안을 자동 생성합니다.
+<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-8 space-y-5">
+  <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">AI 초안 생성 · Generate</h3>
+  <p class="text-sm text-slate-600">
+    <span class="text-slate-900 font-bold">{{ candidate.name }}</span> 후보자의 데이터를 기반으로 AI가 추천 서류 초안을 자동 생성합니다.
   </p>
 
-  <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
-    <p><strong>양식:</strong> {{ submission.get_template_display|default:"미선택" }}</p>
-    <p><strong>경력:</strong> {{ candidate.total_experience_years|default:"–" }}년</p>
-    <p><strong>현재:</strong> {{ candidate.current_company|default:"–" }} {{ candidate.current_position|default:"" }}</p>
+  <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-2">
+    <p class="text-xs"><span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">양식</span> <span class="text-slate-900 font-semibold ml-2">{{ submission.get_template_display|default:"미선택" }}</span></p>
+    <p class="text-xs"><span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">경력</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.total_experience_years|default:"–" }}년</span></p>
+    <p class="text-xs"><span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">현재</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.current_company|default:"–" }} {{ candidate.current_position|default:"" }}</span></p>
   </div>
 
   <form hx-post="{% url 'projects:draft_generate' project.pk submission.pk %}"
@@ -17,9 +17,9 @@
         hx-indicator="#generate-spinner">
     {% csrf_token %}
     <button type="submit"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            class="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
       </svg>
       AI 초안 생성
       <span id="generate-spinner" class="htmx-indicator">

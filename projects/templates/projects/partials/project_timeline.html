@@ -2,23 +2,23 @@
 {% load humanize %}
 <div class="space-y-1">
   {% for action in actions %}
-    <div class="border-l-2 border-slate-700 pl-4 py-2">
+    <div class="border-l-2 border-slate-200 pl-4 py-2">
       <p class="text-xs text-slate-500">{{ action.created_at|date:"Y-m-d H:i" }}</p>
-      <p class="text-sm text-slate-200">
-        <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{{ action.action_type.label_ko }}</span>
+      <p class="text-sm text-slate-700">
+        <span class="rounded-full bg-slate-50 px-2 py-0.5 text-xs text-slate-500">{{ action.action_type.label_ko }}</span>
         <span class="ml-1">{{ action.application.candidate.name }}</span>
         {% if action.channel %}
           <span class="text-xs text-slate-500">· {{ action.get_channel_display }}</span>
         {% endif %}
       </p>
       {% if action.status == 'done' %}
-        <span class="text-xs text-emerald-400">완료{% if action.completed_at %} ({{ action.completed_at|naturaltime }}){% endif %}</span>
+        <span class="text-xs text-emerald-700">완료{% if action.completed_at %} ({{ action.completed_at|naturaltime }}){% endif %}</span>
       {% elif action.status == 'skipped' %}
         <span class="text-xs text-amber-400">건너뜀</span>
       {% elif action.status == 'cancelled' %}
         <span class="text-xs text-slate-500">취소됨</span>
       {% else %}
-        <span class="text-xs text-teal-400">대기</span>
+        <span class="text-xs text-primary">대기</span>
       {% endif %}
       {% if action.result %}
         <p class="mt-1 text-xs text-slate-400">{{ action.result|truncatechars:120 }}</p>

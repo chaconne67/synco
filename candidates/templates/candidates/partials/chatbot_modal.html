@@ -14,10 +14,10 @@
      aria-label="AI 검색">
 
   <!-- Header -->
-  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-    <h2 class="text-base font-semibold text-gray-900">synco AI 검색</h2>
+  <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+    <h2 class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Synco AI Search</h2>
     <button onclick="toggleChatbot()"
-            class="text-gray-400 hover:text-gray-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            class="text-slate-400 hover:text-slate-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="닫기">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -27,22 +27,22 @@
 
   <!-- Drag handle (mobile) -->
   <div class="lg:hidden flex justify-center py-1 cursor-grab" id="drag-handle">
-    <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+    <div class="w-10 h-1 bg-slate-300 rounded-full"></div>
   </div>
 
   <!-- Messages area -->
   <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
     <div class="flex gap-2">
-      <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[90%]">
-        <p class="text-[15px] text-gray-900">안녕하세요! 아래 마이크를 눌러 음성으로 검색하세요.</p>
-        <p class="text-[13px] text-gray-500 mt-1">예시:</p>
+      <div class="bg-slate-50 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%]">
+        <p class="text-sm text-slate-900 font-medium">안녕하세요! 아래 마이크를 눌러 음성으로 검색하세요.</p>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">예시</p>
         <div class="flex flex-wrap gap-1.5 mt-2">
           <button onclick="searchWithChip('영업 경력 10년 이상')"
-                  class="text-[13px] bg-white border border-gray-200 rounded-full px-3 py-1.5 min-h-[36px] hover:border-primary hover:text-primary transition">
+                  class="text-xs font-semibold bg-white border border-slate-100 rounded-full px-3 py-1.5 min-h-[32px] hover:border-primary/30 hover:text-primary transition">
             영업 경력 10년 이상
           </button>
           <button onclick="searchWithChip('삼성전자 출신 HR')"
-                  class="text-[13px] bg-white border border-gray-200 rounded-full px-3 py-1.5 min-h-[36px] hover:border-primary hover:text-primary transition">
+                  class="text-xs font-semibold bg-white border border-slate-100 rounded-full px-3 py-1.5 min-h-[32px] hover:border-primary/30 hover:text-primary transition">
             삼성전자 출신 HR
           </button>
         </div>
@@ -51,11 +51,11 @@
   </div>
 
   <!-- Voice input area — always visible at bottom -->
-  <div class="border-t border-gray-100 px-4 pt-4" style="padding-bottom: max(24px, env(safe-area-inset-bottom))">
+  <div class="border-t border-slate-100 px-4 pt-4" style="padding-bottom: max(24px, env(safe-area-inset-bottom))">
     <!-- Idle state: minimize | mic | keyboard — Font Awesome icons -->
     <div id="voice-idle" class="flex items-center justify-between gap-6">
       <button id="minimize-btn" onclick="toggleChatbot()"
-              class="w-14 h-14 flex items-center justify-center text-gray-400 hover:text-gray-600 transition"
+              class="w-14 h-14 flex items-center justify-center text-slate-400 hover:text-slate-600 transition"
               aria-label="최소화">
         <i class="fa-regular fa-square-minus" style="font-size:24px"></i>
       </button>
@@ -66,7 +66,7 @@
         <i class="fa-solid fa-microphone" style="font-size:24px"></i>
       </button>
       <button onclick="showTextInput()"
-              class="w-14 h-14 flex items-center justify-center text-gray-400 hover:text-gray-600 transition"
+              class="w-14 h-14 flex items-center justify-center text-slate-400 hover:text-slate-600 transition"
               aria-label="키보드 입력">
         <i class="fa-regular fa-keyboard" style="font-size:24px"></i>
       </button>
@@ -75,20 +75,20 @@
     <!-- Recording state: waveform + done button in one row -->
     <div id="voice-recording" class="hidden flex items-center gap-2">
       <!-- Symmetric waveform -->
-      <div class="flex-1 h-12 bg-gray-100 rounded-full flex items-center px-3 gap-[2px] overflow-hidden" id="waveform-container">
-        <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shrink-0 mr-1.5"></span>
+      <div class="flex-1 h-12 bg-slate-50 rounded-full flex items-center px-3 gap-[2px] overflow-hidden" id="waveform-container">
+        <span class="w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse shrink-0 mr-1.5"></span>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <span id="rec-timer" class="text-[11px] font-mono text-red-500 shrink-0 ml-1.5 min-w-[32px] text-right">00:00</span>
+        <span id="rec-timer" class="text-[11px] font-mono text-rose-500 shrink-0 ml-1.5 min-w-[32px] text-right">00:00</span>
       </div>
       <!-- Stop button -->
       <button id="rec-done-btn"
               onclick="toggleRecording()"
-              class="shrink-0 self-center text-red-500 hover:text-red-600 active:scale-95 transition-all"
+              class="shrink-0 self-center text-rose-500 hover:text-rose-600 active:scale-95 transition-all"
               aria-label="녹음 정지">
         <i class="fa-solid fa-circle-stop" style="font-size:40px"></i>
       </button>
@@ -96,21 +96,21 @@
 
     <!-- Processing state: spinner -->
     <div id="voice-processing" class="hidden flex flex-col items-center gap-3 py-2">
-      <div class="w-10 h-10 border-3 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-      <span class="text-sm text-gray-500">음성 인식 중...</span>
+      <div class="w-10 h-10 border-3 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">음성 인식 중...</span>
     </div>
 
     <!-- Text input (hidden by default) -->
     <div id="text-input-area" class="hidden">
       <div class="flex items-center gap-2">
-        <button onclick="hideTextInput()" class="text-gray-400 hover:text-primary shrink-0 w-10 h-10 flex items-center justify-center" aria-label="음성 입력으로 전환">
+        <button onclick="hideTextInput()" class="text-slate-400 hover:text-primary shrink-0 w-10 h-10 flex items-center justify-center" aria-label="음성 입력으로 전환">
           <i class="fa-solid fa-microphone" style="font-size:18px"></i>
         </button>
         <input id="chat-input"
                type="text"
                placeholder="텍스트로 입력하세요..."
-               class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-[15px]
-                      focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
+               class="flex-1 border border-slate-200 rounded-full px-4 py-2.5 text-sm font-medium
+                      focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMessage()">
         <button onclick="sendMessage()"
                 class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-dark transition shrink-0"
@@ -162,7 +162,7 @@
     max-width: 4px;
     height: 4px;
     min-height: 4px;
-    background: #EF4444;
+    background: #F43F5E;
     border-radius: 9999px;
     transition: height 0.06s ease-out;
   }

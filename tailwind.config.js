@@ -12,7 +12,15 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        // Plus Jakarta Sans for Latin glyphs, Pretendard for Korean (auto fallback by glyph coverage)
+        sans: [
+          '"Plus Jakarta Sans"',
+          'Pretendard',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'system-ui',
+          'sans-serif',
+        ],
       },
       fontSize: {
         'display': ['32px', { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '700' }],
@@ -30,10 +38,18 @@ module.exports = {
         'pulse-hint': 'pulse-hint 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       colors: {
+        // Dashboard-based design tokens (synco-dashboard.zip as source of truth)
         primary: {
-          DEFAULT: '#4A56A8',
-          dark: '#3D4891',
-          light: '#E8EAFF',
+          DEFAULT: '#2563EB', // blue-600
+          dark: '#1D4ED8',    // blue-700
+          light: '#DBEAFE',   // blue-100
+        },
+        sidebar: '#0F172A',   // slate-900
+        canvas: '#F8FAFC',    // slate-50
+        ink: {
+          DEFAULT: '#0F172A', // slate-900
+          muted: '#64748B',   // slate-500
+          soft: '#94A3B8',    // slate-400
         },
       },
     },

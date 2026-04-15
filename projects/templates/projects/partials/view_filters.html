@@ -1,33 +1,30 @@
-{# Filter bar for project list — R1-05: phase filter + status=closed for 종료 #}
-<div class="px-8 pt-4">
+{# Filter bar for project list #}
+<div class="mb-8">
   <form method="get" action="{% url 'projects:project_list' %}"
         hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
-        class="flex flex-wrap gap-2 items-center">
+        class="flex flex-wrap gap-3 items-center">
 
-    {# Phase / status filter #}
     <select name="phase"
-            class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
             hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
             hx-include="closest form">
-      <option value="">전체</option>
+      <option value="">전체 단계</option>
       <option value="searching" {% if phase_filter == "searching" %}selected{% endif %}>서칭</option>
       <option value="screening" {% if phase_filter == "screening" %}selected{% endif %}>심사</option>
       <option value="closed" {% if phase_filter == "closed" %}selected{% endif %}>종료</option>
     </select>
 
-    {# Scope (consultant filter) #}
     {% if is_owner %}
       <select name="consultant"
-              class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
               hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
               hx-include="closest form">
         <option value="">담당자 전체</option>
       </select>
     {% endif %}
 
-    {# Client filter #}
     <select name="client"
-            class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
             hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
             hx-include="closest form">
       <option value="">고객사 전체</option>

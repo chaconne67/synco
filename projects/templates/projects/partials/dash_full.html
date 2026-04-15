@@ -1,46 +1,144 @@
 {# Dashboard full content — used as HTMX partial and included by dashboard.html #}
-<div class="min-h-screen bg-slate-950 text-slate-100">
-  <header class="px-8 py-6 border-b border-slate-800">
-    <h1 class="text-2xl font-semibold">{{ request.user.get_full_name|default:request.user.username }}님, 안녕하세요</h1>
-    <p class="mt-1 text-sm text-slate-400">
-      오늘 할 일 {{ today_actions|length }}건 ·
-      마감 지남 {{ overdue_actions|length }}건 ·
-      예정 {{ upcoming_actions|length }}건
-    </p>
-  </header>
+<div class="px-10 py-10 max-w-7xl">
+  {# Greeting header #}
+  <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+    <div>
+      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Executive Search Dashboard</span>
+      <h2 class="text-4xl font-black text-slate-900 tracking-tight">{{ request.user.get_full_name|default:request.user.username }}님, 안녕하세요</h2>
+      <p class="mt-2 text-sm text-slate-500">
+        오늘 할 일 <span class="font-bold text-slate-900">{{ today_actions|length }}</span>건
+        <span class="mx-2 text-slate-500">·</span>
+        마감 지남 <span class="font-bold {% if overdue_actions %}text-rose-600{% else %}text-slate-900{% endif %}">{{ overdue_actions|length }}</span>건
+        <span class="mx-2 text-slate-500">·</span>
+        예정 <span class="font-bold text-slate-900">{{ upcoming_actions|length }}</span>건
+      </p>
+    </div>
+  </div>
 
-  <main class="px-8 py-6 space-y-6">
+  {# Top Row: 3 Stat Cards (Overdue accent dark when > 0) #}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    {# Overdue — dark accent when urgent #}
+    <div class="{% if overdue_actions %}bg-sidebar border-none{% else %}bg-white border border-slate-100{% endif %} rounded-xl p-6 shadow-sm">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-xs font-bold {% if overdue_actions %}text-slate-500{% else %}text-slate-400{% endif %} uppercase tracking-widest">Overdue</h3>
+        <svg class="w-5 h-5 {% if overdue_actions %}text-rose-400{% else %}text-slate-500{% endif %}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-4xl font-light {% if overdue_actions %}text-white{% else %}text-slate-900{% endif %} tracking-tight">{{ overdue_actions|length }}</span>
+        <span class="text-sm {% if overdue_actions %}text-slate-400{% else %}text-slate-500{% endif %} font-medium">건 마감 지남</span>
+      </div>
+      {% if overdue_actions %}
+      <p class="mt-4 text-[11px] font-medium text-rose-300">즉시 처리가 필요합니다</p>
+      {% else %}
+      <p class="mt-4 text-[11px] text-slate-400">모든 일정이 제때 진행 중입니다</p>
+      {% endif %}
+    </div>
+
+    {# Today #}
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Today</h3>
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-3-3v6"/></svg>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-4xl font-light text-slate-900 tracking-tight">{{ today_actions|length }}</span>
+        <span class="text-sm text-slate-500 font-medium">건 오늘 할 일</span>
+      </div>
+      <p class="mt-4 text-[11px] text-slate-400">
+        {% if today_actions %}지금 진행 중인 작업{% else %}오늘 예정된 작업이 없습니다{% endif %}
+      </p>
+    </div>
+
+    {# Upcoming #}
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Upcoming · 3 Days</h3>
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-4xl font-light text-slate-900 tracking-tight">{{ upcoming_actions|length }}</span>
+        <span class="text-sm text-slate-500 font-medium">건 다가오는 일정</span>
+      </div>
+      <p class="mt-4 text-[11px] text-slate-400">
+        {% if upcoming_actions %}3일 내 예정{% else %}3일 내 일정이 없습니다{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {# Main Sections #}
+  <div class="space-y-8">
     {% if overdue_actions %}
-      <section class="rounded-2xl border border-red-500/40 bg-red-950/20 p-6">
-        <h2 class="text-lg font-semibold text-red-300">마감 지남 ({{ overdue_actions|length }})</h2>
-        <div class="mt-4 space-y-3">
-          {% for action in overdue_actions %}
-            {% include "projects/partials/action_item_card.html" with action=action variant="overdue" %}
-          {% endfor %}
-        </div>
-      </section>
+    <section class="bg-white rounded-xl p-8 shadow-sm border border-slate-100">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xs font-bold text-rose-600 uppercase tracking-widest">마감 지남 · Overdue</h3>
+        <span class="bg-rose-50 text-rose-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">{{ overdue_actions|length }} urgent</span>
+      </div>
+      <div class="space-y-3">
+        {% for action in overdue_actions %}
+          {% include "projects/partials/action_item_card.html" with action=action variant="overdue" %}
+        {% endfor %}
+      </div>
+    </section>
     {% endif %}
 
-    <section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-      <h2 class="text-lg font-semibold">오늘 할 일 ({{ today_actions|length }})</h2>
-      <div class="mt-4 space-y-3">
+    <section class="bg-white rounded-xl p-8 shadow-sm border border-slate-100">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">오늘 할 일 · Today</h3>
+        {% if today_actions %}
+        <span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">{{ today_actions|length }} active</span>
+        {% endif %}
+      </div>
+      <div class="space-y-3">
         {% for action in today_actions %}
           {% include "projects/partials/action_item_card.html" with action=action variant="today" %}
         {% empty %}
-          <p class="text-sm text-slate-500">오늘 할 일이 없습니다. 여유로운 하루 보내세요.</p>
+          <div class="py-8 text-center">
+            <p class="text-sm text-slate-500 font-medium">오늘 할 일이 없습니다</p>
+            <p class="mt-1 text-[11px] text-slate-400 uppercase tracking-wider">Enjoy your day</p>
+          </div>
         {% endfor %}
       </div>
     </section>
 
-    <section class="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-      <h2 class="text-lg font-semibold">다가오는 일정 ({{ upcoming_actions|length }})</h2>
-      <div class="mt-4 space-y-3">
+    <section class="bg-white rounded-xl p-8 shadow-sm border border-slate-100">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">다가오는 일정 · Upcoming</h3>
+        {% if upcoming_actions %}
+        <span class="bg-amber-50 text-amber-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">{{ upcoming_actions|length }} planned</span>
+        {% endif %}
+      </div>
+      <div class="space-y-3">
         {% for action in upcoming_actions %}
           {% include "projects/partials/action_item_card.html" with action=action variant="upcoming" %}
         {% empty %}
-          <p class="text-sm text-slate-500">3일 내 예정된 일정이 없습니다.</p>
+          <div class="py-8 text-center">
+            <p class="text-sm text-slate-500 font-medium">3일 내 예정된 일정이 없습니다</p>
+          </div>
         {% endfor %}
       </div>
     </section>
-  </main>
+
+    {% if is_owner and pending_approvals %}
+    <section class="bg-white rounded-xl p-8 shadow-sm border border-slate-100">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">프로젝트 승인 대기 · Approvals</h3>
+        <a href="/projects/approvals/"
+           hx-get="/projects/approvals/" hx-target="#main-content" hx-push-url="true"
+           class="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark">View Queue →</a>
+      </div>
+      <ul class="divide-y divide-slate-100">
+        {% for approval in pending_approvals %}
+        <li class="flex items-center justify-between py-3">
+          <span class="text-sm text-slate-700 font-medium">
+            <span class="text-slate-900 font-bold">{{ approval.requested_by.first_name|default:approval.requested_by.username }}</span>
+            <span class="mx-2 text-slate-500">→</span>
+            {{ approval.project.title }}
+          </span>
+          <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Pending</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
 </div>

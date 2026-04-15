@@ -1,28 +1,28 @@
 {# accounts/templates/accounts/partials/org_tab_bar.html #}
-<div class="border-b border-gray-200 flex gap-0 overflow-x-auto -mx-4 lg:-mx-8 px-4 lg:px-8">
+<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 inline-flex items-center gap-1 flex-wrap">
   {% with active=active_tab|default:"info" %}
 
   <button hx-get="{% url 'org_info' %}"
           hx-target="#org-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'info' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'info' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     조직 정보
   </button>
 
   <button hx-get="{% url 'org_members' %}"
           hx-target="#org-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'members' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'members' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     멤버 관리
   </button>
 
   <button hx-get="{% url 'org_invites' %}"
           hx-target="#org-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'invites' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'invites' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     초대코드
   </button>
 

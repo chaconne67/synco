@@ -1,9 +1,9 @@
 {# 변환 옵션 (마스킹, 언어) + 변환 버튼 (REVIEWED 상태) #}
 <div class="space-y-4">
 
-  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-    <h2 class="text-lg font-semibold text-gray-900">제출용 파일 변환</h2>
-    <p class="text-sm text-gray-600">
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
+    <h2 class="text-lg font-bold text-slate-900">제출용 파일 변환</h2>
+    <p class="text-sm text-slate-600">
       마스킹 설정과 언어를 선택한 후 Word 파일로 변환합니다.
     </p>
 
@@ -15,30 +15,30 @@
 
       {# 마스킹 설정 #}
       <div class="space-y-3 mb-4">
-        <h3 class="text-sm font-semibold text-gray-700">마스킹 설정</h3>
+        <h3 class="text-sm font-semibold text-slate-700">마스킹 설정</h3>
         <div class="grid grid-cols-2 gap-3">
-          <label class="flex items-center gap-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2 text-sm text-slate-600">
             <input type="checkbox" name="mask_salary"
               {% if draft.masking_config.salary %}checked{% endif %}
-              class="rounded border-gray-300 text-primary focus:ring-primary">
+              class="rounded border-slate-300 text-primary focus:ring-primary">
             연봉 정보
           </label>
-          <label class="flex items-center gap-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2 text-sm text-slate-600">
             <input type="checkbox" name="mask_birth_detail"
               {% if draft.masking_config.birth_detail %}checked{% endif %}
-              class="rounded border-gray-300 text-primary focus:ring-primary">
+              class="rounded border-slate-300 text-primary focus:ring-primary">
             생년월일
           </label>
-          <label class="flex items-center gap-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2 text-sm text-slate-600">
             <input type="checkbox" name="mask_contact"
               {% if draft.masking_config.contact %}checked{% endif %}
-              class="rounded border-gray-300 text-primary focus:ring-primary">
+              class="rounded border-slate-300 text-primary focus:ring-primary">
             연락처 (이메일, 전화, 주소)
           </label>
-          <label class="flex items-center gap-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2 text-sm text-slate-600">
             <input type="checkbox" name="mask_current_company"
               {% if draft.masking_config.current_company %}checked{% endif %}
-              class="rounded border-gray-300 text-primary focus:ring-primary">
+              class="rounded border-slate-300 text-primary focus:ring-primary">
             현 직장
           </label>
         </div>
@@ -46,9 +46,9 @@
 
       {# 언어 선택 #}
       <div class="mb-4">
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">출력 언어</h3>
+        <h3 class="text-sm font-semibold text-slate-700 mb-2">출력 언어</h3>
         <select name="output_language"
-                class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+                class="w-full border border-slate-100 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
           <option value="ko" {% if draft.output_language == 'ko' %}selected{% endif %}>국문</option>
           <option value="en" {% if draft.output_language == 'en' %}selected{% endif %}>영문</option>
           <option value="ko_en" {% if draft.output_language == 'ko_en' %}selected{% endif %}>국영문</option>
@@ -93,7 +93,7 @@
           class="inline">
       {% csrf_token %}
       <button type="submit"
-              class="text-sm text-gray-500 hover:text-gray-700 underline">
+              class="text-sm text-slate-500 hover:text-slate-700 underline">
         AI 재정리
       </button>
     </form>

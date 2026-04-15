@@ -1,23 +1,23 @@
 <!-- View Tabs: Board / List / Table -->
-<div class="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 inline-flex items-center gap-1">
   {% with base_url="/projects/" %}
   <a hx-get="{{ base_url }}?view=board&tab_switch=1&{{ filter_params }}"
      hx-target="#view-content"
-     class="px-4 py-2 rounded-md text-[14px] font-medium transition cursor-pointer
-       {% if view_type == 'board' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">
-    <i class="fa-solid fa-columns mr-1"></i> 보드
+     class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-2
+       {% if view_type == 'board' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+    <i class="fa-solid fa-columns"></i> Board
   </a>
   <a hx-get="{{ base_url }}?view=list&tab_switch=1&{{ filter_params }}"
      hx-target="#view-content"
-     class="px-4 py-2 rounded-md text-[14px] font-medium transition cursor-pointer
-       {% if view_type == 'list' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">
-    <i class="fa-solid fa-list mr-1"></i> 리스트
+     class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-2
+       {% if view_type == 'list' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+    <i class="fa-solid fa-list"></i> List
   </a>
   <a hx-get="{{ base_url }}?view=table&tab_switch=1&{{ filter_params }}"
      hx-target="#view-content"
-     class="px-4 py-2 rounded-md text-[14px] font-medium transition cursor-pointer
-       {% if view_type == 'table' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">
-    <i class="fa-solid fa-table mr-1"></i> 테이블
+     class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-2
+       {% if view_type == 'table' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+    <i class="fa-solid fa-table"></i> Table
   </a>
   {% endwith %}
 </div>

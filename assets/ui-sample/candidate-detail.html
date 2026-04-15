@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>synco · 김민호 · Candidate</title>
+
+<!-- Pretendard -->
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+<!-- Tailwind (목업용 CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system',
+                 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        },
+        colors: {
+          canvas:  '#F8FAFC', surface: '#FFFFFF',
+          ink: '#0F172A', ink2: '#1E293B', ink3: '#334155',
+          muted: '#64748B', faint: '#94A3B8',
+          hair: '#E2E8F0', line: '#F1F5F9',
+          success: '#10B981', warning: '#F59E0B',
+          info: '#6366F1', danger: '#EF4444',
+        },
+        boxShadow: {
+          'card': '0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06)',
+          'lift': '0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.04)',
+          'fab':  '0 10px 15px -3px rgba(15,23,42,0.15), 0 4px 6px -2px rgba(15,23,42,0.08)',
+        },
+        borderRadius: { 'card': '16px' }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { font-family: 'Pretendard Variable', Pretendard, -apple-system, sans-serif; }
+  body { background: #F8FAFC; color: #0F172A; -webkit-font-smoothing: antialiased; }
+  .tnum { font-feature-settings: "tnum" 1, "ss01" 1; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 8px;
+    color: #94A3B8; font-size: 13px; font-weight: 500;
+    transition: background .15s ease, color .15s ease;
+  }
+  .sidebar-link:hover { background: #1E293B; color: #fff; }
+  .sidebar-link.is-active { background: #1E293B; color: #fff; }
+  .sidebar-link .dot { width: 3px; height: 18px; border-radius: 2px; background: transparent; margin-right: -8px; }
+  .sidebar-link.is-active .dot { background: #fff; }
+
+  /* Card hover — top/position 기반. transform 을 쓰면 hover 시 텍스트가 흐려진다. */
+  .rounded-card {
+    position: relative;
+    top: 0;
+    transition: top 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .rounded-card:hover {
+    top: -2px;
+    box-shadow:
+      0 12px 24px -10px rgba(15, 23, 42, 0.18),
+      0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  }
+
+  /* Skill / chip / badge */
+  .skill-tag {
+    display: inline-flex; align-items: center;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 11px; font-weight: 600;
+    color: #475569; background: #F1F5F9;
+  }
+  .skill-tag.is-core { background: #334155; color: #fff; }
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 4px 9px; border-radius: 999px;
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .badge.top { background: #F1F5F9; color: #334155; }
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; color: #475569;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 2px 0 rgba(15,23,42,0.04);
+  }
+  .meta-pill svg { color: #64748B; }
+
+  /* Profile avatar */
+  .av-xl {
+    width: 132px; height: 132px; border-radius: 16px;
+    background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 44px;
+    letter-spacing: -0.04em;
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.25),
+                0 6px 12px -6px rgba(15, 23, 42, 0.12);
+    position: relative;
+  }
+  .av-xl .status {
+    position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    background: #FFFFFF; padding: 4px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.15);
+  }
+  .av-xl .status > div {
+    background: #334155; color: #fff;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before {
+    content: ''; position: absolute; top: 6px; bottom: 0;
+    left: 7px; width: 2px; background: #E2E8F0;
+  }
+  .timeline-item { position: relative; padding-bottom: 32px; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -32px; top: 4px;
+    width: 16px; height: 16px; border-radius: 999px;
+    background: #FFFFFF; border: 2px solid #CBD5E1;
+    z-index: 1;
+  }
+  .timeline-item.is-current::before { border-color: #0F172A; }
+
+  /* Language proficiency dots */
+  .lang-bar { display: flex; gap: 3px; }
+  .lang-bar > span {
+    flex: 1; height: 5px; border-radius: 999px;
+    background: #E2E8F0;
+  }
+  .lang-bar > span.on { background: #0F172A; }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- ===================== LAYOUT ===================== -->
+<div class="flex min-h-screen">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="w-[260px] shrink-0 bg-ink text-white flex flex-col">
+    <div class="px-6 py-6 border-b border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        </div>
+        <div>
+          <div class="text-lg font-bold tracking-tight leading-none">synco</div>
+          <div class="eyebrow mt-1" style="color:#64748B">Executive Search v2.4</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="px-4 py-6 space-y-1 flex-1">
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="sidebar-link is-active">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Candidates
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6l5 5v11a2 2 0 0 1-2 2Z"/><path d="M3 15h6"/><path d="M3 18h6"/><path d="M3 12h6"/></svg>
+        Projects
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+        Clients
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/></svg>
+        References
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-3-2-3 2-3-2-3 2Z"/><path d="M18 14h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M8 6h4"/><path d="M8 10h4"/></svg>
+        Newsfeed
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>
+        Team
+      </a>
+    </nav>
+
+    <div class="px-4 pb-6 space-y-1">
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </div>
+  </aside>
+
+  <!-- ===== RIGHT COLUMN ===== -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- Top Header -->
+    <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">데스크 · 헤드헌팅</div>
+        <h1 class="text-[22px] font-bold tracking-tight mt-1">Talent Pipeline</h1>
+      </div>
+      <div class="flex items-center gap-5">
+        <div class="text-right">
+          <div class="eyebrow">Wednesday · Oct 25, 2023</div>
+          <div class="text-xs text-muted mt-1 tnum">10:24 AM KST</div>
+        </div>
+        <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        </button>
+        <div class="flex items-center gap-3 pl-5 border-l border-hair">
+          <div class="text-right">
+            <div class="text-sm font-semibold">Senior Partner</div>
+            <div class="eyebrow">Advisory Board</div>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-ink2 text-white flex items-center justify-center text-sm font-semibold">SP</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content (max 1280) -->
+    <main class="w-full max-w-[1280px] flex flex-col">
+    <div class="px-8 py-8 space-y-8 flex-1">
+
+      <!-- ============ Back link ============ -->
+      <a href="#" class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-faint hover:text-ink transition-colors -mb-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+        Back to Pipeline
+      </a>
+
+      <!-- ============ Profile header ============ -->
+      <section class="flex items-end justify-between gap-8 flex-wrap">
+        <div class="flex items-end gap-8">
+          <!-- Avatar -->
+          <div class="av-xl">
+            김민
+            <div class="status"><div>Active</div></div>
+          </div>
+
+          <!-- Identity -->
+          <div class="pt-2 min-w-0 pb-1">
+            <div class="eyebrow">Candidate Profile</div>
+            <div class="flex items-center gap-3 mt-2 flex-wrap">
+              <h2 class="text-[36px] font-bold tracking-tight leading-none">김민호</h2>
+              <span class="badge top">TOP TALENT</span>
+              <span class="text-sm text-muted tnum">(41세 · 1985년생)</span>
+            </div>
+            <p class="text-lg text-muted mt-3">
+              VP of Engineering
+              <span class="mx-2 text-faint">·</span>
+              <span class="text-ink3 font-semibold">카카오엔터프라이즈</span>
+            </p>
+            <div class="flex flex-wrap items-center gap-2 mt-5">
+              <span class="meta-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                서울 · 성수동
+              </span>
+              <span class="meta-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                Identity Verified
+              </span>
+              <span class="meta-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                총 경력 15년 4개월
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA buttons -->
+        <div class="flex items-center gap-2">
+          <button class="inline-flex items-center gap-2 px-5 h-11 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PDF
+          </button>
+          <button class="inline-flex items-center gap-2 px-5 h-11 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Contact Candidate
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ Main 12-col grid ============ -->
+      <section class="grid grid-cols-12 gap-6">
+
+        <!-- ===== LEFT (8) ===== -->
+        <div class="col-span-8 space-y-6">
+
+          <!-- Summary -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="eyebrow">Summary</div>
+            <p class="mt-4 text-[15px] text-ink3 leading-relaxed">
+              엔지니어링 팀을 20명에서 150명으로 스케일업한 경험을 보유한 기술 리더. 카카오엔터프라이즈에서 글로벌 분산 시스템 아키텍처 설계와 멀티 클라우드 마이그레이션을 리드. 네이버·라인·카카오 출신으로 한국 빅테크 3사 모두에서 시니어 IC와 매니저 역할을 수행했음. KAIST 석사, JPA Korea User Group 운영진.
+            </p>
+          </article>
+
+          <!-- Work Experience -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-7">
+              <div class="eyebrow">Work Experience</div>
+              <div class="h-px flex-1 bg-line"></div>
+              <div class="text-xs text-muted tnum">15Y 4M</div>
+            </div>
+
+            <div class="timeline">
+              <!-- Current -->
+              <div class="timeline-item is-current">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h4 class="text-xl font-bold tracking-tight">VP of Engineering</h4>
+                    <p class="text-sm font-semibold text-ink3 mt-1">
+                      카카오엔터프라이즈
+                      <span class="mx-1.5 text-faint">·</span>
+                      <span class="text-muted font-medium">Cloud Platform Division</span>
+                    </p>
+                    <p class="eyebrow mt-2">
+                      Mar 2021 — Present
+                      <span class="mx-1 text-hair">·</span>
+                      2y 7m
+                    </p>
+                  </div>
+                  <span class="badge top" style="background:#334155;color:#fff">Present</span>
+                </div>
+
+                <div class="mt-4 text-sm text-ink3 leading-relaxed space-y-3">
+                  <p>
+                    카카오 i Cloud 플랫폼 엔지니어링 조직 총괄. 분산 스토리지·네트워크·컴퓨트 인프라 팀 4개를 리드하며 엔지니어 65명 규모로 확장. 멀티 리전 가용성 99.99% 달성.
+                  </p>
+                  <div class="bg-canvas border border-line rounded-lg p-4">
+                    <div class="eyebrow mb-2">주요 성과</div>
+                    <ul class="text-sm text-ink3 space-y-1.5 list-disc list-outside ml-4">
+                      <li>전사 IDC → 자체 클라우드 마이그레이션 PMO. 인프라 비용 32% 절감</li>
+                      <li>플랫폼 SDK 사내 공개 후 활용 팀 8개 → 47개로 확장</li>
+                      <li>리더 코칭 프로그램 도입, 매니저 만족도 NPS 38 → 71</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Previous 1 -->
+              <div class="timeline-item">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h4 class="text-xl font-bold tracking-tight">Engineering Manager</h4>
+                    <p class="text-sm font-semibold text-ink3 mt-1">
+                      네이버
+                      <span class="mx-1.5 text-faint">·</span>
+                      <span class="text-muted font-medium">Search CIC</span>
+                    </p>
+                    <p class="eyebrow mt-2">
+                      Jul 2017 — Feb 2021
+                      <span class="mx-1 text-hair">·</span>
+                      3y 8m
+                    </p>
+                  </div>
+                  <span class="badge" style="background:transparent;color:#94A3B8">Previous</span>
+                </div>
+
+                <div class="mt-4 text-sm text-ink3 leading-relaxed space-y-3">
+                  <p>
+                    검색 인덱싱 인프라 팀 매니저. 일 1조 도큐먼트 처리 파이프라인 운영 및 차세대 벡터 검색 PoC 리드. 팀 규모 12 → 28명.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Previous 2 -->
+              <div class="timeline-item">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h4 class="text-xl font-bold tracking-tight">Senior Software Engineer</h4>
+                    <p class="text-sm font-semibold text-ink3 mt-1">
+                      라인
+                      <span class="mx-1.5 text-faint">·</span>
+                      <span class="text-muted font-medium">Messaging Platform</span>
+                    </p>
+                    <p class="eyebrow mt-2">
+                      Apr 2014 — Jun 2017
+                      <span class="mx-1 text-hair">·</span>
+                      3y 3m
+                    </p>
+                  </div>
+                  <span class="badge" style="background:transparent;color:#94A3B8">Previous</span>
+                </div>
+
+                <div class="mt-4 text-sm text-ink3 leading-relaxed">
+                  <p>
+                    글로벌 메시징 인프라 백엔드 개발. 일 평균 메시지 100억 건 처리. 동남아·일본 리전 트래픽 라우팅 최적화로 P99 지연 35% 개선.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Previous 3 -->
+              <div class="timeline-item">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h4 class="text-xl font-bold tracking-tight">Software Engineer</h4>
+                    <p class="text-sm font-semibold text-ink3 mt-1">
+                      카카오
+                      <span class="mx-1.5 text-faint">·</span>
+                      <span class="text-muted font-medium">Recommendation Platform</span>
+                    </p>
+                    <p class="eyebrow mt-2">
+                      Sep 2009 — Mar 2014
+                      <span class="mx-1 text-hair">·</span>
+                      4y 7m
+                    </p>
+                  </div>
+                  <span class="badge" style="background:transparent;color:#94A3B8">Previous</span>
+                </div>
+
+                <div class="mt-4 text-sm text-ink3 leading-relaxed">
+                  <p>
+                    추천 시스템 모델 서빙 인프라 개발. 협업 필터링 → 딥러닝 기반 모델 전환 시 온라인 학습 파이프라인 구축.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Personal -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="eyebrow">Personal · 인적사항</div>
+              <div class="h-px flex-1 bg-line"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-x-8 gap-y-5">
+              <div>
+                <div class="eyebrow">생년</div>
+                <div class="text-sm font-semibold mt-1 tnum">1985</div>
+              </div>
+              <div>
+                <div class="eyebrow">성별</div>
+                <div class="text-sm font-semibold mt-1">남</div>
+              </div>
+              <div>
+                <div class="eyebrow">카테고리</div>
+                <div class="text-sm font-semibold mt-1">기술 (Engineering)</div>
+              </div>
+              <div>
+                <div class="eyebrow">현재 연봉</div>
+                <div class="text-sm font-semibold mt-1 tnum">18,000<span class="text-xs text-muted ml-1">만원</span></div>
+              </div>
+              <div>
+                <div class="eyebrow">희망 연봉</div>
+                <div class="text-sm font-bold mt-1 tnum">22,000<span class="text-xs text-muted ml-1">만원</span></div>
+              </div>
+              <div>
+                <div class="eyebrow">이메일</div>
+                <div class="text-sm font-semibold mt-1 break-all">minho.kim@kakao.com</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Matched Projects -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-5">
+              <div class="eyebrow">Matched Projects</div>
+              <span class="text-[10px] font-bold text-ink3 bg-line px-2 py-0.5 rounded-full tnum">3</span>
+              <div class="h-px flex-1 bg-line"></div>
+            </div>
+            <div class="space-y-3">
+              <a href="#" class="block bg-canvas border border-line rounded-lg p-4 hover:bg-surface hover:border-hair transition-all">
+                <p class="text-sm font-bold">
+                  삼성전자 Foundry
+                  <span class="mx-1.5 text-faint">·</span>
+                  Cloud Infra Lead 임원 서치
+                </p>
+                <p class="eyebrow mt-2">
+                  Stage 3 · Interview Scheduled
+                  <span class="text-success ml-2 normal-case tracking-normal text-[10px]">2024-10-30</span>
+                </p>
+              </a>
+              <a href="#" class="block bg-canvas border border-line rounded-lg p-4 hover:bg-surface hover:border-hair transition-all">
+                <p class="text-sm font-bold">
+                  네이버 클라우드
+                  <span class="mx-1.5 text-faint">·</span>
+                  플랫폼 엔지니어링 본부장
+                </p>
+                <p class="eyebrow mt-2">
+                  Stage 2 · CV Submitted
+                </p>
+              </a>
+              <a href="#" class="block bg-canvas border border-line rounded-lg p-4 hover:bg-surface hover:border-hair transition-all">
+                <p class="text-sm font-bold">
+                  쿠팡 Cloud Platform
+                  <span class="mx-1.5 text-faint">·</span>
+                  Director, Compute Infra
+                </p>
+                <p class="eyebrow mt-2">
+                  Stage 5 · Hired
+                  <span class="text-success ml-2 normal-case tracking-normal text-[10px]">입사 확정 · 2024-08</span>
+                </p>
+              </a>
+            </div>
+          </article>
+
+          <!-- Comments -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-5">
+              <div class="eyebrow">Comments · 코멘트</div>
+              <span class="text-[10px] font-bold text-ink3 bg-line px-2 py-0.5 rounded-full tnum">4</span>
+              <div class="h-px flex-1 bg-line"></div>
+            </div>
+            <ul class="space-y-5">
+              <li class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-semibold text-xs shrink-0">SP</div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-semibold">Senior Partner</span>
+                    <span class="text-[11px] text-faint">2일 전</span>
+                  </div>
+                  <p class="text-sm text-ink3 mt-1 leading-relaxed">
+                    삼성 Foundry 인터뷰 1차 통과. 기술적 접근과 조직 문화 적합도 모두 강한 인상. 2차 EVP 미팅 일정 조율 중.
+                  </p>
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex items-center justify-center text-white font-semibold text-xs shrink-0">SP</div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-semibold">박수진</span>
+                    <span class="text-[11px] text-faint">5일 전</span>
+                  </div>
+                  <p class="text-sm text-ink3 mt-1 leading-relaxed">
+                    레퍼런스 체크 완료. 카카오엔터프라이즈 동료 3명 모두 매우 긍정적. 특히 조직 빌딩과 갈등 조정 역량 강조.
+                  </p>
+                </div>
+              </li>
+            </ul>
+            <div class="mt-6 pt-5 border-t border-line">
+              <div class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-ink2 text-white flex items-center justify-center text-xs font-semibold shrink-0">SP</div>
+                <div class="flex-1 bg-canvas border border-hair rounded-lg p-3">
+                  <textarea class="w-full bg-transparent text-sm outline-none resize-none" rows="2" placeholder="코멘트 추가…"></textarea>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- ===== RIGHT (4) ===== -->
+        <div class="col-span-4 space-y-6">
+
+          <!-- Core Expertise -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="eyebrow mb-5">Core Expertise</div>
+            <div class="flex flex-wrap gap-2">
+              <span class="skill-tag is-core">분산 시스템</span>
+              <span class="skill-tag is-core">MSA</span>
+              <span class="skill-tag is-core">조직 빌딩</span>
+              <span class="skill-tag">Kubernetes</span>
+              <span class="skill-tag">Java / Kotlin</span>
+              <span class="skill-tag">Go</span>
+              <span class="skill-tag">AWS</span>
+              <span class="skill-tag">GCP</span>
+              <span class="skill-tag">Kafka</span>
+              <span class="skill-tag">Observability</span>
+              <span class="skill-tag">Hiring</span>
+              <span class="skill-tag">Coaching</span>
+            </div>
+          </article>
+
+          <!-- Education -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="eyebrow mb-5">Education</div>
+            <div class="space-y-5">
+              <div class="flex gap-4">
+                <div class="w-10 h-10 shrink-0 bg-line rounded-lg flex items-center justify-center text-ink3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-sm font-bold leading-tight">M.S. Computer Science</h4>
+                  <p class="text-xs font-semibold text-ink3 mt-1">KAIST</p>
+                  <p class="eyebrow mt-1.5">Class of 2009</p>
+                </div>
+              </div>
+              <div class="flex gap-4">
+                <div class="w-10 h-10 shrink-0 bg-line rounded-lg flex items-center justify-center text-ink3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-sm font-bold leading-tight">B.S. Computer Engineering</h4>
+                  <p class="text-xs font-semibold text-ink3 mt-1">한양대학교</p>
+                  <p class="eyebrow mt-1.5">Class of 2007</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Certifications -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="eyebrow mb-5">Certifications</div>
+            <div class="space-y-3">
+              <div class="p-4 border border-line rounded-lg">
+                <h4 class="text-xs font-bold leading-tight">AWS Certified Solutions Architect</h4>
+                <p class="eyebrow mt-2">Professional Level · 2020</p>
+              </div>
+              <div class="p-4 border border-line rounded-lg">
+                <h4 class="text-xs font-bold leading-tight">Google Cloud Professional Architect</h4>
+                <p class="eyebrow mt-2">Cloud Architect · 2018</p>
+              </div>
+              <div class="p-4 border border-line rounded-lg">
+                <h4 class="text-xs font-bold leading-tight">Certified Kubernetes Administrator</h4>
+                <p class="eyebrow mt-2">CNCF · 2019</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Languages -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="eyebrow mb-5">Languages</div>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+              <div>
+                <p class="text-xs font-bold">한국어</p>
+                <div class="lang-bar mt-2">
+                  <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span>
+                </div>
+                <p class="eyebrow mt-2">Native</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold">English</p>
+                <div class="lang-bar mt-2">
+                  <span class="on"></span><span class="on"></span><span class="on"></span><span></span>
+                </div>
+                <p class="eyebrow mt-2">Business</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold">日本語</p>
+                <div class="lang-bar mt-2">
+                  <span class="on"></span><span class="on"></span><span></span><span></span>
+                </div>
+                <p class="eyebrow mt-2">Conversational</p>
+              </div>
+              <div>
+                <p class="text-xs font-bold">中文</p>
+                <div class="lang-bar mt-2">
+                  <span class="on"></span><span></span><span></span><span></span>
+                </div>
+                <p class="eyebrow mt-2">Basic</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Activity Snapshot -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="eyebrow mb-5">Activity Snapshot</div>
+            <ul class="space-y-4">
+              <li class="flex items-center justify-between text-sm">
+                <span class="text-muted">Profile views</span>
+                <span class="font-bold tnum">142</span>
+              </li>
+              <li class="flex items-center justify-between text-sm">
+                <span class="text-muted">Last contacted</span>
+                <span class="font-semibold">3일 전</span>
+              </li>
+              <li class="flex items-center justify-between text-sm">
+                <span class="text-muted">Response rate</span>
+                <span class="font-bold tnum text-success">87%</span>
+              </li>
+              <li class="flex items-center justify-between text-sm">
+                <span class="text-muted">Added to pipeline</span>
+                <span class="font-semibold">2024-06-12</span>
+              </li>
+            </ul>
+          </article>
+
+        </div>
+      </section>
+
+    </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
 {% if duplicate.blocked %}
-<div class="bg-red-50 rounded p-2 mt-1">
+<div class="bg-rose-50 rounded p-2 mt-1">
   {% for warning in duplicate.warnings %}
-  <p class="text-[12px] text-red-600">{{ warning }}</p>
+  <p class="text-[12px] text-rose-600">{{ warning }}</p>
   {% endfor %}
 </div>
 {% elif duplicate.warnings %}
@@ -13,10 +13,10 @@
 {% endif %}
 
 {% if duplicate.other_projects %}
-<div class="bg-blue-50 rounded p-2 mt-1">
-  <p class="text-[12px] text-blue-700 font-medium">다른 프로젝트 이력:</p>
+<div class="bg-primary/10 rounded p-2 mt-1">
+  <p class="text-[12px] text-primary font-medium">다른 프로젝트 이력:</p>
   {% for c in duplicate.other_projects %}
-  <p class="text-[12px] text-blue-600">{{ c.project.title }} — {{ c.get_result_display }}</p>
+  <p class="text-[12px] text-primary">{{ c.project.title }} — {{ c.get_result_display }}</p>
   {% endfor %}
 </div>
 {% endif %}

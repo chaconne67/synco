@@ -1,11 +1,11 @@
-<div class="bg-white rounded-lg border border-purple-100 p-5 mb-4">
+<div class="bg-white rounded-xl border border-primary/10 shadow-sm p-6 mb-4">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-[15px] font-semibold text-purple-700">고객사 피드백 입력</h3>
+    <h3 class="text-[15px] font-semibold text-primary">고객사 피드백 입력</h3>
     <button onclick="document.getElementById('submission-form-area').innerHTML=''"
-            class="text-[13px] text-gray-500 hover:text-gray-700">닫기</button>
+            class="text-[13px] text-slate-500 hover:text-slate-700">닫기</button>
   </div>
 
-  <p class="text-[14px] text-gray-600 mb-3">
+  <p class="text-[14px] text-slate-600 mb-3">
     {{ submission.candidate.name }} — {{ submission.get_template_display|default:"양식 미지정" }}
   </p>
 
@@ -15,11 +15,11 @@
     {% csrf_token %}
     {% for field in form %}
     <div>
-      <label class="block text-[13px] font-medium text-gray-600 mb-1">{{ field.label }}</label>
+      <label class="block text-[13px] font-medium text-slate-600 mb-1">{{ field.label }}</label>
       {{ field }}
       {% if field.errors %}
         {% for error in field.errors %}
-          <p class="text-[12px] text-red-500 mt-0.5">{{ error }}</p>
+          <p class="text-[12px] text-rose-600 mt-0.5">{{ error }}</p>
         {% endfor %}
       {% endif %}
     </div>
@@ -28,9 +28,9 @@
     <div class="flex justify-end gap-2 pt-2">
       <button type="button"
               onclick="document.getElementById('submission-form-area').innerHTML=''"
-              class="text-[13px] text-gray-500 hover:text-gray-700 px-3 py-1.5">취소</button>
+              class="text-[13px] text-slate-500 hover:text-slate-700 px-3 py-1.5">취소</button>
       <button type="submit"
-              class="text-[13px] bg-purple-600 text-white px-4 py-1.5 rounded-lg hover:bg-purple-700 transition">
+              class="text-[13px] bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark transition">
         피드백 저장
       </button>
     </div>

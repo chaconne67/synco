@@ -1,44 +1,47 @@
 {% load humanize %}
 <div id="application-{{ application.id }}"
-     class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5
+     class="rounded-xl bg-white border border-slate-100 p-5 hover:border-slate-200 hover:shadow-sm transition-all
             {% if application.dropped_at %}opacity-60{% endif %}
-            {% if application.hired_at %}border-emerald-500/40{% endif %}">
+            {% if application.hired_at %}border-emerald-200 bg-emerald-50/20{% endif %}">
   <div class="flex items-start justify-between gap-4">
     <div class="flex-1 min-w-0">
       <a href="{% url 'candidates:candidate_detail' application.candidate.id %}"
          hx-get="{% url 'candidates:candidate_detail' application.candidate.id %}"
          hx-target="#main-content" hx-push-url="true"
-         class="text-base font-semibold text-slate-100 hover:text-teal-300">
+         class="text-base font-bold text-slate-900 hover:text-primary transition-colors">
         {{ application.candidate.name }}
       </a>
-      <p class="mt-1 text-xs text-slate-400">
-        {% if application.candidate.birth_year %}{{ application.candidate.birth_year }}년생 · {% endif %}
-        {% if application.candidate.current_company %}{{ application.candidate.current_company }} · {% endif %}
+      <p class="mt-1 text-xs text-slate-500 font-medium">
+        {% if application.candidate.birth_year %}{{ application.candidate.birth_year }}년생 <span class="text-slate-500 mx-1">·</span>{% endif %}
+        {% if application.candidate.current_company %}{{ application.candidate.current_company }} <span class="text-slate-500 mx-1">·</span>{% endif %}
         매칭 {{ application.created_at|naturaltime }}
       </p>
-      <p class="mt-1 text-xs text-slate-500">
-        상태: <span class="text-slate-300">{{ application.current_state }}</span>
+      <p class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        상태 · <span class="text-slate-700">{{ application.current_state }}</span>
       </p>
 
       {% if application.hired_at %}
-        {# Hired — read-only badge #}
-        <div class="mt-3 rounded-md border border-emerald-500/30 bg-emerald-950/20 p-3 text-xs text-emerald-300">
-          입사 확정 ({{ application.hired_at|naturaltime }})
+        <div class="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-emerald-700">입사 확정</p>
+            <p class="text-[10px] font-medium text-emerald-600 mt-0.5">{{ application.hired_at|naturaltime }}</p>
+          </div>
         </div>
       {% elif application.dropped_at %}
-        {# Dropped #}
-        <div class="mt-3 rounded-md border border-red-500/30 bg-red-950/20 p-3 text-xs text-red-300">
-          드롭됨 ({{ application.get_drop_reason_display }})
-          {% if application.drop_note %}<p class="mt-1 text-red-400">{{ application.drop_note }}</p>{% endif %}
+        <div class="mt-4 rounded-xl border border-rose-100 bg-rose-50 p-3">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-rose-700">드롭됨 · {{ application.get_drop_reason_display }}</p>
+          {% if application.drop_note %}<p class="mt-1 text-xs text-rose-600">{{ application.drop_note }}</p>{% endif %}
         </div>
       {% else %}
-        {# Active — show pending actions #}
         <div class="mt-4 space-y-2">
           {% with pending_actions=application.pending_actions %}
             {% for action in pending_actions %}
               {% include "projects/partials/action_item_card.html" with action=action %}
             {% empty %}
-              <p class="text-xs text-slate-500">진행 중 액션이 없습니다. 새 액션을 추가하세요.</p>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">진행 중 액션이 없습니다. 새 액션을 추가하세요.</p>
             {% endfor %}
           {% endwith %}
         </div>
@@ -47,25 +50,24 @@
 
     <div class="flex flex-col gap-2 shrink-0">
       {% if application.hired_at %}
-        {# Hired — no action buttons #}
       {% elif application.dropped_at %}
         <button hx-post="{% url 'projects:application_restore' application.id %}"
                 hx-target="#application-{{ application.id }}"
                 hx-swap="outerHTML"
-                class="rounded-md bg-slate-700 px-3 py-1 text-xs text-slate-200 hover:bg-slate-600">
+                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
           복구
         </button>
       {% else %}
         <button hx-get="{% url 'projects:action_create' application.id %}"
                 hx-target="#modal-container"
                 hx-swap="innerHTML"
-                class="rounded-md bg-teal-700 px-3 py-1 text-xs text-white hover:bg-teal-600">
+                class="rounded-lg bg-primary text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
           + 액션
         </button>
         <button hx-get="{% url 'projects:application_drop' application.id %}"
                 hx-target="#modal-container"
                 hx-swap="innerHTML"
-                class="rounded-md bg-slate-700 px-3 py-1 text-xs text-slate-200 hover:bg-slate-600">
+                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
           드롭
         </button>
       {% endif %}

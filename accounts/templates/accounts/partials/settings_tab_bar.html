@@ -1,36 +1,36 @@
 {# accounts/templates/accounts/partials/settings_tab_bar.html #}
-<div class="border-b border-gray-200 flex gap-0 overflow-x-auto -mx-4 lg:-mx-8 px-4 lg:px-8">
+<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 inline-flex items-center gap-1 flex-wrap">
   {% with active=active_tab|default:"profile" %}
 
   <button hx-get="{% url 'settings_profile' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'profile' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'profile' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     프로필
   </button>
 
   <button hx-get="{% url 'settings_email' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'email' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'email' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     이메일
   </button>
 
   <button hx-get="{% url 'settings_telegram' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'telegram' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'telegram' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     텔레그램
   </button>
 
   <button hx-get="{% url 'settings_notify' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-4 py-2.5 text-[14px] font-medium whitespace-nowrap border-b-2 transition
-            {% if active == 'notify' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
+            {% if active == 'notify' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     알림
   </button>
 

@@ -1,7 +1,11 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
-{% block title %}synco - 개인정보처리방침{% endblock %}
+{% block title %}개인정보처리방침 — synco{% endblock %}
+{% block breadcrumb_current %}Privacy{% endblock %}
+{% block page_title %}개인정보처리방침{% endblock %}
 
 {% block content %}
+<div class="px-10 py-10 max-w-3xl">
   {% include "accounts/partials/privacy_content.html" %}
+</div>
 {% endblock %}

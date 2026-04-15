@@ -1,24 +1,24 @@
-<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-  <div class="flex items-center justify-between mb-3">
-    <h2 class="text-[16px] font-semibold text-gray-900">오늘의 액션</h2>
+<section class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+  <div class="flex items-center justify-between mb-5">
+    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">오늘의 액션 · Today</h3>
     <button hx-get="/dashboard/actions/" hx-target="#dash-actions" hx-swap="innerHTML"
-            class="text-[13px] text-primary hover:underline">새로고침</button>
+            class="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">Refresh</button>
   </div>
   {% if today_actions %}
-  <ul class="space-y-2">
+  <ul class="divide-y divide-slate-100">
     {% for action in today_actions %}
-    <li class="flex items-center justify-between py-2 px-3 rounded-lg bg-red-50">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-red-500"></span>
-        <span class="text-[14px] font-medium text-gray-900">{{ action.label }}</span>
-        <span class="text-[13px] text-gray-500">{{ action.project.title }}</span>
+    <li class="flex items-center justify-between py-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+        <span class="text-sm font-bold text-slate-900 truncate">{{ action.label }}</span>
+        <span class="text-xs text-slate-500 truncate">{{ action.project.title }}</span>
       </div>
-      <span class="text-[13px] text-gray-500">{{ action.detail }}</span>
+      <span class="text-[11px] font-medium text-slate-400 shrink-0 ml-4">{{ action.detail }}</span>
     </li>
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-[14px] text-gray-400 text-center py-4">
+  <p class="text-xs font-medium text-slate-400 text-center py-6">
     {% if is_owner %}오늘 긴급한 액션이 없습니다.{% else %}배정된 업무가 없습니다.{% endif %}
   </p>
   {% endif %}

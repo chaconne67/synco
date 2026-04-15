@@ -1,33 +1,33 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 {% block title %}프로젝트 — synco{% endblock %}
-
-{% block breadcrumb_page %}
-<span class="text-slate-500">/</span>
-<span class="text-white font-semibold">프로젝트</span>
-{% endblock %}
+{% block breadcrumb_current %}Projects{% endblock %}
+{% block page_title %}Projects{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-950 text-slate-100">
-  <header class="flex items-center justify-between border-b border-slate-800 px-8 py-6">
-    <h1 class="text-2xl font-semibold">프로젝트</h1>
-    <div class="flex items-center gap-2">
+<div class="px-10 py-10 max-w-7xl">
+  <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+    <div>
+      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Active Pipeline</span>
+      <h2 class="text-4xl font-black text-slate-900 tracking-tight">프로젝트</h2>
+      <p class="mt-2 text-sm text-slate-500">서칭·심사·종료 단계별 프로젝트 현황</p>
+    </div>
+    <div class="flex gap-3">
       <a href="{% url 'projects:project_create' %}"
          hx-get="{% url 'projects:project_create' %}"
          hx-target="#main-content" hx-push-url="true"
-         class="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
-        + 새 프로젝트
+         class="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        New Project
       </a>
     </div>
-  </header>
+  </div>
 
   {% include "projects/partials/view_filters.html" %}
 
-  <main class="px-8 py-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {% include "projects/partials/kanban_column.html" with title="서칭" cards=kanban.searching column_key="searching" %}
-      {% include "projects/partials/kanban_column.html" with title="심사" cards=kanban.screening column_key="screening" %}
-      {% include "projects/partials/kanban_column.html" with title="종료" cards=kanban.closed column_key="closed" %}
-    </div>
-  </main>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% include "projects/partials/kanban_column.html" with title="서칭" cards=kanban.searching column_key="searching" %}
+    {% include "projects/partials/kanban_column.html" with title="심사" cards=kanban.screening column_key="screening" %}
+    {% include "projects/partials/kanban_column.html" with title="종료" cards=kanban.closed column_key="closed" %}
+  </div>
 </div>
 {% endblock %}

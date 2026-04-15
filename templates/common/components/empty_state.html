@@ -1,12 +1,12 @@
-<div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+<div class="flex flex-col items-center justify-center py-16 px-4 text-center">
   {% if icon %}
-  <div class="text-gray-300 mb-4">{{ icon }}</div>
+  <div class="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-6 text-slate-300">{{ icon }}</div>
   {% endif %}
-  <p class="text-gray-500 text-[15px] mb-4">{{ message }}</p>
+  <p class="text-slate-500 text-sm font-medium mb-6 max-w-md">{{ message }}</p>
   {% if cta_url and cta_text %}
   <a href="{{ cta_url }}"
      hx-get="{{ cta_url }}" hx-target="#main-content" hx-push-url="true"
-     class="bg-primary text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] hover:bg-primary-dark transition">
+     class="bg-primary text-white font-bold text-xs uppercase tracking-widest py-3 px-6 rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.02] active:scale-95 transition-all">
     {{ cta_text }}
   </a>
   {% endif %}

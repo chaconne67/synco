@@ -9,7 +9,7 @@ from .models import InviteCode, Organization
 def _superuser_only(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect("login")
+            return redirect("landing")
         if not request.user.is_superuser:
             raise Http404()
         return view_func(request, *args, **kwargs)

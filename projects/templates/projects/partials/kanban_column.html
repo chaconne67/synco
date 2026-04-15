@@ -1,13 +1,13 @@
-<section class="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-  <header class="flex items-center justify-between mb-4">
-    <h2 class="text-base font-semibold text-slate-200">{{ title }}</h2>
-    <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">{{ cards|length }}</span>
+<section class="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+  <header class="flex items-center justify-between mb-5">
+    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">{{ title }}</h3>
+    <span class="bg-slate-50 text-slate-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-100">{{ cards|length }}</span>
   </header>
-  <div class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
+  <div class="space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto pr-1">
     {% for card in cards %}
       {% include "projects/partials/project_card.html" with card=card column_key=column_key %}
     {% empty %}
-      <p class="text-xs text-slate-500">표시할 프로젝트가 없습니다.</p>
+      <p class="text-xs font-medium text-slate-400 text-center py-6">표시할 프로젝트가 없습니다.</p>
     {% endfor %}
   </div>
 </section>

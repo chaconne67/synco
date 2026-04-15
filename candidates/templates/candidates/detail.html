@@ -2,19 +2,12 @@
 {% load static %}
 
 {% block title %}{{ candidate.name }} — synco{% endblock %}
-
-{% block breadcrumb_page %}
-<span class="text-slate-500">/</span>
-<a href="/candidates/" hx-get="/candidates/" hx-target="#main-content" hx-push-url="true" class="text-slate-300 hover:text-white transition">후보자</a>
-<span class="text-slate-500">/</span>
-<span class="text-white font-semibold">{{ candidate.name }}</span>
-{% endblock %}
+{% block breadcrumb_current %}Candidate{% endblock %}
+{% block page_title %}{{ candidate.name }}{% endblock %}
 
 {% block content %}
-<div class="p-6 lg:p-8" style="background:#F7F9FC;">
-  <div class="max-w-5xl mx-auto">
-    {% include "candidates/partials/candidate_detail_content.html" %}
-  </div>
+<div class="px-10 py-10 max-w-7xl">
+  {% include "candidates/partials/candidate_detail_content.html" %}
 </div>
 {% endblock %}
 

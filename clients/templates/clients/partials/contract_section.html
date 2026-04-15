@@ -1,48 +1,47 @@
-<section class="bg-white rounded-lg border border-gray-100 p-5 space-y-4">
-  <div class="flex items-center justify-between">
-    <h2 class="text-[15px] font-semibold text-gray-500">계약 이력</h2>
+<section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+  <div class="flex items-center justify-between mb-5">
+    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">계약 이력 · Contracts</h3>
     <button type="button"
             hx-get="{% url 'clients:contract_create' client.pk %}"
             hx-target="#contract-section"
-            class="text-[13px] text-primary font-medium hover:text-primary-dark transition">
+            class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
       + 계약 추가
     </button>
   </div>
 
   {% if show_form %}
-  <!-- New Contract Form -->
   <form hx-post="{% url 'clients:contract_create' client.pk %}"
         hx-target="#contract-section"
-        class="border border-gray-200 rounded-lg p-4 space-y-3">
+        class="rounded-xl border border-slate-100 bg-slate-50/50 p-5 space-y-4 mb-4">
     {% csrf_token %}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label class="block text-[13px] text-gray-500 mb-1">시작일 <span class="text-red-500">*</span></label>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">시작일 <span class="text-rose-500">*</span></label>
         {{ contract_form.start_date }}
       </div>
       <div>
-        <label class="block text-[13px] text-gray-500 mb-1">종료일</label>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">종료일</label>
         {{ contract_form.end_date }}
       </div>
       <div>
-        <label class="block text-[13px] text-gray-500 mb-1">상태</label>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">상태</label>
         {{ contract_form.status }}
       </div>
     </div>
     <div>
-      <label class="block text-[13px] text-gray-500 mb-1">계약 조건</label>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">계약 조건</label>
       {{ contract_form.terms }}
     </div>
     <div class="flex gap-2">
       <button type="submit"
-              class="bg-primary text-white font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-primary-dark transition">
+              class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark transition-all">
         저장
       </button>
       <button type="button"
               hx-get="{% url 'clients:client_detail' client.pk %}"
               hx-target="#main-content" hx-push-url="false"
-              hx-select="#contract-section" hx-swap="outerHTML" hx-target="#contract-section"
-              class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-gray-200 transition">
+              hx-select="#contract-section" hx-swap="outerHTML"
+              class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
         취소
       </button>
     </div>
@@ -50,84 +49,82 @@
   {% endif %}
 
   {% if edit_contract %}
-  <!-- Edit Contract Form -->
   <form hx-post="{% url 'clients:contract_update' client.pk edit_contract.pk %}"
         hx-target="#contract-section"
-        class="border border-blue-200 rounded-lg p-4 space-y-3 bg-blue-50">
+        class="rounded-xl border border-primary/20 bg-primary/5 p-5 space-y-4 mb-4">
     {% csrf_token %}
-    <div class="text-[13px] text-blue-600 font-medium mb-2">계약 수정</div>
+    <p class="text-[10px] font-bold uppercase tracking-widest text-primary">계약 수정</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label class="block text-[13px] text-gray-500 mb-1">시작일 <span class="text-red-500">*</span></label>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">시작일 <span class="text-rose-500">*</span></label>
         {{ edit_form.start_date }}
       </div>
       <div>
-        <label class="block text-[13px] text-gray-500 mb-1">종료일</label>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">종료일</label>
         {{ edit_form.end_date }}
       </div>
       <div>
-        <label class="block text-[13px] text-gray-500 mb-1">상태</label>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">상태</label>
         {{ edit_form.status }}
       </div>
     </div>
     <div>
-      <label class="block text-[13px] text-gray-500 mb-1">계약 조건</label>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">계약 조건</label>
       {{ edit_form.terms }}
     </div>
     <div class="flex gap-2">
       <button type="submit"
-              class="bg-primary text-white font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-primary-dark transition">
+              class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark transition-all">
         저장
       </button>
       <button type="button"
               hx-get="{% url 'clients:client_detail' client.pk %}"
               hx-target="#main-content"
-              hx-select="#contract-section" hx-swap="outerHTML" hx-target="#contract-section"
-              class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[13px] hover:bg-gray-200 transition">
+              hx-select="#contract-section" hx-swap="outerHTML"
+              class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
         취소
       </button>
     </div>
   </form>
   {% endif %}
 
-  <!-- Contract List -->
   {% if contracts %}
-  <div class="space-y-2">
+  <div class="divide-y divide-slate-100">
     {% for contract in contracts %}
-    <div class="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-[13px] px-2 py-0.5 rounded-full
-            {% if contract.status == '체결' %}bg-green-50 text-green-600
-            {% elif contract.status == '협의중' %}bg-yellow-50 text-yellow-600
-            {% elif contract.status == '만료' %}bg-gray-100 text-gray-500
-            {% elif contract.status == '해지' %}bg-red-50 text-red-500
-            {% else %}bg-gray-50 text-gray-600{% endif %}">
+    <div class="flex items-center justify-between py-4 first:pt-0 last:pb-0">
+      <div class="min-w-0">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full
+            {% if contract.status == '체결' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+            {% elif contract.status == '협의중' %}bg-amber-50 text-amber-700 border border-amber-100
+            {% elif contract.status == '만료' %}bg-slate-50 text-slate-500 border border-slate-100
+            {% elif contract.status == '해지' %}bg-rose-50 text-rose-600 border border-rose-100
+            {% else %}bg-slate-50 text-slate-600 border border-slate-100{% endif %}">
             {{ contract.get_status_display }}
           </span>
-          <span class="text-[15px] text-gray-700">
+          <span class="text-sm font-bold text-slate-900">
             {{ contract.start_date|date:"Y.m.d" }}
-            {% if contract.end_date %}~ {{ contract.end_date|date:"Y.m.d" }}{% endif %}
+            {% if contract.end_date %}<span class="mx-1 text-slate-300">~</span>{{ contract.end_date|date:"Y.m.d" }}{% endif %}
           </span>
         </div>
         {% if contract.terms %}
-        <p class="text-[13px] text-gray-400 mt-1 line-clamp-1">{{ contract.terms }}</p>
+        <p class="text-xs text-slate-500 mt-1.5 line-clamp-1">{{ contract.terms }}</p>
         {% endif %}
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <button hx-get="{% url 'clients:contract_update' client.pk contract.pk %}"
                 hx-target="#contract-section"
-                class="text-[13px] text-gray-400 hover:text-primary transition">
+                class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-primary px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors">
           수정
         </button>
-        <form method="post" action="{% url 'clients:contract_delete' client.pk contract.pk %}"
+        <form method="post"
               hx-post="{% url 'clients:contract_delete' client.pk contract.pk %}"
               hx-target="#contract-section"
               hx-confirm="계약을 삭제하시겠습니까?"
               class="inline">
           {% csrf_token %}
           <button type="submit"
-                  class="text-[13px] text-gray-400 hover:text-red-500 transition">
+                  class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-rose-500 px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors">
             삭제
           </button>
         </form>
@@ -136,6 +133,6 @@
     {% endfor %}
   </div>
   {% elif not show_form %}
-  <p class="text-[15px] text-gray-400">등록된 계약이 없습니다.</p>
+  <p class="text-xs font-medium text-slate-400 text-center py-4">등록된 계약이 없습니다.</p>
   {% endif %}
 </section>

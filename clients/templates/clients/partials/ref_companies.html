@@ -1,94 +1,91 @@
-<!-- Filters -->
-<div class="flex flex-wrap gap-2 mb-4">
-  <form hx-get="/reference/companies/" hx-target="#ref-tab-content" class="flex flex-wrap gap-2 w-full">
+<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+  <form hx-get="/reference/companies/" hx-target="#ref-tab-content" class="flex flex-wrap gap-3 mb-6">
     <input type="text" name="q" value="{{ q }}" placeholder="회사명 검색"
-           class="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-[15px] focus:ring-2 focus:ring-primary focus:border-primary">
-    <select name="listed" class="border border-gray-300 rounded-lg px-3 py-2 text-[15px]">
+           class="flex-1 min-w-[200px] rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
+    <select name="listed" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
       <option value="">전체 상장</option>
       {% for val, label in listed_choices %}
       <option value="{{ val }}" {% if listed_filter == val %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <select name="size" class="border border-gray-300 rounded-lg px-3 py-2 text-[15px]">
+    <select name="size" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
       <option value="">전체 규모</option>
       {% for val, label in size_choices %}
       <option value="{{ val }}" {% if size_filter == val %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <button type="submit" class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[15px] hover:bg-gray-200">검색</button>
+    <button type="submit" class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 shadow-sm hover:bg-slate-50 transition-all">검색</button>
   </form>
-</div>
 
-<!-- Table -->
-{% if page_obj.object_list %}
-<div class="overflow-x-auto">
-  <table class="w-full text-[15px]">
-    <thead>
-      <tr class="border-b border-gray-200 text-left text-gray-500 text-[13px]">
-        <th class="pb-2 font-medium">회사명</th>
-        <th class="pb-2 font-medium">업종</th>
-        <th class="pb-2 font-medium">규모</th>
-        <th class="pb-2 font-medium">상장</th>
-        <th class="pb-2 font-medium">소재지</th>
-        {% if is_staff %}<th class="pb-2 font-medium"></th>{% endif %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for c in page_obj %}
-      <tr class="border-b border-gray-100 hover:bg-gray-50">
-        <td class="py-2.5 font-medium text-gray-900">{{ c.name }}</td>
-        <td class="py-2.5 text-gray-600">{{ c.industry|default:"-" }}</td>
-        <td class="py-2.5 text-gray-600">{{ c.get_size_category_display|default:"-" }}</td>
-        <td class="py-2.5 text-gray-600">{{ c.get_listed_display|default:"-" }}</td>
-        <td class="py-2.5 text-gray-600">{{ c.region|default:"-" }}</td>
-        {% if is_staff %}
-        <td class="py-2.5 text-right space-x-1">
-          <button hx-get="/reference/companies/{{ c.pk }}/edit/" hx-target="#ref-form-area"
-                  class="text-[13px] text-primary hover:underline">수정</button>
-          <button hx-post="/reference/companies/{{ c.pk }}/delete/" hx-confirm="정말 삭제하시겠습니까?"
-                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                  class="text-[13px] text-red-500 hover:underline">삭제</button>
-        </td>
-        {% endif %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+  {% if page_obj.object_list %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-slate-100 text-left">
+          <th class="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">회사명</th>
+          <th class="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">업종</th>
+          <th class="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">규모</th>
+          <th class="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">상장</th>
+          <th class="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">소재지</th>
+          {% if is_staff %}<th class="pb-3"></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for c in page_obj %}
+        <tr class="hover:bg-slate-50/60 transition-colors">
+          <td class="py-3 font-bold text-slate-900">{{ c.name }}</td>
+          <td class="py-3 text-slate-600">{{ c.industry|default:"-" }}</td>
+          <td class="py-3 text-slate-600">{{ c.get_size_category_display|default:"-" }}</td>
+          <td class="py-3 text-slate-600">{{ c.get_listed_display|default:"-" }}</td>
+          <td class="py-3 text-slate-600">{{ c.region|default:"-" }}</td>
+          {% if is_staff %}
+          <td class="py-3 text-right space-x-1">
+            <button hx-get="/reference/companies/{{ c.pk }}/edit/" hx-target="#ref-form-area"
+                    class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors">수정</button>
+            <button hx-post="/reference/companies/{{ c.pk }}/delete/" hx-confirm="정말 삭제하시겠습니까?"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    class="text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors">삭제</button>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-{% if page_obj.has_other_pages %}
-<div class="flex justify-center gap-2 pt-4">
-  {% if page_obj.has_previous %}
-  <button hx-get="/reference/companies/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ page_obj.previous_page_number }}"
-          hx-target="#ref-tab-content"
-          class="px-3 py-2 rounded-lg text-[15px] text-gray-500 hover:bg-gray-100">이전</button>
+  {% if page_obj.has_other_pages %}
+  <div class="flex justify-center items-center gap-3 mt-6">
+    {% if page_obj.has_previous %}
+    <button hx-get="/reference/companies/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ page_obj.previous_page_number }}"
+            hx-target="#ref-tab-content"
+            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">이전</button>
+    {% endif %}
+    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <button hx-get="/reference/companies/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ page_obj.next_page_number }}"
+            hx-target="#ref-tab-content"
+            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">다음</button>
+    {% endif %}
+  </div>
   {% endif %}
-  <span class="px-3 py-2 text-[15px] text-gray-500">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-  {% if page_obj.has_next %}
-  <button hx-get="/reference/companies/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ page_obj.next_page_number }}"
-          hx-target="#ref-tab-content"
-          class="px-3 py-2 rounded-lg text-[15px] text-gray-500 hover:bg-gray-100">다음</button>
+  {% else %}
+  <p class="text-center text-xs font-medium text-slate-400 py-12">{% if q %}검색 결과가 없습니다.{% else %}등록된 기업이 없습니다.{% endif %}</p>
   {% endif %}
-</div>
-{% endif %}
-{% else %}
-<p class="text-center text-gray-500 py-8">{% if q %}검색 결과가 없습니다.{% else %}등록된 기업이 없습니다.{% endif %}</p>
-{% endif %}
 
-<!-- Actions -->
-<div class="flex gap-2 pt-4">
-  {% if is_staff %}
-  <button hx-get="/reference/companies/new/" hx-target="#ref-form-area"
-          class="bg-primary text-white font-semibold py-2 px-4 rounded-lg text-[15px] hover:bg-primary-dark transition">+ 추가</button>
-  <form hx-post="/reference/companies/import/" hx-target="#ref-import-result" hx-encoding="multipart/form-data" class="flex gap-2">
-    {% csrf_token %}
-    {{ import_form.csv_file }}
-    <button type="submit" class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[15px] hover:bg-gray-200">CSV 가져오기</button>
-  </form>
-  {% endif %}
-  <a href="/reference/companies/export/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}{% endif %}"
-     hx-boost="false"
-     class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg text-[15px] hover:bg-gray-200">CSV 내보내기</a>
+  <div class="flex gap-2 pt-6 mt-6 border-t border-slate-100">
+    {% if is_staff %}
+    <button hx-get="/reference/companies/new/" hx-target="#ref-form-area"
+            class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark transition-all">+ 추가</button>
+    <form hx-post="/reference/companies/import/" hx-target="#ref-import-result" hx-encoding="multipart/form-data" class="flex gap-2">
+      {% csrf_token %}
+      {{ import_form.csv_file }}
+      <button type="submit" class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">CSV 가져오기</button>
+    </form>
+    {% endif %}
+    <a href="/reference/companies/export/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}{% endif %}"
+       hx-boost="false"
+       class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all flex items-center">CSV 내보내기</a>
+  </div>
 </div>
 
 <div id="ref-form-area"></div>

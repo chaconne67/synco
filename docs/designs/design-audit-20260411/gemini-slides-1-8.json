@@ -1,0 +1,39 @@
+{
+  "scores": {
+    "Visual Hierarchy": 6,
+    "Typography": 5,
+    "Color & Contrast": 6,
+    "Spacing & Layout": 4,
+    "Interaction States": 4,
+    "AI Slop Detection": 7,
+    "Overall Professionalism": 5
+  },
+  "issues": [
+    {
+      "location": "Slide 8, Bottom half",
+      "description": "Severe layout failure. The bottom blue card ('BLUE - 참고') is cut off, and large text elements ('자동', '10초', '필드별') are awkwardly overlapping the background and the card, breaking the layout entirely."
+    },
+    {
+      "location": "Slide 1, Top Left & Throughout",
+      "description": "Typographic inconsistency. The logo font ('synco') is a traditional serif, which heavily clashes with the modern sans-serif font used for the rest of the presentation. This lowers brand coherence."
+    },
+    {
+      "location": "Slide 3, Center Cards",
+      "description": "Visual hierarchy and contrast issues. The large orange numbers (01-04) overpower the actual feature titles below them. Additionally, the contrast ratio of the orange text on the mid-blue background may not meet WCAG standards."
+    },
+    {
+      "location": "Slide 2, Cards",
+      "description": "Arbitrary color usage. The colored dots (red, orange, yellow, purple) next to the titles lack semantic meaning and feel like generic decorations rather than informative indicators."
+    },
+    {
+      "location": "Slides 4-7, Overall Layout",
+      "description": "UI representation feels like a basic presentation template rather than actual product screens. Elements lack depth, borders, or styling that imply interactive software components."
+    },
+    {
+      "location": "Slide 4, Content text",
+      "description": "The Before/After text is very dense. Even though 'AFTER' has some color coding (green), the lack of proper spacing and structural styling makes it look like a wall of text rather than parsed data fields."
+    }
+  ],
+  "overall_grade": "C-",
+  "summary": "The design functions adequately as an early-stage pitch deck to communicate core features, but it fails to present as a credible, design-led software product. The presentation suffers from a major layout break on slide 8, jarring typographic inconsistencies between the logo and body copy, and UI representations that feel like basic PowerPoint shapes rather than a polished application interface. To build trust with a B2B audience, the visual identity needs unification, and UI mockups should reflect actual, accessible web components."
+}

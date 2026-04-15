@@ -1,17 +1,17 @@
 {# 변환 완료 — 다운로드 링크 #}
 <div class="space-y-4">
 
-  <div class="bg-white rounded-xl border border-green-200 p-6 space-y-4">
+  <div class="bg-white rounded-xl border border-emerald-100 p-6 space-y-4">
     <div class="flex items-center gap-2">
-      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600">
+      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
       </span>
-      <h2 class="text-lg font-semibold text-gray-900">변환이 완료되었습니다</h2>
+      <h2 class="text-lg font-bold text-slate-900">변환이 완료되었습니다</h2>
     </div>
 
-    <p class="text-sm text-gray-600">
+    <p class="text-sm text-slate-600">
       제출용 Word 파일이 생성되었습니다.
       Submission의 서류 파일에도 자동으로 복사되었습니다.
     </p>
@@ -30,13 +30,13 @@
   </div>
 
   {# 재변환 / 재검토 옵션 #}
-  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
-    <h3 class="text-sm font-semibold text-gray-700">추가 작업</h3>
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-3">
+    <h3 class="text-sm font-semibold text-slate-700">추가 작업</h3>
     <div class="flex items-center gap-4">
       <a href="{% url 'projects:draft_review' project.pk submission.pk %}"
          hx-get="{% url 'projects:draft_review' project.pk submission.pk %}"
          hx-target="#draft-content"
-         class="text-sm text-gray-600 hover:text-gray-800 underline">
+         class="text-sm text-slate-600 hover:text-slate-800 underline">
         내용 재검토
       </a>
       <a href="{% url 'projects:draft_preview' project.pk submission.pk %}"

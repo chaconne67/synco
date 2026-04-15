@@ -1,13 +1,13 @@
-<div class="mt-4 p-4 rounded-lg {% if errors %}bg-red-50 border border-red-200{% else %}bg-green-50 border border-green-200{% endif %}">
+<div class="mt-4 p-5 rounded-xl {% if errors %}bg-rose-50 border border-rose-100{% else %}bg-emerald-50 border border-emerald-100{% endif %}">
   {% if errors %}
-  <h3 class="font-semibold text-red-700 text-[15px] mb-2">가져오기 실패</h3>
-  <ul class="text-[13px] text-red-600 space-y-1">
+  <p class="text-[10px] font-bold uppercase tracking-widest text-rose-700 mb-3">가져오기 실패</p>
+  <ul class="text-xs text-rose-600 space-y-1">
     {% for err in errors %}
     <li>{{ err }}</li>
     {% endfor %}
   </ul>
   {% else %}
-  <h3 class="font-semibold text-green-700 text-[15px] mb-1">가져오기 완료</h3>
-  <p class="text-[13px] text-green-600">추가: {{ created }}건, 수정: {{ updated }}건</p>
+  <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-2">가져오기 완료</p>
+  <p class="text-xs text-emerald-600 font-semibold">추가 {{ created }}건 <span class="mx-1">·</span> 수정 {{ updated }}건</p>
   {% endif %}
 </div>

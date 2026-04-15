@@ -1,18 +1,21 @@
 {% load humanize %}
-<section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-  <h2 class="text-[16px] font-semibold text-gray-900 mb-3">최근 활동</h2>
+<section class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">최근 활동 · Recent Activity</h3>
   {% if activities %}
-  <ul class="space-y-2">
+  <ul class="space-y-5">
     {% for activity in activities %}
-    <li class="flex items-center gap-3 py-1.5">
-      <span class="text-[12px] text-gray-400 whitespace-nowrap min-w-[60px] text-right">
-        {{ activity.timestamp|naturaltime }}
-      </span>
-      <span class="text-[14px] text-gray-700">{{ activity.description }}</span>
+    <li class="flex gap-4 group cursor-default">
+      <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-slate-900 leading-snug">{{ activity.description }}</p>
+        <p class="text-[11px] text-slate-400 font-medium mt-1">{{ activity.timestamp|naturaltime }}</p>
+      </div>
     </li>
     {% endfor %}
   </ul>
   {% else %}
-  <p class="text-[14px] text-gray-400 text-center py-4">최근 활동이 없습니다.</p>
+  <p class="text-xs font-medium text-slate-400 text-center py-6">최근 활동이 없습니다.</p>
   {% endif %}
 </section>

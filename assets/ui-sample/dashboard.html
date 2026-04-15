@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>synco · Executive Search Dashboard</title>
+
+<!-- Pretendard (프로젝트 표준 폰트) -->
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+<!-- Tailwind (목업용 CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system',
+                 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        },
+        colors: {
+          canvas:   '#F8FAFC',
+          surface:  '#FFFFFF',
+          ink:      '#0F172A',
+          ink2:     '#1E293B',
+          ink3:     '#334155',
+          muted:    '#64748B',
+          faint:    '#94A3B8',
+          hair:     '#E2E8F0',
+          line:     '#F1F5F9',
+          success:  '#10B981',
+          warning:  '#F59E0B',
+          info:     '#6366F1',
+          danger:   '#EF4444',
+        },
+        boxShadow: {
+          'card': '0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06)',
+          'lift': '0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.04)',
+          'fab':  '0 10px 15px -3px rgba(15,23,42,0.15), 0 4px 6px -2px rgba(15,23,42,0.08)',
+        },
+        borderRadius: {
+          'card': '16px',
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { font-family: 'Pretendard Variable', Pretendard, -apple-system, sans-serif; }
+  body { background: #F8FAFC; color: #0F172A; -webkit-font-smoothing: antialiased; }
+  .tnum { font-feature-settings: "tnum" 1, "ss01" 1; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 8px;
+    color: #94A3B8; font-size: 13px; font-weight: 500;
+    transition: background .15s ease, color .15s ease;
+  }
+  .sidebar-link:hover { background: #1E293B; color: #fff; }
+  .sidebar-link.is-active { background: #1E293B; color: #fff; }
+  .sidebar-link .dot { width: 3px; height: 18px; border-radius: 2px; background: transparent; margin-right: -8px; }
+  .sidebar-link.is-active .dot { background: #fff; }
+  .progress { height: 4px; border-radius: 999px; background: #E2E8F0; overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: #334155; border-radius: 999px; }
+  .progress.success > span { background: #10B981; }
+  .progress.info > span { background: #6366F1; }
+  .status-dot { width: 6px; height: 6px; border-radius: 999px; display: inline-block; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 500; color: #334155;
+    background: #F1F5F9;
+  }
+  .chip.is-active { background: #334155; color: #fff; }
+  .cal-day {
+    aspect-ratio: 1/1;
+    display: flex; flex-direction: column;
+    align-items: flex-start; justify-content: flex-start;
+    padding: 12px 14px;
+    color: #0F172A;
+    border: 2px solid #EEF2F7;
+    background: #FFFFFF;
+    transition: background .15s ease;
+    position: relative;
+  }
+  .cal-day:hover { background: #F8FAFC; }
+  .cal-day > .tnum {
+    font-size: 14px; font-weight: 600;
+    color: #0F172A;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .cal-day.muted > .tnum { color: #CBD5E1; font-weight: 500; }
+  .cal-day.today > .tnum {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px;
+    background: #0F172A; color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    margin: -5px -6px;
+  }
+  .cal-event {
+    margin-top: 8px;
+    font-size: 10px; line-height: 1.2;
+    padding: 4px 10px; border-radius: 999px;
+    background: #F1F5F9; color: #334155;
+    font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%;
+    align-self: flex-start;
+  }
+  .cal-day.today .cal-event { background: #0F172A; color: #fff; }
+  /* Internal-only borders: remove all four outer edges */
+  .cal-day:nth-child(-n+7)    { border-top: 0; margin-top: 0 !important; }
+  .cal-day:nth-child(7n+1)    { border-left: 0; }
+  .cal-day:nth-child(7n)      { border-right: 0; }
+  .cal-day:nth-last-child(-n+7) { border-bottom: 0; }
+
+  /* Card hover — top/position 기반. transform 을 쓰면 hover 시 텍스트가 흐려진다. */
+  .rounded-card {
+    position: relative;
+    top: 0;
+    transition: top 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .rounded-card:hover {
+    top: -2px;
+    box-shadow:
+      0 12px 24px -10px rgba(15, 23, 42, 0.18),
+      0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  }
+  /* Dark accent card gets a slightly stronger lift */
+  .bg-ink.rounded-card:hover {
+    box-shadow:
+      0 16px 32px -12px rgba(15, 23, 42, 0.45),
+      0 6px 12px -6px rgba(15, 23, 42, 0.2);
+  }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- ===================== LAYOUT ===================== -->
+<div class="flex min-h-screen">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="w-[260px] shrink-0 bg-ink text-white flex flex-col">
+    <!-- Logo -->
+    <div class="px-6 py-6 border-b border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        </div>
+        <div>
+          <div class="text-lg font-bold tracking-tight leading-none">synco</div>
+          <div class="eyebrow mt-1" style="color:#64748B">Executive Search v2.4</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="px-4 py-6 space-y-1 flex-1">
+      <a href="#" class="sidebar-link is-active">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Candidates
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6l5 5v11a2 2 0 0 1-2 2Z"/><path d="M3 15h6"/><path d="M3 18h6"/><path d="M3 12h6"/></svg>
+        Projects
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+        Clients
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/></svg>
+        References
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-3-2-3 2-3-2-3 2Z"/><path d="M18 14h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M8 6h4"/><path d="M8 10h4"/></svg>
+        Newsfeed
+      </a>
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>
+        Team
+      </a>
+    </nav>
+
+    <!-- Footer of sidebar -->
+    <div class="px-4 pb-6 space-y-1">
+      <a href="#" class="sidebar-link">
+        <span class="dot"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </div>
+  </aside>
+
+  <!-- ===== RIGHT COLUMN (header full-width, content 1024) ===== -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- Top Header: full width of right column -->
+    <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">데스크 · 헤드헌팅</div>
+        <h1 class="text-[22px] font-bold tracking-tight mt-1">Executive Search Dashboard</h1>
+      </div>
+      <div class="flex items-center gap-5">
+        <div class="text-right">
+          <div class="eyebrow">Wednesday · Oct 25, 2023</div>
+          <div class="text-xs text-muted mt-1 tnum">10:24 AM KST</div>
+        </div>
+        <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+        <button class="w-9 h-9 rounded-full hover:bg-line flex items-center justify-center text-muted">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        </button>
+        <div class="flex items-center gap-3 pl-5 border-l border-hair">
+          <div class="text-right">
+            <div class="text-sm font-semibold">Senior Partner</div>
+            <div class="eyebrow">Advisory Board</div>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-ink2 text-white flex items-center justify-center text-sm font-semibold">SP</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content (max 1280) -->
+    <main class="w-full max-w-[1280px] flex flex-col">
+    <!-- Content -->
+    <div class="px-8 py-8 space-y-6 flex-1">
+
+      <!-- ============ TOP ROW: 3 stat cards ============ -->
+      <section class="grid grid-cols-12 gap-6">
+
+        <!-- Monthly Success -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6 flex flex-col">
+          <div class="flex items-start justify-between">
+            <div class="eyebrow">Monthly Success</div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          </div>
+          <div class="mt-6 flex items-baseline gap-3">
+            <span class="text-[40px] leading-none font-bold tnum">24</span>
+            <span class="text-sm text-muted">Projects Closed</span>
+          </div>
+          <div class="mt-6 pt-5 border-t border-line grid grid-cols-2 gap-4">
+            <div>
+              <div class="eyebrow">In Progress</div>
+              <div class="mt-1 text-xl font-bold tnum">12</div>
+            </div>
+            <div>
+              <div class="eyebrow">Success Rate</div>
+              <div class="mt-1 text-xl font-bold tnum">82<span class="text-sm text-muted font-medium">%</span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Estimated Revenue (DARK accent card) -->
+        <article class="col-span-4 bg-ink text-white rounded-card shadow-lift p-6 flex flex-col">
+          <div class="flex items-start justify-between">
+            <div class="eyebrow" style="color:#64748B">Estimated Revenue</div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          </div>
+          <div class="mt-6">
+            <div class="text-[40px] leading-none font-bold tnum">₩ 842,500</div>
+          </div>
+          <div class="mt-auto pt-6">
+            <div class="flex items-center justify-between mb-2">
+              <div class="eyebrow" style="color:#64748B">Target Progress</div>
+              <div class="text-xs font-semibold tnum">76%</div>
+            </div>
+            <div class="progress" style="background:#1E293B"><span style="width:76%; background:#fff"></span></div>
+          </div>
+        </article>
+
+        <!-- Project Status -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-start justify-between">
+            <div class="eyebrow">Project Status</div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect width="4" height="7" x="7" y="10" rx="1"/><rect width="4" height="12" x="15" y="5" rx="1"/></svg>
+          </div>
+          <ul class="mt-6 space-y-4">
+            <li class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="status-dot" style="background:#10B981"></span>
+                <span class="text-sm">진행 (Active)</span>
+              </div>
+              <span class="text-lg font-bold tnum">42</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="status-dot" style="background:#F59E0B"></span>
+                <span class="text-sm">심사 (Review)</span>
+              </div>
+              <span class="text-lg font-bold tnum">18</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="status-dot" style="background:#6366F1"></span>
+                <span class="text-sm">완료 (Completed)</span>
+              </div>
+              <span class="text-lg font-bold tnum">114</span>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <!-- ============ MIDDLE ROW: team + activity ============ -->
+      <section class="grid grid-cols-12 gap-6">
+
+        <!-- Team Performance -->
+        <article class="col-span-8 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="eyebrow">Team Performance</div>
+            </div>
+            <a href="#" class="text-xs font-semibold text-ink3 hover:underline">VIEW ALL MEMBERS →</a>
+          </div>
+
+          <ul class="mt-6 space-y-5">
+            <li class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-semibold text-sm">MK</div>
+              <div class="w-[180px] shrink-0">
+                <div class="text-sm font-semibold">Min-ho Kim</div>
+                <div class="eyebrow mt-0.5" style="color:#94A3B8">Principal Consultant</div>
+              </div>
+              <div class="w-[140px] shrink-0">
+                <div class="eyebrow">Current Projects</div>
+                <div class="text-sm font-semibold mt-0.5">8 active</div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="eyebrow">Completion</div>
+                  <div class="text-xs font-semibold tnum text-ink3">92%</div>
+                </div>
+                <div class="progress success"><span style="width:92%"></span></div>
+              </div>
+            </li>
+
+            <li class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex items-center justify-center text-white font-semibold text-sm">SP</div>
+              <div class="w-[180px] shrink-0">
+                <div class="text-sm font-semibold">Sarah Park</div>
+                <div class="eyebrow mt-0.5" style="color:#94A3B8">Senior Consultant</div>
+              </div>
+              <div class="w-[140px] shrink-0">
+                <div class="eyebrow">Current Projects</div>
+                <div class="text-sm font-semibold mt-0.5">5 active</div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="eyebrow">Completion</div>
+                  <div class="text-xs font-semibold tnum text-ink3">75%</div>
+                </div>
+                <div class="progress"><span style="width:75%"></span></div>
+              </div>
+            </li>
+
+            <li class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">JL</div>
+              <div class="w-[180px] shrink-0">
+                <div class="text-sm font-semibold">Ji-won Lee</div>
+                <div class="eyebrow mt-0.5" style="color:#94A3B8">Research Associate</div>
+              </div>
+              <div class="w-[140px] shrink-0">
+                <div class="eyebrow">Current Projects</div>
+                <div class="text-sm font-semibold mt-0.5">12 active</div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="eyebrow">Completion</div>
+                  <div class="text-xs font-semibold tnum text-ink3">48%</div>
+                </div>
+                <div class="progress info"><span style="width:48%"></span></div>
+              </div>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Recent Activity -->
+        <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+          <div class="flex items-center justify-between">
+            <div class="eyebrow">Recent Activity</div>
+            <button class="text-faint hover:text-ink">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            </button>
+          </div>
+          <ul class="mt-5 space-y-4">
+            <li class="flex gap-3">
+              <div class="w-7 h-7 rounded-full bg-emerald-50 text-success flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold leading-snug">Candidate placement confirmed</div>
+                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Project Cloud / CTO Search · 2h ago</div>
+              </div>
+            </li>
+            <li class="flex gap-3">
+              <div class="w-7 h-7 rounded-full bg-indigo-50 text-info flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold leading-snug">New candidate added</div>
+                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Global FinTech Expansion · 5h ago</div>
+              </div>
+            </li>
+            <li class="flex gap-3">
+              <div class="w-7 h-7 rounded-full bg-amber-50 text-warning flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold leading-snug">Client meeting notes updated</div>
+                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Samsung Electronics Advisory · Yesterday</div>
+              </div>
+            </li>
+            <li class="flex gap-3">
+              <div class="w-7 h-7 rounded-full bg-red-50 text-danger flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold leading-snug">Project deadline approaching</div>
+                <div class="eyebrow mt-0.5 normal-case tracking-normal" style="color:#94A3B8;font-weight:500;font-size:11px;text-transform:none;letter-spacing:0">Renewable Energy Head Search · 2 days ago</div>
+              </div>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <!-- ============ BOTTOM ROW: schedule + calendar ============ -->
+      <section class="grid grid-cols-12 gap-6">
+
+        <!-- Weekly Schedule -->
+        <div class="col-span-4">
+          <div class="eyebrow mb-4">Weekly Schedule</div>
+          <div class="space-y-4">
+          <div class="bg-surface rounded-card shadow-card p-5">
+            <div class="flex items-start justify-between">
+              <div class="eyebrow text-ink3" style="color:#334155">Mon, Oct 23 · 09:00</div>
+              <button class="text-faint hover:text-ink">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+            <div class="mt-3 text-[15px] font-semibold leading-snug">Weekly Pipeline Review</div>
+            <div class="text-xs text-muted mt-1">Internal Team Session · Room A</div>
+          </div>
+
+          <div class="bg-surface rounded-card shadow-card p-5">
+            <div class="flex items-start justify-between">
+              <div class="eyebrow" style="color:#6366F1">Wed, Oct 25 · 11:00</div>
+              <button class="text-faint hover:text-ink">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+            <div class="mt-3 text-[15px] font-semibold leading-snug">Executive Interview</div>
+            <div class="text-xs text-muted mt-1">Candidate: Hae-Joon Park · Zoom</div>
+          </div>
+
+          <div class="bg-surface rounded-card shadow-card p-5">
+            <div class="flex items-start justify-between">
+              <div class="eyebrow" style="color:#F59E0B">Fri, Oct 27 · 14:00</div>
+              <button class="text-faint hover:text-ink">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+            <div class="mt-3 text-[15px] font-semibold leading-snug">Client Briefing: SK Hynix</div>
+            <div class="text-xs text-muted mt-1">Strategy Planning · Head Office</div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Monthly Schedule -->
+        <div class="col-span-8">
+          <div class="eyebrow mb-4">Monthly Schedule</div>
+          <article class="bg-surface rounded-card shadow-card overflow-hidden">
+
+          <div class="grid grid-cols-7 border-b-2 bg-canvas" style="border-bottom-color:#EEF2F7">
+            <!-- Weekday headers -->
+            <div class="eyebrow text-center py-3 !text-ink3">Sun</div>
+            <div class="eyebrow text-center py-3 !text-ink3">Mon</div>
+            <div class="eyebrow text-center py-3 !text-ink3">Tue</div>
+            <div class="eyebrow text-center py-3 !text-ink3">Wed</div>
+            <div class="eyebrow text-center py-3 !text-ink3">Thu</div>
+            <div class="eyebrow text-center py-3 !text-ink3">Fri</div>
+            <div class="eyebrow text-center py-3 !text-ink3">Sat</div>
+          </div>
+
+          <div class="grid grid-cols-7 [&>*]:-ml-0.5 [&>*]:-mt-0.5">
+            <!-- trailing days of previous month -->
+            <div class="cal-day muted"><span class="tnum">24</span></div>
+            <div class="cal-day muted"><span class="tnum">25</span></div>
+            <div class="cal-day muted"><span class="tnum">26</span></div>
+            <div class="cal-day muted"><span class="tnum">27</span></div>
+            <div class="cal-day muted"><span class="tnum">28</span></div>
+            <div class="cal-day muted"><span class="tnum">29</span></div>
+            <div class="cal-day muted"><span class="tnum">30</span></div>
+
+            <!-- Week 1 -->
+            <div class="cal-day"><span class="tnum">1</span></div>
+            <div class="cal-day"><span class="tnum">2</span></div>
+            <div class="cal-day"><span class="tnum">3</span></div>
+            <div class="cal-day">
+              <span class="tnum">4</span>
+              <div class="cal-event">Board Mtg</div>
+            </div>
+            <div class="cal-day"><span class="tnum">5</span></div>
+            <div class="cal-day"><span class="tnum">6</span></div>
+            <div class="cal-day"><span class="tnum">7</span></div>
+
+            <!-- Week 2 -->
+            <div class="cal-day"><span class="tnum">8</span></div>
+            <div class="cal-day"><span class="tnum">9</span></div>
+            <div class="cal-day"><span class="tnum">10</span></div>
+            <div class="cal-day"><span class="tnum">11</span></div>
+            <div class="cal-day"><span class="tnum">12</span></div>
+            <div class="cal-day"><span class="tnum">13</span></div>
+            <div class="cal-day"><span class="tnum">14</span></div>
+
+            <!-- Week 3 -->
+            <div class="cal-day"><span class="tnum">15</span></div>
+            <div class="cal-day"><span class="tnum">16</span></div>
+            <div class="cal-day"><span class="tnum">17</span></div>
+            <div class="cal-day"><span class="tnum">18</span></div>
+            <div class="cal-day"><span class="tnum">19</span></div>
+            <div class="cal-day"><span class="tnum">20</span></div>
+            <div class="cal-day"><span class="tnum">21</span></div>
+
+            <!-- Week 4 -->
+            <div class="cal-day"><span class="tnum">22</span></div>
+            <div class="cal-day">
+              <span class="tnum">23</span>
+              <div class="cal-event">Weekly Review</div>
+            </div>
+            <div class="cal-day"><span class="tnum">24</span></div>
+            <div class="cal-day today">
+              <span class="tnum">25</span>
+              <div class="cal-event">Interview</div>
+            </div>
+            <div class="cal-day"><span class="tnum">26</span></div>
+            <div class="cal-day">
+              <span class="tnum">27</span>
+              <div class="cal-event">SK Hynix</div>
+            </div>
+            <div class="cal-day"><span class="tnum">28</span></div>
+
+            <!-- Week 5 -->
+            <div class="cal-day"><span class="tnum">29</span></div>
+            <div class="cal-day"><span class="tnum">30</span></div>
+            <div class="cal-day"><span class="tnum">31</span></div>
+            <div class="cal-day muted"><span class="tnum">1</span></div>
+            <div class="cal-day muted"><span class="tnum">2</span></div>
+            <div class="cal-day muted"><span class="tnum">3</span></div>
+            <div class="cal-day muted"><span class="tnum">4</span></div>
+          </div>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-ink3 text-white shadow-fab hover:bg-ink2 transition-colors flex items-center justify-center">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+</body>
+</html>

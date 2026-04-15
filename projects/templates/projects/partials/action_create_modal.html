@@ -1,20 +1,20 @@
 {# Modal: Create new ActionItem for an Application #}
 <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-action-create"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
      hx-on:click="if (event.target === this) document.getElementById('modal-container').innerHTML = ''"
      hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
-  <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-    <header class="mb-4 flex items-center justify-between">
-      <h2 id="modal-title-action-create" class="text-lg font-semibold text-slate-100">액션 생성</h2>
+  <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl shadow-slate-900/20 p-8">
+    <header class="mb-5 flex items-center justify-between">
+      <h3 id="modal-title-action-create" class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">액션 생성 · New</h3>
       <button type="button"
               onclick="document.getElementById('modal-container').innerHTML = ''"
-              class="text-slate-500 hover:text-slate-300">&#10005;</button>
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
     </header>
 
-    <p class="mb-4 text-xs text-slate-400">{{ application.candidate.name }} · {{ application.project.title }}</p>
+    <p class="mb-5 text-xs text-slate-500"><span class="font-bold text-slate-900">{{ application.candidate.name }}</span> <span class="mx-1 text-slate-500">·</span> {{ application.project.title }}</p>
 
     {% if form.non_field_errors %}
-      <div class="mb-3 rounded-md border border-red-500/30 bg-red-950/20 p-3 text-xs text-red-300">
+      <div class="mb-4 rounded-xl border border-rose-100 bg-rose-50 p-3 text-xs font-semibold text-rose-600">
         {% for error in form.non_field_errors %}{{ error }}{% endfor %}
       </div>
     {% endif %}
@@ -23,31 +23,31 @@
           hx-target="#modal-container"
           hx-swap="innerHTML">
       {% csrf_token %}
-      <div class="space-y-4">
-        <label class="block">
-          <span class="text-sm text-slate-300">액션 유형</span>
+      <div class="space-y-5">
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">액션 유형</label>
           <select name="action_type_id"
-                  class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                  class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">
             <option value="">선택하세요</option>
             {% for at in action_types %}
               <option value="{{ at.pk }}" {% if form.action_type_id.value|slugify == at.pk|slugify %}selected{% endif %}>{{ at.label_ko }}</option>
             {% endfor %}
           </select>
           {% if form.action_type_id.errors %}
-            <p class="mt-1 text-xs text-red-400">{{ form.action_type_id.errors.0 }}</p>
+            <p class="mt-2 text-xs font-semibold text-rose-600">{{ form.action_type_id.errors.0 }}</p>
           {% endif %}
-        </label>
+        </div>
 
-        <label class="block">
-          <span class="text-sm text-slate-300">제목 (선택, 비워두면 자동 생성)</span>
-          <input type="text" name="title" value="{{ form.title.value|default:"" }}"
-                 class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
-        </label>
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">제목 (선택)</label>
+          <input type="text" name="title" value="{{ form.title.value|default:"" }}" placeholder="비워두면 자동 생성"
+                 class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">
+        </div>
 
-        <label class="block">
-          <span class="text-sm text-slate-300">채널</span>
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">채널</label>
           <select name="channel"
-                  class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                  class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">
             <option value="">선택 안 함</option>
             <option value="in_person" {% if form.channel.value == "in_person" %}selected{% endif %}>대면</option>
             <option value="video" {% if form.channel.value == "video" %}selected{% endif %}>화상</option>
@@ -58,36 +58,36 @@
             <option value="linkedin" {% if form.channel.value == "linkedin" %}selected{% endif %}>LinkedIn</option>
             <option value="other" {% if form.channel.value == "other" %}selected{% endif %}>기타</option>
           </select>
-        </label>
-
-        <div class="grid grid-cols-2 gap-4">
-          <label class="block">
-            <span class="text-sm text-slate-300">예정일</span>
-            <input type="datetime-local" name="scheduled_at" value="{{ form.scheduled_at.value|default:"" }}"
-                   class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
-          </label>
-          <label class="block">
-            <span class="text-sm text-slate-300">마감일</span>
-            <input type="datetime-local" name="due_at" value="{{ form.due_at.value|default:"" }}"
-                   class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
-          </label>
         </div>
 
-        <label class="block">
-          <span class="text-sm text-slate-300">메모 (선택)</span>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">예정일</label>
+            <input type="datetime-local" name="scheduled_at" value="{{ form.scheduled_at.value|default:"" }}"
+                   class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">마감일</label>
+            <input type="datetime-local" name="due_at" value="{{ form.due_at.value|default:"" }}"
+                   class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">메모 (선택)</label>
           <textarea name="note" rows="2"
-                    class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">{{ form.note.value|default:"" }}</textarea>
-        </label>
+                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">{{ form.note.value|default:"" }}</textarea>
+        </div>
       </div>
 
       <div class="mt-6 flex justify-end gap-2">
         <button type="button"
                 onclick="document.getElementById('modal-container').innerHTML = ''"
-                class="rounded-md bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">
+                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
           취소
         </button>
         <button type="submit"
-                class="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
+                class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
           생성
         </button>
       </div>

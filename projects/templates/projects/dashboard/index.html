@@ -1,7 +1,6 @@
-{% extends "base.html" %}
+{% extends "common/base.html" %}
+{% block breadcrumb_current %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 {% block content %}
-<h1>Dashboard</h1>
-<p>Today: {{ today_actions|length }}</p>
-<p>Overdue: {{ overdue_actions|length }}</p>
-<p>Upcoming: {{ upcoming_actions|length }}</p>
+{% include "projects/partials/dash_full.html" %}
 {% endblock %}

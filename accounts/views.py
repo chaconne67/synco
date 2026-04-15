@@ -144,10 +144,10 @@ def rejected_page(request):
     return render(request, "accounts/rejected.html")
 
 
-def login_page(request):
+def landing_page(request):
     if request.user.is_authenticated:
         return redirect("home")
-    return render(request, "accounts/login.html")
+    return render(request, "accounts/landing.html")
 
 
 def kakao_login(request):
@@ -163,7 +163,7 @@ def kakao_login(request):
 def kakao_callback(request):
     code = request.GET.get("code")
     if not code:
-        return redirect("login")
+        return redirect("landing")
 
     # Exchange code for token
     token_resp = httpx.post(
@@ -177,7 +177,7 @@ def kakao_callback(request):
         },
     )
     if token_resp.status_code != 200:
-        return redirect("login")
+        return redirect("landing")
 
     access_token = token_resp.json().get("access_token")
 
@@ -187,7 +187,7 @@ def kakao_callback(request):
         headers={"Authorization": f"Bearer {access_token}"},
     )
     if user_resp.status_code != 200:
-        return redirect("login")
+        return redirect("landing")
 
     kakao_data = user_resp.json()
     kakao_id = kakao_data["id"]
@@ -328,7 +328,7 @@ def settings_notify(request):
 
 def logout_view(request):
     logout(request)
-    return redirect("login")
+    return redirect("landing")
 
 
 def terms(request):

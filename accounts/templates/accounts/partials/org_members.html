@@ -2,54 +2,53 @@
 {% load static %}
 
 {% if message %}
-<div class="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">{{ message }}</div>
+<div class="mb-4 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold">{{ message }}</div>
 {% endif %}
 
-<section class="bg-white rounded-lg border border-gray-100">
-  <div class="p-5 border-b border-gray-100">
-    <h2 class="text-[15px] font-semibold text-gray-500">멤버 목록</h2>
+<section class="bg-white rounded-xl border border-slate-100 shadow-sm">
+  <div class="p-6 border-b border-slate-100">
+    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">멤버 목록 · Members</h3>
   </div>
 
-  <div class="divide-y divide-gray-50">
+  <div class="divide-y divide-slate-100">
     {% for member in members %}
-    <div class="p-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-[14px] font-medium text-gray-600">
+    <div class="p-5 flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-4 min-w-0">
+        <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-sm font-black text-primary">
           {{ member.user.first_name|default:member.user.username|truncatechars:2 }}
         </div>
-        <div>
-          <p class="text-[14px] font-medium text-gray-900">
+        <div class="min-w-0">
+          <p class="text-sm font-bold text-slate-900 truncate">
             {{ member.user.first_name|default:member.user.username }}
           </p>
-          <div class="flex items-center gap-2 mt-0.5">
-            <span class="text-[12px] px-1.5 py-0.5 rounded
-              {% if member.role == 'owner' %}bg-purple-50 text-purple-700
-              {% elif member.role == 'consultant' %}bg-blue-50 text-blue-700
-              {% else %}bg-gray-100 text-gray-600{% endif %}">
+          <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
+              {% if member.role == 'owner' %}bg-primary/10 text-primary border border-primary/20
+              {% elif member.role == 'consultant' %}bg-primary/10 text-primary border border-primary/20
+              {% else %}bg-slate-50 text-slate-600 border border-slate-100{% endif %}">
               {{ member.get_role_display }}
             </span>
-            <span class="text-[12px] px-1.5 py-0.5 rounded
-              {% if member.status == 'active' %}bg-green-50 text-green-700
-              {% elif member.status == 'pending' %}bg-amber-50 text-amber-700
-              {% else %}bg-red-50 text-red-700{% endif %}">
+            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
+              {% if member.status == 'active' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+              {% elif member.status == 'pending' %}bg-amber-50 text-amber-700 border border-amber-100
+              {% else %}bg-rose-50 text-rose-700 border border-rose-100{% endif %}">
               {% if member.status == 'active' %}활성
               {% elif member.status == 'pending' %}승인대기
               {% else %}거절{% endif %}
             </span>
-            <span class="text-[11px] text-gray-400">{{ member.created_at|date:"Y-m-d" }}</span>
+            <span class="text-[10px] font-medium text-slate-400">{{ member.created_at|date:"Y-m-d" }}</span>
           </div>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
         {% if member.status == 'pending' %}
-          <!-- Approve/Reject buttons -->
           <form method="post"
                 hx-post="{% url 'org_member_approve' member.pk %}"
                 hx-target="#org-content">
             {% csrf_token %}
             <button type="submit"
-                    class="px-3 py-1.5 text-[12px] font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+                    class="rounded-lg bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 shadow-sm hover:bg-emerald-700 transition-all">
               승인
             </button>
           </form>
@@ -58,32 +57,30 @@
                 hx-target="#org-content">
             {% csrf_token %}
             <button type="submit"
-                    class="px-3 py-1.5 text-[12px] font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition">
+                    class="rounded-lg bg-white border border-rose-200 text-rose-600 text-[10px] font-bold uppercase tracking-widest px-4 py-2 hover:bg-rose-50 transition-all">
               거절
             </button>
           </form>
 
         {% elif member.status == 'active' and member.role != 'owner' %}
-          <!-- Role change dropdown -->
           <form method="post"
                 hx-post="{% url 'org_member_role' member.pk %}"
                 hx-target="#org-content">
             {% csrf_token %}
             <select name="role"
                     onchange="this.form.requestSubmit()"
-                    class="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="text-[10px] font-bold uppercase tracking-wider px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary">
               <option value="consultant" {% if member.role == 'consultant' %}selected{% endif %}>Consultant</option>
               <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>Viewer</option>
             </select>
           </form>
-          <!-- Remove button -->
           <form method="post"
                 hx-post="{% url 'org_member_remove' member.pk %}"
                 hx-target="#org-content"
                 hx-confirm="정말로 {{ member.user.first_name|default:member.user.username }}님을 조직에서 제거하시겠습니까?">
             {% csrf_token %}
             <button type="submit"
-                    class="px-3 py-1.5 text-[12px] font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition">
+                    class="rounded-lg bg-white border border-rose-100 text-rose-500 text-[10px] font-bold uppercase tracking-widest px-4 py-2 hover:bg-rose-50 transition-all">
               제거
             </button>
           </form>
@@ -91,8 +88,8 @@
       </div>
     </div>
     {% empty %}
-    <div class="p-8 text-center text-[14px] text-gray-400">
-      멤버가 없습니다.
+    <div class="p-12 text-center text-sm font-medium text-slate-400">
+      멤버가 없습니다
     </div>
     {% endfor %}
   </div>

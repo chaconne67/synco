@@ -1,67 +1,78 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
 {% block title %}뉴스피드 — synco{% endblock %}
+{% block breadcrumb_current %}Newsfeed{% endblock %}
+{% block page_title %}Newsfeed{% endblock %}
 
 {% block content %}
-<div class="p-4 lg:p-8 space-y-6">
-
-  <div class="flex items-center justify-between">
-    <h1 class="text-heading font-bold">뉴스피드</h1>
+<div class="px-10 py-10 max-w-5xl">
+  <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+    <div>
+      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Market Intelligence</span>
+      <h2 class="text-4xl font-black text-slate-900 tracking-tight">뉴스피드</h2>
+      <p class="mt-2 text-sm text-slate-500">프로젝트와 관련된 최신 소식을 모아보세요.</p>
+    </div>
     {% if is_staff %}
     <a href="{% url 'news:news_sources' %}"
        hx-get="{% url 'news:news_sources' %}" hx-target="#main-content" hx-push-url="true"
-       class="text-[15px] text-primary hover:text-primary-dark transition">
+       class="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-3 shadow-sm hover:bg-slate-50 transition-all">
       소스 관리
     </a>
     {% endif %}
   </div>
 
-  <!-- Category filter tabs -->
-  <div class="flex gap-2 overflow-x-auto pb-1">
+  <div class="flex gap-2 overflow-x-auto pb-2 mb-8 no-scrollbar">
     <button hx-get="{% url 'news:news_filter' %}" hx-target="#news-list" hx-swap="innerHTML"
-            class="px-3 py-1.5 rounded-full text-[14px] font-medium whitespace-nowrap
-            {% if not active_category %}bg-primary text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
-      전체
+            class="px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors
+            {% if not active_category %}bg-primary text-white shadow-lg shadow-primary/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+      All Disciplines
     </button>
     {% for value, label in categories %}
     <button hx-get="{% url 'news:news_filter' %}?category={{ value }}" hx-target="#news-list" hx-swap="innerHTML"
-            class="px-3 py-1.5 rounded-full text-[14px] font-medium whitespace-nowrap
-            {% if active_category == value %}bg-primary text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+            class="px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors
+            {% if active_category == value %}bg-primary text-white shadow-lg shadow-primary/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
       {{ label }}
     </button>
     {% endfor %}
   </div>
 
-  <!-- Related news section -->
   {% if related_articles %}
-  <div class="space-y-3">
-    <h2 class="text-[16px] font-semibold text-gray-700">내 프로젝트 관련 뉴스</h2>
-    {% for article in related_articles %}
-    <a href="{{ article.url }}" target="_blank" rel="noopener"
-       class="block bg-blue-50 border border-blue-100 rounded-lg p-4 hover:bg-blue-100 transition">
-      <div class="flex items-start gap-2">
-        <span class="text-[12px] font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
-          {{ article.get_category_display|default:"기타" }}
-        </span>
-        <h3 class="text-[15px] font-medium text-gray-900 line-clamp-2">{{ article.title }}</h3>
-      </div>
-      {% if article.summary %}
-      <p class="text-[14px] text-gray-600 mt-1 line-clamp-2">{{ article.summary }}</p>
-      {% endif %}
-      <div class="flex items-center gap-2 mt-2 text-[12px] text-gray-400">
-        <span>{{ article.source.name }}</span>
-        {% if article.published_at %}
-        <span>{{ article.published_at|date:"m/d H:i" }}</span>
+  <div class="mb-10">
+    <div class="flex items-center gap-4 mb-5">
+      <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">내 프로젝트 관련 뉴스 · For You</h3>
+      <div class="h-px flex-1 bg-slate-100"></div>
+    </div>
+    <div class="space-y-3">
+      {% for article in related_articles %}
+      <a href="{{ article.url }}" target="_blank" rel="noopener"
+         class="block rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-primary/20 transition-all p-5 group">
+        <div class="flex items-start gap-3">
+          <span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full uppercase tracking-widest whitespace-nowrap shrink-0">
+            {{ article.get_category_display|default:"기타" }}
+          </span>
+          <h4 class="text-base font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2">{{ article.title }}</h4>
+        </div>
+        {% if article.summary %}
+        <p class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">{{ article.summary }}</p>
         {% endif %}
-      </div>
-    </a>
-    {% endfor %}
+        <div class="flex items-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <span>{{ article.source.name }}</span>
+          {% if article.published_at %}
+          <span class="text-slate-200">·</span>
+          <span>{{ article.published_at|date:"m/d H:i" }}</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
   </div>
   {% endif %}
 
-  <!-- All news section -->
-  <div class="space-y-3">
-    <h2 class="text-[16px] font-semibold text-gray-700">최신 뉴스</h2>
+  <div>
+    <div class="flex items-center gap-4 mb-5">
+      <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">최신 뉴스 · Latest</h3>
+      <div class="h-px flex-1 bg-slate-100"></div>
+    </div>
     <div id="news-list">
       {% include "projects/partials/news_list.html" with articles=all_articles %}
     </div>

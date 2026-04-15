@@ -1,31 +1,35 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
 
 {% block title %}레퍼런스 관리 — synco{% endblock %}
+{% block breadcrumb_current %}References{% endblock %}
+{% block page_title %}레퍼런스 관리{% endblock %}
 
 {% block content %}
-<div class="p-4 lg:p-8 space-y-6">
-  <h1 class="text-heading font-bold">레퍼런스 관리</h1>
+<div class="px-10 py-10 max-w-6xl">
+  <div class="mb-10">
+    <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Reference Library</span>
+    <h2 class="text-4xl font-black text-slate-900 tracking-tight">레퍼런스 관리</h2>
+    <p class="mt-2 text-sm text-slate-500">대학·기업·자격증 마스터 데이터를 관리합니다.</p>
+  </div>
 
-  <!-- Tabs -->
-  <div class="flex gap-1 border-b border-gray-200">
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-2 mb-6 inline-flex items-center gap-1">
     <button hx-get="/reference/universities/" hx-target="#ref-tab-content" hx-push-url="/reference/universities/"
-            class="ref-tab px-4 py-2.5 text-[15px] font-medium rounded-t-lg border-b-2 -mb-px {% if active_tab == 'universities' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}"
+            class="ref-tab px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'universities' %}bg-primary text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
             data-tab="universities">
       대학 랭킹
     </button>
     <button hx-get="/reference/companies/" hx-target="#ref-tab-content" hx-push-url="/reference/companies/"
-            class="ref-tab px-4 py-2.5 text-[15px] font-medium rounded-t-lg border-b-2 -mb-px {% if active_tab == 'companies' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}"
+            class="ref-tab px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'companies' %}bg-primary text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
             data-tab="companies">
       기업 DB
     </button>
     <button hx-get="/reference/certs/" hx-target="#ref-tab-content" hx-push-url="/reference/certs/"
-            class="ref-tab px-4 py-2.5 text-[15px] font-medium rounded-t-lg border-b-2 -mb-px {% if active_tab == 'certs' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}"
+            class="ref-tab px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'certs' %}bg-primary text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
             data-tab="certs">
       자격증
     </button>
   </div>
 
-  <!-- Tab Content -->
   <div id="ref-tab-content">
     {% if active_tab == "universities" %}
       {% include "clients/partials/ref_universities.html" %}
@@ -44,10 +48,12 @@ document.body.addEventListener('htmx:afterSwap', function(e) {
     document.querySelectorAll('.ref-tab').forEach(function(tab) {
       var key = tab.dataset.tab;
       var active = path.includes('/' + key);
-      tab.className = tab.className.replace(/border-primary text-primary|border-transparent text-gray-500 hover:text-gray-700/g, '');
-      tab.classList.add(active ? 'border-primary' : 'border-transparent');
-      tab.classList.add(active ? 'text-primary' : 'text-gray-500');
-      if (!active) tab.classList.add('hover:text-gray-700');
+      tab.classList.remove('bg-primary', 'text-white', 'text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
+      if (active) {
+        tab.classList.add('bg-primary', 'text-white');
+      } else {
+        tab.classList.add('text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
+      }
     });
   }
 });
