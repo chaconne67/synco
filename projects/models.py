@@ -645,6 +645,12 @@ class Submission(BaseModel):
     client_feedback = models.TextField(blank=True)
     client_feedback_at = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True)
+    batch_id = models.UUIDField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="같은 배치로 제출된 Submission들이 공유하는 UUID. None이면 개별 제출.",
+    )
 
     class Meta:
         ordering = ["-created_at"]

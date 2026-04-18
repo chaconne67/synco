@@ -142,6 +142,31 @@ def third_application(db, project, third_candidate, user):
     )
 
 
+@pytest.fixture
+def submission_factory(db, project, user):
+    """Factory that creates a Submission linked to a fresh Application/ActionItem each call."""
+    from candidates.models import Candidate
+    from projects.models import ActionItem, ActionItemStatus, ActionType, Application, Submission
+
+    counter = {"n": 0}
+
+    def _make(**kwargs):
+        batch_id = kwargs.pop("batch_id", None)
+        counter["n"] += 1
+        candidate = Candidate.objects.create(name=f"배치후보{counter['n']}")
+        app = Application.objects.create(project=project, candidate=candidate, created_by=user)
+        at = ActionType.objects.get(code="submit_to_client")
+        ai = ActionItem.objects.create(
+            application=app,
+            action_type=at,
+            title="Test submit",
+            status=ActionItemStatus.DONE,
+        )
+        return Submission.objects.create(action_item=ai, batch_id=batch_id)
+
+    return _make
+
+
 @pytest.fixture(autouse=True)
 def _disable_manifest_storage(settings):
     """Use plain static storage for tests (no collectstatic needed)."""
