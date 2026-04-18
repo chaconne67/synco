@@ -105,6 +105,11 @@ STAGES_ORDER = [
     ("hired",           "입사"),
 ]
 
+# 후보자 카드 진행바에 표시할 단계 (서칭은 프로젝트 레벨이라 제외)
+CARD_STAGES_ORDER = [
+    (sid, label) for sid, label in STAGES_ORDER if sid != "sourcing"
+]
+
 # ActionType.code → stage_id. 단계 영향 없는 범용 활동은 매핑 없음.
 STAGE_FROM_ACTION_TYPE: dict[str, str] = {
     "search_db":              "sourcing",
