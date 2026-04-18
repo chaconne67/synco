@@ -406,6 +406,27 @@ def candidate_list(request):
     else:
         template = "candidates/search.html"
 
+    # Project context mode: ?project=<uuid> sets a target_project for "프로젝트에 추가"
+    project_id = request.GET.get("project")
+    target_project = None
+    if project_id:
+        try:
+            project_uuid = uuid.UUID(project_id)
+        except (ValueError, AttributeError):
+            project_uuid = None
+        if project_uuid:
+            from projects.models import Project
+            from accounts.helpers import _get_org
+
+            try:
+                org = _get_org(request)
+            except Exception:
+                org = None
+            if org:
+                target_project = Project.objects.filter(
+                    pk=project_uuid, organization=org
+                ).first()
+
     return render(
         request,
         template,
@@ -420,6 +441,7 @@ def candidate_list(request):
             "session": session,
             "last_turn": last_turn,
             "rec_status_filter": rec_status_filter,
+            "target_project": target_project,
         },
     )
 

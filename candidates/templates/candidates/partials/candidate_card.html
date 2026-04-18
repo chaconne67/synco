@@ -1,4 +1,5 @@
 {% load candidate_extras %}
+<div class="flex flex-col gap-1.5">
 <a href="/candidates/{{ candidate.pk }}/"
    hx-get="/candidates/{{ candidate.pk }}/"
    hx-target="#main-content"
@@ -60,3 +61,16 @@
   {% endif %}
   {% endif %}
 </a>
+{% if target_project %}
+<form method="post"
+      action="{% url 'projects:project_add_candidate' target_project.pk %}"
+      class="flex">
+  {% csrf_token %}
+  <input type="hidden" name="candidate_id" value="{{ candidate.pk }}">
+  <button type="submit"
+          class="inline-flex items-center px-3 h-8 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white hover:bg-ink3 hover:text-white hover:border-ink3 transition-colors">
+    프로젝트에 추가
+  </button>
+</form>
+{% endif %}
+</div>

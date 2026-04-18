@@ -2607,7 +2607,8 @@ def resume_assign_project(request, resume_pk, project_pk):
 def project_add_candidate(request, pk):
     """POST /projects/<pk>/add_candidate/ — Application 생성.
     GET: 후보자 추가 모달 폼 렌더링.
-    POST: Application 생성 → HX-Trigger: applicationChanged.
+    POST (candidate_id): 서칭 페이지의 "프로젝트에 추가" 버튼 — 단건 직접 추가.
+    POST (form): 모달 폼을 통한 추가 (기존 방식).
     """
     org = _get_org(request)
     project = get_object_or_404(Project, pk=pk, organization=org)
@@ -2620,7 +2621,30 @@ def project_add_candidate(request, pk):
             {"form": form, "project": project},
         )
 
-    # POST
+    # POST — 직접 candidate_id 전달 (서칭 페이지 "프로젝트에 추가" 버튼)
+    candidate_id = request.POST.get("candidate_id")
+    if candidate_id and "candidate" not in request.POST:
+        from candidates.models import Candidate
+        from projects.services.searching import add_candidates_to_project
+
+        try:
+            candidate_uuid = uuid.UUID(candidate_id)
+        except (ValueError, AttributeError):
+            return HttpResponseBadRequest("유효하지 않은 candidate_id")
+
+        candidate = Candidate.objects.filter(pk=candidate_uuid).first()
+        if candidate is None:
+            return HttpResponseBadRequest("후보자를 찾을 수 없습니다")
+
+        add_candidates_to_project(project, [candidate_uuid], created_by=request.user)
+
+        if request.headers.get("HX-Request"):
+            response = HttpResponse(status=204)
+            response["HX-Trigger"] = "applicationChanged"
+            return response
+        return redirect("projects:project_detail", pk=project.pk)
+
+    # POST — 모달 폼 (기존 방식)
     form = ApplicationCreateForm(request.POST, organization=org)
     if not form.is_valid():
         return render(
