@@ -146,7 +146,13 @@ def third_application(db, project, third_candidate, user):
 def submission_factory(db, project, user):
     """Factory that creates a Submission linked to a fresh Application/ActionItem each call."""
     from candidates.models import Candidate
-    from projects.models import ActionItem, ActionItemStatus, ActionType, Application, Submission
+    from projects.models import (
+        ActionItem,
+        ActionItemStatus,
+        ActionType,
+        Application,
+        Submission,
+    )
 
     counter = {"n": 0}
 
@@ -154,7 +160,9 @@ def submission_factory(db, project, user):
         batch_id = kwargs.pop("batch_id", None)
         counter["n"] += 1
         candidate = Candidate.objects.create(name=f"배치후보{counter['n']}")
-        app = Application.objects.create(project=project, candidate=candidate, created_by=user)
+        app = Application.objects.create(
+            project=project, candidate=candidate, created_by=user
+        )
         at = ActionType.objects.get(code="submit_to_client")
         ai = ActionItem.objects.create(
             application=app,

@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0004_project_annual_salary_project_fee_percent'),
+        ("projects", "0004_project_annual_salary_project_fee_percent"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='submission',
-            name='batch_id',
-            field=models.UUIDField(blank=True, db_index=True, help_text='같은 배치로 제출된 Submission들이 공유하는 UUID. None이면 개별 제출.', null=True),
+            model_name="submission",
+            name="batch_id",
+            field=models.UUIDField(
+                blank=True,
+                db_index=True,
+                help_text="같은 배치로 제출된 Submission들이 공유하는 UUID. None이면 개별 제출.",
+                null=True,
+            ),
         ),
     ]
