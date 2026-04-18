@@ -28,15 +28,28 @@ def test_submissions_can_share_batch_id(submission_factory):
 @pytest.mark.django_db
 def test_submission_batch_create(client, user, project, submission_factory):
     """프로젝트 배치 제출 뷰 — 선택한 Application 들을 하나의 batch_id 로 묶어 Submission 생성."""
-    from projects.models import Application, Submission
+    from projects.models import Application, Submission, ActionItem, ActionItemStatus
+    from projects.models import ActionType
     from candidates.models import Candidate
 
-    # 2 Application을 client_submit 직전 상태로 세팅
-    # (이력서 준비 + 이력서 작성까지 통과했다고 가정)
+    # 2 Application을 client_submit 단계로 세팅
+    # (이전 모든 gate action이 완료됨)
     c1 = Candidate.objects.create(name="배치1")
     c2 = Candidate.objects.create(name="배치2")
     a1 = Application.objects.create(project=project, candidate=c1, created_by=user)
     a2 = Application.objects.create(project=project, candidate=c2, created_by=user)
+
+    # Gate actions 생성: reach_out → receive_resume → pre_meeting → submit_to_pm
+    gates = ["reach_out", "receive_resume", "pre_meeting", "submit_to_pm"]
+    for app in [a1, a2]:
+        for gate_code in gates:
+            at = ActionType.objects.get(code=gate_code)
+            ActionItem.objects.create(
+                application=app,
+                action_type=at,
+                status=ActionItemStatus.DONE,
+                created_by=user,
+            )
 
     client.force_login(user)
     resp = client.post(
@@ -60,4 +73,23 @@ def test_submission_batch_rejects_empty(client, user, project):
         reverse("projects:submission_batch_create", args=[project.pk]),
         {},  # no application_ids
     )
+    assert resp.status_code == 400
+
+
+@pytest.mark.django_db
+def test_submission_batch_rejects_wrong_stage(client, user, project):
+    """제출 준비 단계 이전의 Application 은 batch 에 끼워 넣어도 거절되어야 함."""
+    from candidates.models import Candidate
+    from projects.models import Application
+
+    client.force_login(user)
+    # New application — no action items yet → current_stage = "contact"
+    c = Candidate.objects.create(name="너무이른후보")
+    app = Application.objects.create(project=project, candidate=c, created_by=user)
+
+    resp = client.post(
+        reverse("projects:submission_batch_create", args=[project.pk]),
+        {"application_ids": [str(app.pk)]},
+    )
+    # View must reject — "No applications ready for client submission"
     assert resp.status_code == 400

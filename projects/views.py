@@ -1071,12 +1071,22 @@ def submission_batch_create(request, pk):
     if not app_ids:
         return HttpResponseBadRequest("application_ids required")
 
-    applications = Application.objects.filter(
-        pk__in=app_ids,
-        project=project,
-        dropped_at__isnull=True,
-        hired_at__isnull=True,
+    applications = (
+        Application.objects.filter(
+            pk__in=app_ids,
+            project=project,
+            dropped_at__isnull=True,
+            hired_at__isnull=True,
+        )
+        .select_related("candidate")
+        .prefetch_related("action_items__action_type")
     )
+
+    # Stage validation — only apps ready for client submission can be batched.
+    applications = [app for app in applications if app.current_stage == "client_submit"]
+    if not applications:
+        return HttpResponseBadRequest("No applications ready for client submission")
+
     submit_type = ActionType.objects.get(code="submit_to_client")
     batch_id = uuid.uuid4()
 
