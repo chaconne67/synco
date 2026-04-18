@@ -1,5 +1,7 @@
 import pytest
 from django.urls import reverse
+from candidates.models import Candidate
+from projects.models import Application
 
 
 @pytest.mark.django_db
@@ -38,3 +40,18 @@ def test_candidate_card_shows_7_stages_not_8(client, user, project):
         "입사",
     ]:
         assert label in content, f"Missing stage label: {label}"
+
+
+@pytest.mark.django_db
+def test_card_dispatches_stage_partial(client, user, project):
+    """카드 진행바 아래에 현재 단계 partial이 include 되는지 확인."""
+    # 새 Application — current_stage = "contact"
+    c = Candidate.objects.create(name="스테이지디스패치")
+    Application.objects.create(project=project, candidate=c, created_by=user)
+
+    client.force_login(user)
+    resp = client.get(reverse("projects:project_detail", args=[project.pk]))
+    assert resp.status_code == 200
+    content = resp.content.decode()
+    # stub text of contact stage partial
+    assert "(접촉 단계 — Task 10에서 구현)" in content
