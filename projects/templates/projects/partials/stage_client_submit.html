@@ -1,1 +1,15 @@
-<div class="text-sm text-muted">(이력서 제출 단계 — Task 14에서 구현)</div>
+<div class="space-y-3">
+  <p class="text-sm font-medium">이력서 고객사 제출</p>
+  <p class="text-xs text-muted">
+    여러 후보자를 묶어 제출하려면 페이지 상단 <strong class="text-ink2">이력서 배치 제출</strong> 영역을 사용하세요.
+    이 후보자만 따로 제출하려면 아래 버튼을 누르세요. 이 단계는 건너뛸 수 없습니다.
+  </p>
+  <form method="post"
+        action="{% url 'projects:stage_client_submit_single' application.pk %}">
+    {% csrf_token %}
+    <button type="submit"
+            class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+      이 후보만 단독 제출
+    </button>
+  </form>
+</div>

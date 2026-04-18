@@ -3482,3 +3482,30 @@ def stage_prep_submission_confirm(request, pk):
         created_by=request.user,
     )
     return redirect("projects:project_detail", pk=app.project.pk)
+
+
+@login_required
+@require_http_methods(["POST"])
+def stage_client_submit_single(request, pk):
+    """이력서 제출 단계 — 이 후보자만 단독 제출."""
+    org = _get_org(request)
+    app = get_object_or_404(Application, pk=pk)
+    if app.project.organization != org:
+        return HttpResponseForbidden("cross-org access denied")
+
+    at = ActionType.objects.get(code="submit_to_client")
+    ai = ActionItem.objects.create(
+        application=app,
+        action_type=at,
+        title="이력서 고객사 제출 (개별)",
+        status=ActionItemStatus.DONE,
+        completed_at=timezone.now(),
+        created_by=request.user,
+    )
+    Submission.objects.create(
+        action_item=ai,
+        consultant=request.user,
+        batch_id=None,
+        submitted_at=timezone.now(),
+    )
+    return redirect("projects:project_detail", pk=app.project.pk)

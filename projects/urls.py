@@ -78,6 +78,12 @@ urlpatterns = [
         views.stage_prep_submission_confirm,
         name="stage_prep_submission_confirm",
     ),
+    # Phase C: 이력서 제출 단계 — 개별 경로
+    path(
+        "applications/<uuid:pk>/stage/client_submit/single/",
+        views.stage_client_submit_single,
+        name="stage_client_submit_single",
+    ),
     # Phase B: 이력서 수집 단계 — 3가지 방법
     path(
         "applications/<uuid:pk>/resume/use_db/",
