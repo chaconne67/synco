@@ -1,1 +1,41 @@
-<div class="text-sm text-muted">(사전 미팅 단계 — Task 12에서 구현)</div>
+{% if not application.has_pre_meeting_scheduled %}
+  {# 단계 1: 일정 조율 #}
+  <form method="post" action="{% url 'projects:stage_pre_meeting_schedule' application.pk %}"
+        class="space-y-3">
+    {% csrf_token %}
+    <p class="text-sm font-medium">① 사전 미팅 일정 잡기</p>
+    <input type="datetime-local" name="scheduled_at" required
+           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+    <select name="channel" required
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+      <option value="in_person">대면</option>
+      <option value="video">화상</option>
+      <option value="phone">전화</option>
+    </select>
+    <input type="text" name="location" placeholder="장소/URL (선택)"
+           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+    <button type="submit"
+            class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+      일정 확정
+    </button>
+  </form>
+{% else %}
+  {# 단계 2: 결과 기록 #}
+  <form method="post" action="{% url 'projects:stage_pre_meeting_record' application.pk %}"
+        enctype="multipart/form-data" class="space-y-3">
+    {% csrf_token %}
+    <p class="text-sm font-medium">② 미팅 결과 기록</p>
+    <p class="text-xs text-muted">확정 일정: {{ application.pre_meeting_scheduled_at|date:"Y-m-d H:i" }}</p>
+    <textarea name="summary" rows="4" required placeholder="미팅 요지·다음 액션 요약"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></textarea>
+    <label class="block text-xs text-muted">
+      녹음 파일 첨부 (선택 — 추후 STT 자동 요약 지원 예정)
+      <input type="file" name="audio" accept="audio/*"
+             class="w-full mt-1 text-sm">
+    </label>
+    <button type="submit"
+            class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+      미팅 완료
+    </button>
+  </form>
+{% endif %}

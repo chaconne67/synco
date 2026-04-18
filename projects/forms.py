@@ -447,3 +447,18 @@ class ContactCompleteForm(forms.Form):
     ]
     response = forms.ChoiceField(choices=RESPONSE_CHOICES, widget=forms.RadioSelect)
     note = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 2}))
+
+
+class PreMeetingScheduleForm(forms.Form):
+    scheduled_at = forms.DateTimeField()
+    channel = forms.ChoiceField(
+        choices=[("in_person", "대면"), ("video", "화상"), ("phone", "전화")]
+    )
+    location = forms.CharField(required=False, max_length=300)
+
+
+class PreMeetingRecordForm(forms.Form):
+    summary = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}))
+    audio = forms.FileField(
+        required=False, help_text="녹음 파일 (선택) — 추후 STT 지원 예정"
+    )

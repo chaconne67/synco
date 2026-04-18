@@ -61,6 +61,17 @@ urlpatterns = [
         views.stage_contact_complete,
         name="stage_contact_complete",
     ),
+    # Phase C: 사전 미팅 단계 — 일정 확정 + 결과 기록
+    path(
+        "applications/<uuid:pk>/stage/pre_meeting/schedule/",
+        views.stage_pre_meeting_schedule,
+        name="stage_pre_meeting_schedule",
+    ),
+    path(
+        "applications/<uuid:pk>/stage/pre_meeting/record/",
+        views.stage_pre_meeting_record,
+        name="stage_pre_meeting_record",
+    ),
     # Phase B: 이력서 수집 단계 — 3가지 방법
     path(
         "applications/<uuid:pk>/resume/use_db/",

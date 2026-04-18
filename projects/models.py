@@ -95,43 +95,41 @@ STATE_FROM_ACTION_TYPE: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 STAGES_ORDER = [
-    ("sourcing",        "서칭"),
-    ("contact",         "접촉"),
-    ("resume",          "이력서 준비"),
-    ("pre_meeting",     "사전 미팅"),
+    ("sourcing", "서칭"),
+    ("contact", "접촉"),
+    ("resume", "이력서 준비"),
+    ("pre_meeting", "사전 미팅"),
     ("prep_submission", "이력서 작성(제출용)"),
-    ("client_submit",   "이력서 제출"),
-    ("interview",       "면접"),
-    ("hired",           "입사"),
+    ("client_submit", "이력서 제출"),
+    ("interview", "면접"),
+    ("hired", "입사"),
 ]
 
 # 후보자 카드 진행바에 표시할 단계 (서칭은 프로젝트 레벨이라 제외)
-CARD_STAGES_ORDER = [
-    (sid, label) for sid, label in STAGES_ORDER if sid != "sourcing"
-]
+CARD_STAGES_ORDER = [(sid, label) for sid, label in STAGES_ORDER if sid != "sourcing"]
 
 # ActionType.code → stage_id. 단계 영향 없는 범용 활동은 매핑 없음.
 STAGE_FROM_ACTION_TYPE: dict[str, str] = {
-    "search_db":              "sourcing",
-    "search_external":        "sourcing",
-    "reach_out":              "contact",
-    "re_reach_out":           "contact",
-    "await_reply":            "contact",
-    "share_jd":               "contact",
-    "receive_resume":         "resume",
-    "convert_resume":         "resume",
-    "schedule_pre_meet":      "pre_meeting",
-    "pre_meeting":            "pre_meeting",
-    "prepare_submission":     "prep_submission",
-    "submit_to_pm":           "prep_submission",
-    "submit_to_client":       "client_submit",
-    "await_doc_review":       "client_submit",
-    "receive_doc_feedback":   "client_submit",
-    "schedule_interview":     "interview",
-    "interview_round":        "interview",
+    "search_db": "sourcing",
+    "search_external": "sourcing",
+    "reach_out": "contact",
+    "re_reach_out": "contact",
+    "await_reply": "contact",
+    "share_jd": "contact",
+    "receive_resume": "resume",
+    "convert_resume": "resume",
+    "schedule_pre_meet": "pre_meeting",
+    "pre_meeting": "pre_meeting",
+    "prepare_submission": "prep_submission",
+    "submit_to_pm": "prep_submission",
+    "submit_to_client": "client_submit",
+    "await_doc_review": "client_submit",
+    "receive_doc_feedback": "client_submit",
+    "schedule_interview": "interview",
+    "interview_round": "interview",
     "await_interview_result": "interview",
-    "confirm_hire":           "hired",
-    "await_onboarding":       "hired",
+    "confirm_hire": "hired",
+    "await_onboarding": "hired",
     # follow_up, escalate_to_boss, note → 지원 활동 (stage 진행에 영향 없음)
 }
 
@@ -139,14 +137,14 @@ STAGE_FROM_ACTION_TYPE: dict[str, str] = {
 # 원칙: gate는 "단계 완료를 의미하는 가장 자연스러운 액션". share_jd/await_reply 는 reach_out 중
 #       자연 발생하는 부산물이므로 독립 gate가 아니라 선택적 보조 액션으로 둠.
 STAGE_GATES: dict[str, str | None] = {
-    "sourcing":        None,              # Application 생성 자체가 gate
-    "contact":         "reach_out",       # 연락 한 번 성공 = 접촉 완료
-    "resume":          "receive_resume",
-    "pre_meeting":     "pre_meeting",
+    "sourcing": None,  # Application 생성 자체가 gate
+    "contact": "reach_out",  # 연락 한 번 성공 = 접촉 완료
+    "resume": "receive_resume",
+    "pre_meeting": "pre_meeting",
     "prep_submission": "submit_to_pm",
-    "client_submit":   "submit_to_client",
-    "interview":       "interview_round",
-    "hired":           "confirm_hire",
+    "client_submit": "submit_to_client",
+    "interview": "interview_round",
+    "hired": "confirm_hire",
 }
 
 # 건너뛰기 placeholder ActionType code — update_action_labels 커맨드가 seed
@@ -421,7 +419,8 @@ class Application(BaseModel):
         # prefetch 이용 가능 시 in-memory 필터
         if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
             done_actions = [
-                a for a in self._prefetched_objects_cache["action_items"]
+                a
+                for a in self._prefetched_objects_cache["action_items"]
                 if a.status == ActionItemStatus.DONE
             ]
 
@@ -482,9 +481,9 @@ class Application(BaseModel):
             return []
         if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
             return [
-                a for a in self._prefetched_objects_cache["action_items"]
-                if a.status == ActionItemStatus.PENDING
-                and a.action_type.code in codes
+                a
+                for a in self._prefetched_objects_cache["action_items"]
+                if a.status == ActionItemStatus.PENDING and a.action_type.code in codes
             ]
         return list(
             self.action_items.filter(
@@ -492,6 +491,27 @@ class Application(BaseModel):
                 action_type__code__in=codes,
             ).select_related("action_type")
         )
+
+    @property
+    def has_pre_meeting_scheduled(self) -> bool:
+        """사전 미팅 일정 확정된 ActionItem 존재 여부."""
+        return self.action_items.filter(
+            action_type__code="schedule_pre_meet",
+            status=ActionItemStatus.DONE,
+        ).exists()
+
+    @property
+    def pre_meeting_scheduled_at(self):
+        """일정 확정된 ActionItem의 scheduled_at."""
+        ai = (
+            self.action_items.filter(
+                action_type__code="schedule_pre_meet",
+                status=ActionItemStatus.DONE,
+            )
+            .order_by("-completed_at")
+            .first()
+        )
+        return ai.scheduled_at if ai else None
 
     @property
     def pending_actions(self):

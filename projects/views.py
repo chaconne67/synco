@@ -3387,3 +3387,76 @@ def stage_contact_complete(request, pk):
         )
 
     return redirect("projects:project_detail", pk=app.project.pk)
+
+
+@login_required
+@require_http_methods(["POST"])
+def stage_pre_meeting_schedule(request, pk):
+    """사전 미팅 일정 확정."""
+    from projects.forms import PreMeetingScheduleForm
+    from projects.models import ActionItem, ActionItemStatus, ActionType
+
+    app = get_object_or_404(Application, pk=pk)
+    org = _get_org(request)
+    if app.project.organization != org:
+        return HttpResponseForbidden("cross-org access denied")
+
+    form = PreMeetingScheduleForm(request.POST)
+    if not form.is_valid():
+        return HttpResponseBadRequest(form.errors.as_text())
+
+    schedule_type = ActionType.objects.get(code="schedule_pre_meet")
+    ActionItem.objects.create(
+        application=app,
+        action_type=schedule_type,
+        title=f"사전 미팅 일정 ({form.cleaned_data['channel']})",
+        status=ActionItemStatus.DONE,
+        scheduled_at=form.cleaned_data["scheduled_at"],
+        channel=form.cleaned_data["channel"],
+        note=form.cleaned_data.get("location", ""),
+        completed_at=timezone.now(),
+        created_by=request.user,
+    )
+    return redirect("projects:project_detail", pk=app.project.pk)
+
+
+@login_required
+@require_http_methods(["POST"])
+def stage_pre_meeting_record(request, pk):
+    """사전 미팅 결과 기록 — pre_meeting ActionItem DONE + (선택) MeetingRecord 오디오."""
+    from projects.forms import PreMeetingRecordForm
+    from projects.models import (
+        ActionItem,
+        ActionItemStatus,
+        ActionType,
+        MeetingRecord,
+    )
+
+    app = get_object_or_404(Application, pk=pk)
+    org = _get_org(request)
+    if app.project.organization != org:
+        return HttpResponseForbidden("cross-org access denied")
+
+    form = PreMeetingRecordForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return HttpResponseBadRequest(form.errors.as_text())
+
+    pre_meeting_type = ActionType.objects.get(code="pre_meeting")
+    ai = ActionItem.objects.create(
+        application=app,
+        action_type=pre_meeting_type,
+        title="사전 미팅 진행",
+        status=ActionItemStatus.DONE,
+        result=form.cleaned_data["summary"],
+        completed_at=timezone.now(),
+        created_by=request.user,
+    )
+    audio = form.cleaned_data.get("audio")
+    if audio:
+        MeetingRecord.objects.create(
+            action_item=ai,
+            audio_file=audio,
+            status=MeetingRecord.Status.UPLOADED,
+            created_by=request.user,
+        )
+    return redirect("projects:project_detail", pk=app.project.pk)
