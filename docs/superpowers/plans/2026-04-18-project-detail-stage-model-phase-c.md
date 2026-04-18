@@ -1782,50 +1782,48 @@ git commit -m "feat(projects): hired stage partial — reuses application_hire v
 
 ---
 
-## Task 17: 레거시 탭 뷰/템플릿 정리
+## Task 17: 레거시 탭 뷰/템플릿 정리 — **SKIP (Phase D로 이관)**
 
-**Files:**
-- Modify: `projects/views.py` (project_tab_* 뷰 제거)
-- Modify: `projects/urls.py` (tab URL 제거)
-- Delete: `projects/templates/projects/partials/tab_*.html`
+> **상태: SKIPPED**. 2026-04-19 조사 결과 — 플랜 작성 시 "dead code"로 잘못 분류했음. 실제 사용처 다수 확인되어 단순 제거 불가.
 
-### Step 17.1: 참조 확인
+### 왜 제거할 수 없는가
 
-- [ ] **Grep all tab_overview/tab_search/tab_submissions/tab_interviews references:**
+`project_tab_*` 뷰 4개(`project_tab_overview`, `project_tab_search`, `project_tab_submissions`, `project_tab_interviews`)는 프로젝트 상세 메인 페이지에서는 Phase C Task 4가 area A/B로 교체했지만, 앱 나머지에서 아래와 같이 **현역 기능**으로 쓰이고 있다:
 
-```bash
-```
+1. **Project 서브 페이지의 "돌아가기" 타겟**
+   - `projects/templates/projects/partials/posting_section.html` L23, `posting_edit.html` L31 — 포스팅 편집 화면의 "← 개요로" 링크가 `project_tab_overview` 사용
+   - `projects/templates/projects/submission_draft.html` L16 — 제출 초안 편집의 "제출 리스트로" 링크가 `project_tab_submissions` 사용
 
-(Grep tool 사용)
+2. **View 함수 내부 호출**
+   - `projects/views.py:1032` — submission_create 성공 후 `project_tab_submissions(request, pk)` 직접 호출
+   - `projects/views.py:1622` — interview 생성 처리 시 `tab_interviews_with_form.html` 직접 렌더
 
-### Step 17.2: 안전하게 제거할 수 있는지 판단
+3. **음성 컨텍스트 라우팅**
+   - `projects/services/voice/context_resolver.py` L17-19 — 음성 기반 페이지 이동이 이 URL 이름들을 **하드코딩 리스트**로 참조. 제거 시 음성 네비게이션 깨짐.
 
-- [ ] 외부 참조(브라우저 즐겨찾기 등)가 없고, 테스트도 없으면 제거. 있으면 redirect 스텁만 남기고 뷰 제거.
+4. **템플릿 상호 include**
+   - `tab_overview.html`, `detail_tab_bar.html` 이 서로 참조 — 한 파일만 떼낼 수 없는 구조
 
-### Step 17.3: 제거 + 테스트
+5. **테스트 15+ 케이스**
+   - `tests/test_p05_project_tabs.py` (전체), `test_p07_submissions.py:173,753`, `test_p09_interviews_offers.py:219,295,487,958,979`, `test_p10_posting.py:577,585,595,606` — 직접 URL 테스트
 
-- [ ] **Remove tab views/urls/templates**:
+### 올바른 프레이밍
 
-```bash
-rm projects/templates/projects/partials/tab_overview.html
-rm projects/templates/projects/partials/tab_search.html
-rm projects/templates/projects/partials/tab_submissions.html
-rm projects/templates/projects/partials/tab_interviews.html
-rm projects/templates/projects/partials/tab_interviews_with_form.html
-rm projects/templates/projects/partials/detail_tab_bar.html
-```
+Phase C는 "프로젝트 상세 **메인** 페이지"의 단계 모델 재설계가 범위. 서브 페이지(posting 편집, submission_draft 편집) 및 음성 라우팅은 **Project 도메인의 다른 플로우**로 여전히 탭 URL을 정상 사용 중.
 
-- [ ] **Edit `projects/urls.py`** — remove 4 tab URL paths.
-- [ ] **Edit `projects/views.py`** — remove 4 tab view functions.
+"레거시"라는 낙인은 철회하고, 이 뷰들은 **Phase D에서 Project 도메인 전체 재점검 시** 서브 페이지 재설계와 함께 정리 대상으로 재분류한다.
 
-### Step 17.4: 전체 테스트
+### Phase D 처리 체크리스트
 
-- [ ] **Run full test suite:**
+향후 Phase D 계획 수립 시 포함해야 할 항목:
 
-```bash
-uv run pytest -v
-```
-Expected: 기존 기능 깨짐 없음.
+- [ ] `posting_edit.html`, `posting_section.html`의 "돌아가기" 타겟을 새 area A/B URL로 교체
+- [ ] `submission_draft.html`의 "제출 리스트로" 링크 교체
+- [ ] `views.py:1032` `submission_create` 리턴 경로 재설계 — 직접 함수 호출 대신 서비스 계층으로 분리 또는 URL redirect
+- [ ] `views.py:1622` interview 플로우 재설계
+- [ ] `context_resolver.py` 음성 라우팅 업데이트 — 새 URL 이름 또는 area 단위 라우팅으로 전환
+- [ ] 테스트 15+ 케이스 마이그레이션 (`test_p05_project_tabs.py`는 재설계 후 제거, 나머지는 새 URL로 갱신)
+- [ ] 위 작업 완료 후에만 `project_tab_*` 뷰 / URL / `tab_*.html` 파티얼 / `detail_tab_bar.html` 제거 가능
 
 ### Step 17.5: 커밋
 

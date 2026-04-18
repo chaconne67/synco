@@ -235,7 +235,7 @@ docs/session-handoff/2026-04-18-project-detail-L2.md 를 먼저 읽고 컨텍스
 ## 7. 알려진 이슈 (다음 세션에서 같이 정리)
 
 - `_build_overview_context` (projects/views.py 611) 에 `project.submissions` 오용 (이미 부분 수정됐지만 다른 호출자 있을 수 있음)
-- `project_detail_tabs` 관련 레거시 view/template 몇 개가 아직 존재 (tab_overview/tab_search/tab_submissions/tab_interviews). **C안 채택으로 사용 안 함** — 이후 정리 대상
+- `project_detail_tabs` 관련 뷰/템플릿 (tab_overview/tab_search/tab_submissions/tab_interviews) 현황: **메인 페이지에서는 미사용, 그러나 서브 페이지 다수(posting 편집, submission_draft 편집)와 음성 컨텍스트 라우팅(`context_resolver.py`)이 여전히 현역으로 사용 중**. Phase C Task 17은 SKIP 처리. Phase D에서 Project 도메인 전체 재점검 시 서브 페이지 재설계와 함께 정리 — 상세 체크리스트는 [Phase C 구현 계획 Task 17](../superpowers/plans/2026-04-18-project-detail-stage-model-phase-c.md#task-17-레거시-탭-뷰템플릿-정리--skip-phase-d로-이관) 참조
 - `project-detail.html` UI 샘플 목업(assets/ui-sample/)은 8탭 버전으로 만들어둠 — C안에 맞춰 업데이트 필요
 - `docs/design-system.md` 에 stage-progress 컴포넌트 문서화 아직 안 됨 → §4 Components 에 추가 필요
 - **Candidate.name이 파일명으로 들어간 레코드 존재** (예: "00 다국적 기업 홍보 담당자 리스트.docx"). `data_extraction` 파이프라인이 이력서 import 시 실제 이름 추출 실패한 케이스로 추정. 별도 cleanup/재추출 작업 필요
