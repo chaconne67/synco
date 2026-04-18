@@ -1,1 +1,17 @@
-<div class="text-sm text-muted">(입사 단계 — Task 16에서 구현)</div>
+<div class="space-y-3">
+  <p class="text-sm font-medium">🎉 입사 확정</p>
+  {% if application.hired_at %}
+    <p class="text-sm">입사 확정일: {{ application.hired_at|date:"Y-m-d" }}</p>
+  {% else %}
+    <form method="post" action="{% url 'projects:application_hire' application.pk %}"
+          hx-post="{% url 'projects:application_hire' application.pk %}"
+          hx-confirm="입사를 확정하시겠습니까?"
+          class="space-y-2">
+      {% csrf_token %}
+      <button type="submit"
+              class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+        입사일 확정
+      </button>
+    </form>
+  {% endif %}
+</div>
