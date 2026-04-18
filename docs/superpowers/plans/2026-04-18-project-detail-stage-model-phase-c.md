@@ -422,12 +422,12 @@ Expected: FAIL — div id not present
 ```django
 {# 프로젝트 레벨 작업 영역 — 서칭 도구 + 배치 제출 관리 #}
 <section id="project-area-a" class="space-y-6 mb-8">
-  <div class="card-default p-6">
+  <div class="bg-surface rounded-card shadow-card p-6">
     <h2 class="text-lg font-semibold mb-4">서칭</h2>
     {% include "projects/partials/area_a_searching.html" %}
   </div>
 
-  <div class="card-default p-6">
+  <div class="bg-surface rounded-card shadow-card p-6">
     <h2 class="text-lg font-semibold mb-4">이력서 배치 제출</h2>
     {% include "projects/partials/area_a_submission_batch.html" %}
   </div>
@@ -439,13 +439,13 @@ Expected: FAIL — div id not present
 - [ ] **Create `projects/templates/projects/partials/area_a_searching.html`:**
 
 ```django
-<div class="text-sm text-fg-muted">(서칭 도구 — Task 5에서 구현)</div>
+<div class="text-sm text-muted">(서칭 도구 — Task 5에서 구현)</div>
 ```
 
 - [ ] **Create `projects/templates/projects/partials/area_a_submission_batch.html`:**
 
 ```django
-<div class="text-sm text-fg-muted">(배치 제출 관리 — Task 7에서 구현)</div>
+<div class="text-sm text-muted">(배치 제출 관리 — Task 7에서 구현)</div>
 ```
 
 ### Step 4.4: project_detail.html 재작성
@@ -613,7 +613,7 @@ def add_candidates_to_project(project, candidate_ids: list, created_by=None) -> 
   {% include "projects/partials/area_a_channel_placeholder.html" with channel="이메일" %}
 </div>
 
-<p class="text-sm text-fg-muted mt-3">
+<p class="text-sm text-muted mt-3">
   JD 기반으로 후보자를 발굴하세요. 드롭·추가와 관계없이 프로젝트 종료까지 언제든 다시 서칭할 수 있습니다.
 </p>
 ```
@@ -710,7 +710,7 @@ git commit -m "feat(projects): DB searching → candidate add flow in project de
   class="btn-secondary opacity-60 cursor-not-allowed"
   title="준비 중 — 별도 설계 문서 참조"
   disabled>
-  {{ channel }} <span class="text-xs text-fg-muted">(준비중)</span>
+  {{ channel }} <span class="text-xs text-muted">(준비중)</span>
 </button>
 ```
 
@@ -842,7 +842,7 @@ def submission_batch_create(request, pk):
   <button type="submit" class="btn-primary">선택한 후보 묶어 제출</button>
 </form>
 {% else %}
-  <div class="text-sm text-fg-muted">제출 대기 중인 후보자가 없습니다.</div>
+  <div class="text-sm text-muted">제출 대기 중인 후보자가 없습니다.</div>
 {% endif %}
 ```
 
@@ -968,7 +968,7 @@ git commit -m "refactor(projects): card progress bar uses 7-stage CARD_STAGES_OR
 
 ```bash
 for stage in contact resume pre_meeting prep_submission client_submit interview hired; do
-  echo "<div class=\"text-sm text-fg-muted\">($stage — 추후 구현)</div>" > \
+  echo "<div class=\"text-sm text-muted\">($stage — 추후 구현)</div>" > \
     projects/templates/projects/partials/stage_${stage}.html
 done
 ```
@@ -1358,7 +1358,7 @@ def stage_pre_meeting_record(request, pk):
         enctype="multipart/form-data" class="space-y-3">
     {% csrf_token %}
     <p class="font-medium">② 미팅 결과 기록</p>
-    <p class="text-sm text-fg-muted">일정: {{ application.pre_meeting_scheduled_at }}</p>
+    <p class="text-sm text-muted">일정: {{ application.pre_meeting_scheduled_at }}</p>
     <textarea name="summary" rows="4" placeholder="미팅 요지·다음 액션 요약" 
               class="form-textarea w-full" required></textarea>
     <label class="block text-sm">
@@ -1482,7 +1482,7 @@ def stage_prep_submission_confirm(request, pk):
   <p class="font-medium">고객사 제출용 이력서 문서</p>
   <div class="bg-bg-muted p-4 rounded text-sm">
     <p class="mb-2">📄 자동 생성 기능은 별도 설계 중입니다.</p>
-    <p class="text-fg-muted">
+    <p class="text-muted">
       현재는 컨설턴트가 문서를 외부에서 준비한 뒤 아래 버튼으로 컨펌하세요. 
       이 단계는 <strong>건너뛸 수 없습니다</strong>.
     </p>
@@ -1585,7 +1585,7 @@ def stage_client_submit_single(request, pk):
 ```django
 <div class="space-y-3">
   <p class="font-medium">이력서 고객사 제출</p>
-  <p class="text-sm text-fg-muted">
+  <p class="text-sm text-muted">
     배치 제출은 위쪽 <strong>영역 A</strong> 에서 여러 명 묶어서 처리할 수 있습니다.
     이 후보자만 따로 제출하려면 아래 버튼을 누르세요. 이 단계는 건너뛸 수 없습니다.
   </p>
@@ -1724,7 +1724,7 @@ def stage_interview_complete(request, pk):
   <textarea name="review" rows="4" 
             placeholder="(선택) After Interview Review — 질문·응답·인상 요약"
             class="form-textarea w-full"></textarea>
-  <p class="text-xs text-fg-muted">
+  <p class="text-xs text-muted">
     녹음 → STT → 요약 자동화는 별도 설계 중입니다. 지금은 수기 입력만 지원합니다.
   </p>
   <button type="submit" class="btn-primary">면접 완료</button>
