@@ -1,5 +1,6 @@
 {% load humanize %}
-{# 후보자 카드 — 8단계 진행 바 + 현 단계 할 일 (nested sub-card 없음) #}
+{% load projects_tags %}
+{# 후보자 카드 — 7단계 진행 바 + 현 단계 할 일 (nested sub-card 없음) #}
 <div id="application-{{ application.id }}"
      class="bg-surface rounded-card border border-hair p-6
             {% if application.dropped_at %}opacity-60{% endif %}
@@ -42,11 +43,12 @@
     </div>
   </div>
 
-  {# ── 8단계 진행 바 ── #}
+  {# ── 7단계 진행 바 (서칭 제외) ── #}
   {% if not application.dropped_at %}
+  {% card_stages as stages %}
   {% with passed=application.stages_passed cur=application.current_stage %}
   <div class="stage-progress">
-    {% for stage_id, stage_label in stages_order %}
+    {% for stage_id, stage_label in stages %}
     <div class="stage-step {% if stage_id in passed and stage_id != cur %}passed{% elif stage_id == cur %}current{% endif %}">
       <div class="dot">
         {% if stage_id in passed and stage_id != cur %}
