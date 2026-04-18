@@ -5,14 +5,14 @@
      hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
   <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl shadow-slate-900/20 p-8">
     <header class="mb-5 flex items-center justify-between">
-      <h3 id="modal-title-action-complete" class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">액션 완료 · Complete</h3>
+      <h3 id="modal-title-action-complete" class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">액션 완료 · Complete</h3>
       <button type="button"
               onclick="document.getElementById('modal-container').innerHTML = ''"
               class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
     </header>
 
     <div class="mb-5 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-      <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ action.action_type.label_ko }}</p>
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ action.action_type.label_ko }}</p>
       <p class="mt-2 text-sm font-bold text-slate-900">{{ action.title }}</p>
       <p class="mt-1 text-xs text-slate-500">{{ action.application.candidate.name }} <span class="mx-1 text-slate-500">·</span> {{ action.application.project.title }}</p>
     </div>
@@ -29,26 +29,26 @@
       {% csrf_token %}
       <div class="space-y-5">
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">결과 · Result</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">결과 · Result</label>
           <textarea name="result" rows="3"
-                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition"
+                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition"
                     placeholder="진행 결과를 입력하세요">{{ form.result.value|default:"" }}</textarea>
         </div>
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">메모 (선택)</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">메모 (선택)</label>
           <textarea name="note" rows="2"
-                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">{{ form.note.value|default:"" }}</textarea>
+                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">{{ form.note.value|default:"" }}</textarea>
         </div>
       </div>
 
       <div class="mt-6 flex justify-end gap-2">
         <button type="button"
                 onclick="document.getElementById('modal-container').innerHTML = ''"
-                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
+                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
           취소
         </button>
         <button type="submit"
-                class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
+                class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
           완료 처리
         </button>
       </div>

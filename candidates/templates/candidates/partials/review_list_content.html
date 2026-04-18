@@ -1,6 +1,6 @@
 <div class="px-10 py-10 max-w-5xl">
   <div class="mb-10">
-    <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Quality Review</span>
+    <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Quality Review</span>
     <h2 class="text-4xl font-black text-slate-900 tracking-tight">이력서 검토</h2>
     <p class="text-sm text-slate-500 mt-2">총 <span class="text-slate-900 font-bold">{{ total }}</span>건</p>
   </div>
@@ -11,8 +11,8 @@
       hx-get="{% url 'candidates:review_list' %}?status={{ value }}"
       hx-target="#main-content"
       hx-push-url="true"
-      class="px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-        {% if status_filter == value %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+      class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+        {% if status_filter == value %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
       {{ label }}
     </button>
     {% endfor %}
@@ -23,35 +23,35 @@
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}"
       hx-target="#main-content" hx-push-url="true"
-      class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+      class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
         {% if not rec %}bg-slate-900 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
       전체
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=pending"
       hx-target="#main-content" hx-push-url="true"
-      class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+      class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
         {% if rec == 'pending' %}bg-slate-900 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
       미결정
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=recommended"
       hx-target="#main-content" hx-push-url="true"
-      class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+      class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
         {% if rec == 'recommended' %}bg-emerald-600 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
       추천
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=not_recommended"
       hx-target="#main-content" hx-push-url="true"
-      class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+      class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
         {% if rec == 'not_recommended' %}bg-rose-600 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
       비추천
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=on_hold"
       hx-target="#main-content" hx-push-url="true"
-      class="whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+      class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
         {% if rec == 'on_hold' %}bg-amber-600 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
       보류
     </button>
@@ -69,16 +69,16 @@
       <div class="flex items-start justify-between gap-3">
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-1">
-            <h4 class="text-base font-bold text-slate-900 group-hover:text-primary transition-colors truncate">{{ candidate.name }}</h4>
+            <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors truncate">{{ candidate.name }}</h4>
             {% include "candidates/partials/_recommendation_badge.html" %}
             {% if candidate.confidence_score is not None %}
               {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
               {% if candidate.confidence_score >= 0.85 %}
-                <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{{ confidence_pct }}%</span>
+                <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{{ confidence_pct }}%</span>
               {% elif candidate.confidence_score >= 0.6 %}
-                <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">{{ confidence_pct }}%</span>
+                <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">{{ confidence_pct }}%</span>
               {% else %}
-                <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">{{ confidence_pct }}%</span>
+                <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">{{ confidence_pct }}%</span>
               {% endif %}
             {% endif %}
           </div>
@@ -90,7 +90,7 @@
               {% if candidate.current_position %}{{ candidate.current_position }}{% endif %}
             </p>
             {% endif %}
-            <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">
+            <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-slate-400 mt-2">
               {% if candidate.birth_year %}
               <span>{{ candidate.birth_year }}년생</span>
               {% endif %}
@@ -101,7 +101,7 @@
           </div>
         </div>
         {% if candidate.primary_category %}
-        <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-primary/10 text-primary whitespace-nowrap ml-2 shrink-0">
+        <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-ink3/10 text-ink3 whitespace-nowrap ml-2 shrink-0">
           {{ candidate.primary_category.name_ko|default:candidate.primary_category.name }}
         </span>
         {% endif %}

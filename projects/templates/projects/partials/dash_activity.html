@@ -5,12 +5,12 @@
   <ul class="space-y-5">
     {% for activity in activities %}
     <li class="flex gap-4 group cursor-default">
-      <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <div class="w-9 h-9 rounded-full bg-ink3/10 flex items-center justify-center shrink-0 mt-0.5">
+        <svg class="w-4 h-4 text-ink3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-bold text-slate-900 leading-snug">{{ activity.description }}</p>
-        <p class="text-[11px] text-slate-400 font-medium mt-1">{{ activity.timestamp|naturaltime }}</p>
+        <p class="text-xs text-slate-400 font-medium mt-1">{{ activity.timestamp|naturaltime }}</p>
       </div>
     </li>
     {% endfor %}

@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>synco · CTO 후보 · Project Detail</title>
+
+<!-- Pretendard -->
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+<!-- Tailwind (목업용 CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system',
+                 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        },
+        colors: {
+          canvas:  '#F8FAFC', surface: '#FFFFFF',
+          ink: '#0F172A', ink2: '#1E293B', ink3: '#334155',
+          muted: '#64748B', faint: '#94A3B8',
+          hair: '#E2E8F0', line: '#F1F5F9',
+          success: '#10B981', warning: '#F59E0B',
+          info: '#6366F1', danger: '#EF4444',
+        },
+        boxShadow: {
+          'card': '0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06)',
+          'lift': '0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.04)',
+          'fab':  '0 10px 15px -3px rgba(15,23,42,0.15), 0 4px 6px -2px rgba(15,23,42,0.08)',
+        },
+        borderRadius: { 'card': '16px' }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { font-family: 'Pretendard Variable', Pretendard, -apple-system, sans-serif; }
+  body { background: #F8FAFC; color: #0F172A; -webkit-font-smoothing: antialiased; }
+  .tnum { font-feature-settings: "tnum" 1, "ss01" 1; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 8px;
+    color: #94A3B8; font-size: 13px; font-weight: 500;
+  }
+  .sidebar-link:hover, .sidebar-link.is-active { background: #1E293B; color: #fff; }
+  .sidebar-link .dot { width: 3px; height: 18px; border-radius: 2px; background: transparent; margin-right: -8px; }
+  .sidebar-link.is-active .dot { background: #fff; }
+
+  /* Badge */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .badge::before {
+    content: ''; width: 5px; height: 5px; border-radius: 999px; background: currentColor;
+  }
+  .badge.screening { background: #EFF6FF; color: #1D4ED8; }
+  .badge.urgent    { background: #FEF2F2; color: #B91C1C; }
+
+  /* Tag */
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 4px 9px; border-radius: 6px;
+    font-size: 10px; font-weight: 600;
+    color: #475569; background: #F1F5F9;
+  }
+
+  /* Meta pill (프로젝트 헤더의 메타 정보) */
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    background: #F1F5F9; color: #334155;
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* Detail tab bar */
+  .tab-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #64748B;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tab-btn:hover { background: #F1F5F9; color: #0F172A; }
+  .tab-btn.is-active { background: #0F172A; color: #fff; }
+  .tab-btn .count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 6px;
+    border-radius: 999px;
+    background: #E2E8F0; color: #334155;
+    font-size: 10px; font-weight: 700;
+    font-feature-settings: "tnum" 1;
+  }
+  .tab-btn.is-active .count { background: #334155; color: #fff; }
+
+  /* Avatar stack */
+  .av-stack { display: flex; }
+  .av-stack > * {
+    width: 28px; height: 28px; border-radius: 999px;
+    border: 2px solid #FFFFFF;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 11px;
+    margin-left: -8px;
+  }
+  .av-stack > *:first-child { margin-left: 0; }
+  .av-1 { background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%); }
+  .av-2 { background: linear-gradient(135deg, #fcd34d 0%, #d97706 100%); }
+  .av-3 { background: linear-gradient(135deg, #c4b5fd 0%, #6366f1 100%); }
+
+  /* Funnel */
+  .funnel-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 60px;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+  }
+  .funnel-row + .funnel-row { border-top: 1px solid #F1F5F9; }
+  .funnel-bar {
+    height: 8px; border-radius: 999px; background: #F1F5F9; overflow: hidden;
+  }
+  .funnel-bar > span {
+    display: block; height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #334155, #0F172A);
+  }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before {
+    content: ''; position: absolute;
+    left: 10px; top: 8px; bottom: 8px; width: 2px;
+    background: #E2E8F0;
+  }
+  .timeline-item { position: relative; padding-bottom: 20px; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before {
+    content: ''; position: absolute;
+    left: -22px; top: 6px;
+    width: 10px; height: 10px; border-radius: 999px;
+    background: #334155; border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #E2E8F0;
+  }
+  .timeline-item.is-success::before { background: #10B981; box-shadow: 0 0 0 2px #10B98133; }
+  .timeline-item.is-warn::before    { background: #F59E0B; box-shadow: 0 0 0 2px #F59E0B33; }
+
+  /* Fact row */
+  .fact-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 0;
+    border-top: 1px solid #F1F5F9;
+  }
+  .fact-row:first-child { border-top: 0; }
+  .fact-row .k { color: #94A3B8; font-size: 11px; font-weight: 600; }
+  .fact-row .v { color: #0F172A; font-size: 13px; font-weight: 700; text-align: right; }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- ===================== LAYOUT ===================== -->
+<div class="flex min-h-screen">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="w-[260px] shrink-0 bg-ink text-white flex flex-col">
+    <div class="px-6 py-6 border-b border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        </div>
+        <div>
+          <div class="text-lg font-bold tracking-tight leading-none">synco</div>
+          <div class="eyebrow mt-1" style="color:#64748B">Executive Search v2.4</div>
+        </div>
+      </div>
+    </div>
+    <nav class="px-4 py-6 space-y-1 flex-1">
+      <a href="dashboard.html" class="sidebar-link"><span class="dot"></span>Dashboard</a>
+      <a href="candidate-list.html" class="sidebar-link"><span class="dot"></span>Candidates</a>
+      <a href="projects.html" class="sidebar-link is-active"><span class="dot"></span>Projects</a>
+      <a href="clients-list.html" class="sidebar-link"><span class="dot"></span>Clients</a>
+      <a href="references.html" class="sidebar-link"><span class="dot"></span>References</a>
+      <a href="newsfeed.html" class="sidebar-link"><span class="dot"></span>Newsfeed</a>
+      <a href="team.html" class="sidebar-link"><span class="dot"></span>Team</a>
+    </nav>
+    <div class="px-4 pb-6 space-y-1">
+      <a href="#" class="sidebar-link"><span class="dot"></span>Settings</a>
+    </div>
+  </aside>
+
+  <!-- ===== RIGHT COLUMN ===== -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- Top Header -->
+    <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">데스크 · 헤드헌팅</div>
+        <h1 class="text-[22px] font-bold tracking-tight mt-1">Project Detail</h1>
+      </div>
+      <div class="flex items-center gap-5">
+        <div class="text-right">
+          <div class="eyebrow">Wednesday · Oct 25, 2023</div>
+          <div class="text-xs text-muted mt-1 tnum">10:24 AM KST</div>
+        </div>
+        <div class="flex items-center gap-3 pl-5 border-l border-hair">
+          <div class="text-right">
+            <div class="text-sm font-semibold">Senior Partner</div>
+            <div class="eyebrow">Advisory Board</div>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-ink2 text-white flex items-center justify-center text-sm font-semibold">SP</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="w-full max-w-[1280px]">
+    <div class="px-8 py-8 space-y-6">
+
+      <!-- ============ Back link ============ -->
+      <a href="projects.html" class="inline-flex items-center gap-2 text-xs font-semibold text-muted hover:text-ink transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Projects로 돌아가기
+      </a>
+
+      <!-- ============ Project header ============ -->
+      <section class="bg-surface rounded-card shadow-card p-8 flex items-start justify-between gap-6">
+        <div class="min-w-0">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="badge screening">심사중 · Screening</span>
+            <span class="badge urgent">D-7</span>
+          </div>
+          <h2 class="mt-4 text-[32px] font-bold tracking-tight leading-tight">Head of Product</h2>
+          <p class="text-lg text-muted mt-2">
+            <span class="font-semibold text-ink3">토스</span>
+            <span class="mx-2 text-faint">·</span>
+            Core Product Division
+          </p>
+
+          <div class="flex flex-wrap items-center gap-2 mt-5">
+            <span class="meta-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              마감 2026-05-02
+            </span>
+            <span class="meta-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              연봉 ₩ 180M
+            </span>
+            <span class="meta-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+              수수료율 22%
+            </span>
+            <span class="meta-pill" style="background:#F0FDF4;color:#047857">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              예상 수수료 ₩ 39.6M
+            </span>
+            <span class="meta-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+              매칭 18명
+            </span>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="av-stack mr-2">
+            <div class="av-1">SP</div>
+            <div class="av-2">박</div>
+          </div>
+          <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            편집
+          </button>
+          <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            후보자 추가
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ Tab bar ============ -->
+      <nav class="flex items-center gap-1 flex-wrap bg-surface rounded-xl border border-hair p-1.5">
+        <button type="button" class="tab-btn is-active">Overview</button>
+        <button type="button" class="tab-btn">Search <span class="count">312</span></button>
+        <button type="button" class="tab-btn">Applications <span class="count">18</span></button>
+        <button type="button" class="tab-btn">Submissions <span class="count">6</span></button>
+        <button type="button" class="tab-btn">Interviews <span class="count">4</span></button>
+        <button type="button" class="tab-btn">Posting</button>
+        <button type="button" class="tab-btn">Context</button>
+        <button type="button" class="tab-btn">Auto Actions <span class="count">3</span></button>
+      </nav>
+
+      <!-- ============ Overview Tab Content ============ -->
+      <section class="grid grid-cols-12 gap-6">
+
+        <!-- ===== LEFT (8) ===== -->
+        <div class="col-span-8 space-y-6">
+
+          <!-- JD Summary -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-5">
+              <div class="eyebrow">JD · Job Description</div>
+              <div class="h-px flex-1 bg-line"></div>
+              <button class="text-xs font-semibold text-ink3 hover:underline">원본 파일 열기 →</button>
+            </div>
+            <p class="text-[15px] text-ink3 leading-relaxed">
+              토스 Core Product Division을 총괄할 Head of Product를 찾습니다. B2C 모바일 서비스 PMF 경험 10년 이상, 30명+ 조직 리딩 경험 필수. 데이터 기반 의사결정 문화와 글로벌 확장 경험을 가진 리더를 우선합니다.
+            </p>
+            <div class="flex items-center gap-2 mt-5 flex-wrap">
+              <span class="tag">B2C 모바일</span>
+              <span class="tag">PMF</span>
+              <span class="tag">조직 30명+</span>
+              <span class="tag">데이터 드리븐</span>
+              <span class="tag">글로벌 경험 우대</span>
+            </div>
+          </article>
+
+          <!-- Funnel -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="eyebrow">Funnel · 진행 퍼널</div>
+              <div class="h-px flex-1 bg-line"></div>
+              <div class="text-xs text-muted tnum">전환율 <span class="text-ink3 font-semibold">22%</span></div>
+            </div>
+
+            <div class="funnel-row">
+              <div class="text-sm font-semibold text-ink">매칭</div>
+              <div class="funnel-bar"><span style="width:100%"></span></div>
+              <div class="text-sm font-bold text-ink3 tnum text-right">18</div>
+            </div>
+            <div class="funnel-row">
+              <div class="text-sm font-semibold text-ink">컨택</div>
+              <div class="funnel-bar"><span style="width:67%"></span></div>
+              <div class="text-sm font-bold text-ink3 tnum text-right">12</div>
+            </div>
+            <div class="funnel-row">
+              <div class="text-sm font-semibold text-ink">서류 제출</div>
+              <div class="funnel-bar"><span style="width:33%"></span></div>
+              <div class="text-sm font-bold text-ink3 tnum text-right">6</div>
+            </div>
+            <div class="funnel-row">
+              <div class="text-sm font-semibold text-ink">면접</div>
+              <div class="funnel-bar"><span style="width:22%"></span></div>
+              <div class="text-sm font-bold text-ink3 tnum text-right">4</div>
+            </div>
+            <div class="funnel-row">
+              <div class="text-sm font-semibold text-ink">오퍼</div>
+              <div class="funnel-bar"><span style="width:5%"></span></div>
+              <div class="text-sm font-bold text-ink3 tnum text-right">1</div>
+            </div>
+          </article>
+
+          <!-- Recent Activity -->
+          <article class="bg-surface rounded-card shadow-card p-7">
+            <div class="flex items-center gap-4 mb-5">
+              <div class="eyebrow">Recent Activity · 최근 활동</div>
+              <div class="h-px flex-1 bg-line"></div>
+              <button class="text-xs font-semibold text-ink3 hover:underline">전체 보기 →</button>
+            </div>
+
+            <div class="timeline">
+              <div class="timeline-item is-success">
+                <div class="flex items-baseline justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-bold text-ink">2차 면접 완료 · 박해준</p>
+                    <p class="text-xs text-muted mt-1">토스 본사 · 담당: SP</p>
+                  </div>
+                  <span class="eyebrow" style="text-transform:none">2시간 전</span>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="flex items-baseline justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-bold text-ink">추천 서류 3건 제출</p>
+                    <p class="text-xs text-muted mt-1">박해준 · 김지민 · 이수빈 · 담당: 박</p>
+                  </div>
+                  <span class="eyebrow" style="text-transform:none">어제</span>
+                </div>
+              </div>
+              <div class="timeline-item is-warn">
+                <div class="flex items-baseline justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-bold text-ink">컨택 Lock 만료 임박 · 임지혜</p>
+                    <p class="text-xs text-muted mt-1">3일 내 재컨택 필요</p>
+                  </div>
+                  <span class="eyebrow" style="text-transform:none">3일 전</span>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="flex items-baseline justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-bold text-ink">JD 분석 완료 (AI)</p>
+                    <p class="text-xs text-muted mt-1">키워드 5개 · 필수경력 10Y+ 추출</p>
+                  </div>
+                  <span class="eyebrow" style="text-transform:none">4일 전</span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- ===== RIGHT (4) ===== -->
+        <div class="col-span-4 space-y-6">
+
+          <!-- Project Facts -->
+          <article class="bg-surface rounded-card shadow-card p-6">
+            <div class="eyebrow mb-4">Project Facts</div>
+            <div class="fact-row"><span class="k">고객사</span><span class="v">토스</span></div>
+            <div class="fact-row"><span class="k">부서</span><span class="v">Core Product</span></div>
+            <div class="fact-row"><span class="k">포지션 레벨</span><span class="v">Executive</span></div>
+            <div class="fact-row"><span class="k">필요 경력</span><span class="v tnum">10Y+</span></div>
+            <div class="fact-row"><span class="k">연봉</span><span class="v tnum">₩ 180,000,000</span></div>
+            <div class="fact-row"><span class="k">수수료율</span><span class="v tnum">22%</span></div>
+            <div class="fact-row">
+              <span class="k">예상 수수료</span>
+              <span class="v tnum" style="color:#047857">₩ 39,600,000</span>
+            </div>
+            <div class="fact-row"><span class="k">마감</span><span class="v tnum">2026-05-02 (D-7)</span></div>
+            <div class="fact-row"><span class="k">등록일</span><span class="v tnum">2026-03-15</span></div>
+          </article>
+
+          <!-- Assigned Team -->
+          <article class="bg-surface rounded-card shadow-card p-6">
+            <div class="eyebrow mb-4">Assigned Team</div>
+            <ul class="space-y-4">
+              <li class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">SP</div>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold">Senior Partner</div>
+                  <div class="eyebrow eyebrow-ko" style="color:#94A3B8">수석 컨설턴트 · Lead</div>
+                </div>
+              </li>
+              <li class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">박</div>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold">박지영</div>
+                  <div class="eyebrow eyebrow-ko" style="color:#94A3B8">시니어 컨설턴트</div>
+                </div>
+              </li>
+            </ul>
+          </article>
+
+          <!-- Quick Actions -->
+          <article class="bg-surface rounded-card shadow-card p-6">
+            <div class="eyebrow mb-4">Quick Actions</div>
+            <div class="space-y-2">
+              <button class="w-full inline-flex items-center justify-between px-4 h-10 rounded-lg bg-line hover:bg-hair text-sm font-semibold text-ink3 transition-colors">
+                + 후보자 추가
+                <span class="eyebrow" style="text-transform:none">Search →</span>
+              </button>
+              <button class="w-full inline-flex items-center justify-between px-4 h-10 rounded-lg bg-line hover:bg-hair text-sm font-semibold text-ink3 transition-colors">
+                ✎ 추천 서류 생성
+                <span class="eyebrow" style="text-transform:none">AI 초안</span>
+              </button>
+              <button class="w-full inline-flex items-center justify-between px-4 h-10 rounded-lg bg-line hover:bg-hair text-sm font-semibold text-ink3 transition-colors">
+                ☎ 면접 일정 잡기
+              </button>
+              <button class="w-full inline-flex items-center justify-between px-4 h-10 rounded-lg bg-line hover:bg-hair text-sm font-semibold text-ink3 transition-colors">
+                ✕ 프로젝트 종료
+                <span class="eyebrow" style="text-transform:none;color:#EF4444">종료</span>
+              </button>
+            </div>
+          </article>
+
+          <!-- Auto Actions (AI 제안) -->
+          <article class="bg-ink text-white rounded-card shadow-lift p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              <div class="eyebrow" style="color:#64748B">AI Suggested</div>
+            </div>
+            <p class="text-[14px] font-semibold leading-snug mb-4">
+              박해준 2차 면접 후속 확정을 위한 제안이 3건 있습니다.
+            </p>
+            <div class="flex items-center gap-2">
+              <button class="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-white text-ink text-xs font-bold hover:bg-line transition-colors">
+                Auto Actions 보기
+              </button>
+              <button class="inline-flex items-center gap-2 px-4 h-9 rounded-lg border border-white/20 text-white/90 text-xs font-semibold hover:bg-white/5 transition-colors">
+                무시
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </div>
+    </main>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-ink3 text-white shadow-fab hover:bg-ink2 transition-colors flex items-center justify-center">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+</body>
+</html>

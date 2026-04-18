@@ -1,0 +1,34 @@
+{# 단계 건너뛰기 모달 — "이번 프로젝트에서는 사전 미팅 불필요" 같은 상황 #}
+<div class="fixed inset-0 bg-ink/50 flex items-center justify-center z-50"
+     _="on click from me if target is me remove me">
+  <div class="bg-surface rounded-card shadow-lift w-[480px] max-w-[90vw] p-8"
+       onclick="event.stopPropagation()">
+    <h3 class="text-xl font-bold tracking-tight mb-2">단계 건너뛰기</h3>
+    <p class="text-sm text-muted mb-6">
+      <span class="font-semibold text-ink3">{{ application.candidate.name }}</span> 후보자의
+      현재 단계 <span class="font-semibold text-ink3">{{ current_stage_label }}</span>를(을)
+      생략하고 {% if next_stage_label %}<span class="font-semibold text-ink3">{{ next_stage_label }}</span> 단계{% else %}다음 단계{% endif %}로 이동합니다.
+    </p>
+
+    <form hx-post="{% url 'projects:application_skip_stage' application.id %}"
+          hx-swap="none">
+      {% csrf_token %}
+      <label class="block text-xs font-semibold text-muted mb-1">건너뛰는 이유</label>
+      <textarea name="reason" rows="3" required
+                placeholder="예: 이전 프로젝트에서 이미 사전 미팅 진행함"
+                class="w-full px-3 py-2 rounded-lg border border-hair bg-surface text-sm placeholder:text-faint focus:border-ink3 focus:outline-none resize-none"></textarea>
+
+      <div class="flex items-center justify-end gap-2 mt-6">
+        <button type="button"
+                onclick="document.querySelector('.fixed.inset-0').remove()"
+                class="inline-flex items-center px-4 h-10 rounded-lg border border-hair text-sm font-semibold text-muted hover:text-ink hover:bg-line transition-colors">
+          취소
+        </button>
+        <button type="submit"
+                class="inline-flex items-center px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+          건너뛰고 다음 단계로
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

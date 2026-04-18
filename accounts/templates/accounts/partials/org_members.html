@@ -7,14 +7,14 @@
 
 <section class="bg-white rounded-xl border border-slate-100 shadow-sm">
   <div class="p-6 border-b border-slate-100">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">멤버 목록 · Members</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">멤버 목록 · Members</h3>
   </div>
 
   <div class="divide-y divide-slate-100">
     {% for member in members %}
     <div class="p-5 flex items-center justify-between gap-3 flex-wrap">
       <div class="flex items-center gap-4 min-w-0">
-        <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-sm font-black text-primary">
+        <div class="w-10 h-10 bg-ink3/10 rounded-xl flex items-center justify-center text-sm font-black text-ink3">
           {{ member.user.first_name|default:member.user.username|truncatechars:2 }}
         </div>
         <div class="min-w-0">
@@ -22,13 +22,13 @@
             {{ member.user.first_name|default:member.user.username }}
           </p>
           <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
-              {% if member.role == 'owner' %}bg-primary/10 text-primary border border-primary/20
-              {% elif member.role == 'consultant' %}bg-primary/10 text-primary border border-primary/20
+            <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
+              {% if member.role == 'owner' %}bg-ink3/10 text-ink3 border border-ink3/20
+              {% elif member.role == 'consultant' %}bg-ink3/10 text-ink3 border border-ink3/20
               {% else %}bg-slate-50 text-slate-600 border border-slate-100{% endif %}">
               {{ member.get_role_display }}
             </span>
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
+            <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full
               {% if member.status == 'active' %}bg-emerald-50 text-emerald-700 border border-emerald-100
               {% elif member.status == 'pending' %}bg-amber-50 text-amber-700 border border-amber-100
               {% else %}bg-rose-50 text-rose-700 border border-rose-100{% endif %}">
@@ -36,7 +36,7 @@
               {% elif member.status == 'pending' %}승인대기
               {% else %}거절{% endif %}
             </span>
-            <span class="text-[10px] font-medium text-slate-400">{{ member.created_at|date:"Y-m-d" }}</span>
+            <span class="text-xs font-medium text-slate-400">{{ member.created_at|date:"Y-m-d" }}</span>
           </div>
         </div>
       </div>
@@ -48,7 +48,7 @@
                 hx-target="#org-content">
             {% csrf_token %}
             <button type="submit"
-                    class="rounded-lg bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 shadow-sm hover:bg-emerald-700 transition-all">
+                    class="rounded-lg bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 shadow-sm hover:bg-emerald-700 transition-all">
               승인
             </button>
           </form>
@@ -57,7 +57,7 @@
                 hx-target="#org-content">
             {% csrf_token %}
             <button type="submit"
-                    class="rounded-lg bg-white border border-rose-200 text-rose-600 text-[10px] font-bold uppercase tracking-widest px-4 py-2 hover:bg-rose-50 transition-all">
+                    class="rounded-lg bg-white border border-rose-200 text-rose-600 text-xs font-bold uppercase tracking-widest px-4 py-2 hover:bg-rose-50 transition-all">
               거절
             </button>
           </form>
@@ -69,7 +69,7 @@
             {% csrf_token %}
             <select name="role"
                     onchange="this.form.requestSubmit()"
-                    class="text-[10px] font-bold uppercase tracking-wider px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary">
+                    class="text-xs font-bold uppercase tracking-wider px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-ink3/10 focus:border-ink3">
               <option value="consultant" {% if member.role == 'consultant' %}selected{% endif %}>Consultant</option>
               <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>Viewer</option>
             </select>
@@ -80,7 +80,7 @@
                 hx-confirm="정말로 {{ member.user.first_name|default:member.user.username }}님을 조직에서 제거하시겠습니까?">
             {% csrf_token %}
             <button type="submit"
-                    class="rounded-lg bg-white border border-rose-100 text-rose-500 text-[10px] font-bold uppercase tracking-widest px-4 py-2 hover:bg-rose-50 transition-all">
+                    class="rounded-lg bg-white border border-rose-100 text-rose-500 text-xs font-bold uppercase tracking-widest px-4 py-2 hover:bg-rose-50 transition-all">
               제거
             </button>
           </form>

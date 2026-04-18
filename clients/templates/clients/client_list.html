@@ -8,14 +8,14 @@
 <div class="px-10 py-10 max-w-5xl">
   <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
     <div>
-      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Account Roster</span>
+      <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Account Roster</span>
       <h2 class="text-4xl font-black text-slate-900 tracking-tight">고객사</h2>
       <p class="mt-2 text-sm text-slate-500">등록된 모든 고객사 정보를 관리합니다.</p>
     </div>
     {% if membership and membership.role == 'owner' %}
     <a href="{% url 'clients:client_create' %}"
        hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
       New Client
     </a>
@@ -27,7 +27,7 @@
         class="flex gap-3 mb-6">
     <input type="text" name="q" value="{{ q }}"
            placeholder="고객사명 또는 업종으로 검색"
-           class="flex-1 rounded-xl bg-white border border-slate-200 px-5 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
+           class="flex-1 rounded-xl bg-white border border-slate-200 px-5 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition">
     <button type="submit"
             class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-6 shadow-sm hover:bg-slate-50 transition-all">
       검색
@@ -42,20 +42,20 @@
        class="block bg-white rounded-xl border border-slate-100 shadow-sm hover:border-slate-200 hover:shadow-md transition-all p-5 group">
       <div class="flex items-center justify-between gap-4">
         <div class="min-w-0 flex-1">
-          <h4 class="text-base font-bold text-slate-900 group-hover:text-primary transition-colors">{{ client.name }}</h4>
+          <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors">{{ client.name }}</h4>
           <div class="flex items-center gap-2 mt-1.5 flex-wrap">
             {% if client.industry %}
-            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 px-2 py-1 rounded-full">{{ client.industry }}</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 px-2 py-1 rounded-full">{{ client.industry }}</span>
             {% endif %}
             {% if client.size %}
-            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">{{ client.get_size_display }}</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-500">{{ client.get_size_display }}</span>
             {% endif %}
             {% if client.region %}
-            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">· {{ client.region }}</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-500">· {{ client.region }}</span>
             {% endif %}
           </div>
         </div>
-        <svg class="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-slate-300 group-hover:text-ink3 transition-colors shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
         </svg>
       </div>
@@ -69,18 +69,18 @@
     <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"
        hx-get="{% url 'clients:client_list' %}?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"
        hx-target="#main-content" hx-push-url="true"
-       class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
+       class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
       이전
     </a>
     {% endif %}
-    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+    <span class="text-xs font-bold uppercase tracking-widest text-slate-400">
       {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
     </span>
     {% if page_obj.has_next %}
     <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
        hx-get="{% url 'clients:client_list' %}?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
        hx-target="#main-content" hx-push-url="true"
-       class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
+       class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
       다음
     </a>
     {% endif %}
@@ -98,7 +98,7 @@
     <p class="text-sm font-medium text-slate-500 mb-5">등록된 고객사가 없습니다</p>
     <a href="{% url 'clients:client_create' %}"
        hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
       첫 고객사 등록
     </a>
     {% else %}

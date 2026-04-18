@@ -1,20 +1,20 @@
 {% if comments %}
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mt-4">
-  <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">코멘트 이력 · Comment History</h3>
+  <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">코멘트 이력 · Comment History</h3>
   <div class="divide-y divide-slate-100">
     {% for comment in comments %}
     <div class="py-4 first:pt-0 last:pb-0">
       <div class="flex items-center gap-2 mb-2 flex-wrap">
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
         {% if comment.author %}
         <span class="text-xs font-semibold text-slate-600">{{ comment.author.get_full_name|default:comment.author.username }}</span>
         {% endif %}
         {% if comment.recommendation_status == "recommended" %}
-          <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">추천</span>
+          <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">추천</span>
         {% elif comment.recommendation_status == "not_recommended" %}
-          <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">비추천</span>
+          <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">비추천</span>
         {% elif comment.recommendation_status == "on_hold" %}
-          <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">보류</span>
+          <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">보류</span>
         {% endif %}
         {% if comment.input_method == "voice" %}
           <span class="text-slate-300" title="음성 입력">
@@ -27,7 +27,7 @@
       {% if comment.reason_labels %}
       <div class="flex flex-wrap gap-1.5 mb-2">
         {% for label in comment.reason_labels %}
-        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-100">{{ label }}</span>
+        <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-100">{{ label }}</span>
         {% endfor %}
       </div>
       {% endif %}

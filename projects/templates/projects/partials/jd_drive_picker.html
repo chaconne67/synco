@@ -1,13 +1,13 @@
 <div class="space-y-3">
   {% if error %}
   <div class="bg-rose-50 border border-rose-100 rounded-lg p-3">
-    <p class="text-[13px] text-rose-600">{{ error }}</p>
+    <p class="text-sm text-rose-600">{{ error }}</p>
   </div>
   {% endif %}
 
   {% if success %}
   <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-    <p class="text-[13px] text-emerald-600">Drive 파일에서 텍스트가 추출되었습니다.</p>
+    <p class="text-sm text-emerald-600">Drive 파일에서 텍스트가 추출되었습니다.</p>
   </div>
   {% endif %}
 
@@ -23,12 +23,12 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
-        <span class="text-[14px] text-slate-700">{{ file.name }}</span>
+        <span class="text-sm text-slate-700">{{ file.name }}</span>
       </button>
     </form>
     {% endfor %}
   </div>
   {% else %}
-  <p class="text-[14px] text-slate-400">Drive에서 파일을 찾을 수 없습니다.</p>
+  <p class="text-sm text-slate-400">Drive에서 파일을 찾을 수 없습니다.</p>
   {% endif %}
 </div>

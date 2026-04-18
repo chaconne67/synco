@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between mb-5">
     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">오늘의 액션 · Today</h3>
     <button hx-get="/dashboard/actions/" hx-target="#dash-actions" hx-swap="innerHTML"
-            class="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">Refresh</button>
+            class="text-xs font-bold text-ink3 uppercase tracking-widest hover:text-ink2 transition-colors">Refresh</button>
   </div>
   {% if today_actions %}
   <ul class="divide-y divide-slate-100">
@@ -13,7 +13,7 @@
         <span class="text-sm font-bold text-slate-900 truncate">{{ action.label }}</span>
         <span class="text-xs text-slate-500 truncate">{{ action.project.title }}</span>
       </div>
-      <span class="text-[11px] font-medium text-slate-400 shrink-0 ml-4">{{ action.detail }}</span>
+      <span class="text-xs font-medium text-slate-400 shrink-0 ml-4">{{ action.detail }}</span>
     </li>
     {% endfor %}
   </ul>

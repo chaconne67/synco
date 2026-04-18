@@ -47,9 +47,9 @@
           "hover:text-gray-700",
           "hover:border-gray-300"
         );
-        btn.classList.add("border-primary", "text-primary");
+        btn.classList.add("border-ink3", "text-ink3");
       } else {
-        btn.classList.remove("border-primary", "text-primary");
+        btn.classList.remove("border-ink3", "text-ink3");
         btn.classList.add(
           "border-transparent",
           "text-gray-500",

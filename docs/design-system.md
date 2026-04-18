@@ -1,7 +1,11 @@
 # synco Design System
 
-> **Source of truth:** [`assets/ui-sample/dashboard.html`](../assets/ui-sample/dashboard.html)
-> 이 문서는 위 목업에서 추출한 토큰과 컴포넌트 패턴이다. 모든 신규/리팩터링 화면은 이 문서를 기준으로 작성한다.
+> **Source of truth:** [`assets/ui-sample/*.html`](../assets/ui-sample/) 목업 + 이 문서.
+> 이 문서는 목업에서 추출한 토큰·컴포넌트 패턴이다. **모든 신규/리팩터링 화면은 목업의 레이아웃을 그대로 따르고, 색상·간격·타이포·컴포넌트 규칙은 이 문서를 기준으로 작성한다.** 구현 화면과 목업이 다르면 목업이 승.
+
+**예외 — 사이드바 메뉴 아이콘:** 기존 [`templates/common/nav_sidebar.html`](../templates/common/nav_sidebar.html) 의 `<svg>` 아이콘 세트를 유지한다. 이미 도메인 의미에 맞춰 선택돼 있어 목업 아이콘으로 교체하지 않는다.
+
+**메모리 정책:** 디자인 규칙(폰트·컬러·간격·그림자·금지 패턴 등)은 모두 **이 문서에 집중**. 작업자 메모리에는 개별 규칙을 복제하지 말고 이 문서를 참조.
 
 ---
 
@@ -138,37 +142,42 @@ boxShadow: {
 
 ---
 
-## 2. Typography Scale
+## 2. Typography Scale — Tailwind 기본 스케일 우선
 
-`<style>` 블록의 `.eyebrow` + Tailwind 임의값 조합. **모든 폰트 크기는 px 명시**(rem 변환 금지).
+**Tailwind 기본 font-size 토큰**(`text-xs` ~ `text-5xl`)을 적극 사용. 커스텀 클래스(`input.css` `@layer components`)의 `font-size`도 기본 스케일에 맞춰 정의 — `@apply text-xs` 같이 토큰으로 참조. **인라인 arbitrary `text-[Xpx]`는 쓰지 않는다.**
 
-| Role | 클래스 / 인라인 | size | weight | 용도 |
+| Role | 클래스 | size | weight | 용도 |
 |---|---|---|---|---|
-| Stat number | `text-[40px] leading-none font-bold tnum` | 40 | 700 | 카드 핵심 KPI (24, ₩842,500) |
-| Page title | `text-[22px] font-bold tracking-tight` | 22 | 700 | 상단 헤더 H1 |
-| Stat secondary | `text-xl font-bold tnum` | 20 | 700 | sub stat (12, 82%) |
-| Logo | `text-lg font-bold tracking-tight` | 18 | 700 | 사이드바 로고 |
-| Card body strong | `text-[15px] font-semibold leading-snug` | 15 | 600 | 카드 내 주요 문구 (스케줄 제목) |
-| Body | `text-sm` | 14 | 400 | 일반 본문, 상태 라벨 |
-| Body strong | `text-sm font-semibold` | 14 | 600 | 이름, 메뉴 텍스트 |
-| Calendar day number | `cal-day > .tnum` | 14 | 600 | 캘린더 날짜 숫자 |
-| Body small | `text-xs` | 12 | 400/500 | 메타, 위치, 시간 |
-| Chip | `chip` | 12 | 500 | 태그, 필터 pill |
-| Eyebrow | `eyebrow` | 10 | 700 | 섹션 라벨 (UPPERCASE, letter-spacing 0.08em) |
-| Calendar event | `cal-event` | 10 | 600 | 캘린더 이벤트 pill |
+| Hero / Stat number | `text-4xl font-bold tnum` | 36 | 700 | 대시보드 핵심 KPI |
+| Page title | `text-3xl font-bold tracking-tight` | 30 | 700 | 페이지 상단 H2 ("Projects") |
+| Section / subtitle | `text-2xl font-bold` | 24 | 700 | 주요 섹션 head, 프로젝트 상세 타이틀 |
+| Stat secondary | `text-xl font-bold tnum` | 20 | 700 | sub stat |
+| Subheading / Logo | `text-lg font-semibold` | 18 | 600 | 서브 헤딩, 사이드바 로고 |
+| Card title | `text-base font-bold` | 16 | 700 | 카드 내 주요 문구 (JD 요약 등) |
+| Body | `text-sm` | 14 | 400 | 일반 본문, 버튼, 메뉴 |
+| Body strong | `text-sm font-semibold` | 14 | 600 | 이름, 강조 |
+| Body small | `text-xs` | 12 | 400~700 | 메타, 날짜, 보조 정보 |
+| Eyebrow | `.eyebrow` | 12 | 700 | UPPERCASE 섹션 라벨 |
+| Chip / Tag / Badge | `.chip` `.tag` `.badge` | 12 | 500~700 | pill 류 |
+| Avatar initials | `.av-stack > *` | 12 | 700 | 이니셜 (28px 원) |
 
-### `.eyebrow` 정의
+### 커스텀 클래스 `@apply` 예시
 ```css
 .eyebrow {
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: #94A3B8;  /* 기본은 faint, 진하게 필요 시 !text-ink3 추가 */
+  @apply text-xs font-bold uppercase;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+}
+.tag {
+  @apply inline-flex items-center text-xs font-semibold;
+  padding: 4px 9px; border-radius: 6px;
+  color: #475569; background: #F1F5F9;
 }
 ```
 
 ### 변형
-- **요일 헤더처럼 진한 eyebrow:** `class="eyebrow !text-ink3"`
-- **dark 카드 내부 eyebrow:** `style="color:#64748B"` (ink2 위에서 가독성)
+- **진한 eyebrow** (요일 헤더 등): `class="eyebrow !text-ink3"`
+- **dark 카드 내부 eyebrow**: `style="color:#64748B"` (ink2 위에서 가독성)
 
 ---
 
@@ -527,6 +536,9 @@ boxShadow: {
 - `Inter`, `Roboto`, `Noto Sans` 등 다른 폰트 사용 금지 → Pretendard 고정
 - 보라/파랑 그라디언트 CTA 금지 → ink 단색
 - 컬러풀한 브랜드 컬러 추가 금지
+- **카드·컨테이너 좌측 스트라이프 절대 금지** — `border-l-{N} border-l-{color}` 또는 좌측 box-shadow로 컬러 세로 막대 만들지 않음. 모든 색상·모든 카드 적용. 상태·긴급도 표시는 뱃지·pill·배경 tint·아이콘으로 대체. 타임라인 vertical rail도 border-l 금지 — 다른 visual metaphor 사용
+- **인라인 arbitrary 폰트 크기 지양** — `text-[10px]` `text-[15px]` 같은 임의값 쓰지 않고 Tailwind 기본 스케일(`text-xs` ~ `text-5xl`) 사용. 커스텀 클래스의 font-size도 기본 스케일에 맞춤
+- **UX 용어는 사람 중심** — 버튼 라벨·상태 문구는 처음 보는 사용자도 의도를 즉시 이해할 수 있어야 한다. 금지: 영어 직역("드롭", "에스컬레이션"), 업계 은어("내부 양식 변환"), 의미 불명(+액션"). 좋은 예: "탈락 처리", "할 일 추가", "이력서 정리하기", "사장님께 보고". 모든 버튼은 `title` 속성에 구체 설명을 넣어 hover 시 맥락을 준다
 
 ---
 

@@ -34,4 +34,14 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    from django.views.static import serve
+
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # UI 목업 참조용 (assets/ui-sample/*.html) — DEBUG에서만 노출
+    urlpatterns += [
+        path(
+            "mockup/<path:path>",
+            serve,
+            {"document_root": settings.BASE_DIR / "assets" / "ui-sample"},
+        ),
+    ]

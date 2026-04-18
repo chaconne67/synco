@@ -5,32 +5,32 @@
   <button hx-get="{% url 'settings_profile' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-            {% if active == 'profile' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+            {% if active == 'profile' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     프로필
   </button>
 
   <button hx-get="{% url 'settings_email' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-            {% if active == 'email' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+            {% if active == 'email' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     이메일
   </button>
 
   <button hx-get="{% url 'settings_telegram' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-            {% if active == 'telegram' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+            {% if active == 'telegram' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     텔레그램
   </button>
 
   <button hx-get="{% url 'settings_notify' %}"
           hx-target="#settings-content"
           hx-push-url="true"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-            {% if active == 'notify' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+            {% if active == 'notify' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     알림
   </button>
 

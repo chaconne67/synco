@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import random
 from datetime import timedelta
+from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -64,6 +65,27 @@ PROJECT_TITLES = [
     "전략기획 임원",
     "법무 실장",
 ]
+
+# (title keyword → 연봉 범위 원 단위, 태그 키워드 3종)
+# 포지션 레벨에 따른 연봉/수수료율 차등
+PROJECT_COMPENSATION = {
+    "CTO 후보":           {"salary": 250_000_000, "fee": "25.00", "keywords": ["기술전략", "CTO 15Y+", "조직 빌딩"]},
+    "전략기획 임원":      {"salary": 200_000_000, "fee": "25.00", "keywords": ["M&A", "IR", "CXO 경력"]},
+    "재무회계 이사":      {"salary": 180_000_000, "fee": "22.00", "keywords": ["IPO 준비", "CFO 경력", "15Y+"]},
+    "마케팅 총괄":        {"salary": 170_000_000, "fee": "22.00", "keywords": ["B2C", "CMO", "D2C"]},
+    "법무 실장":          {"salary": 160_000_000, "fee": "22.00", "keywords": ["변호사", "컴플라이언스", "12Y+"]},
+    "글로벌 세일즈 디렉터": {"salary": 180_000_000, "fee": "22.00", "keywords": ["영문 비즈니스", "B2B", "APAC"]},
+    "HR 팀장":            {"salary": 130_000_000, "fee": "20.00", "keywords": ["HRBP", "채용 설계", "10Y+"]},
+    "UX 디자인 리드":     {"salary": 140_000_000, "fee": "20.00", "keywords": ["디자인 시스템", "모바일", "15Y+"]},
+    "프로덕트 매니저":    {"salary": 130_000_000, "fee": "20.00", "keywords": ["PMF", "B2C 앱", "그로스"]},
+    "백엔드 리드":        {"salary": 150_000_000, "fee": "20.00", "keywords": ["분산시스템", "Java/Kotlin", "100만 MAU+"]},
+    "시니어 프론트엔드 개발자": {"salary": 120_000_000, "fee": "20.00", "keywords": ["React", "TypeScript", "10Y+"]},
+    "AI/ML 엔지니어":     {"salary": 160_000_000, "fee": "22.00", "keywords": ["LLM", "PyTorch", "논문 5편+"]},
+    "데이터 사이언티스트": {"salary": 140_000_000, "fee": "20.00", "keywords": ["ML Ops", "A/B 테스트", "SQL"]},
+    "SRE/인프라 엔지니어": {"salary": 140_000_000, "fee": "20.00", "keywords": ["k8s", "IaC", "관제"]},
+    "반도체 공정 엔지니어": {"salary": 130_000_000, "fee": "20.00", "keywords": ["EUV", "수율", "파운드리"]},
+}
+DEFAULT_COMP = {"salary": 120_000_000, "fee": "20.00", "keywords": ["리더십", "기술전문성", "글로벌 경험"]}
 
 CANDIDATE_NAMES = [
     "김민준",
@@ -416,39 +438,58 @@ class Command(BaseCommand):
         projects: list[Project] = []
         now = timezone.now()
         titles = random.sample(PROJECT_TITLES, min(count, len(PROJECT_TITLES)))
+        # 강제 분포: 진행중(서칭) 45%, 심사중 30%, 완료(성공) 25%
+        n_total = len(titles)
+        n_searching = max(int(n_total * 0.45), 1)
+        n_screening = max(int(n_total * 0.30), 1)
+        n_closed = n_total - n_searching - n_screening
+        intents = (
+            ["searching"] * n_searching
+            + ["screening"] * n_screening
+            + ["closed"] * n_closed
+        )
+        random.shuffle(intents)
+
         for i, title in enumerate(titles):
             client = random.choice(clients)
-            # 80% open, 20% closed
-            is_open = random.random() < 0.8
-            phase = random.choice([ProjectPhase.SEARCHING, ProjectPhase.SCREENING])
+            intent = intents[i]
             deadline = (now + timedelta(days=random.randint(-5, 45))).date()
+
+            comp = PROJECT_COMPENSATION.get(title, DEFAULT_COMP)
+            salary_base = comp["salary"]
+            salary = int(salary_base * random.uniform(0.85, 1.15))
+            salary = (salary // 1_000_000) * 1_000_000
+
+            # 모두 기본 상태(phase=searching, status=open)로 생성.
+            # 승격은 _seed_applications 에서 submit_to_client DONE / hire 로 유도 → 시그널이 반영
             project = Project.objects.create(
                 client=client,
                 organization=org,
-                title=f"{client.name} - {title}",
+                title=title,
                 jd_text=(
                     f"{client.name} {title} 포지션.\n\n"
                     "- 요구 경력: 8년 이상\n"
                     "- 필요 역량: 리더십/커뮤니케이션/기술 전문성\n"
                     "- 보상: 업계 상위 수준\n"
                 ),
-                phase=phase,
-                status=ProjectStatus.OPEN if is_open else ProjectStatus.CLOSED,
+                phase=ProjectPhase.SEARCHING,
+                status=ProjectStatus.OPEN,
                 deadline=deadline,
-                closed_at=None
-                if is_open
-                else now - timedelta(days=random.randint(1, 30)),
-                result="" if is_open else random.choice(["success", "fail"]),
+                annual_salary=salary,
+                fee_percent=Decimal(comp["fee"]),
                 note=f"{DUMMY_TAG} 디자인 테스트용 더미 프로젝트",
                 created_by=creator,
                 requirements={
                     "min_years": random.choice([5, 8, 10, 12]),
-                    "must_have": ["리더십", "기술전문성"],
+                    "keywords": comp["keywords"],
+                    "must_have": comp["keywords"][:2],
                     "nice_to_have": ["글로벌 경험"],
                 },
             )
             if creator is not None:
                 project.assigned_consultants.add(creator)
+            # 인텐트 저장 (승격용)
+            project._seed_intent = intent
             projects.append(project)
         self.stdout.write(f"  projects: {len(projects)} created")
         return projects
@@ -470,14 +511,18 @@ class Command(BaseCommand):
             )
             return
 
+        submit_at = ActionType.objects.filter(code="submit_to_client").first()
+
         now = timezone.now()
         app_count = 0
         item_count = 0
         for project in projects:
+            intent = getattr(project, "_seed_intent", "searching")
             # 2~5 후보자 매칭
             match_count = random.randint(2, 5)
             matched = random.sample(candidates, match_count)
-            for cand in matched:
+            created_apps: list[Application] = []
+            for idx, cand in enumerate(matched):
                 application, created = Application.objects.get_or_create(
                     project=project,
                     candidate=cand,
@@ -486,11 +531,13 @@ class Command(BaseCommand):
                 if not created:
                     continue
                 app_count += 1
+                created_apps.append(application)
 
                 # 각 application 당 1~2 pending + 0~2 done ActionItem
-                pending_n = random.randint(1, 2)
-                for _ in range(pending_n):
-                    at = random.choice(pending_action_types)
+                # random.sample 로 중복 ActionType 방지 (같은 ActionType이 2번 생성되지 않도록)
+                pending_n = min(random.randint(1, 2), len(pending_action_types))
+                pending_picks = random.sample(pending_action_types, pending_n)
+                for at in pending_picks:
                     # 분포: overdue 25%, today 25%, upcoming 50%
                     r = random.random()
                     if r < 0.25:
@@ -530,9 +577,9 @@ class Command(BaseCommand):
                     )
                     item_count += 1
 
-                done_n = random.randint(0, 2)
-                for _ in range(done_n):
-                    at = random.choice(done_action_types)
+                done_n = min(random.randint(0, 2), len(done_action_types))
+                done_picks = random.sample(done_action_types, done_n) if done_n else []
+                for at in done_picks:
                     completed = now - timedelta(days=random.randint(1, 30))
                     ActionItem.objects.create(
                         application=application,
@@ -554,6 +601,47 @@ class Command(BaseCommand):
                         created_by=creator,
                     )
                     item_count += 1
+
+            # ── 인텐트 승격 ──────────────────────────────────────────────────
+            # screening / closed 는 submit_to_client DONE 으로 phase 승격
+            if intent in ("screening", "closed") and created_apps and submit_at:
+                target = created_apps[0]
+                submit_completed = now - timedelta(days=random.randint(3, 14))
+                ActionItem.objects.create(
+                    application=target,
+                    action_type=submit_at,
+                    title=f"클라이언트 제출 — {target.candidate.name}",
+                    channel=ActionChannel.EMAIL,
+                    due_at=submit_completed,
+                    scheduled_at=submit_completed,
+                    completed_at=submit_completed,
+                    status=ActionItemStatus.DONE,
+                    result="제출 완료 (더미)",
+                    assigned_to=creator,
+                    created_by=creator,
+                )
+                item_count += 1
+
+            # closed: 먼저 프로젝트를 닫고(phase 고정), 그 다음 hired_at 세팅
+            if intent == "closed" and created_apps:
+                hire_date = now - timedelta(days=random.randint(1, 45))
+                # 1) project close (signal 우회 — status/result/closed_at 동시 세팅)
+                Project.objects.filter(pk=project.pk).update(
+                    closed_at=hire_date,
+                    result="success",
+                    status=ProjectStatus.CLOSED,
+                )
+                # 2) 첫 application hire + 나머지 drop (update 로 시그널 영향 최소화)
+                hired_app = created_apps[0]
+                Application.objects.filter(pk=hired_app.pk).update(hired_at=hire_date)
+                Application.objects.filter(
+                    project=project, hired_at__isnull=True, dropped_at__isnull=True
+                ).update(
+                    dropped_at=hire_date,
+                    drop_reason="other",
+                    drop_note=f"입사자({hired_app.candidate.name}) 확정으로 포지션 마감",
+                )
+
         self.stdout.write(
             f"  applications: {app_count} created, action_items: {item_count}"
         )

@@ -1,6 +1,6 @@
 <!-- Comment form -->
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-  <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">검수 판정 · Review Verdict</h3>
+  <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">검수 판정 · Review Verdict</h3>
 
   <form hx-post="{% url 'candidates:comment_create' candidate.pk %}"
         hx-target="#comment-list"
@@ -10,7 +10,7 @@
 
     <!-- Recommendation status -->
     <div>
-      <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">판정 · Verdict</label>
+      <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">판정 · Verdict</label>
       <div class="flex gap-2">
         {% with current=candidate.recommendation_status %}
         <label class="flex-1 cursor-pointer">
@@ -34,12 +34,12 @@
 
     <!-- Reason codes -->
     <div>
-      <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">사유 선택 · Reasons</label>
+      <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">사유 선택 · Reasons</label>
       <div class="grid grid-cols-2 gap-2">
         {% for code, label in reason_codes.items %}
         <label class="flex items-center gap-2 cursor-pointer py-1.5">
           <input type="checkbox" name="reason_codes" value="{{ code }}"
-                 class="w-4 h-4 rounded text-primary focus:ring-primary/30 border-slate-300">
+                 class="w-4 h-4 rounded text-ink3 focus:ring-ink3/30 border-slate-300">
           <span class="text-xs font-medium text-slate-600">{{ label }}</span>
         </label>
         {% endfor %}
@@ -48,13 +48,13 @@
 
     <!-- Content with voice input -->
     <div>
-      <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">코멘트 · Comment</label>
+      <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">코멘트 · Comment</label>
       <div class="relative">
         <textarea name="content" rows="3"
-                  class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition pr-12"
+                  class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition pr-12"
                   placeholder="인터뷰 결과, 확인 사항 등을 기록하세요"></textarea>
         <button type="button" data-voice-input
-                class="absolute right-3 top-3 w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all"
+                class="absolute right-3 top-3 w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-ink3 hover:border-ink3/30 transition-all"
                 title="음성 입력">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -66,7 +66,7 @@
     </div>
 
     <button type="submit"
-            class="w-full rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+            class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
       Save Verdict
     </button>
   </form>

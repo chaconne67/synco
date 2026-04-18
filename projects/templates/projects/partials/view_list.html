@@ -7,18 +7,18 @@
     <div class="flex items-center gap-2 mb-3">
       {% if group.level == "red" %}
       <span class="inline-block w-3 h-3 rounded-full bg-rose-500"></span>
-      <h3 class="text-[15px] font-semibold text-rose-700">{{ group.label }}</h3>
-      <span class="text-[12px] text-rose-600">(경과일 20일 이상)</span>
+      <h3 class="text-base font-semibold text-rose-700">{{ group.label }}</h3>
+      <span class="text-xs text-rose-600">(경과일 20일 이상)</span>
       {% elif group.level == "yellow" %}
       <span class="inline-block w-3 h-3 rounded-full bg-amber-500"></span>
-      <h3 class="text-[15px] font-semibold text-amber-700">{{ group.label }}</h3>
-      <span class="text-[12px] text-amber-500">(경과일 10~20일)</span>
+      <h3 class="text-base font-semibold text-amber-700">{{ group.label }}</h3>
+      <span class="text-xs text-amber-500">(경과일 10~20일)</span>
       {% else %}
       <span class="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
-      <h3 class="text-[15px] font-semibold text-emerald-700">{{ group.label }}</h3>
-      <span class="text-[12px] text-emerald-500">(경과일 10일 미만)</span>
+      <h3 class="text-base font-semibold text-emerald-700">{{ group.label }}</h3>
+      <span class="text-xs text-emerald-500">(경과일 10일 미만)</span>
       {% endif %}
-      <span class="text-[12px] text-slate-400 ml-auto">{{ group.projects|length }}건</span>
+      <span class="text-xs text-slate-400 ml-auto">{{ group.projects|length }}건</span>
     </div>
 
     <!-- Project Items -->
@@ -26,35 +26,32 @@
       {% for project in group.projects %}
       <a href="{% url 'projects:project_detail' project.pk %}"
          hx-get="{% url 'projects:project_detail' project.pk %}" hx-target="#main-content" hx-push-url="true"
-         class="block bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:border-slate-300 transition
-           {% if group.level == 'red' %}border-l-4 border-l-rose-400
-           {% elif group.level == 'yellow' %}border-l-4 border-l-amber-400
-           {% else %}border-l-4 border-l-emerald-400{% endif %}">
+         class="block bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:border-slate-300 transition">
         <div class="flex items-center justify-between">
           <div class="min-w-0 flex-1">
-            <h4 class="text-[15px] font-semibold text-slate-900 truncate">{{ project.title }}</h4>
+            <h4 class="text-base font-semibold text-slate-900 truncate">{{ project.title }}</h4>
             <div class="flex items-center gap-2 mt-1 flex-wrap">
-              <span class="text-[13px] text-slate-500">{{ project.client.name }}</span>
-              <span class="text-[13px] text-slate-400">·</span>
-              <span class="text-[13px] px-2 py-0.5 rounded-full
-                {% if project.status == 'new' %}bg-primary/10 text-primary
+              <span class="text-sm text-slate-500">{{ project.client.name }}</span>
+              <span class="text-sm text-slate-400">·</span>
+              <span class="text-sm px-2 py-0.5 rounded-full
+                {% if project.status == 'new' %}bg-ink3/10 text-ink3
                 {% elif project.status == 'searching' %}bg-amber-50 text-amber-600
-                {% elif project.status == 'recommending' %}bg-primary/10 text-primary
-                {% elif project.status == 'interviewing' %}bg-primary/10 text-primary
+                {% elif project.status == 'recommending' %}bg-ink3/10 text-ink3
+                {% elif project.status == 'interviewing' %}bg-ink3/10 text-ink3
                 {% elif project.status == 'negotiating' %}bg-emerald-50 text-emerald-600
                 {% elif project.status == 'on_hold' %}bg-orange-50 text-orange-600
                 {% elif project.status == 'pending_approval' %}bg-amber-50 text-amber-600
                 {% else %}bg-slate-50 text-slate-600{% endif %}">
                 {{ project.get_status_display }}
               </span>
-              <span class="text-[13px] text-slate-400">·</span>
-              <span class="text-[13px] {% if project.days_elapsed > 20 %}text-rose-600 font-medium{% elif project.days_elapsed > 10 %}text-amber-600{% else %}text-slate-500{% endif %}">
+              <span class="text-sm text-slate-400">·</span>
+              <span class="text-sm {% if project.days_elapsed > 20 %}text-rose-600 font-medium{% elif project.days_elapsed > 10 %}text-amber-600{% else %}text-slate-500{% endif %}">
                 {{ project.days_elapsed }}일 경과
               </span>
             </div>
             {% if project.status == "pending_approval" %}
             <div class="flex items-center gap-2 mt-1">
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[12px] font-medium bg-amber-100 text-amber-800">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
                 승인 대기중
               </span>
             </div>
@@ -64,7 +61,7 @@
             {% if project.status == "pending_approval" %}
             <form method="post" action="{% url 'projects:approval_cancel' pk=project.pk %}" onclick="event.stopPropagation(); event.preventDefault();">
               {% csrf_token %}
-              <button type="submit" class="text-[12px] text-rose-600 hover:text-rose-700 underline"
+              <button type="submit" class="text-xs text-rose-600 hover:text-rose-700 underline"
                       onclick="event.stopPropagation(); if(!confirm('승인 요청을 취소하시겠습니까?')) return false; this.form.submit();">취소</button>
             </form>
             {% endif %}
@@ -84,7 +81,7 @@
   {% if not has_any %}
   <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
     {% if membership and membership.role == 'owner' %}
-    <p class="text-slate-500 text-[15px] mb-4">
+    <p class="text-slate-500 text-base mb-4">
       {% if scope == "mine" %}
       담당 프로젝트가 없습니다.
       {% else %}
@@ -93,12 +90,12 @@
     </p>
     <a href="{% url 'projects:project_create' %}"
        hx-get="{% url 'projects:project_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="bg-primary text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] hover:bg-primary-dark transition">
+       class="bg-ink3 text-white font-semibold py-2.5 px-5 rounded-lg text-base hover:bg-ink2 transition">
       새 프로젝트 만들기
     </a>
     {% else %}
-    <p class="text-slate-500 text-[15px]">배정된 프로젝트가 없습니다.</p>
-    <p class="text-slate-400 text-[13px] mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
+    <p class="text-slate-500 text-base">배정된 프로젝트가 없습니다.</p>
+    <p class="text-slate-400 text-sm mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
     {% endif %}
   </div>
   {% endif %}

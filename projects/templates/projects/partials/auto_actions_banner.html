@@ -1,6 +1,6 @@
 {% if actions %}
-<div id="auto-actions-banner" class="bg-primary/5 border border-primary/10 rounded-xl p-5 mb-4">
-  <h4 class="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">자동 생성 · {{ actions|length }}건</h4>
+<div id="auto-actions-banner" class="bg-ink3/5 border border-ink3/10 rounded-xl p-5 mb-4">
+  <h4 class="text-xs font-bold uppercase tracking-widest text-ink3 mb-3">자동 생성 · {{ actions|length }}건</h4>
   <div class="space-y-2">
     {% for action in actions %}
     <div class="flex items-center justify-between gap-3 bg-white rounded-lg p-3">
@@ -9,13 +9,13 @@
         <button hx-post="{% url 'projects:auto_action_apply' project.pk action.pk %}"
                 hx-target="#auto-actions-wrapper"
                 hx-swap="innerHTML"
-                class="rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
+                class="rounded-lg bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-3 py-1.5 shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
           확인
         </button>
         <button hx-post="{% url 'projects:auto_action_dismiss' project.pk action.pk %}"
                 hx-target="#auto-actions-wrapper"
                 hx-swap="innerHTML"
-                class="rounded-lg bg-white text-slate-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 border border-slate-200 hover:bg-slate-50 transition-all">
+                class="rounded-lg bg-white text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1.5 border border-slate-200 hover:bg-slate-50 transition-all">
           무시
         </button>
       </div>

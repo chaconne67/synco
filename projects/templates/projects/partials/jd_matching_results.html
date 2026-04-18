@@ -1,16 +1,16 @@
 <div id="matching-results" class="space-y-3">
-  <h3 class="text-[15px] font-semibold text-slate-700">매칭 후보자 (상위 {{ results|length }}명)</h3>
+  <h3 class="text-base font-semibold text-slate-700">매칭 후보자 (상위 {{ results|length }}명)</h3>
 
   {% for item in results %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex items-center justify-between">
     <div>
-      <span class="text-[14px] font-medium text-slate-800">{{ item.candidate.name }}</span>
-      <span class="text-[13px] text-slate-500 ml-2">
+      <span class="text-sm font-medium text-slate-800">{{ item.candidate.name }}</span>
+      <span class="text-sm text-slate-500 ml-2">
         {{ item.candidate.current_company }} · {{ item.candidate.current_position }}
       </span>
     </div>
     <div class="flex items-center gap-2">
-      <span class="text-[13px] font-medium
+      <span class="text-sm font-medium
         {% if item.level == '높음' %}text-emerald-600
         {% elif item.level == '보통' %}text-amber-600
         {% else %}text-rose-600{% endif %}">
@@ -19,6 +19,6 @@
     </div>
   </div>
   {% empty %}
-  <p class="text-[14px] text-slate-400">매칭되는 후보자가 없습니다.</p>
+  <p class="text-sm text-slate-400">매칭되는 후보자가 없습니다.</p>
   {% endfor %}
 </div>

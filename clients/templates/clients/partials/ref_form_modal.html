@@ -1,13 +1,13 @@
 <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="ref-modal-overlay"
      onclick="if(event.target===this)this.remove()">
   <div class="bg-white rounded-xl shadow-2xl shadow-slate-900/20 w-full max-w-lg p-8 space-y-5">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">{{ title }}</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">{{ title }}</h3>
     {% if show_autofill %}
-    <div class="flex items-center gap-3 rounded-xl bg-primary/5 border border-primary/10 px-4 py-3">
+    <div class="flex items-center gap-3 rounded-xl bg-ink3/5 border border-ink3/10 px-4 py-3">
       <button type="button" id="autofill-btn"
-              class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark"
+              class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2"
               onclick="doAutofill()">자동채움</button>
-      <span class="text-[10px] text-slate-500">회사명이 외부 검색 서비스로 전송됩니다</span>
+      <span class="text-xs text-slate-500">회사명이 외부 검색 서비스로 전송됩니다</span>
     </div>
     <script>
     function doAutofill() {
@@ -48,7 +48,7 @@
       {% for field in form %}
       {% if not field.is_hidden %}
       <div>
-        <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{{ field.label }}</label>
+        <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{{ field.label }}</label>
         {{ field }}
         {% if field.errors %}
         <p class="text-rose-600 text-xs font-semibold mt-2">{{ field.errors.0 }}</p>
@@ -60,9 +60,9 @@
       {% endfor %}
       <div class="flex justify-end gap-2 pt-3">
         <button type="button" onclick="document.getElementById('ref-modal-overlay').remove()"
-                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">취소</button>
+                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">취소</button>
         <button type="submit"
-                class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark transition-all">저장</button>
+                class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 transition-all">저장</button>
       </div>
     </form>
   </div>

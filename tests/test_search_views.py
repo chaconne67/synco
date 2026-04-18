@@ -76,7 +76,7 @@ def test_candidate_list_filter_category_htmx_renders_active_tab(
 
     assert resp.status_code == 200
     assert 'hx-get="/candidates/?category=Accounting"' in body
-    assert "bg-primary text-white" in body
+    assert "bg-ink3 text-white" in body
 
 
 @pytest.mark.django_db

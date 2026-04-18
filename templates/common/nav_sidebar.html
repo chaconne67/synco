@@ -1,9 +1,9 @@
 <div class="p-8 mb-4">
   <div class="flex items-center gap-3 mb-2">
-    <div class="w-10 h-10 bg-primary rounded flex items-center justify-center font-black text-xl tracking-tighter text-white">S</div>
+    <div class="w-10 h-10 bg-ink3 rounded flex items-center justify-center font-black text-xl tracking-tighter text-white">S</div>
     <div>
       <h1 class="text-lg font-black leading-tight tracking-tight uppercase text-white">Synco</h1>
-      <p class="text-[10px] text-slate-500 font-bold tracking-[0.2em] uppercase mt-1">Executive Search</p>
+      <p class="text-xs text-slate-500 font-bold tracking-[0.2em] uppercase mt-1">Executive Search</p>
     </div>
   </div>
 </div>
@@ -55,7 +55,7 @@
       <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="text-sm font-medium tracking-wide uppercase">Approvals</span>
     </span>
-    <span class="bg-primary text-white text-[10px] font-bold rounded-full px-2 py-0.5 min-w-[20px] text-center">{{ pending_approval_count }}</span>
+    <span class="bg-ink3 text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[20px] text-center">{{ pending_approval_count }}</span>
   </a>
   {% endif %}
   <a href="/news/"
@@ -64,7 +64,7 @@
      class="sidebar-tab w-full flex items-center gap-3 px-6 py-3.5 transition-all duration-200 group text-slate-400 hover:text-white hover:bg-white/5">
     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
     <span class="text-sm font-medium tracking-wide uppercase">Newsfeed</span>
-    {% if has_new_news %}<span class="w-1.5 h-1.5 bg-primary rounded-full ml-1"></span>{% endif %}
+    {% if has_new_news %}<span class="w-1.5 h-1.5 bg-ink3 rounded-full ml-1"></span>{% endif %}
   </a>
   {% if membership and membership.role == 'owner' %}
   <a href="/org/"
@@ -89,7 +89,7 @@
 
 <script>
 (function() {
-  var ACTIVE = 'bg-white/10 text-white border-r-4 border-primary';
+  var ACTIVE = 'bg-white/10 text-white border-r-4 border-ink3';
   var INACTIVE = 'text-slate-400 hover:text-white hover:bg-white/5';
 
   function updateSidebar() {
@@ -106,9 +106,9 @@
                    (key === 'org' && path.startsWith('/org')) ||
                    (key === 'settings' && path.includes('/settings'));
       // Preserve all existing classes except the state-dependent ones
-      tab.classList.remove('bg-white/10', 'text-white', 'border-r-4', 'border-primary', 'text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+      tab.classList.remove('bg-white/10', 'text-white', 'border-r-4', 'border-ink3', 'text-slate-400', 'hover:text-white', 'hover:bg-white/5');
       if (active) {
-        tab.classList.add('bg-white/10', 'text-white', 'border-r-4', 'border-primary');
+        tab.classList.add('bg-white/10', 'text-white', 'border-r-4', 'border-ink3');
       } else {
         tab.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
       }

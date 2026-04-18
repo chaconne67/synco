@@ -1,10 +1,10 @@
 <div class="bg-white rounded-lg border border-slate-200 p-5 mb-4">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-[15px] font-semibold text-slate-700">
+    <h3 class="text-base font-semibold text-slate-700">
       {% if is_edit %}면접 수정{% else %}면접 등록{% endif %}
     </h3>
     <button onclick="document.getElementById('interview-form-area').innerHTML=''"
-            class="text-[13px] text-slate-500 hover:text-slate-700">닫기</button>
+            class="text-sm text-slate-500 hover:text-slate-700">닫기</button>
   </div>
 
   <form hx-post="{% if is_edit %}{% url 'projects:interview_update' project.pk interview.pk %}{% else %}{% url 'projects:interview_create' project.pk %}{% endif %}"
@@ -13,11 +13,11 @@
     {% csrf_token %}
     {% for field in form %}
     <div>
-      <label class="block text-[13px] font-medium text-slate-600 mb-1">{{ field.label }}</label>
+      <label class="block text-sm font-medium text-slate-600 mb-1">{{ field.label }}</label>
       {{ field }}
       {% if field.errors %}
         {% for error in field.errors %}
-          <p class="text-[12px] text-rose-600 mt-0.5">{{ error }}</p>
+          <p class="text-xs text-rose-600 mt-0.5">{{ error }}</p>
         {% endfor %}
       {% endif %}
     </div>
@@ -26,9 +26,9 @@
     <div class="flex justify-end gap-2 pt-2">
       <button type="button"
               onclick="document.getElementById('interview-form-area').innerHTML=''"
-              class="text-[13px] text-slate-500 hover:text-slate-700 px-3 py-1.5">취소</button>
+              class="text-sm text-slate-500 hover:text-slate-700 px-3 py-1.5">취소</button>
       <button type="submit"
-              class="text-[13px] bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark transition">
+              class="text-sm bg-ink3 text-white px-4 py-1.5 rounded-lg hover:bg-ink2 transition">
         {% if is_edit %}수정{% else %}등록{% endif %}
       </button>
     </div>

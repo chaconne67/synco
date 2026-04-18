@@ -10,32 +10,32 @@
     {% if is_edit %}
     <a href="{% url 'clients:client_detail' client.pk %}"
        hx-get="{% url 'clients:client_detail' client.pk %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-primary transition-colors">
+       class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-ink3 transition-colors">
       <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       상세로 돌아가기
     </a>
     {% else %}
     <a href="{% url 'clients:client_list' %}"
        hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-primary transition-colors">
+       class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-ink3 transition-colors">
       <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       목록으로 돌아가기
     </a>
     {% endif %}
   </div>
 
-  <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">{% if is_edit %}Edit Client{% else %}New Client{% endif %}</span>
+  <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">{% if is_edit %}Edit Client{% else %}New Client{% endif %}</span>
   <h2 class="text-4xl font-black text-slate-900 tracking-tight mb-10">{% if is_edit %}고객사 수정{% else %}고객사 등록{% endif %}</h2>
 
   <form method="post" class="space-y-6">
     {% csrf_token %}
 
     <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
-      <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-6">기본 정보 · Basics</h3>
+      <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-6">기본 정보 · Basics</h3>
       <div class="space-y-5">
         {% for field in form %}
         <div>
-          <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+          <label for="{{ field.id_for_label }}" class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
             {{ field.label }}{% if field.field.required %} <span class="text-rose-500">*</span>{% endif %}
           </label>
           {{ field }}
@@ -49,9 +49,9 @@
 
     <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
       <div class="flex items-center justify-between mb-6">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">담당자 · Contacts</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">담당자 · Contacts</h3>
         <button type="button" onclick="addContactPerson()"
-                class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
+                class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2 px-3 py-1.5 rounded-lg hover:bg-ink3/5 transition-colors">
           + 추가
         </button>
       </div>
@@ -62,7 +62,7 @@
 
     <div class="flex gap-3">
       <button type="submit"
-              class="flex-1 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest py-4 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.005] active:scale-[0.995] transition-all">
+              class="flex-1 rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-4 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.005] active:scale-[0.995] transition-all">
         {% if is_edit %}저장하기{% else %}등록하기{% endif %}
       </button>
     </div>
@@ -86,18 +86,18 @@
     row.className = 'contact-person-row rounded-xl border border-slate-100 p-4 space-y-3';
     row.innerHTML =
       '<div class="flex items-center justify-between mb-1">' +
-        '<span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">담당자</span>' +
-        '<button type="button" onclick="removeContactPerson(this)" class="text-[10px] font-bold uppercase tracking-widest text-rose-400 hover:text-rose-600">삭제</button>' +
+        '<span class="text-xs font-bold uppercase tracking-widest text-slate-400">담당자</span>' +
+        '<button type="button" onclick="removeContactPerson(this)" class="text-xs font-bold uppercase tracking-widest text-rose-400 hover:text-rose-600">삭제</button>' +
       '</div>' +
       '<div class="grid grid-cols-2 gap-2">' +
         '<input type="text" placeholder="이름" data-cp="name" value="' + escapeHtml(data.name || '') + '"' +
-          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">' +
+          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">' +
         '<input type="text" placeholder="직책" data-cp="position" value="' + escapeHtml(data.position || '') + '"' +
-          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">' +
+          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">' +
         '<input type="text" placeholder="전화번호" data-cp="phone" value="' + escapeHtml(data.phone || '') + '"' +
-          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">' +
+          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">' +
         '<input type="text" placeholder="이메일" data-cp="email" value="' + escapeHtml(data.email || '') + '"' +
-          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition">' +
+          ' class="rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">' +
       '</div>';
     container.appendChild(row);
     updateJson();

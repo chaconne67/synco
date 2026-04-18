@@ -2,15 +2,15 @@
 <a href="{{ article.url }}" target="_blank" rel="noopener"
    class="block bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-5 mb-3 group">
   <div class="flex items-start gap-3">
-    <span class="text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-100 px-2 py-1 rounded-full uppercase tracking-widest whitespace-nowrap shrink-0">
+    <span class="text-xs font-bold text-slate-600 bg-slate-50 border border-slate-100 px-2 py-1 rounded-full uppercase tracking-widest whitespace-nowrap shrink-0">
       {{ article.get_category_display|default:"기타" }}
     </span>
-    <h4 class="text-base font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2">{{ article.title }}</h4>
+    <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors line-clamp-2">{{ article.title }}</h4>
   </div>
   {% if article.summary %}
   <p class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">{{ article.summary }}</p>
   {% endif %}
-  <div class="flex items-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+  <div class="flex items-center gap-2 mt-3 text-xs font-bold uppercase tracking-widest text-slate-400">
     <span>{{ article.source.name }}</span>
     {% if article.published_at %}
     <span class="text-slate-700">·</span>

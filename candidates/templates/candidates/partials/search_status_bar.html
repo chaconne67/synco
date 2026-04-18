@@ -1,10 +1,10 @@
 {% if last_turn %}
-<div class="mb-4 flex items-center gap-3 rounded-xl bg-primary/5 border border-primary/10 px-5 py-3 cursor-pointer hover:bg-primary/10 transition-colors"
+<div class="mb-4 flex items-center gap-3 rounded-xl bg-ink3/5 border border-ink3/10 px-5 py-3 cursor-pointer hover:bg-ink3/10 transition-colors"
      onclick="toggleChatbot()">
-  <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-  <p class="text-xs text-primary font-bold truncate flex-1">
-    "{{ last_turn.user_text }}" <span class="mx-1 text-primary/40">·</span> {{ last_turn.result_count }}명 찾음
+  <svg class="w-4 h-4 text-ink3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+  <p class="text-xs text-ink3 font-bold truncate flex-1">
+    "{{ last_turn.user_text }}" <span class="mx-1 text-ink3/40">·</span> {{ last_turn.result_count }}명 찾음
   </p>
-  <span class="text-[10px] font-bold uppercase tracking-widest text-primary/70">수정하기 →</span>
+  <span class="text-xs font-bold uppercase tracking-widest text-ink3/70">수정하기 →</span>
 </div>
 {% endif %}

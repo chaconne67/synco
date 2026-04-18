@@ -10,18 +10,18 @@
         </svg>
       </a>
       <div class="min-w-0">
-        <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Review Mode</span>
+        <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Review Mode</span>
         <div class="flex items-center gap-3 flex-wrap">
           <h1 class="text-4xl font-black text-slate-900 tracking-tight leading-none">{{ candidate.name }}</h1>
           <span id="recommendation-badge">{% include "candidates/partials/_recommendation_badge.html" %}</span>
           {% if candidate.confidence_score is not None %}
             {% widthratio candidate.confidence_score 1 100 as confidence_pct %}
             {% if candidate.confidence_score >= 0.85 %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{{ confidence_pct }}%</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{{ confidence_pct }}%</span>
             {% elif candidate.confidence_score >= 0.6 %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">{{ confidence_pct }}%</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">{{ confidence_pct }}%</span>
             {% else %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100">{{ confidence_pct }}%</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100">{{ confidence_pct }}%</span>
             {% endif %}
           {% endif %}
         </div>
@@ -56,61 +56,61 @@
     <div class="space-y-4">
 
       <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">기본 정보 · Basics</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">기본 정보 · Basics</h3>
         <dl class="space-y-3 text-sm">
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">이름</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">이름</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.name }}{% if candidate.name_en %} <span class="text-slate-400 font-normal">({{ candidate.name_en }})</span>{% endif %}</dd>
           </div>
           {% if candidate.birth_year %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">출생연도</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">출생연도</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.birth_year }}년</dd>
           </div>
           {% endif %}
           {% if candidate.gender %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">성별</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">성별</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.gender }}</dd>
           </div>
           {% endif %}
           {% if candidate.email %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">이메일</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">이메일</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.email }}</dd>
           </div>
           {% endif %}
           {% if candidate.phone %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">연락처</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">연락처</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.phone }}</dd>
           </div>
           {% endif %}
           {% if candidate.address %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">주소</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">주소</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.address }}</dd>
           </div>
           {% endif %}
           {% if candidate.current_company %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">현 직장</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">현 직장</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.current_company }}</dd>
           </div>
           {% endif %}
           {% if candidate.current_position %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">현 직위</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">현 직위</dt>
             <dd class="text-slate-900 font-semibold">{{ candidate.current_position }}</dd>
           </div>
           {% endif %}
           {% if candidate.total_experience_display %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">총 경력</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">총 경력</dt>
             <dd class="text-slate-900 font-semibold">
               {{ candidate.total_experience_display }}
               {% if candidate.computed_total_experience_display %}
-              <span class="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full ml-1 uppercase tracking-widest">
+              <span class="text-xs font-bold text-ink3 bg-ink3/10 border border-ink3/20 px-2 py-0.5 rounded-full ml-1 uppercase tracking-widest">
                 {% if candidate.effective_resume_reference_source %}현재 기준 합산{% else %}경력 합산{% endif %}
               </span>
               {% endif %}
@@ -119,9 +119,9 @@
           {% endif %}
           {% if candidate.primary_category %}
           <div class="flex">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">카테고리</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-0.5">카테고리</dt>
             <dd>
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+              <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-ink3/10 text-ink3">
                 {{ candidate.primary_category.name_ko|default:candidate.primary_category.name }}
               </span>
             </dd>
@@ -129,7 +129,7 @@
           {% endif %}
           {% if candidate.summary %}
           <div class="pt-3 border-t border-slate-100">
-            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">요약</dt>
+            <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">요약</dt>
             <dd class="text-slate-700 leading-relaxed">{{ candidate.summary }}</dd>
           </div>
           {% endif %}
@@ -138,24 +138,24 @@
 
       {% if careers %}
       <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">경력 · Career</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">경력 · Career</h3>
         <div class="space-y-5">
           {% for career in careers %}
-          <div class="relative pl-5 border-l-2 {% if career.is_current %}border-primary{% else %}border-slate-200{% endif %}">
+          <div class="relative">
             <div class="flex items-start justify-between gap-2 flex-wrap">
               <div>
                 <p class="text-sm font-bold text-slate-900">
                   {{ career.company }}{% if career.company_en %} <span class="text-slate-400 font-normal">({{ career.company_en }})</span>{% endif %}
-                  {% if career.uses_duration_inference %}<span class="inline-flex text-[10px] font-bold uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full align-middle ml-1">기간 보정</span>{% endif %}
+                  {% if career.uses_duration_inference %}<span class="inline-flex text-xs font-bold uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full align-middle ml-1">기간 보정</span>{% endif %}
                 </p>
                 <p class="text-sm text-slate-700 mt-0.5">{{ career.position }}{% if career.department %} <span class="text-slate-400">/ {{ career.department }}</span>{% endif %}</p>
               </div>
               {% if career.is_current %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/10 text-primary">현재</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-ink3/10 text-ink3">현재</span>
               {% endif %}
             </div>
             {% if career.start_date_display or career.end_date_display %}
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2 whitespace-nowrap">
+            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mt-2 whitespace-nowrap">
               {{ career.start_date_display }}{% if career.start_date_display and career.end_date_display %} ~ {% endif %}{{ career.end_date_display }}
             </p>
             {% endif %}
@@ -170,7 +170,7 @@
 
       {% if educations %}
       <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">학력 · Education</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">학력 · Education</h3>
         <div class="space-y-4">
           {% for edu in educations %}
           <div>
@@ -180,14 +180,14 @@
               {% if edu.major %} {{ edu.major }}{% endif %}
             </p>
             {% if edu.start_year or edu.end_year %}
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">
+            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mt-1">
               {% if edu.start_year %}{{ edu.start_year }}{% endif %}
               {% if edu.start_year and edu.end_year %} ~ {% endif %}
               {% if edu.end_year %}{{ edu.end_year }}{% endif %}
             </p>
             {% endif %}
             {% if edu.is_abroad %}
-            <span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full mt-1 inline-block">해외</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-ink3 bg-ink3/10 border border-ink3/20 px-2 py-0.5 rounded-full mt-1 inline-block">해외</span>
             {% endif %}
           </div>
           {% endfor %}
@@ -197,11 +197,11 @@
 
       {% if certifications or language_skills %}
       <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">자격증 · 어학</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">자격증 · 어학</h3>
 
         {% if certifications %}
         <div class="mb-4">
-          <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">자격증</h4>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">자격증</h4>
           <div class="space-y-2">
             {% for cert in certifications %}
             <div class="text-sm">
@@ -220,7 +220,7 @@
 
         {% if language_skills %}
         <div>
-          <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">어학</h4>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">어학</h4>
           <div class="space-y-2">
             {% for lang in language_skills %}
             <div class="text-sm">
@@ -242,7 +242,7 @@
     <!-- Right column: Raw text -->
     <div>
       <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">원문 텍스트 · Raw</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">원문 텍스트 · Raw</h3>
         {% if candidate.raw_text %}
         <pre class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-h-[600px] overflow-y-auto bg-slate-50 rounded-xl p-4">{{ candidate.raw_text }}</pre>
         {% elif primary_resume and primary_resume.raw_text %}
@@ -254,13 +254,13 @@
 
       {% if logs %}
       <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mt-4">
-        <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">추출 이력 · Log</h3>
+        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">추출 이력 · Log</h3>
         <div class="divide-y divide-slate-100">
           {% for log in logs %}
           <div class="text-sm py-3 first:pt-0 last:pb-0">
             <div class="flex items-center justify-between">
               <span class="font-bold text-slate-900">{{ log.get_action_display }}</span>
-              <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ log.created_at|date:"n/j H:i" }}</span>
+              <span class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ log.created_at|date:"n/j H:i" }}</span>
             </div>
             {% if log.note %}
             <p class="text-xs text-slate-500 mt-1">{{ log.note }}</p>
@@ -278,7 +278,7 @@
     <button
       hx-post="{% url 'candidates:review_confirm' candidate.pk %}"
       hx-confirm="이 후보자 정보를 확인하시겠습니까?"
-      class="flex-1 rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest py-4 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.005] active:scale-[0.995] transition-all">
+      class="flex-1 rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-4 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.005] active:scale-[0.995] transition-all">
       Confirm 확인
     </button>
     <button
@@ -291,7 +291,7 @@
   </div>
 
   <div id="reject-form" class="hidden mt-4 bg-white rounded-xl border border-rose-100 shadow-sm p-6">
-    <label for="reject-reason" class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">거부 사유 · Reason</label>
+    <label for="reject-reason" class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">거부 사유 · Reason</label>
     <textarea
       id="reject-reason"
       name="reason"

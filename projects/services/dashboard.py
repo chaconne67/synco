@@ -70,10 +70,63 @@ def get_upcoming_actions(user: User, org: Organization, days=3):
     )
 
 
-def get_project_kanban_cards(org: Organization):
-    """2-phase 칸반에 필요한 카드 데이터."""
+def _sweep_overdue_projects(org: Organization):
+    """마감 경과 OPEN 프로젝트를 자동으로 실패 종료.
+
+    정책: deadline < today + hired Application 없음 → status=CLOSED, result=fail.
+    관리 커맨드와 동일 로직, 칸반 조회 시 lazy 실행.
+    """
+    today = timezone.now().date()
     now = timezone.now()
-    projects = (
+
+    overdue = (
+        Project.objects.filter(
+            organization=org,
+            status=ProjectStatus.OPEN,
+            deadline__lt=today,
+        )
+        .exclude(applications__hired_at__isnull=False)
+    )
+    note_suffix = f"\n\n[AUTO-CLOSE {today.isoformat()}] 마감일 경과로 자동 종료 (실패)"
+    from projects.models import Application
+    for p in overdue:
+        Project.objects.filter(pk=p.pk).update(
+            status=ProjectStatus.CLOSED,
+            result="fail",
+            closed_at=now,
+            note=(p.note or "") + note_suffix,
+        )
+        Application.objects.filter(
+            project=p, dropped_at__isnull=True, hired_at__isnull=True
+        ).update(
+            dropped_at=now,
+            drop_reason="other",
+            drop_note="프로젝트 마감일 경과로 자동 종료",
+        )
+
+
+def get_project_kanban_cards(
+    org: Organization,
+    *,
+    consultant_id=None,
+    client_id=None,
+    search=None,
+    sort_searching="asc",
+    sort_screening="asc",
+    sort_closed="desc",
+):
+    """2-phase 칸반에 필요한 카드 데이터.
+
+    필터:
+    - consultant_id: 담당자 UUID (assigned_consultants 중)
+    - client_id: 고객사 UUID
+    - search: title 또는 client.name ilike
+    """
+    # 칸반 렌더 직전에 마감 경과 프로젝트 자동 종료 (Stale auto-close)
+    _sweep_overdue_projects(org)
+
+    now = timezone.now()
+    qs = (
         Project.objects.filter(organization=org)
         .annotate(
             active_count=Count(
@@ -87,6 +140,13 @@ def get_project_kanban_cards(org: Organization):
         .select_related("client")
         .prefetch_related("assigned_consultants")
     )
+    if consultant_id:
+        qs = qs.filter(assigned_consultants__id=consultant_id)
+    if client_id:
+        qs = qs.filter(client_id=client_id)
+    if search:
+        qs = qs.filter(Q(title__icontains=search) | Q(client__name__icontains=search))
+    projects = qs.distinct()
 
     cards = {
         ProjectPhase.SEARCHING: [],
@@ -102,6 +162,17 @@ def get_project_kanban_cards(org: Organization):
         overdue_count = pending_actions.filter(due_at__lt=now).count()
         pending_count = pending_actions.count()
 
+        # closed + success 프로젝트는 입사자 이름 표시용으로 hired Application 조회
+        hired_candidate = None
+        if project.status == ProjectStatus.CLOSED and project.result == "success":
+            hired_app = (
+                project.applications.filter(hired_at__isnull=False)
+                .select_related("candidate")
+                .first()
+            )
+            if hired_app:
+                hired_candidate = hired_app.candidate
+
         card = {
             "project": project,
             "active_count": project.active_count,
@@ -111,12 +182,29 @@ def get_project_kanban_cards(org: Organization):
             "days_until_deadline": (
                 (project.deadline - now.date()).days if project.deadline else None
             ),
+            "hired_candidate": hired_candidate,
         }
 
         if project.status == ProjectStatus.CLOSED:
             cards["closed"].append(card)
         else:
             cards[project.phase].append(card)
+
+    # 정렬 정책 (컬럼별 독립):
+    # - OPEN 컬럼: created_at 기준. 기본 asc(오래된 것 상단).
+    # - CLOSED 컬럼: closed_at 기준. 기본 desc(최근 종료건 먼저).
+    cards[ProjectPhase.SEARCHING].sort(
+        key=lambda c: c["project"].created_at,
+        reverse=(sort_searching == "desc"),
+    )
+    cards[ProjectPhase.SCREENING].sort(
+        key=lambda c: c["project"].created_at,
+        reverse=(sort_screening == "desc"),
+    )
+    cards["closed"].sort(
+        key=lambda c: c["project"].closed_at or c["project"].updated_at,
+        reverse=(sort_closed == "desc"),
+    )
 
     return cards
 

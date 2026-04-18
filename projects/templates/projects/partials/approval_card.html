@@ -1,14 +1,14 @@
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
   <div class="flex items-start justify-between gap-4">
     <div class="min-w-0">
-      <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ approval.requested_by.get_full_name|default:approval.requested_by.username }}</p>
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">{{ approval.requested_by.get_full_name|default:approval.requested_by.username }}</p>
       <p class="text-lg font-bold text-slate-900 leading-tight">
         <span class="text-slate-600 font-semibold">{{ approval.project.client.name }}</span>
         <span class="mx-2 text-slate-500">·</span>{{ approval.project.title }}
       </p>
       {% if approval.conflict_project %}
       <div class="mt-3 rounded-xl border border-amber-100 bg-amber-50 p-4">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-amber-700">Conflict Detected · 유사도 {% if approval.conflict_score >= 0.7 %}높음{% else %}중간{% endif %} ({{ approval.conflict_score }})</p>
+        <p class="text-xs font-bold uppercase tracking-widest text-amber-700">Conflict Detected · 유사도 {% if approval.conflict_score >= 0.7 %}높음{% else %}중간{% endif %} ({{ approval.conflict_score }})</p>
         <p class="mt-2 text-sm text-amber-900">
           {{ approval.conflict_project.created_by.get_full_name|default:approval.conflict_project.created_by.username }}의
           "<span class="font-semibold">{{ approval.conflict_project.client.name }} · {{ approval.conflict_project.title }}</span>"
@@ -17,19 +17,19 @@
       </div>
       {% endif %}
     </div>
-    <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 shrink-0">{{ approval.created_at|date:"m/d" }}</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-400 shrink-0">{{ approval.created_at|date:"m/d" }}</div>
   </div>
 
   {% if approval.message %}
   <div class="rounded-xl bg-slate-50 border border-slate-100 p-4">
-    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">요청자 메시지</p>
+    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">요청자 메시지</p>
     <p class="text-sm text-slate-700">"{{ approval.message }}"</p>
   </div>
   {% endif %}
 
   {% if approval.admin_response %}
-  <div class="rounded-xl bg-primary/5 border border-primary/10 p-4">
-    <p class="text-[10px] font-bold uppercase tracking-widest text-primary mb-1.5">Admin Response</p>
+  <div class="rounded-xl bg-ink3/5 border border-ink3/10 p-4">
+    <p class="text-xs font-bold uppercase tracking-widest text-ink3 mb-1.5">Admin Response</p>
     <p class="text-sm text-slate-700">"{{ approval.admin_response }}"</p>
   </div>
   {% endif %}
@@ -38,7 +38,7 @@
     {% csrf_token %}
 
     {% if approval.merge_candidates.exists %}
-    <select name="merge_target" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
+    <select name="merge_target" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition">
       <option value="">합류 대상: {{ approval.conflict_project.title|default:"자동 선택" }}</option>
       {% for candidate in approval.merge_candidates %}
       <option value="{{ candidate.pk }}" {% if candidate.pk == approval.conflict_project_id %}selected{% endif %}>
@@ -50,15 +50,15 @@
 
     <div class="flex flex-wrap gap-2">
       <button type="submit" name="decision" value="승인"
-              class="rounded-xl bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              class="rounded-xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
         승인
       </button>
       <button type="submit" name="decision" value="합류"
-              class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
+              class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
         합류
       </button>
       <button type="submit" name="decision" value="반려"
-              class="rounded-xl bg-rose-600 text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-rose-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              class="rounded-xl bg-rose-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-rose-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
               onclick="var reason = prompt('반려 사유를 입력해 주세요.'); if(reason === null) return false; this.form.querySelector('[name=response_text]').value = reason;">
         반려
       </button>
@@ -67,10 +67,10 @@
 
     <div class="flex items-stretch gap-2 mt-2">
       <input type="text" name="response_text" placeholder="메시지를 입력하세요..."
-             class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
+             class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition"
              form="msg-form-{{ approval.pk }}">
       <button type="submit" name="decision" value="메시지" form="msg-form-{{ approval.pk }}"
-              class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 hover:bg-slate-50 transition-all">
+              class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 hover:bg-slate-50 transition-all">
         메시지
       </button>
     </div>

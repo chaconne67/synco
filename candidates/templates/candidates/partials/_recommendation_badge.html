@@ -1,7 +1,7 @@
 {% if candidate.recommendation_status == "recommended" %}
-  <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">추천</span>
+  <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">추천</span>
 {% elif candidate.recommendation_status == "not_recommended" %}
-  <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100">비추천</span>
+  <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100">비추천</span>
 {% elif candidate.recommendation_status == "on_hold" %}
-  <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">보류</span>
+  <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">보류</span>
 {% endif %}

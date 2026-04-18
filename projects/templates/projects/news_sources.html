@@ -8,13 +8,13 @@
 <div class="px-10 py-10 max-w-4xl">
   <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
     <div>
-      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Source Admin</span>
+      <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Source Admin</span>
       <h2 class="text-4xl font-black text-slate-900 tracking-tight">뉴스 소스 관리</h2>
       <p class="mt-2 text-sm text-slate-500">RSS·API 소스를 등록하고 활성 상태를 관리합니다.</p>
     </div>
     <a href="{% url 'news:news_source_create' %}"
        hx-get="{% url 'news:news_source_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
       소스 추가
     </a>
@@ -29,32 +29,32 @@
           <h4 class="text-base font-bold text-slate-900">{{ source.name }}</h4>
           <p class="text-xs text-slate-500 mt-1 truncate">{{ source.url }}</p>
           <div class="flex items-center gap-2 mt-3 flex-wrap">
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-600">{{ source.get_type_display }}</span>
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-600">{{ source.get_category_display }}</span>
+            <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-600">{{ source.get_type_display }}</span>
+            <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-600">{{ source.get_category_display }}</span>
             {% if source.is_active %}
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700">Active</span>
+            <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700">Active</span>
             {% else %}
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-400">Inactive</span>
+            <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-400">Inactive</span>
             {% endif %}
             {% if source.last_fetched_at %}
-            <span class="text-[10px] font-medium text-slate-400">최근 수집 {{ source.last_fetched_at|date:"m/d H:i" }}</span>
+            <span class="text-xs font-medium text-slate-400">최근 수집 {{ source.last_fetched_at|date:"m/d H:i" }}</span>
             {% endif %}
           </div>
         </div>
         <div class="flex items-center gap-1 shrink-0">
           <form method="post" action="{% url 'news:news_source_toggle' source.pk %}">
             {% csrf_token %}
-            <button type="submit" class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
+            <button type="submit" class="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
               {% if source.is_active %}비활성화{% else %}활성화{% endif %}
             </button>
           </form>
           <a href="{% url 'news:news_source_update' source.pk %}"
              hx-get="{% url 'news:news_source_update' source.pk %}" hx-target="#main-content" hx-push-url="true"
-             class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors">수정</a>
+             class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2 px-3 py-2 rounded-lg hover:bg-ink3/5 transition-colors">수정</a>
           <form method="post" action="{% url 'news:news_source_delete' source.pk %}"
                 onsubmit="return confirm('정말 삭제하시겠습니까?')">
             {% csrf_token %}
-            <button type="submit" class="text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors">삭제</button>
+            <button type="submit" class="text-xs font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors">삭제</button>
           </form>
         </div>
       </div>

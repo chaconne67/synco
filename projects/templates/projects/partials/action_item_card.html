@@ -1,16 +1,15 @@
 {% load humanize %}
-{# variant: overdue | today | upcoming — controls the left indicator stripe and due-text color #}
+{# variant: overdue | today | upcoming — due-text color 로만 구분 (좌측 스트라이프 금지) #}
 <div id="action-{{ action.id }}"
-     class="group relative rounded-xl bg-white border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all p-5
-            {% if variant == 'overdue' %}border-l-4 border-l-rose-500{% elif variant == 'today' %}border-l-4 border-l-primary{% elif variant == 'upcoming' %}border-l-4 border-l-amber-500{% endif %}">
+     class="group relative rounded-xl bg-white border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all p-5">
   <div class="flex items-start justify-between gap-4">
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+        <span class="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 uppercase tracking-wider">
           {{ action.action_type.label_ko }}
         </span>
         {% if action.channel %}
-          <span class="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 uppercase tracking-wider">
             {{ action.get_channel_display }}
           </span>
         {% endif %}
@@ -21,7 +20,7 @@
           <a href="{% url 'projects:project_detail' action.application.project.id %}"
              hx-get="{% url 'projects:project_detail' action.application.project.id %}"
              hx-target="#main-content" hx-push-url="true"
-             class="font-semibold text-slate-700 hover:text-primary transition-colors">
+             class="font-semibold text-slate-700 hover:text-ink3 transition-colors">
             {{ action.application.project.client.name }} · {{ action.application.project.title }}
           </a>
           <span class="mx-1 text-slate-500">·</span>
@@ -29,7 +28,7 @@
         </p>
       {% endif %}
       {% if action.due_at %}
-        <p class="mt-3 text-[11px] font-bold uppercase tracking-wider {% if variant == 'overdue' %}text-rose-600{% elif variant == 'today' %}text-primary{% else %}text-slate-400{% endif %}">
+        <p class="mt-3 text-xs font-bold uppercase tracking-wider {% if variant == 'overdue' %}text-rose-600{% elif variant == 'today' %}text-ink3{% else %}text-slate-400{% endif %}">
           마감 · {{ action.due_at|naturaltime }}
         </p>
       {% endif %}
@@ -38,7 +37,7 @@
       {% endif %}
       {% if action.status == 'done' and action.result %}
         <div class="mt-3 rounded-lg bg-emerald-50 border border-emerald-100 p-3">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-1">Result</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-1">Result</p>
           <p class="text-xs text-slate-700 leading-relaxed">{{ action.result }}</p>
         </div>
       {% endif %}
@@ -48,19 +47,19 @@
         <button hx-get="{% url 'projects:action_complete' action.id %}"
                 hx-target="#modal-container"
                 hx-swap="innerHTML"
-                class="rounded-lg bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
+                class="rounded-lg bg-ink3 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
           완료
         </button>
         <button hx-get="{% url 'projects:action_skip' action.id %}"
                 hx-target="#modal-container"
                 hx-swap="innerHTML"
-                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
+                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
           건너뛰기
         </button>
         <button hx-get="{% url 'projects:action_reschedule' action.id %}"
                 hx-target="#modal-container"
                 hx-swap="innerHTML"
-                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
+                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
           나중에
         </button>
       </div>

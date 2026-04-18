@@ -2,21 +2,21 @@
 <div id="context-banner" class="bg-amber-50 border border-amber-100 rounded-xl p-5 mb-4">
   <div class="flex items-start justify-between gap-4">
     <div class="min-w-0 flex-1">
-      <h4 class="text-[10px] font-bold uppercase tracking-widest text-amber-700">중단된 작업</h4>
+      <h4 class="text-xs font-bold uppercase tracking-widest text-amber-700">중단된 작업</h4>
       <p class="text-sm font-bold text-amber-900 mt-1.5">{{ context.pending_action }}</p>
-      <p class="text-[10px] font-bold uppercase tracking-widest text-amber-600 mt-1">{{ context.updated_at|timesince }} 전 중단</p>
+      <p class="text-xs font-bold uppercase tracking-widest text-amber-600 mt-1">{{ context.updated_at|timesince }} 전 중단</p>
     </div>
     <div class="flex items-center gap-2 shrink-0">
       {% if resume_url %}
       <button hx-post="{% url 'projects:project_context_resume' project.pk %}"
-              class="rounded-lg bg-amber-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 shadow-sm hover:bg-amber-700 transition-all">
+              class="rounded-lg bg-amber-600 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 shadow-sm hover:bg-amber-700 transition-all">
         이어서 하기
       </button>
       {% endif %}
       <button hx-post="{% url 'projects:project_context_discard' project.pk %}"
               hx-target="#context-banner-wrapper"
               hx-swap="innerHTML"
-              class="rounded-lg bg-white text-amber-700 text-[10px] font-bold uppercase tracking-widest px-4 py-2 border border-amber-200 hover:bg-amber-50 transition-all">
+              class="rounded-lg bg-white text-amber-700 text-xs font-bold uppercase tracking-widest px-4 py-2 border border-amber-200 hover:bg-amber-50 transition-all">
         취소
       </button>
     </div>

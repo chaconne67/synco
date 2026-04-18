@@ -5,7 +5,7 @@
         class="flex flex-wrap gap-3 items-center">
 
     <select name="phase"
-            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition"
             hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
             hx-include="closest form">
       <option value="">전체 단계</option>
@@ -16,7 +16,7 @@
 
     {% if is_owner %}
       <select name="consultant"
-              class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
+              class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition"
               hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
               hx-include="closest form">
         <option value="">담당자 전체</option>
@@ -24,7 +24,7 @@
     {% endif %}
 
     <select name="client"
-            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition"
             hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
             hx-include="closest form">
       <option value="">고객사 전체</option>

@@ -10,14 +10,14 @@
   <div class="flex items-center justify-between mb-8">
     <a href="{% url 'clients:client_list' %}"
        hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-primary transition-colors">
+       class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-ink3 transition-colors">
       <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       목록으로
     </a>
     <div class="flex items-center gap-2">
       <a href="{% url 'clients:client_update' client.pk %}"
          hx-get="{% url 'clients:client_update' client.pk %}" hx-target="#main-content" hx-push-url="true"
-         class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors">
+         class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2 px-3 py-2 rounded-lg hover:bg-ink3/5 transition-colors">
         수정
       </a>
       <form method="post" action="{% url 'clients:client_delete' client.pk %}"
@@ -25,7 +25,7 @@
             class="inline">
         {% csrf_token %}
         <button type="submit"
-                class="text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors">
+                class="text-xs font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors">
           삭제
         </button>
       </form>
@@ -33,7 +33,7 @@
   </div>
 
   <div class="mb-10">
-    <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Client Profile</span>
+    <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Client Profile</span>
     <h2 class="text-4xl font-black text-slate-900 tracking-tight">{{ client.name }}</h2>
     {% if client.industry or client.size or client.region %}
     <p class="mt-3 text-sm text-slate-500">
@@ -51,33 +51,33 @@
   {% endif %}
 
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mb-4">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">기본 정보 · Basics</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">기본 정보 · Basics</h3>
     <dl class="space-y-3 text-sm">
       <div class="flex items-start justify-between">
-        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pt-0.5">고객사명</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 pt-0.5">고객사명</dt>
         <dd class="text-slate-900 font-bold">{{ client.name }}</dd>
       </div>
       {% if client.industry %}
       <div class="flex items-start justify-between">
-        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pt-0.5">업종</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 pt-0.5">업종</dt>
         <dd class="text-slate-900 font-semibold">{{ client.industry }}</dd>
       </div>
       {% endif %}
       {% if client.size %}
       <div class="flex items-start justify-between">
-        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pt-0.5">규모</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 pt-0.5">규모</dt>
         <dd class="text-slate-900 font-semibold">{{ client.get_size_display }}</dd>
       </div>
       {% endif %}
       {% if client.region %}
       <div class="flex items-start justify-between">
-        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 pt-0.5">지역</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 pt-0.5">지역</dt>
         <dd class="text-slate-900 font-semibold">{{ client.region }}</dd>
       </div>
       {% endif %}
       {% if client.notes %}
       <div class="pt-3 border-t border-slate-100">
-        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">비고</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">비고</dt>
         <dd class="text-slate-700 whitespace-pre-wrap leading-relaxed">{{ client.notes }}</dd>
       </div>
       {% endif %}
@@ -85,7 +85,7 @@
   </section>
 
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mb-4">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">담당자 · Contacts</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">담당자 · Contacts</h3>
     {% if client.contact_persons %}
     <div class="space-y-3">
       {% for person in client.contact_persons %}
@@ -93,7 +93,7 @@
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-sm font-bold text-slate-900">{{ person.name }}</span>
           {% if person.position %}
-          <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ person.position }}</span>
+          <span class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ person.position }}</span>
           {% endif %}
         </div>
         <div class="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
@@ -113,17 +113,17 @@
   </section>
 
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mb-4">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">진행중 프로젝트 · Active</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">진행중 프로젝트 · Active</h3>
     {% if active_projects %}
     <div class="divide-y divide-slate-100">
       {% for project in active_projects %}
       <div class="flex items-center justify-between py-3 first:pt-0 last:pb-0">
         <span class="text-sm text-slate-900 font-semibold">{{ project.title }}</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full
-          {% if project.status == 'new' %}bg-primary/10 text-primary border border-primary/20
+        <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full
+          {% if project.status == 'new' %}bg-ink3/10 text-ink3 border border-ink3/20
           {% elif project.status == 'searching' %}bg-amber-50 text-amber-700 border border-amber-100
-          {% elif project.status == 'recommending' %}bg-primary/10 text-primary border border-primary/20
-          {% elif project.status == 'interviewing' %}bg-primary/10 text-primary border border-primary/20
+          {% elif project.status == 'recommending' %}bg-ink3/10 text-ink3 border border-ink3/20
+          {% elif project.status == 'interviewing' %}bg-ink3/10 text-ink3 border border-ink3/20
           {% elif project.status == 'negotiating' %}bg-emerald-50 text-emerald-700 border border-emerald-100
           {% else %}bg-slate-50 text-slate-600 border border-slate-100{% endif %}">
           {{ project.get_status_display }}

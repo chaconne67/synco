@@ -4,27 +4,27 @@
   <button data-tab="overview"
           hx-get="{% url 'projects:project_tab_overview' project.pk %}"
           hx-target="#tab-content"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-            {% if active == 'overview' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+            {% if active == 'overview' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     개요
   </button>
 
   <button data-tab="search"
           hx-get="{% url 'projects:project_tab_search' project.pk %}"
           hx-target="#tab-content"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors
-            {% if active == 'search' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
+            {% if active == 'search' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     서칭
   </button>
 
   <button data-tab="submissions"
           hx-get="{% url 'projects:project_tab_submissions' project.pk %}"
           hx-target="#tab-content"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2
-            {% if active == 'submissions' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2
+            {% if active == 'submissions' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     추천
     {% if tab_counts.submissions %}
-    <span class="text-[10px] {% if active == 'submissions' %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-600{% endif %} px-1.5 py-0.5 rounded-full"
+    <span class="text-xs {% if active == 'submissions' %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-600{% endif %} px-1.5 py-0.5 rounded-full"
           data-badge-count
           data-latest="{{ tab_latest.submissions|date:'c' }}">{{ tab_counts.submissions }}</span>
     {% endif %}
@@ -33,11 +33,11 @@
   <button data-tab="interviews"
           hx-get="{% url 'projects:project_tab_interviews' project.pk %}"
           hx-target="#tab-content"
-          class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2
-            {% if active == 'interviews' %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+          class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2
+            {% if active == 'interviews' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
     면접
     {% if tab_counts.interviews %}
-    <span class="text-[10px] {% if active == 'interviews' %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-600{% endif %} px-1.5 py-0.5 rounded-full"
+    <span class="text-xs {% if active == 'interviews' %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-600{% endif %} px-1.5 py-0.5 rounded-full"
           data-badge-count
           data-latest="{{ tab_latest.interviews|date:'c' }}">{{ tab_counts.interviews }}</span>
     {% endif %}

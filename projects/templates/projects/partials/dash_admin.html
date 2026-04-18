@@ -4,13 +4,13 @@
     <div class="flex items-center gap-3">
       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">프로젝트 승인 · Approvals</h3>
       {% if pending_approvals %}
-      <span class="bg-rose-50 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">{{ pending_approvals.count }}</span>
+      <span class="bg-rose-50 text-rose-600 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">{{ pending_approvals.count }}</span>
       {% endif %}
     </div>
     {% if pending_approvals %}
     <a href="/projects/approvals/"
        hx-get="/projects/approvals/" hx-target="#main-content" hx-push-url="true"
-       class="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">View Queue →</a>
+       class="text-xs font-bold text-ink3 uppercase tracking-widest hover:text-ink2 transition-colors">View Queue →</a>
     {% endif %}
   </div>
   {% if pending_approvals %}
@@ -22,7 +22,7 @@
         <span class="mx-2 text-slate-500">→</span>
         {{ approval.project.title }}
       </span>
-      <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Pending</span>
+      <span class="text-xs font-bold text-amber-600 uppercase tracking-widest">Pending</span>
     </li>
     {% endfor %}
   </ul>
@@ -39,12 +39,12 @@
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-slate-100">
-          <th class="text-left py-2 pr-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">컨설턴트</th>
-          <th class="text-center py-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">진행</th>
-          <th class="text-center py-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">컨택</th>
-          <th class="text-center py-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">추천</th>
-          <th class="text-center py-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">면접</th>
-          <th class="text-center py-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">클로즈</th>
+          <th class="text-left py-2 pr-4 text-xs font-bold text-slate-400 uppercase tracking-widest">컨설턴트</th>
+          <th class="text-center py-2 px-2 text-xs font-bold text-slate-400 uppercase tracking-widest">진행</th>
+          <th class="text-center py-2 px-2 text-xs font-bold text-slate-400 uppercase tracking-widest">컨택</th>
+          <th class="text-center py-2 px-2 text-xs font-bold text-slate-400 uppercase tracking-widest">추천</th>
+          <th class="text-center py-2 px-2 text-xs font-bold text-slate-400 uppercase tracking-widest">면접</th>
+          <th class="text-center py-2 px-2 text-xs font-bold text-slate-400 uppercase tracking-widest">클로즈</th>
         </tr>
       </thead>
       <tbody>
@@ -63,11 +63,11 @@
   </div>
   <div class="mt-5 pt-5 border-t border-slate-100 flex items-center gap-6">
     <div>
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">컨택 → 추천</p>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">컨택 → 추천</p>
       <p class="text-lg font-bold text-slate-900">{{ team_summary.kpi.contact_to_submission }}%</p>
     </div>
     <div>
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">추천 → 면접</p>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">추천 → 면접</p>
       <p class="text-lg font-bold text-slate-900">{{ team_summary.kpi.submission_to_interview }}%</p>
     </div>
   </div>

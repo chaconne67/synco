@@ -18,7 +18,7 @@ from .models import (
 
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
-    "focus:ring-2 focus:ring-primary focus:border-primary"
+    "focus:ring-2 focus:ring-ink3 focus:border-ink3"
 )
 
 
@@ -28,6 +28,9 @@ class ProjectForm(forms.ModelForm):
         fields = [
             "client",
             "title",
+            "deadline",
+            "annual_salary",
+            "fee_percent",
             "jd_source",
             "jd_text",
             "jd_file",
@@ -37,6 +40,26 @@ class ProjectForm(forms.ModelForm):
             "client": forms.Select(attrs={"class": INPUT_CSS}),
             "title": forms.TextInput(
                 attrs={"class": INPUT_CSS, "placeholder": "프로젝트명"}
+            ),
+            "deadline": forms.DateInput(
+                attrs={"class": INPUT_CSS, "type": "date"}
+            ),
+            "annual_salary": forms.NumberInput(
+                attrs={
+                    "class": INPUT_CSS,
+                    "placeholder": "예: 80000000",
+                    "min": "0",
+                    "step": "1000000",
+                }
+            ),
+            "fee_percent": forms.NumberInput(
+                attrs={
+                    "class": INPUT_CSS,
+                    "placeholder": "예: 20.00",
+                    "min": "0",
+                    "max": "100",
+                    "step": "0.5",
+                }
             ),
             "jd_source": forms.Select(attrs={"class": INPUT_CSS}),
             "jd_text": forms.Textarea(
@@ -55,6 +78,9 @@ class ProjectForm(forms.ModelForm):
         labels = {
             "client": "고객사",
             "title": "프로젝트명",
+            "deadline": "마감 예정일",
+            "annual_salary": "포지션 연봉 (원)",
+            "fee_percent": "수수료율 (%)",
             "jd_source": "JD 입력 방식",
             "jd_text": "JD 내용",
             "jd_file": "JD 파일",
@@ -80,6 +106,14 @@ class ProjectForm(forms.ModelForm):
         self.fields["jd_text"].required = False
         self.fields["jd_file"].required = False
         self.fields["jd_source"].required = False
+
+        # 신규 프로젝트는 deadline·연봉·수수료율 필수. 기존 프로젝트 편집은 optional
+        # (누락 데이터는 대시보드에서 "데이터 누락 N건"으로 경고).
+        # 주: BaseModel이 UUID PK를 생성 시점에 부여하므로 pk is None 체크 불가 → _state.adding 사용
+        is_new = self.instance._state.adding
+        self.fields["deadline"].required = is_new
+        self.fields["annual_salary"].required = is_new
+        self.fields["fee_percent"].required = is_new
 
     def clean(self):
         cleaned = super().clean()
@@ -247,7 +281,7 @@ class PostingSiteForm(forms.ModelForm):
             ),
             "is_active": forms.CheckboxInput(
                 attrs={
-                    "class": "rounded border-gray-300 text-primary focus:ring-primary"
+                    "class": "rounded border-gray-300 text-ink3 focus:ring-ink3"
                 }
             ),
             "applicant_count": forms.NumberInput(attrs={"class": INPUT_CSS, "min": 0}),

@@ -1,76 +1,153 @@
 {% load humanize %}
+{# 후보자 카드 — 8단계 진행 바 + 현 단계 할 일 (nested sub-card 없음) #}
 <div id="application-{{ application.id }}"
-     class="rounded-xl bg-white border border-slate-100 p-5 hover:border-slate-200 hover:shadow-sm transition-all
+     class="bg-surface rounded-card border border-hair p-6
             {% if application.dropped_at %}opacity-60{% endif %}
-            {% if application.hired_at %}border-emerald-200 bg-emerald-50/20{% endif %}">
-  <div class="flex items-start justify-between gap-4">
-    <div class="flex-1 min-w-0">
+            {% if application.hired_at %}ring-2 ring-success/30{% endif %}">
+
+  {# ── 후보자 기본 정보 + 탈락/되돌리기 버튼 ── #}
+  <div class="flex items-start justify-between gap-4 mb-4">
+    <div class="min-w-0">
       <a href="{% url 'candidates:candidate_detail' application.candidate.id %}"
          hx-get="{% url 'candidates:candidate_detail' application.candidate.id %}"
          hx-target="#main-content" hx-push-url="true"
-         class="text-base font-bold text-slate-900 hover:text-primary transition-colors">
+         class="text-base font-bold text-ink hover:text-ink3 transition-colors">
         {{ application.candidate.name }}
       </a>
-      <p class="mt-1 text-xs text-slate-500 font-medium">
-        {% if application.candidate.birth_year %}{{ application.candidate.birth_year }}년생 <span class="text-slate-500 mx-1">·</span>{% endif %}
-        {% if application.candidate.current_company %}{{ application.candidate.current_company }} <span class="text-slate-500 mx-1">·</span>{% endif %}
-        매칭 {{ application.created_at|naturaltime }}
+      <p class="mt-1 text-xs text-muted">
+        {% if application.candidate.birth_year %}{{ application.candidate.birth_year }}년생{% endif %}
+        {% if application.candidate.current_company %}<span class="mx-1">·</span>{{ application.candidate.current_company }}{% endif %}
+        <span class="mx-1">·</span>매칭 {{ application.created_at|naturaltime }}
       </p>
-      <p class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-        상태 · <span class="text-slate-700">{{ application.current_state }}</span>
-      </p>
-
-      {% if application.hired_at %}
-        <div class="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          </div>
-          <div>
-            <p class="text-xs font-bold text-emerald-700">입사 확정</p>
-            <p class="text-[10px] font-medium text-emerald-600 mt-0.5">{{ application.hired_at|naturaltime }}</p>
-          </div>
-        </div>
-      {% elif application.dropped_at %}
-        <div class="mt-4 rounded-xl border border-rose-100 bg-rose-50 p-3">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-rose-700">드롭됨 · {{ application.get_drop_reason_display }}</p>
-          {% if application.drop_note %}<p class="mt-1 text-xs text-rose-600">{{ application.drop_note }}</p>{% endif %}
-        </div>
-      {% else %}
-        <div class="mt-4 space-y-2">
-          {% with pending_actions=application.pending_actions %}
-            {% for action in pending_actions %}
-              {% include "projects/partials/action_item_card.html" with action=action %}
-            {% empty %}
-              <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">진행 중 액션이 없습니다. 새 액션을 추가하세요.</p>
-            {% endfor %}
-          {% endwith %}
-        </div>
-      {% endif %}
     </div>
-
-    <div class="flex flex-col gap-2 shrink-0">
+    <div class="shrink-0">
       {% if application.hired_at %}
+        <span class="badge sourcing" title="이 프로젝트의 최종 합격자">입사 확정</span>
       {% elif application.dropped_at %}
         <button hx-post="{% url 'projects:application_restore' application.id %}"
                 hx-target="#application-{{ application.id }}"
                 hx-swap="outerHTML"
-                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
-          복구
+                class="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-surface border border-hair text-sm font-semibold text-ink3 hover:bg-line transition-colors"
+                title="이 후보자를 다시 진행 상태로 되돌립니다">
+          되돌리기
         </button>
       {% else %}
-        <button hx-get="{% url 'projects:action_create' application.id %}"
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-                class="rounded-lg bg-primary text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
-          + 액션
-        </button>
         <button hx-get="{% url 'projects:application_drop' application.id %}"
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-                class="rounded-lg bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
-          드롭
+                hx-target="#modal-container" hx-swap="innerHTML"
+                class="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-surface border border-hair text-sm font-semibold text-muted hover:text-danger hover:border-danger transition-colors"
+                title="이 후보자를 이 프로젝트에서 제외합니다 (사유 기록)">
+          탈락 처리
         </button>
       {% endif %}
     </div>
   </div>
+
+  {# ── 8단계 진행 바 ── #}
+  {% if not application.dropped_at %}
+  {% with passed=application.stages_passed cur=application.current_stage %}
+  <div class="stage-progress">
+    {% for stage_id, stage_label in stages_order %}
+    <div class="stage-step {% if stage_id in passed and stage_id != cur %}passed{% elif stage_id == cur %}current{% endif %}">
+      <div class="dot">
+        {% if stage_id in passed and stage_id != cur %}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        {% else %}
+          {{ forloop.counter }}
+        {% endif %}
+      </div>
+      <span>{{ stage_label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endwith %}
+
+  {# ── 현 단계 상자 + 할 일 리스트 + 2버튼 ── #}
+  {% if application.hired_at %}
+    <div class="mt-6 rounded-lg bg-success/5 border border-success/20 p-4">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <p class="text-sm font-bold text-success">입사 확정 · {{ application.hired_at|naturaltime }}</p>
+      </div>
+    </div>
+  {% else %}
+    {% with current_stage_id=application.current_stage current_stage_label=application.current_stage_label %}
+    <div class="mt-6 rounded-lg bg-line border border-hair p-4">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div>
+          <div class="eyebrow">현재 단계</div>
+          <p class="text-sm font-bold text-ink mt-0.5">{{ current_stage_label }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button hx-get="{% url 'projects:action_create' application.id %}"
+                  hx-target="#modal-container" hx-swap="innerHTML"
+                  class="inline-flex items-center gap-1 px-3 h-9 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors"
+                  title="이 단계에서 할 일(연락·제출·면접 등)을 기록합니다">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            할 일 추가
+          </button>
+          <button hx-get="{% url 'projects:application_skip_stage' application.id %}"
+                  hx-target="#modal-container" hx-swap="innerHTML"
+                  class="inline-flex items-center gap-1 px-3 h-9 rounded-lg bg-surface border border-hair text-sm font-semibold text-muted hover:text-ink hover:border-ink3 transition-colors"
+                  title="이 단계를 생략하고 다음 단계로 이동합니다">
+            건너뛰기 →
+          </button>
+        </div>
+      </div>
+
+      {# Phase B: resume 단계는 3방법 UI를 최상단에 항상 표시 #}
+      {% if application.current_stage == "resume" %}
+        {% include "projects/partials/stage_resume_methods.html" with application=application %}
+      {% endif %}
+
+      {# 현 단계 할 일 리스트 (이 단계에 속하는 액션만) #}
+      {% with stage_codes=application.current_stage_action_codes gate=application.current_stage_gate_action %}
+      <div class="space-y-1.5 mt-3">
+        {% for action in application.action_items.all %}
+          {% if action.action_type.code in stage_codes %}
+          <div class="flex items-center gap-2 text-sm">
+            {% if action.status == 'done' %}
+              <svg class="w-4 h-4 text-success shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-muted line-through">{{ action.action_type.label_ko }}</span>
+              <span class="text-xs text-faint">· {{ action.completed_at|naturaltime }}</span>
+            {% else %}
+              <span class="w-4 h-4 rounded-full border-2 border-hair shrink-0"></span>
+              <span class="text-ink3 font-medium">{{ action.action_type.label_ko }}</span>
+              {% if action.due_at %}<span class="text-xs text-muted">· {{ action.due_at|date:"m/d" }}</span>{% endif %}
+              <button hx-get="{% url 'projects:action_complete' action.id %}"
+                      hx-target="#modal-container" hx-swap="innerHTML"
+                      class="ml-auto text-xs font-semibold text-ink3 hover:underline">완료</button>
+            {% endif %}
+          </div>
+          {% endif %}
+        {% endfor %}
+
+        {# Phase A: pending 없고 resume 단계 아니고 gate 있으면 시작 버튼 #}
+        {% if not application.current_stage_pending_actions and application.current_stage != "resume" %}
+          {% if gate %}
+            <div class="mt-2 p-3 rounded-lg bg-ink3/5 border border-ink3/20">
+              <p class="text-xs text-muted mb-2">
+                이 단계를 완료하려면 <b class="text-ink3">{{ gate.label_ko }}</b> 액션이 필요합니다.
+              </p>
+              <button hx-get="{% url 'projects:action_create' application.id %}?preset={{ gate.code }}"
+                      hx-target="#modal-container" hx-swap="innerHTML"
+                      class="inline-flex items-center gap-1 px-3 h-8 rounded-lg bg-ink3 text-white text-xs font-semibold hover:bg-ink2 transition-colors">
+                {{ gate.label_ko }} 시작하기 →
+              </button>
+            </div>
+          {% else %}
+            <p class="text-xs text-faint">이 단계에서 할 일을 추가하거나 건너뛰세요.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% endwith %}
+    </div>
+    {% endwith %}
+  {% endif %}
+  {% else %}
+    {# dropped #}
+    <div class="mt-4 rounded-lg bg-danger/5 border border-danger/20 p-3">
+      <p class="text-xs font-bold text-danger">탈락 · {{ application.get_drop_reason_display }}</p>
+      {% if application.drop_note %}<p class="mt-1 text-xs text-muted">{{ application.drop_note }}</p>{% endif %}
+    </div>
+  {% endif %}
 </div>

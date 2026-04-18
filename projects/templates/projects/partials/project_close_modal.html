@@ -5,7 +5,7 @@
      hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
   <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl shadow-slate-900/20 p-8">
     <header class="mb-5 flex items-center justify-between">
-      <h3 id="modal-title-project-close" class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">프로젝트 종료 · Close</h3>
+      <h3 id="modal-title-project-close" class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">프로젝트 종료 · Close</h3>
       <button type="button"
               onclick="document.getElementById('modal-container').innerHTML = ''"
               class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
@@ -34,7 +34,7 @@
       {% csrf_token %}
       <div class="space-y-5">
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">결과</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">결과</label>
           <div class="grid grid-cols-2 gap-2">
             <label class="flex items-center justify-center gap-2 rounded-xl border border-slate-100 bg-white p-3 cursor-pointer hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors">
               <input type="radio" name="result" value="success" {% if form.result.value == "success" %}checked{% endif %}
@@ -53,9 +53,9 @@
         </div>
 
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">사유 / 메모</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">사유 / 메모</label>
           <textarea name="note" rows="3"
-                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-primary focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 transition"
+                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition"
                     placeholder="종료 사유를 입력하세요"
                     required>{{ form.note.value|default:"" }}</textarea>
           {% if form.note.errors %}
@@ -67,11 +67,11 @@
       <div class="mt-6 flex justify-end gap-2">
         <button type="button"
                 onclick="document.getElementById('modal-container').innerHTML = ''"
-                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
+                class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
           취소
         </button>
         <button type="submit"
-                class="rounded-xl bg-rose-600 text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-rose-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                class="rounded-xl bg-rose-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-rose-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
           프로젝트 종료
         </button>
       </div>

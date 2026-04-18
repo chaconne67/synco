@@ -69,6 +69,7 @@ from .models import (
     PostingSite,
     Project,
     ProjectApproval,
+    ProjectPhase,
     ProjectStatus,
     ResumeUpload,
     Submission,
@@ -114,33 +115,81 @@ def project_list(request):
     membership = request.user.membership
     is_owner = membership.role == "owner"
 
-    cards = get_project_kanban_cards(org)
+    # Filter query parameters (Owner만 consultant 필터 허용. Consultant는 본인 배정만 강제)
+    consultant_filter = request.GET.get("consultant") if is_owner else str(request.user.id)
+    client_filter = request.GET.get("client") or None
+    search_filter = request.GET.get("q") or None
+    phase_filter = request.GET.get("phase")  # legacy, 사용 안 함
 
-    # Consultant sees only assigned projects
-    if not is_owner:
-        for phase_key in list(cards.keys()):
-            cards[phase_key] = [
-                card
-                for card in cards[phase_key]
-                if request.user in card["project"].assigned_consultants.all()
-            ]
+    # 컬럼별 정렬 방향 (기본: open=asc 오래된 것 상단, closed=desc 최근 먼저)
+    sort_searching = request.GET.get("sort_searching", "asc")
+    sort_screening = request.GET.get("sort_screening", "asc")
+    sort_closed = request.GET.get("sort_closed", "desc")
 
-    # Filter query parameters
-    phase_filter = request.GET.get("phase")
-    consultant_filter = request.GET.get("consultant") if is_owner else ""
-    client_filter = request.GET.get("client")
+    cards = get_project_kanban_cards(
+        org,
+        consultant_id=consultant_filter or None,
+        client_id=client_filter,
+        search=search_filter,
+        sort_searching=sort_searching,
+        sort_screening=sort_screening,
+        sort_closed=sort_closed,
+    )
+
+    # 정렬 토글 URL 계산 (현재 방향 반대로 세팅)
+    def _flip(column, current):
+        params = request.GET.copy()
+        params[f"sort_{column}"] = "desc" if current == "asc" else "asc"
+        return f"?{params.urlencode()}"
+
+    sort_directions = {
+        "searching": sort_searching,
+        "screening": sort_screening,
+        "closed": sort_closed,
+    }
+    sort_toggle_urls = {
+        col: _flip(col, direction) for col, direction in sort_directions.items()
+    }
+
+    # 상단 헤더 요약 — 진행 중 · 이달 마감
+    now = timezone.now()
+    active_count = len(cards[ProjectPhase.SEARCHING]) + len(cards[ProjectPhase.SCREENING])
+    this_month_deadline_count = Project.objects.filter(
+        organization=org,
+        status=ProjectStatus.OPEN,
+        deadline__year=now.year,
+        deadline__month=now.month,
+    ).count()
+
+    # Owner 는 필터 바에서 컨설턴트 선택 가능. 조직 멤버 리스트 필요.
+    from accounts.models import Membership
+    if is_owner:
+        org_consultants = [
+            m.user
+            for m in Membership.objects.filter(
+                organization=org, status="active"
+            ).select_related("user")
+        ]
+    else:
+        org_consultants = []
 
     context = {
         "kanban": cards,
         "phase_filter": phase_filter,
         "consultant_filter": consultant_filter,
         "client_filter": client_filter,
+        "search_filter": search_filter,
+        "sort_directions": sort_directions,
+        "sort_toggle_urls": sort_toggle_urls,
         "is_owner": is_owner,
         "clients": org.clients.all(),
+        "org_consultants": org_consultants,
         "scope": request.GET.get("scope", "mine"),
         "view_type": "board",
         "status_choices": ProjectStatus.choices,
         "filter_params": _filter_params_string(request),
+        "active_count": active_count,
+        "this_month_deadline_count": this_month_deadline_count,
     }
 
     # HTMX tab switch -> partial only
@@ -292,19 +341,21 @@ def project_create(request):
 
 
 def _build_tab_context(project):
-    """Build tab_counts and tab_latest for project detail template."""
+    """Build tab_counts and tab_latest for project detail template.
+
+    Submission은 Application 경유(related_name 'submission' 단수). Project에서 직접 역참조 불가.
+    """
+    submissions_qs = Submission.objects.filter(application__project=project)
     tab_counts = {
         "applications": Application.objects.filter(project=project).count(),
-        "submissions": project.submissions.count(),
+        "submissions": submissions_qs.count(),
         "interviews": Interview.objects.filter(submission__project=project).count(),
     }
     tab_latest = {
         "applications": Application.objects.filter(project=project).aggregate(
             latest=Max("created_at")
         )["latest"],
-        "submissions": project.submissions.aggregate(latest=Max("created_at"))[
-            "latest"
-        ],
+        "submissions": submissions_qs.aggregate(latest=Max("created_at"))["latest"],
         "interviews": Interview.objects.filter(submission__project=project).aggregate(
             latest=Max("created_at")
         )["latest"],
@@ -333,7 +384,7 @@ def project_detail(request, pk):
         )
     )
 
-    tab_counts, tab_latest = _build_tab_context(project)
+    from projects.models import STAGES_ORDER
 
     return render(
         request,
@@ -341,9 +392,7 @@ def project_detail(request, pk):
         {
             "project": project,
             "applications": applications,
-            "tab_counts": tab_counts,
-            "tab_latest": tab_latest,
-            "active_tab": "overview",
+            "stages_order": STAGES_ORDER,
         },
     )
 
@@ -367,10 +416,11 @@ def project_applications_partial(request, pk):
             "-created_at",
         )
     )
+    from projects.models import STAGES_ORDER
     return render(
         request,
         "projects/partials/project_applications_list.html",
-        {"project": project, "applications": applications},
+        {"project": project, "applications": applications, "stages_order": STAGES_ORDER},
     )
 
 
@@ -2706,6 +2756,195 @@ def application_hire(request, pk):
     return redirect("projects:project_detail", pk=application.project.pk)
 
 
+@login_required
+@membership_required
+def application_skip_stage(request, pk):
+    """현재 단계 건너뛰기. GET=모달, POST=stage_skipped ActionItem 생성."""
+    from projects.models import (
+        ActionItem,
+        ActionItemStatus,
+        ActionType,
+        STAGE_SKIPPED_ACTION_CODE,
+        STAGES_ORDER,
+    )
+    from django.utils import timezone
+
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application.objects.select_related("candidate", "project"),
+        pk=pk,
+        project__organization=org,
+    )
+    current_id = application.current_stage
+    if current_id in (None, "hired"):
+        return HttpResponseBadRequest("건너뛸 수 있는 단계가 없습니다.")
+
+    stages_dict = dict(STAGES_ORDER)
+    current_label = stages_dict.get(current_id, "")
+    # 다음 단계 찾기 (UI 표시용)
+    order_keys = [s for s, _ in STAGES_ORDER]
+    try:
+        next_id = order_keys[order_keys.index(current_id) + 1]
+    except (ValueError, IndexError):
+        next_id = None
+    next_label = stages_dict.get(next_id, "") if next_id else ""
+
+    if request.method == "POST":
+        reason = (request.POST.get("reason") or "").strip()
+        if not reason:
+            reason = "사유 미입력"
+        try:
+            at = ActionType.objects.get(code=STAGE_SKIPPED_ACTION_CODE)
+        except ActionType.DoesNotExist:
+            return HttpResponseBadRequest(
+                "stage_skipped ActionType이 없습니다. update_action_labels 커맨드 실행 필요."
+            )
+        now = timezone.now()
+        ActionItem.objects.create(
+            application=application,
+            action_type=at,
+            title=f"{current_label} 단계 건너뛰기",
+            result=current_id,  # 스킵한 stage id (current_stage 파생 시 사용)
+            note=reason,
+            status=ActionItemStatus.DONE,
+            completed_at=now,
+            scheduled_at=now,
+            due_at=now,
+            assigned_to=request.user,
+            created_by=request.user,
+        )
+        # 이벤트 trigger — 상세 페이지 리로드
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "applicationChanged"
+        return response
+
+    return render(
+        request,
+        "projects/partials/stage_skip_modal.html",
+        {
+            "application": application,
+            "current_stage_id": current_id,
+            "current_stage_label": current_label,
+            "next_stage_label": next_label,
+        },
+    )
+
+
+def _create_receive_resume_action(application, actor, *, done, note, due_days=0):
+    """Phase B 헬퍼: receive_resume ActionType 으로 ActionItem 생성."""
+    from django.utils import timezone
+    at = ActionType.objects.filter(code="receive_resume").first()
+    if not at:
+        return None
+    now = timezone.now()
+    due = now + timedelta(days=due_days) if due_days else now
+    return ActionItem.objects.create(
+        application=application,
+        action_type=at,
+        title=at.label_ko,
+        note=note,
+        status=ActionItemStatus.DONE if done else ActionItemStatus.PENDING,
+        completed_at=now if done else None,
+        scheduled_at=due,
+        due_at=due,
+        assigned_to=actor,
+        created_by=actor,
+    )
+
+
+@login_required
+@membership_required
+@require_POST
+def application_resume_use_db(request, pk):
+    """Phase B — DB에 있는 기존 이력서 사용. receive_resume 즉시 완료."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application.objects.select_related("candidate", "project"),
+        pk=pk,
+        project__organization=org,
+    )
+    current = application.candidate.current_resume
+    if not current:
+        return HttpResponse(
+            "이 후보자에게 DB 이력서가 없습니다. 다른 방법을 선택하세요.",
+            status=400,
+        )
+    _create_receive_resume_action(
+        application, request.user,
+        done=True,
+        note=f"DB 기존 이력서 재사용 (파일: {current.filename or current.pk})",
+    )
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "applicationChanged"
+    return response
+
+
+@login_required
+@membership_required
+def application_resume_request_email(request, pk):
+    """Phase B — 이메일로 이력서 요청. GET=폼 모달, POST=pending 액션 생성."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application.objects.select_related("candidate", "project"),
+        pk=pk,
+        project__organization=org,
+    )
+    if request.method == "POST":
+        body = (request.POST.get("body") or "").strip() or "(본문 미입력)"
+        _create_receive_resume_action(
+            application, request.user,
+            done=False,
+            note=f"이메일 요청 보냄\n\n{body}",
+            due_days=3,
+        )
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "applicationChanged"
+        return response
+    return render(
+        request,
+        "projects/partials/resume_email_request_modal.html",
+        {"application": application},
+    )
+
+
+@login_required
+@membership_required
+def application_resume_upload(request, pk):
+    """Phase B — 직접 받은 이력서 파일 업로드. GET=업로드 모달, POST=Resume+ActionItem 생성."""
+    org = _get_org(request)
+    application = get_object_or_404(
+        Application.objects.select_related("candidate", "project"),
+        pk=pk,
+        project__organization=org,
+    )
+    if request.method == "POST":
+        file = request.FILES.get("resume_file")
+        if not file:
+            return HttpResponse("파일을 선택하세요.", status=400)
+        from candidates.models import Resume
+        resume = Resume.objects.create(
+            candidate=application.candidate,
+            filename=file.name,
+            file=file,
+        )
+        if not application.candidate.current_resume:
+            application.candidate.current_resume = resume
+            application.candidate.save(update_fields=["current_resume"])
+        _create_receive_resume_action(
+            application, request.user,
+            done=True,
+            note=f"직접 업로드 — {file.name}",
+        )
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "applicationChanged"
+        return response
+    return render(
+        request,
+        "projects/partials/resume_upload_modal.html",
+        {"application": application},
+    )
+
+
 @membership_required
 def application_actions_partial(request, pk):
     """GET: Application의 ActionItem 목록. R1-11/R1-12: prefetch + ordering."""
@@ -2744,11 +2983,24 @@ def action_create(request, pk):
     active_types = ActionType.objects.filter(is_active=True).order_by("sort_order")
 
     if request.method == "GET":
-        form = ActionItemCreateForm()
+        # Phase A: preset 파라미터로 특정 ActionType 사전 선택 (단계 gate 시작 버튼에서 사용)
+        preset_code = request.GET.get("preset")
+        initial = {}
+        preset_at = None
+        if preset_code:
+            preset_at = active_types.filter(code=preset_code).first()
+            if preset_at:
+                initial["action_type_id"] = str(preset_at.pk)
+        form = ActionItemCreateForm(initial=initial)
         return render(
             request,
             "projects/partials/action_create_modal.html",
-            {"form": form, "application": application, "action_types": active_types},
+            {
+                "form": form,
+                "application": application,
+                "action_types": active_types,
+                "preset_action_type": preset_at,
+            },
         )
 
     # POST
@@ -3002,14 +3254,8 @@ def action_propose_next(request, pk):
             )
 
     if request.headers.get("HX-Request"):
-        response = render(
-            request,
-            "projects/partials/application_actions_list.html",
-            {
-                "application": action.application,
-                "actions": action.application.action_items.all(),
-            },
-        )
+        # 빈 응답으로 modal-container 비우면서 actionChanged 트리거 → 본문 리프레시
+        response = HttpResponse("")
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)

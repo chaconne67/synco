@@ -50,6 +50,27 @@ urlpatterns = [
         views.application_hire,
         name="application_hire",
     ),
+    path(
+        "applications/<uuid:pk>/skip_stage/",
+        views.application_skip_stage,
+        name="application_skip_stage",
+    ),
+    # Phase B: 이력서 수집 단계 — 3가지 방법
+    path(
+        "applications/<uuid:pk>/resume/use_db/",
+        views.application_resume_use_db,
+        name="application_resume_use_db",
+    ),
+    path(
+        "applications/<uuid:pk>/resume/request_email/",
+        views.application_resume_request_email,
+        name="application_resume_request_email",
+    ),
+    path(
+        "applications/<uuid:pk>/resume/upload/",
+        views.application_resume_upload,
+        name="application_resume_upload",
+    ),
     # Phase 3b: ActionItem CRUD (stub views)
     path(
         "applications/<uuid:pk>/actions/",

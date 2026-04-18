@@ -8,7 +8,7 @@
 <div class="px-10 py-10 max-w-5xl">
   <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
     <div>
-      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Inbox</span>
+      <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Inbox</span>
       <h2 class="text-4xl font-black text-slate-900 tracking-tight">미배정 이력서 <span class="text-slate-400">{{ uploads|length }}</span></h2>
       <p class="mt-2 text-sm text-slate-500">업로드된 이력서를 프로젝트에 배정하세요.</p>
     </div>
@@ -27,11 +27,11 @@
         <div class="flex items-center gap-4 flex-1 min-w-0">
           {% if upload.file_type == "pdf" %}
           <div class="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
-            <span class="text-[10px] font-black text-rose-600 tracking-wider">PDF</span>
+            <span class="text-xs font-black text-rose-600 tracking-wider">PDF</span>
           </div>
           {% else %}
-          <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <span class="text-[10px] font-black text-primary tracking-wider">DOC</span>
+          <div class="w-11 h-11 rounded-xl bg-ink3/10 flex items-center justify-center shrink-0">
+            <span class="text-xs font-black text-ink3 tracking-wider">DOC</span>
           </div>
           {% endif %}
 
@@ -39,19 +39,19 @@
             <p class="text-sm font-bold text-slate-900 truncate">{{ upload.file_name }}</p>
             <div class="flex items-center gap-2 mt-1.5 flex-wrap">
               {% if upload.status == "pending" or upload.status == "extracting" %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">추출중</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-ink3/10 text-ink3 border border-ink3/20">추출중</span>
               {% elif upload.status == "extracted" %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">추출완료</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">추출완료</span>
               {% elif upload.status == "duplicate" %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">중복</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">중복</span>
               {% elif upload.status == "linked" %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">연결됨</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">연결됨</span>
               {% elif upload.status == "failed" %}
-              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">실패</span>
+              <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100">실패</span>
               {% endif %}
 
               {% if upload.source == "email" %}
-              <span class="text-[10px] font-medium text-slate-500 inline-flex items-center gap-1">
+              <span class="text-xs font-medium text-slate-500 inline-flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
@@ -59,7 +59,7 @@
               </span>
               {% endif %}
 
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ upload.created_at|date:"m/d H:i" }}</span>
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ upload.created_at|date:"m/d H:i" }}</span>
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@
           {% if projects %}
           <div class="flex items-center gap-2">
             <select id="project-select-{{ upload.pk }}"
-                    class="text-xs font-medium border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-700 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition">
+                    class="text-xs font-medium border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-700 focus:ring-2 focus:ring-ink3/10 focus:border-ink3 outline-none transition">
               <option value="">프로젝트 선택</option>
               {% for project in projects %}
               <option value="{{ project.pk }}">{{ project.title }}</option>
@@ -76,12 +76,12 @@
             </select>
             <button type="button"
                     onclick="assignProject('{{ upload.pk }}')"
-                    class="rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
               배정
             </button>
           </div>
           {% else %}
-          <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">프로젝트 없음</span>
+          <span class="text-xs font-bold uppercase tracking-widest text-slate-400">프로젝트 없음</span>
           {% endif %}
         </div>
       </div>

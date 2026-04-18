@@ -7,7 +7,7 @@
 {% block content %}
 <div class="px-10 py-10 max-w-5xl">
   <div class="mb-10">
-    <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">SuperAdmin</span>
+    <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">SuperAdmin</span>
     <h2 class="text-4xl font-black text-slate-900 tracking-tight">업체 관리</h2>
     <p class="mt-2 text-sm text-slate-500">새 헤드헌팅 업체를 등록하면 OWNER 초대코드가 자동 발급됩니다.</p>
   </div>
@@ -21,9 +21,9 @@
   <form method="post" class="flex gap-3 items-stretch mb-6">
     {% csrf_token %}
     <input type="text" name="name" placeholder="업체명" required
-           class="flex-1 rounded-xl bg-white border border-slate-200 px-5 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition" />
+           class="flex-1 rounded-xl bg-white border border-slate-200 px-5 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition" />
     <button type="submit"
-            class="rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest px-8 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.005] active:scale-[0.995] transition-all">
+            class="rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest px-8 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.005] active:scale-[0.995] transition-all">
       업체 등록
     </button>
   </form>
@@ -32,10 +32,10 @@
     <table class="w-full text-sm">
       <thead class="border-b border-slate-100">
         <tr>
-          <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">업체명</th>
-          <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">OWNER 초대코드</th>
-          <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">사용</th>
-          <th class="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">등록일</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">업체명</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">OWNER 초대코드</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">사용</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">등록일</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
@@ -43,12 +43,12 @@
         <tr class="hover:bg-slate-50/60 transition-colors">
           <td class="px-5 py-3 font-bold text-slate-900">{{ row.org.name }}</td>
           <td class="px-5 py-3 font-mono text-xs">
-            {% if row.invite %}<span class="text-primary font-bold">{{ row.invite.code }}</span>{% else %}<span class="text-slate-400">없음</span>{% endif %}
+            {% if row.invite %}<span class="text-ink3 font-bold">{{ row.invite.code }}</span>{% else %}<span class="text-slate-400">없음</span>{% endif %}
           </td>
           <td class="px-5 py-3 text-xs text-slate-600">
             {% if row.invite %}{{ row.invite.used_count }} / {{ row.invite.max_uses }}{% else %}—{% endif %}
           </td>
-          <td class="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ row.org.created_at|date:"Y-m-d H:i" }}</td>
+          <td class="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-400">{{ row.org.created_at|date:"Y-m-d H:i" }}</td>
         </tr>
         {% empty %}
         <tr>

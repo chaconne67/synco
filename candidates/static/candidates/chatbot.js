@@ -404,8 +404,8 @@
     var div = document.createElement("div");
     div.className = "flex justify-end";
     div.innerHTML =
-      '<div class="bg-primary text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%]">' +
-      '<p class="text-[15px]">' + escapeHtml(text) +
+      '<div class="bg-ink3 text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%]">' +
+      '<p class="text-base">' + escapeHtml(text) +
       "</p></div>";
     container.appendChild(div);
     scrollChat();
@@ -417,7 +417,7 @@
     div.className = "flex gap-2";
     div.innerHTML =
       '<div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%]">' +
-      '<p class="text-[15px] text-gray-900 whitespace-pre-line">' + escapeHtml(text) + "</p></div>";
+      '<p class="text-base text-gray-900 whitespace-pre-line">' + escapeHtml(text) + "</p></div>";
     container.appendChild(div);
     scrollChat();
   }
@@ -429,7 +429,7 @@
     div.className = "flex gap-2";
     div.innerHTML =
       '<div class="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2">' +
-      '<p class="text-[15px] text-gray-400">검색 중' +
+      '<p class="text-base text-gray-400">검색 중' +
       '<span class="inline-flex ml-1"><span class="animate-bounce" style="animation-delay:0ms">.</span>' +
       '<span class="animate-bounce" style="animation-delay:150ms">.</span>' +
       '<span class="animate-bounce" style="animation-delay:300ms">.</span></span></p></div>';
@@ -457,9 +457,9 @@
     div.className = "flex gap-2";
     div.innerHTML =
       '<div class="bg-red-50 border border-red-200 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[90%]">' +
-      '<p class="text-[15px] text-red-800 font-medium">마이크 권한이 필요합니다</p>' +
-      '<p class="text-[13px] text-red-600 mt-1">주소창 🔒 아이콘 → 마이크 → 허용으로 변경해주세요.</p>' +
-      '<p class="text-[13px] text-gray-500 mt-1">또는 <button onclick="showTextInput()" class="text-primary underline">텍스트로 검색</button>할 수 있습니다.</p>' +
+      '<p class="text-base text-red-800 font-medium">마이크 권한이 필요합니다</p>' +
+      '<p class="text-sm text-red-600 mt-1">주소창 🔒 아이콘 → 마이크 → 허용으로 변경해주세요.</p>' +
+      '<p class="text-sm text-gray-500 mt-1">또는 <button onclick="showTextInput()" class="text-ink3 underline">텍스트로 검색</button>할 수 있습니다.</p>' +
       "</div>";
     container.appendChild(div);
     scrollChat();
@@ -497,8 +497,8 @@
     var bar = document.getElementById("search-status-bar");
     if (bar) {
       bar.innerHTML =
-        '<div class="px-4 py-2 bg-primary-light border-b border-primary/10 cursor-pointer" onclick="toggleChatbot()">' +
-        '<p class="text-sm text-primary font-medium truncate">\uD83D\uDD0D "' +
+        '<div class="px-4 py-2 bg-line border-b border-ink3/10 cursor-pointer" onclick="toggleChatbot()">' +
+        '<p class="text-sm text-ink3 font-medium truncate">\uD83D\uDD0D "' +
         escapeHtml(query) + '" \u2014 ' + count + '\uBA85 \uCC3E\uC74C</p></div>';
     }
   }

@@ -15,7 +15,7 @@
 
   <!-- Header -->
   <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-    <h2 class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Synco AI Search</h2>
+    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Synco AI Search</h2>
     <button onclick="toggleChatbot()"
             class="text-slate-400 hover:text-slate-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="닫기">
@@ -35,14 +35,14 @@
     <div class="flex gap-2">
       <div class="bg-slate-50 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%]">
         <p class="text-sm text-slate-900 font-medium">안녕하세요! 아래 마이크를 눌러 음성으로 검색하세요.</p>
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">예시</p>
+        <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mt-2">예시</p>
         <div class="flex flex-wrap gap-1.5 mt-2">
           <button onclick="searchWithChip('영업 경력 10년 이상')"
-                  class="text-xs font-semibold bg-white border border-slate-100 rounded-full px-3 py-1.5 min-h-[32px] hover:border-primary/30 hover:text-primary transition">
+                  class="text-xs font-semibold bg-white border border-slate-100 rounded-full px-3 py-1.5 min-h-[32px] hover:border-ink3/30 hover:text-ink3 transition">
             영업 경력 10년 이상
           </button>
           <button onclick="searchWithChip('삼성전자 출신 HR')"
-                  class="text-xs font-semibold bg-white border border-slate-100 rounded-full px-3 py-1.5 min-h-[32px] hover:border-primary/30 hover:text-primary transition">
+                  class="text-xs font-semibold bg-white border border-slate-100 rounded-full px-3 py-1.5 min-h-[32px] hover:border-ink3/30 hover:text-ink3 transition">
             삼성전자 출신 HR
           </button>
         </div>
@@ -60,8 +60,8 @@
         <i class="fa-regular fa-square-minus" style="font-size:24px"></i>
       </button>
       <button onclick="startRecording()"
-              class="w-14 h-14 flex items-center justify-center rounded-full bg-primary text-white shadow-lg
-                     hover:bg-primary-dark active:scale-95 transition-all"
+              class="w-14 h-14 flex items-center justify-center rounded-full bg-ink3 text-white shadow-lg
+                     hover:bg-ink2 active:scale-95 transition-all"
               aria-label="마이크">
         <i class="fa-solid fa-microphone" style="font-size:24px"></i>
       </button>
@@ -83,7 +83,7 @@
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
         <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
-        <span id="rec-timer" class="text-[11px] font-mono text-rose-500 shrink-0 ml-1.5 min-w-[32px] text-right">00:00</span>
+        <span id="rec-timer" class="text-xs font-mono text-rose-500 shrink-0 ml-1.5 min-w-[32px] text-right">00:00</span>
       </div>
       <!-- Stop button -->
       <button id="rec-done-btn"
@@ -96,24 +96,24 @@
 
     <!-- Processing state: spinner -->
     <div id="voice-processing" class="hidden flex flex-col items-center gap-3 py-2">
-      <div class="w-10 h-10 border-3 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-      <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">음성 인식 중...</span>
+      <div class="w-10 h-10 border-3 border-slate-200 border-t-ink3 rounded-full animate-spin"></div>
+      <span class="text-xs font-bold uppercase tracking-widest text-slate-500">음성 인식 중...</span>
     </div>
 
     <!-- Text input (hidden by default) -->
     <div id="text-input-area" class="hidden">
       <div class="flex items-center gap-2">
-        <button onclick="hideTextInput()" class="text-slate-400 hover:text-primary shrink-0 w-10 h-10 flex items-center justify-center" aria-label="음성 입력으로 전환">
+        <button onclick="hideTextInput()" class="text-slate-400 hover:text-ink3 shrink-0 w-10 h-10 flex items-center justify-center" aria-label="음성 입력으로 전환">
           <i class="fa-solid fa-microphone" style="font-size:18px"></i>
         </button>
         <input id="chat-input"
                type="text"
                placeholder="텍스트로 입력하세요..."
                class="flex-1 border border-slate-200 rounded-full px-4 py-2.5 text-sm font-medium
-                      focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                      focus:outline-none focus:border-ink3 focus:ring-2 focus:ring-ink3/10"
                onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMessage()">
         <button onclick="sendMessage()"
-                class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-dark transition shrink-0"
+                class="w-10 h-10 flex items-center justify-center rounded-lg bg-ink3 text-white hover:bg-ink2 transition shrink-0"
                 aria-label="전송">
           <i class="fa-solid fa-arrow-up" style="font-size:18px"></i>
         </button>

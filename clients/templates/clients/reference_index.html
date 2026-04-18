@@ -7,24 +7,24 @@
 {% block content %}
 <div class="px-10 py-10 max-w-6xl">
   <div class="mb-10">
-    <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Reference Library</span>
+    <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Reference Library</span>
     <h2 class="text-4xl font-black text-slate-900 tracking-tight">레퍼런스 관리</h2>
     <p class="mt-2 text-sm text-slate-500">대학·기업·자격증 마스터 데이터를 관리합니다.</p>
   </div>
 
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-2 mb-6 inline-flex items-center gap-1">
     <button hx-get="/reference/universities/" hx-target="#ref-tab-content" hx-push-url="/reference/universities/"
-            class="ref-tab px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'universities' %}bg-primary text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+            class="ref-tab px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'universities' %}bg-ink3 text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
             data-tab="universities">
       대학 랭킹
     </button>
     <button hx-get="/reference/companies/" hx-target="#ref-tab-content" hx-push-url="/reference/companies/"
-            class="ref-tab px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'companies' %}bg-primary text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+            class="ref-tab px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'companies' %}bg-ink3 text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
             data-tab="companies">
       기업 DB
     </button>
     <button hx-get="/reference/certs/" hx-target="#ref-tab-content" hx-push-url="/reference/certs/"
-            class="ref-tab px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'certs' %}bg-primary text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
+            class="ref-tab px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'certs' %}bg-ink3 text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
             data-tab="certs">
       자격증
     </button>
@@ -48,9 +48,9 @@ document.body.addEventListener('htmx:afterSwap', function(e) {
     document.querySelectorAll('.ref-tab').forEach(function(tab) {
       var key = tab.dataset.tab;
       var active = path.includes('/' + key);
-      tab.classList.remove('bg-primary', 'text-white', 'text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
+      tab.classList.remove('bg-ink3', 'text-white', 'text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
       if (active) {
-        tab.classList.add('bg-primary', 'text-white');
+        tab.classList.add('bg-ink3', 'text-white');
       } else {
         tab.classList.add('text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
       }

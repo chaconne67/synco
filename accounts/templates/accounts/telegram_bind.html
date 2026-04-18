@@ -6,7 +6,7 @@
 {% block content %}
 <div class="px-10 py-10 max-w-2xl">
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-6">Binding Setup</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-6">Binding Setup</h3>
 
     {% if message %}
     <div class="mb-5 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-xs font-semibold text-emerald-700">
@@ -21,10 +21,10 @@
     {% endif %}
 
     {% if code %}
-    <div class="mb-6 rounded-xl bg-primary/5 border border-primary/10 p-6">
-      <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Step 1 · 텔레그램 Bot에 아래 코드 전송</p>
+    <div class="mb-6 rounded-xl bg-ink3/5 border border-ink3/10 p-6">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Step 1 · 텔레그램 Bot에 아래 코드 전송</p>
       <p class="text-3xl font-mono font-black text-center tracking-[0.3em] text-slate-900 my-4">{{ code }}</p>
-      <p class="text-[11px] text-slate-500 text-center font-medium">
+      <p class="text-xs text-slate-500 text-center font-medium">
         <code class="bg-white px-2 py-1 rounded border border-slate-100">/start {{ code }}</code>
         <span class="mx-1">·</span>
         {{ expires_minutes }}분 내 입력
@@ -40,7 +40,7 @@
       <div class="flex-1 min-w-0">
         <p class="text-sm font-bold text-slate-900">텔레그램 연결 완료</p>
         {% if verified_at %}
-        <p class="text-[11px] text-slate-500 mt-0.5">{{ verified_at|date:"Y-m-d H:i" }} 인증</p>
+        <p class="text-xs text-slate-500 mt-0.5">{{ verified_at|date:"Y-m-d H:i" }} 인증</p>
         {% endif %}
       </div>
     </div>
@@ -49,7 +49,7 @@
       <form method="post" action="{% url 'telegram:test' %}" class="flex-1">
         {% csrf_token %}
         <button type="submit"
-          class="w-full rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+          class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
           Test Message
         </button>
       </form>
@@ -65,7 +65,7 @@
     <form method="post" action="{% url 'telegram:bind' %}">
       {% csrf_token %}
       <button type="submit"
-        class="w-full rounded-xl bg-primary text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
+        class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
         Connect Telegram
       </button>
     </form>

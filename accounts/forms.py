@@ -9,7 +9,7 @@ from .models import InviteCode, Organization
 
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
-    "focus:ring-2 focus:ring-primary focus:border-primary"
+    "focus:ring-2 focus:ring-ink3 focus:border-ink3"
 )
 
 FILE_INPUT_CSS = (

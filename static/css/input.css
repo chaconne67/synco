@@ -2,9 +2,314 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   synco design system — ui-sample/*.html 기준 재사용 유틸리티
+--------------------------------------------------------------------------- */
+@layer components {
+
+  /* Tabular numerals — 지표/통계/날짜용 */
+  .tnum {
+    font-feature-settings: "tnum" 1, "ss01" 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Eyebrow — 카드·섹션 위쪽의 작은 대문자 라벨 (text-xs = 12px) */
+  .eyebrow {
+    @apply text-xs font-bold uppercase;
+    letter-spacing: 0.08em;
+    color: #94A3B8;
+  }
+  .eyebrow-ko {
+    @apply text-xs font-semibold;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* 사이드바 링크 — dark 사이드바의 아이템 (text-sm = 14px) */
+  .sidebar-link {
+    @apply flex items-center text-sm font-medium;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #94A3B8;
+    transition: background .15s ease, color .15s ease;
+  }
+  .sidebar-link:hover,
+  .sidebar-link.is-active {
+    background: #1E293B;
+    color: #fff;
+  }
+  .sidebar-link .dot {
+    width: 3px;
+    height: 18px;
+    border-radius: 2px;
+    background: transparent;
+    margin-right: -8px;
+  }
+  .sidebar-link.is-active .dot {
+    background: #fff;
+  }
+
+  /* 칸반 컬럼 컨테이너 — 상태 색상 배경 (Notion 스타일). 카드는 흰색으로 대비 */
+  .col-container {
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .col-container-searching { background: #FDF2F8; }  /* pink 50 */
+  .col-container-screening { background: #EFF6FF; }  /* blue 50 */
+  .col-container-closed    { background: #F0FDF4; }  /* green 50 */
+
+  /* 상태 pill (컬럼 헤더 내부) — 컨테이너보다 진한 색으로 구분 강조 (text-xs = 12px) */
+  .col-pill {
+    @apply inline-flex items-center text-xs font-semibold;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+  .col-pill-searching { background: #FCE7F3; color: #BE185D; }  /* pink */
+  .col-pill-screening { background: #DBEAFE; color: #1E40AF; }  /* blue */
+  .col-pill-closed    { background: #D1FAE5; color: #047857; }  /* green */
+
+  /* Card hover — top/position 기반. transform 쓰면 hover 시 텍스트 흐려진다 */
+  .rounded-card {
+    position: relative;
+    top: 0;
+    transition:
+      top 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .rounded-card:hover {
+    top: -2px;
+    box-shadow:
+      0 12px 24px -10px rgba(15, 23, 42, 0.18),
+      0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  }
+  .bg-ink.rounded-card:hover {
+    box-shadow:
+      0 16px 32px -12px rgba(15, 23, 42, 0.45),
+      0 6px 12px -6px rgba(15, 23, 42, 0.2);
+  }
+
+  /* Progress bar (얇은 4px) */
+  .progress {
+    height: 4px;
+    border-radius: 999px;
+    background: #E2E8F0;
+    overflow: hidden;
+  }
+  .progress > span {
+    display: block;
+    height: 100%;
+    background: #334155;
+    border-radius: 999px;
+  }
+  .progress.success > span { background: #10B981; }
+  .progress.info    > span { background: #6366F1; }
+  .progress.muted   > span { background: #94A3B8; }
+
+  /* Status dot */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    display: inline-block;
+  }
+
+  /* Chip (카테고리 토글) — text-xs = 12px */
+  .chip {
+    @apply inline-flex items-center text-xs font-medium;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: #334155;
+    background: #F1F5F9;
+  }
+  .chip.is-active {
+    background: #334155;
+    color: #fff;
+  }
+
+  /* Badge (프로젝트 상태 뱃지) — text-xs = 12px */
+  .badge {
+    @apply inline-flex items-center text-xs font-bold uppercase;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.06em;
+  }
+  .badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+  .badge.sourcing       { background: #ECFDF5; color: #047857; }
+  .badge.screening      { background: #EFF6FF; color: #1D4ED8; }
+  .badge.closed-success { background: #F1F5F9; color: #334155; }
+  .badge.urgent         { background: #FEF2F2; color: #B91C1C; }
+
+  /* Meta pill — 프로젝트/후보자 헤더의 메타정보 (연봉·수수료·마감 등) */
+  .meta-pill {
+    @apply inline-flex items-center text-xs font-semibold;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #F1F5F9;
+    color: #334155;
+  }
+  .meta-pill.success { background: #F0FDF4; color: #047857; }
+  .meta-pill.danger  { background: #FEF2F2; color: #B91C1C; }
+
+  /* Skill / tag chip — text-xs = 12px */
+  .tag {
+    @apply inline-flex items-center text-xs font-semibold;
+    padding: 4px 9px;
+    border-radius: 6px;
+    color: #475569;
+    background: #F1F5F9;
+  }
+
+  /* View-mode toggle (보드/리스트/스케줄) — button text-sm = 14px */
+  .view-toggle {
+    display: inline-flex;
+    align-items: center;
+    background: #FFFFFF;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 2px 0 rgba(15,23,42,0.04);
+  }
+  .view-toggle button {
+    @apply inline-flex items-center text-sm font-semibold;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    color: #64748B;
+    transition: background .15s ease, color .15s ease;
+  }
+  .view-toggle button:hover { color: #0F172A; }
+  .view-toggle button.is-active {
+    background: #334155;
+    color: #fff;
+    box-shadow: 0 1px 2px 0 rgba(15,23,42,0.12);
+  }
+
+  /* 칸반 컬럼 헤더 — col-title text-xs = 12px */
+  .col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 16px;
+  }
+  .col-title {
+    @apply inline-flex items-center text-xs font-bold uppercase;
+    gap: 8px;
+    letter-spacing: 0.08em;
+    color: #334155;
+  }
+  .col-title .count {
+    color: #94A3B8;
+    font-weight: 700;
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Avatar stack — 28px 원 + text-xs (12px) */
+  .av-stack {
+    display: flex;
+  }
+  .av-stack > * {
+    @apply flex items-center justify-center text-xs font-bold;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 2px solid #FFFFFF;
+    color: #fff;
+    margin-left: -6px;
+  }
+  .av-stack > *:first-child { margin-left: 0; }
+  .av-stack > .more {
+    background: #F1F5F9;
+    color: #475569;
+  }
+  /* 8단계 진행 바 (Application 카드용) */
+  .stage-progress {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .stage-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+  .stage-step .dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: #F1F5F9;
+    border: 2px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94A3B8;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .stage-step.passed .dot {
+    background: #10B981;
+    border-color: #10B981;
+    color: #fff;
+  }
+  .stage-step.current .dot {
+    background: #0F172A;
+    border-color: #0F172A;
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(15,23,42,0.12);
+  }
+  .stage-step.passed,
+  .stage-step.current {
+    color: #0F172A;
+  }
+  /* 단계 연결선 */
+  .stage-step::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: calc(50% + 18px);
+    right: calc(-50% + 18px);
+    height: 2px;
+    background: #E2E8F0;
+    z-index: 0;
+  }
+  .stage-step:last-child::before { display: none; }
+  .stage-step.passed::before {
+    background: #10B981;
+  }
+  .stage-step > .dot { position: relative; z-index: 1; }
+
+  /* av-1 ~ av-6: 각 담당자 인덱스별 gradient 배경 (목업 기준) */
+  .av-1 { background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%); }
+  .av-2 { background: linear-gradient(135deg, #fcd34d 0%, #d97706 100%); }
+  .av-3 { background: linear-gradient(135deg, #c4b5fd 0%, #6366f1 100%); }
+  .av-4 { background: linear-gradient(135deg, #6ee7b7 0%, #059669 100%); }
+  .av-5 { background: linear-gradient(135deg, #fda4af 0%, #be123c 100%); }
+  .av-6 { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%); }
+}
+
+/* ---------------------------------------------------------------------------
+   접근성·모션
+--------------------------------------------------------------------------- */
+
 /* Focus visible */
 *:focus-visible {
-  outline: 2px solid #2563EB;
+  outline: 2px solid #334155;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -26,4 +331,3 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-section {@apply p-6}

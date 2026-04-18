@@ -2,7 +2,7 @@
 {% load static %}
 
 <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-  <h2 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-4">알림 설정</h2>
+  <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">알림 설정</h2>
 
   <form method="post"
         hx-post="{% url 'settings_notify' %}"
@@ -13,9 +13,9 @@
     <div class="space-y-1">
       <!-- Header row -->
       <div class="grid grid-cols-3 gap-4 pb-2 border-b border-slate-100">
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">알림 유형</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">웹</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">텔레그램</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">알림 유형</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 text-center">웹</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 text-center">텔레그램</span>
       </div>
 
       <!-- Contact result -->
@@ -24,12 +24,12 @@
         <div class="text-center">
           <input type="checkbox" name="contact_result_web"
                  {% if form.initial.contact_result_web %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
         <div class="text-center">
           <input type="checkbox" name="contact_result_telegram"
                  {% if form.initial.contact_result_telegram %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
       </div>
 
@@ -39,12 +39,12 @@
         <div class="text-center">
           <input type="checkbox" name="recommendation_feedback_web"
                  {% if form.initial.recommendation_feedback_web %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
         <div class="text-center">
           <input type="checkbox" name="recommendation_feedback_telegram"
                  {% if form.initial.recommendation_feedback_telegram %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
       </div>
 
@@ -54,12 +54,12 @@
         <div class="text-center">
           <input type="checkbox" name="project_approval_web"
                  {% if form.initial.project_approval_web %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
         <div class="text-center">
           <input type="checkbox" name="project_approval_telegram"
                  {% if form.initial.project_approval_telegram %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
       </div>
 
@@ -69,19 +69,19 @@
         <div class="text-center">
           <input type="checkbox" name="newsfeed_update_web"
                  {% if form.initial.newsfeed_update_web %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
         <div class="text-center">
           <input type="checkbox" name="newsfeed_update_telegram"
                  {% if form.initial.newsfeed_update_telegram %}checked{% endif %}
-                 class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary/30">
+                 class="w-4 h-4 text-ink3 rounded border-slate-300 focus:ring-ink3/30">
         </div>
       </div>
     </div>
 
     <div class="mt-6">
       <button type="submit"
-              class="w-full py-3.5 text-xs font-bold uppercase tracking-widest text-white bg-primary rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.005] active:scale-[0.995] transition-all">
+              class="w-full py-3.5 text-xs font-bold uppercase tracking-widest text-white bg-ink3 rounded-xl shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.005] active:scale-[0.995] transition-all">
         설정 저장
       </button>
     </div>

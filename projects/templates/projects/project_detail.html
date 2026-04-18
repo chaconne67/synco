@@ -3,101 +3,151 @@
 
 {% block title %}{{ project.title }} — synco{% endblock %}
 {% block breadcrumb_current %}Project{% endblock %}
-{% block page_title %}{{ project.title|truncatechars:30 }}{% endblock %}
+{% block page_title %}Project Detail{% endblock %}
 
 {% block content %}
-<div class="px-10 py-10 max-w-7xl">
-  {# Project Header #}
-  <div class="flex flex-col md:flex-row md:items-start justify-between mb-10 gap-6">
-    <div>
-      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">{{ project.client.name }}</span>
-      <h2 class="text-4xl font-black text-slate-900 tracking-tight leading-tight">{{ project.title }}</h2>
-      <div class="mt-4 flex items-center gap-2 flex-wrap">
-        <span class="inline-flex items-center gap-1.5 bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-700">
-          <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          {{ project.get_phase_display }}
-        </span>
-        <span class="inline-flex items-center gap-1.5 bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-700">
-          {{ project.get_status_display }}
-        </span>
+<main class="w-full max-w-[1280px]">
+<div class="px-8 py-8 space-y-6">
+
+  {# Back link #}
+  <a href="{% url 'projects:project_list' %}"
+     hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
+     class="inline-flex items-center gap-2 text-xs font-semibold text-muted hover:text-ink transition-colors">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+    Projects로 돌아가기
+  </a>
+
+  {# ============ Project header ============ #}
+  <section class="bg-surface rounded-card shadow-card p-8 flex items-start justify-between gap-6">
+    <div class="min-w-0">
+      <div class="flex items-center gap-2 flex-wrap">
+        {% if project.status == "closed" %}
+          <span class="col-pill col-pill-closed">완료 · {{ project.get_result_display|default:"종료" }}</span>
+        {% elif project.phase == "screening" %}
+          <span class="col-pill col-pill-screening">심사중</span>
+        {% else %}
+          <span class="col-pill col-pill-searching">진행중</span>
+        {% endif %}
+        {% if project.deadline and project.status == "open" %}
+          {% with days=project.deadline|timeuntil %}
+          <span class="badge urgent">{{ project.deadline|date:"Y-m-d" }}</span>
+          {% endwith %}
+        {% endif %}
+      </div>
+      <h2 class="mt-4 text-2xl font-bold tracking-tight leading-tight">{{ project.title }}</h2>
+      <p class="text-lg text-muted mt-2">
+        <span class="font-semibold text-ink3">{{ project.client.name }}</span>
+      </p>
+
+      <div class="flex flex-wrap items-center gap-2 mt-5">
         {% if project.deadline %}
-        <span class="inline-flex items-center gap-1.5 bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-700">
-          <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          마감 {{ project.deadline|date:"Y.m.d" }}
+        <span class="meta-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          마감 {{ project.deadline|date:"Y-m-d" }}
         </span>
         {% endif %}
-        <span class="inline-flex items-center gap-1.5 bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-700">
-          매칭 {{ applications|length }}건
+        {% if project.annual_salary %}
+        <span class="meta-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          연봉 ₩ {{ project.annual_salary|intcomma }}
+        </span>
+        {% endif %}
+        {% if project.fee_percent %}
+        <span class="meta-pill">
+          수수료율 {{ project.fee_percent }}%
+        </span>
+        {% endif %}
+        {% if project.expected_fee %}
+        <span class="meta-pill success">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          예상 수수료 ₩ {{ project.expected_fee|intcomma }}
+        </span>
+        {% endif %}
+        <span class="meta-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          매칭 {{ applications|length }}명
+        </span>
+        <span class="meta-pill">
+          진행 {{ project.days_elapsed }}일
         </span>
       </div>
+
+      {% if project.assigned_consultants.all %}
+      <div class="mt-4 text-xs text-muted">
+        담당자:
+        <span class="font-semibold text-ink3">{% for c in project.assigned_consultants.all %}{{ c.get_full_name|default:c.username }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+      </div>
+      {% endif %}
     </div>
-    <div class="flex flex-col gap-2 items-end shrink-0">
+
+    {# CTA + 더보기 #}
+    <div class="flex items-center gap-2 shrink-0">
+      {% if project.status == "open" %}
       <button hx-get="{% url 'projects:project_add_candidate' project.id %}"
-              hx-target="#modal-container"
-              hx-swap="innerHTML"
-              class="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-primary/20 hover:bg-primary-dark hover:scale-[1.01] active:scale-[0.99] transition-all">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              hx-target="#modal-container" hx-swap="innerHTML"
+              class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         후보자 추가
       </button>
-      <div class="flex items-center gap-3 mt-1">
-        <a href="{% url 'projects:project_update' project.id %}"
-           hx-get="{% url 'projects:project_update' project.id %}"
-           hx-target="#main-content" hx-push-url="true"
-           class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-primary transition-colors">JD 편집</a>
-        {% if project.status == "open" %}
-          <span class="text-slate-200">·</span>
-          <button hx-get="{% url 'projects:project_close' project.id %}"
-                  hx-target="#modal-container"
+      {% endif %}
+
+      {# 더보기 드롭다운 (L2.2에서 확장 예정) #}
+      <details class="relative">
+        <summary class="list-none inline-flex items-center justify-center w-10 h-10 rounded-lg border border-hair bg-surface text-muted hover:bg-line hover:text-ink cursor-pointer transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </summary>
+        <div class="absolute right-0 top-12 z-20 w-48 bg-surface border border-hair rounded-xl shadow-lift py-1.5">
+          <a href="{% url 'projects:project_update' project.id %}"
+             hx-get="{% url 'projects:project_update' project.id %}"
+             hx-target="#main-content" hx-push-url="true"
+             class="block px-4 py-2 text-sm font-medium text-ink3 hover:bg-line transition-colors">
+            JD · 정보 편집
+          </a>
+          <button hx-get="{% url 'projects:project_timeline' project.id %}"
+                  hx-target="#project-main"
                   hx-swap="innerHTML"
-                  class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-rose-600 transition-colors">프로젝트 종료</button>
-        {% endif %}
-      </div>
+                  class="w-full text-left px-4 py-2 text-sm font-medium text-ink3 hover:bg-line transition-colors">
+            타임라인 보기
+          </button>
+          <div class="h-px my-1 bg-line"></div>
+          {% if project.status == "open" %}
+          <button hx-get="{% url 'projects:project_close' project.id %}"
+                  hx-target="#modal-container" hx-swap="innerHTML"
+                  class="w-full text-left px-4 py-2 text-sm font-medium text-danger hover:bg-line transition-colors">
+            프로젝트 종료
+          </button>
+          {% endif %}
+        </div>
+      </details>
     </div>
-  </div>
+  </section>
 
-  {# Tab Bar #}
-  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 mb-6 inline-flex items-center gap-1">
-    <button class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-primary text-white"
-            data-tab="applications">
-      후보자 · {{ applications|length }}
-    </button>
-    <button class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
-            data-tab="timeline"
-            hx-get="{% url 'projects:project_timeline' project.id %}"
-            hx-target="#tab-content"
-            hx-swap="innerHTML">
-      타임라인
-    </button>
-    <button class="px-5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-400 cursor-not-allowed"
-            data-tab="jd" disabled>
-      JD · 메타
-    </button>
-  </div>
-
-  <div id="tab-content">
+  {# ============ Main — Applications ============ #}
+  <section id="project-main">
     <div id="project-applications-container"
          hx-get="{% url 'projects:project_applications' project.id %}"
          hx-trigger="actionChanged from:body, applicationChanged from:body"
          hx-swap="innerHTML">
-      <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
+      <div class="bg-surface rounded-card shadow-card p-8">
         <div class="flex items-center gap-4 mb-6">
-          <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">매칭된 후보자 · Candidates</h3>
-          <div class="h-px flex-1 bg-slate-100"></div>
+          <div class="eyebrow">Candidates · 후보자</div>
+          <div class="h-px flex-1 bg-line"></div>
+          <div class="text-xs text-muted tnum">{{ applications|length }}명</div>
         </div>
         <div class="space-y-3">
           {% for application in applications %}
             {% include "projects/partials/application_card.html" with application=application %}
           {% empty %}
             <div class="py-8 text-center">
-              <p class="text-sm text-slate-500 font-medium">아직 매칭된 후보자가 없습니다</p>
-              <p class="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">우측 상단 [후보자 추가] 버튼을 사용하세요</p>
+              <p class="text-sm text-muted font-medium">아직 매칭된 후보자가 없습니다</p>
+              <p class="mt-1 text-xs text-faint">우측 상단 <b>+ 후보자 추가</b> 버튼을 사용하세요</p>
             </div>
           {% endfor %}
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  {# modal-container is in common/base.html — no duplicate here #}
 </div>
+</main>
 {% endblock %}

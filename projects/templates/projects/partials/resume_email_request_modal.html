@@ -1,0 +1,37 @@
+{# Phase B — 이메일로 이력서 요청 모달 #}
+<div class="fixed inset-0 bg-ink/50 flex items-center justify-center z-50"
+     onclick="if (event.target === this) document.getElementById('modal-container').innerHTML = ''">
+  <div class="bg-surface rounded-card shadow-lift w-[560px] max-w-[90vw] p-8">
+    <h3 class="text-xl font-bold tracking-tight mb-2">이메일로 이력서 요청</h3>
+    <p class="text-sm text-muted mb-6">
+      <span class="font-semibold text-ink3">{{ application.candidate.name }}</span> 후보자에게
+      이력서를 요청하는 이메일 내용을 작성합니다. 발송 기록만 저장되고, 응답을 3일간 대기하는 상태로 설정됩니다.
+    </p>
+
+    <form hx-post="{% url 'projects:application_resume_request_email' application.id %}"
+          hx-swap="none">
+      {% csrf_token %}
+      <label class="block text-xs font-semibold text-muted mb-1">받는 사람 (참고)</label>
+      <input type="text" value="{{ application.candidate.email|default:'이메일 미등록' }}" readonly
+             class="w-full h-10 px-3 mb-4 rounded-lg border border-hair bg-line text-sm text-muted">
+
+      <label class="block text-xs font-semibold text-muted mb-1">이메일 본문</label>
+      <textarea name="body" rows="6" required
+                placeholder="예: 안녕하세요. 말씀드린 포지션 검토를 위해 이력서 송부 부탁드립니다."
+                class="w-full px-3 py-2 rounded-lg border border-hair bg-surface text-sm placeholder:text-faint focus:border-ink3 focus:outline-none resize-none">{{ application.project.title }} 포지션 검토를 위해 이력서 송부 부탁드립니다. 감사합니다.</textarea>
+
+      <div class="flex items-center justify-end gap-2 mt-6">
+        <button type="button"
+                onclick="document.getElementById('modal-container').innerHTML = ''"
+                class="inline-flex items-center px-4 h-10 rounded-lg border border-hair text-sm font-semibold text-muted hover:text-ink hover:bg-line transition-colors">
+          취소
+        </button>
+        <button type="submit"
+                class="inline-flex items-center px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors"
+                onclick="setTimeout(() => document.getElementById('modal-container').innerHTML = '', 200)">
+          요청 기록 · 응답 대기
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

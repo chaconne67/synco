@@ -89,6 +89,65 @@ STATE_FROM_ACTION_TYPE: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# 업무 프로세스 8단계 — 엑셀 분석(01-excel-analysis §5) + synco 사전 미팅 추가
+# 각 단계는 Completion Gate(ActionType)를 가지며, 그 액션 완료 시 단계 통과.
+# ---------------------------------------------------------------------------
+
+STAGES_ORDER = [
+    ("sourcing",        "서칭"),
+    ("contact",         "접촉"),
+    ("resume",          "이력서 수집"),
+    ("pre_meeting",     "사전 미팅"),
+    ("prep_submission", "제출 준비"),
+    ("client_submit",   "고객사 제출"),
+    ("interview",       "면접"),
+    ("hired",           "입사"),
+]
+
+# ActionType.code → stage_id. 단계 영향 없는 범용 활동은 매핑 없음.
+STAGE_FROM_ACTION_TYPE: dict[str, str] = {
+    "search_db":              "sourcing",
+    "search_external":        "sourcing",
+    "reach_out":              "contact",
+    "re_reach_out":           "contact",
+    "await_reply":            "contact",
+    "share_jd":               "contact",
+    "receive_resume":         "resume",
+    "convert_resume":         "resume",
+    "schedule_pre_meet":      "pre_meeting",
+    "pre_meeting":            "pre_meeting",
+    "prepare_submission":     "prep_submission",
+    "submit_to_pm":           "prep_submission",
+    "submit_to_client":       "client_submit",
+    "await_doc_review":       "client_submit",
+    "receive_doc_feedback":   "client_submit",
+    "schedule_interview":     "interview",
+    "interview_round":        "interview",
+    "await_interview_result": "interview",
+    "confirm_hire":           "hired",
+    "await_onboarding":       "hired",
+    # follow_up, escalate_to_boss, note → 지원 활동 (stage 진행에 영향 없음)
+}
+
+# 각 stage의 completion gate (이 ActionType이 완료되면 단계 통과)
+# 원칙: gate는 "단계 완료를 의미하는 가장 자연스러운 액션". share_jd/await_reply 는 reach_out 중
+#       자연 발생하는 부산물이므로 독립 gate가 아니라 선택적 보조 액션으로 둠.
+STAGE_GATES: dict[str, str | None] = {
+    "sourcing":        None,              # Application 생성 자체가 gate
+    "contact":         "reach_out",       # 연락 한 번 성공 = 접촉 완료
+    "resume":          "receive_resume",
+    "pre_meeting":     "pre_meeting",
+    "prep_submission": "submit_to_pm",
+    "client_submit":   "submit_to_client",
+    "interview":       "interview_round",
+    "hired":           "confirm_hire",
+}
+
+# 건너뛰기 placeholder ActionType code — update_action_labels 커맨드가 seed
+STAGE_SKIPPED_ACTION_CODE = "stage_skipped"
+
+
 # ===========================================================================
 # Project
 # ===========================================================================
@@ -134,6 +193,20 @@ class Project(BaseModel):
         db_index=True,
     )
     deadline = models.DateField(null=True, blank=True)
+    annual_salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        help_text="포지션 연봉 (원)",
+    )
+    fee_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="수수료율 (%, 예: 20.00)",
+    )
     closed_at = models.DateTimeField(null=True, blank=True)
     result = models.CharField(
         max_length=20,
@@ -190,6 +263,13 @@ class Project(BaseModel):
     @property
     def days_elapsed(self) -> int:
         return (timezone.now().date() - self.created_at.date()).days
+
+    @property
+    def expected_fee(self):
+        """예상 수수료 매출 (원). annual_salary·fee_percent 둘 다 있을 때만 계산."""
+        if self.annual_salary is None or self.fee_percent is None:
+            return None
+        return int(self.annual_salary * self.fee_percent / 100)
 
 
 # ===========================================================================
@@ -323,6 +403,90 @@ class Application(BaseModel):
         if not latest_done:
             return "matched"
         return STATE_FROM_ACTION_TYPE.get(latest_done.action_type.code, "in_progress")
+
+    @property
+    def stages_passed(self) -> set[str]:
+        """이 Application이 통과한 단계들 (gate 완료 또는 건너뛰기 placeholder 기록 기준)."""
+        passed = {"sourcing"}  # Application 존재 자체가 서칭 통과
+        if self.hired_at:
+            # hired는 모든 앞 단계 통과 + 입사까지 통과
+            return {s for s, _ in STAGES_ORDER}
+
+        done_actions = self.action_items.filter(status=ActionItemStatus.DONE)
+        # prefetch 이용 가능 시 in-memory 필터
+        if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
+            done_actions = [
+                a for a in self._prefetched_objects_cache["action_items"]
+                if a.status == ActionItemStatus.DONE
+            ]
+
+        for action in done_actions:
+            code = action.action_type.code
+            if code == STAGE_SKIPPED_ACTION_CODE:
+                skipped_id = (action.result or "").strip()
+                if skipped_id in dict(STAGES_ORDER):
+                    passed.add(skipped_id)
+            else:
+                stage_id = STAGE_FROM_ACTION_TYPE.get(code)
+                if stage_id and STAGE_GATES.get(stage_id) == code:
+                    passed.add(stage_id)
+        return passed
+
+    @property
+    def current_stage(self) -> str | None:
+        """현재 진행 단계 ID. hired면 'hired', dropped면 None."""
+        if self.dropped_at:
+            return None
+        if self.hired_at:
+            return "hired"
+        passed = self.stages_passed
+        for stage_id, _ in STAGES_ORDER:
+            if stage_id not in passed:
+                return stage_id
+        return "hired"
+
+    @property
+    def current_stage_label(self) -> str:
+        """현재 단계의 표시 이름."""
+        stage_id = self.current_stage
+        if not stage_id:
+            return ""
+        return dict(STAGES_ORDER).get(stage_id, "")
+
+    @property
+    def current_stage_action_codes(self) -> list[str]:
+        """현재 단계에 속하는 ActionType.code 리스트 (UI에서 할 일 필터링용)."""
+        sid = self.current_stage
+        if not sid:
+            return []
+        return [code for code, s in STAGE_FROM_ACTION_TYPE.items() if s == sid]
+
+    @property
+    def current_stage_gate_action(self):
+        """현재 단계의 gate ActionType 인스턴스. 없으면 None (sourcing은 gate 없음)."""
+        code = STAGE_GATES.get(self.current_stage)
+        if not code:
+            return None
+        return ActionType.objects.filter(code=code).first()
+
+    @property
+    def current_stage_pending_actions(self):
+        """현재 단계에 속하는 pending ActionItem 리스트."""
+        codes = set(self.current_stage_action_codes)
+        if not codes:
+            return []
+        if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
+            return [
+                a for a in self._prefetched_objects_cache["action_items"]
+                if a.status == ActionItemStatus.PENDING
+                and a.action_type.code in codes
+            ]
+        return list(
+            self.action_items.filter(
+                status=ActionItemStatus.PENDING,
+                action_type__code__in=codes,
+            ).select_related("action_type")
+        )
 
     @property
     def pending_actions(self):

@@ -20,7 +20,7 @@
     <a href="{% url 'projects:draft_preview' project.pk submission.pk %}"
        hx-get="{% url 'projects:draft_preview' project.pk submission.pk %}"
        hx-target="#draft-content"
-       class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark font-medium">
+       class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2 font-medium">
       전체 미리보기 &rarr;
     </a>
   </div>
@@ -28,7 +28,7 @@
   {# 자동 보정 내역 #}
   {% if draft.auto_corrections %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-3">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">자동 보정 내역 ({{ draft.auto_corrections|length }}건)</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">자동 보정 내역 ({{ draft.auto_corrections|length }}건)</h3>
     <div class="divide-y divide-slate-100">
       {% for correction in draft.auto_corrections %}
       <div class="py-2 text-sm">
@@ -47,7 +47,7 @@
 
   {# 다음 단계 선택 #}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">다음 단계</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">다음 단계</h3>
     <div class="flex flex-wrap gap-3">
       <a href="{% url 'projects:draft_consultation' project.pk submission.pk %}"
          hx-get="{% url 'projects:draft_consultation' project.pk submission.pk %}"
@@ -62,7 +62,7 @@
             class="inline">
         {% csrf_token %}
         <button type="submit"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition">
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-ink3 text-white rounded-lg text-sm font-medium hover:bg-ink3/90 transition">
           상담 건너뛰고 AI 정리
           <span id="finalize-spinner" class="htmx-indicator">
             <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

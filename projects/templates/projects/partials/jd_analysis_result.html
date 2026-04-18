@@ -2,12 +2,12 @@
   {% if analysis.requirements %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-[15px] font-semibold text-slate-700">JD 분석 결과</h3>
+      <h3 class="text-base font-semibold text-slate-700">JD 분석 결과</h3>
       <div class="flex items-center gap-2">
         <button hx-post="{% url 'projects:analyze_jd' project.pk %}"
                 hx-target="#jd-analysis-result"
                 hx-swap="outerHTML"
-                class="text-[13px] text-primary hover:text-primary-dark">
+                class="text-sm text-ink3 hover:text-ink2">
           재분석
         </button>
       </div>
@@ -17,15 +17,15 @@
     <div class="space-y-3">
       {% if reqs.position %}
       <div class="flex items-start justify-between">
-        <span class="text-[14px] text-slate-500 w-24 shrink-0">포지션</span>
-        <span class="text-[14px] text-slate-800 text-right">{{ reqs.position }}</span>
+        <span class="text-sm text-slate-500 w-24 shrink-0">포지션</span>
+        <span class="text-sm text-slate-800 text-right">{{ reqs.position }}</span>
       </div>
       {% endif %}
 
       {% if reqs.min_experience_years or reqs.max_experience_years %}
       <div class="flex items-start justify-between">
-        <span class="text-[14px] text-slate-500 w-24 shrink-0">경력</span>
-        <span class="text-[14px] text-slate-800 text-right">
+        <span class="text-sm text-slate-500 w-24 shrink-0">경력</span>
+        <span class="text-sm text-slate-800 text-right">
           {% if reqs.min_experience_years and reqs.max_experience_years %}
             {{ reqs.min_experience_years }}~{{ reqs.max_experience_years }}년
           {% elif reqs.min_experience_years %}
@@ -39,8 +39,8 @@
 
       {% if reqs.education_fields %}
       <div class="flex items-start justify-between">
-        <span class="text-[14px] text-slate-500 w-24 shrink-0">전공</span>
-        <span class="text-[14px] text-slate-800 text-right">
+        <span class="text-sm text-slate-500 w-24 shrink-0">전공</span>
+        <span class="text-sm text-slate-800 text-right">
           {{ reqs.education_fields|join:", " }}
         </span>
       </div>
@@ -48,10 +48,10 @@
 
       {% if reqs.keywords %}
       <div class="flex items-start">
-        <span class="text-[14px] text-slate-500 w-24 shrink-0">키워드</span>
+        <span class="text-sm text-slate-500 w-24 shrink-0">키워드</span>
         <div class="flex flex-wrap gap-1.5">
           {% for kw in reqs.keywords %}
-          <span class="px-2 py-0.5 bg-primary/10 text-primary text-[12px] rounded-full">{{ kw }}</span>
+          <span class="px-2 py-0.5 bg-ink3/10 text-ink3 text-xs rounded-full">{{ kw }}</span>
           {% endfor %}
         </div>
       </div>
@@ -59,8 +59,8 @@
 
       {% if reqs.role_summary %}
       <div class="pt-2 border-t border-slate-50">
-        <span class="text-[14px] text-slate-500 block mb-1">직무 요약</span>
-        <p class="text-[14px] text-slate-700">{{ reqs.role_summary }}</p>
+        <span class="text-sm text-slate-500 block mb-1">직무 요약</span>
+        <p class="text-sm text-slate-700">{{ reqs.role_summary }}</p>
       </div>
       {% endif %}
     </div>
@@ -71,21 +71,21 @@
       <form method="post" action="{% url 'projects:start_search_session' project.pk %}">
         {% csrf_token %}
         <button type="submit"
-                class="px-4 py-2 bg-primary text-white text-[14px] font-medium rounded-lg hover:bg-primary-dark transition">
+                class="px-4 py-2 bg-ink3 text-white text-sm font-medium rounded-lg hover:bg-ink2 transition">
           후보자 서칭
         </button>
       </form>
       <button hx-get="{% url 'projects:jd_matching_results' project.pk %}"
               hx-target="#matching-results"
               hx-swap="outerHTML"
-              class="px-4 py-2 border border-slate-300 text-slate-700 text-[14px] font-medium rounded-lg hover:bg-slate-50 transition">
+              class="px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition">
         매칭 결과 보기
       </button>
     </div>
   </div>
   {% else %}
   <div class="bg-slate-50 rounded-lg p-4 text-center">
-    <p class="text-[14px] text-slate-500">분석 결과가 없습니다.</p>
+    <p class="text-sm text-slate-500">분석 결과가 없습니다.</p>
   </div>
   {% endif %}
 </div>

@@ -5,10 +5,10 @@
 
   <!-- 상단: 추천 등록 버튼 -->
   <div class="flex justify-between items-center">
-    <h2 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">추천 이력 ({{ total_count }}건)</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">추천 이력 ({{ total_count }}건)</h2>
     <button hx-get="{% url 'projects:submission_create' project.pk %}"
             hx-target="#submission-form-area"
-            class="text-[13px] bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-dark transition">
+            class="text-sm bg-ink3 text-white px-3 py-1.5 rounded-lg hover:bg-ink2 transition">
       + 추천 등록
     </button>
   </div>
@@ -19,16 +19,16 @@
   <!-- 작성중 -->
   {% if drafting %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase mb-3">작성중 ({{ drafting|length }}건)</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-3">작성중 ({{ drafting|length }}건)</h3>
     <div class="overflow-x-auto">
-      <table class="w-full text-[14px]">
+      <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">등록일</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">등록일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -45,19 +45,19 @@
                  hx-get="{% url 'projects:submission_draft' project.pk submission.pk %}"
                  hx-target="#main-content"
                  hx-push-url="true"
-                 class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark">초안 작업</a>
+                 class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2">초안 작업</a>
               <button hx-get="{% url 'projects:submission_update' project.pk submission.pk %}"
                       hx-target="#submission-form-area"
-                      class="text-[13px] text-primary hover:text-primary-dark ml-2">수정</button>
+                      class="text-sm text-ink3 hover:text-ink2 ml-2">수정</button>
               <button hx-post="{% url 'projects:submission_submit' project.pk submission.pk %}"
                       hx-confirm="고객사에 제출하시겠습니까?"
-                      class="text-[13px] text-primary hover:text-primary-dark ml-2">제출하기</button>
+                      class="text-sm text-ink3 hover:text-ink2 ml-2">제출하기</button>
               <button hx-post="{% url 'projects:submission_delete' project.pk submission.pk %}"
                       hx-confirm="정말 삭제하시겠습니까?"
-                      class="text-[13px] text-rose-600 hover:text-rose-700 ml-2">삭제</button>
+                      class="text-sm text-rose-600 hover:text-rose-700 ml-2">삭제</button>
               {% if submission.document_file %}
                 <a href="{% url 'projects:submission_download' project.pk submission.pk %}"
-                   class="text-[13px] text-slate-600 hover:text-slate-800 ml-2">다운로드</a>
+                   class="text-sm text-slate-600 hover:text-slate-800 ml-2">다운로드</a>
               {% endif %}
             </td>
           </tr>
@@ -70,17 +70,17 @@
 
   <!-- 제출 -->
   {% if submitted %}
-  <div class="bg-white rounded-xl border border-primary/10 shadow-sm p-6">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-primary uppercase mb-3">제출 ({{ submitted|length }}건)</h3>
+  <div class="bg-white rounded-xl border border-ink3/10 shadow-sm p-6">
+    <h3 class="text-xs font-black tracking-[0.2em] text-ink3 uppercase mb-3">제출 ({{ submitted|length }}건)</h3>
     <div class="overflow-x-auto">
-      <table class="w-full text-[14px]">
+      <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">제출일</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">제출일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -95,10 +95,10 @@
             <td class="py-2 text-right">
               <button hx-get="{% url 'projects:submission_feedback' project.pk submission.pk %}"
                       hx-target="#submission-form-area"
-                      class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark">피드백 입력</button>
+                      class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2">피드백 입력</button>
               {% if submission.document_file %}
                 <a href="{% url 'projects:submission_download' project.pk submission.pk %}"
-                   class="text-[13px] text-slate-600 hover:text-slate-800 ml-2">다운로드</a>
+                   class="text-sm text-slate-600 hover:text-slate-800 ml-2">다운로드</a>
               {% endif %}
             </td>
           </tr>
@@ -112,16 +112,16 @@
   <!-- 통과 -->
   {% if passed %}
   <div class="bg-white rounded-xl border border-emerald-100 shadow-sm p-6">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-emerald-700 uppercase mb-3">통과 ({{ passed|length }}건)</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-emerald-700 uppercase mb-3">통과 ({{ passed|length }}건)</h3>
     <div class="overflow-x-auto">
-      <table class="w-full text-[14px]">
+      <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">제출일</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">제출일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -137,10 +137,10 @@
               <a href="{% url 'projects:interview_create' project.pk %}?submission={{ submission.pk }}"
                  hx-get="{% url 'projects:interview_create' project.pk %}?submission={{ submission.pk }}"
                  hx-target="#tab-content"
-                 class="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-dark">면접 등록 &rarr;</a>
+                 class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2">면접 등록 &rarr;</a>
               {% if submission.document_file %}
                 <a href="{% url 'projects:submission_download' project.pk submission.pk %}"
-                   class="text-[13px] text-slate-600 hover:text-slate-800 ml-2">다운로드</a>
+                   class="text-sm text-slate-600 hover:text-slate-800 ml-2">다운로드</a>
               {% endif %}
             </td>
           </tr>
@@ -154,16 +154,16 @@
   <!-- 탈락 -->
   {% if rejected %}
   <div class="bg-white rounded-xl border border-rose-100 shadow-sm p-6">
-    <h3 class="text-[11px] font-black tracking-[0.2em] text-rose-700 uppercase mb-3">탈락 ({{ rejected|length }}건)</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-rose-700 uppercase mb-3">탈락 ({{ rejected|length }}건)</h3>
     <div class="overflow-x-auto">
-      <table class="w-full text-[14px]">
+      <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">제출일</th>
-            <th class="text-left py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">제출일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -178,7 +178,7 @@
             <td class="py-2 text-right">
               {% if submission.document_file %}
                 <a href="{% url 'projects:submission_download' project.pk submission.pk %}"
-                   class="text-[13px] text-slate-600 hover:text-slate-800">다운로드</a>
+                   class="text-sm text-slate-600 hover:text-slate-800">다운로드</a>
               {% endif %}
             </td>
           </tr>
@@ -191,7 +191,7 @@
 
   {% if total_count == 0 %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <p class="text-[14px] text-slate-400">컨택에서 관심 후보자가 생기면 추천서류를 작성할 수 있습니다.</p>
+    <p class="text-sm text-slate-400">컨택에서 관심 후보자가 생기면 추천서류를 작성할 수 있습니다.</p>
   </div>
   {% endif %}
 </div>

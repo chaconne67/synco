@@ -36,19 +36,19 @@
     dropZone.addEventListener("dragover", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      dropZone.classList.add("border-primary", "bg-primary/5");
+      dropZone.classList.add("border-ink3", "bg-ink3/5");
     });
 
     dropZone.addEventListener("dragleave", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      dropZone.classList.remove("border-primary", "bg-primary/5");
+      dropZone.classList.remove("border-ink3", "bg-ink3/5");
     });
 
     dropZone.addEventListener("drop", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      dropZone.classList.remove("border-primary", "bg-primary/5");
+      dropZone.classList.remove("border-ink3", "bg-ink3/5");
       if (e.dataTransfer.files.length > 0) {
         handleFiles(e.dataTransfer.files);
       }
@@ -65,11 +65,11 @@
       if (container) {
         container.innerHTML =
           '<div class="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-100">' +
-          '<svg class="animate-spin w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24">' +
+          '<svg class="animate-spin w-5 h-5 text-ink3" fill="none" viewBox="0 0 24 24">' +
           '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>' +
           '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>' +
           '</svg>' +
-          '<span class="text-[13px] text-gray-500">업로드 중...</span>' +
+          '<span class="text-sm text-gray-500">업로드 중...</span>' +
           '</div>';
       }
 
@@ -123,7 +123,7 @@
           console.error("Upload error:", err);
           if (container) {
             container.innerHTML =
-              '<div class="p-3 bg-red-50 rounded-lg border border-red-100 text-[13px] text-red-600">' +
+              '<div class="p-3 bg-red-50 rounded-lg border border-red-100 text-sm text-red-600">' +
               '업로드에 실패했습니다. 다시 시도해주세요.</div>';
           }
         });

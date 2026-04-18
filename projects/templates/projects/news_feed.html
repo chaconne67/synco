@@ -8,7 +8,7 @@
 <div class="px-10 py-10 max-w-5xl">
   <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
     <div>
-      <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-2 block">Market Intelligence</span>
+      <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Market Intelligence</span>
       <h2 class="text-4xl font-black text-slate-900 tracking-tight">뉴스피드</h2>
       <p class="mt-2 text-sm text-slate-500">프로젝트와 관련된 최신 소식을 모아보세요.</p>
     </div>
@@ -23,14 +23,14 @@
 
   <div class="flex gap-2 overflow-x-auto pb-2 mb-8 no-scrollbar">
     <button hx-get="{% url 'news:news_filter' %}" hx-target="#news-list" hx-swap="innerHTML"
-            class="px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors
-            {% if not active_category %}bg-primary text-white shadow-lg shadow-primary/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+            class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors
+            {% if not active_category %}bg-ink3 text-white shadow-lg shadow-ink3/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
       All Disciplines
     </button>
     {% for value, label in categories %}
     <button hx-get="{% url 'news:news_filter' %}?category={{ value }}" hx-target="#news-list" hx-swap="innerHTML"
-            class="px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors
-            {% if active_category == value %}bg-primary text-white shadow-lg shadow-primary/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+            class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors
+            {% if active_category == value %}bg-ink3 text-white shadow-lg shadow-ink3/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
       {{ label }}
     </button>
     {% endfor %}
@@ -39,23 +39,23 @@
   {% if related_articles %}
   <div class="mb-10">
     <div class="flex items-center gap-4 mb-5">
-      <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">내 프로젝트 관련 뉴스 · For You</h3>
+      <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">내 프로젝트 관련 뉴스 · For You</h3>
       <div class="h-px flex-1 bg-slate-100"></div>
     </div>
     <div class="space-y-3">
       {% for article in related_articles %}
       <a href="{{ article.url }}" target="_blank" rel="noopener"
-         class="block rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-primary/20 transition-all p-5 group">
+         class="block rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-ink3/20 transition-all p-5 group">
         <div class="flex items-start gap-3">
-          <span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full uppercase tracking-widest whitespace-nowrap shrink-0">
+          <span class="text-xs font-bold text-ink3 bg-ink3/10 px-2 py-1 rounded-full uppercase tracking-widest whitespace-nowrap shrink-0">
             {{ article.get_category_display|default:"기타" }}
           </span>
-          <h4 class="text-base font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2">{{ article.title }}</h4>
+          <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors line-clamp-2">{{ article.title }}</h4>
         </div>
         {% if article.summary %}
         <p class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">{{ article.summary }}</p>
         {% endif %}
-        <div class="flex items-center gap-2 mt-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div class="flex items-center gap-2 mt-3 text-xs font-bold uppercase tracking-widest text-slate-400">
           <span>{{ article.source.name }}</span>
           {% if article.published_at %}
           <span class="text-slate-200">·</span>
@@ -70,7 +70,7 @@
 
   <div>
     <div class="flex items-center gap-4 mb-5">
-      <h3 class="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">최신 뉴스 · Latest</h3>
+      <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">최신 뉴스 · Latest</h3>
       <div class="h-px flex-1 bg-slate-100"></div>
     </div>
     <div id="news-list">
