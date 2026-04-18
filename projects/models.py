@@ -495,6 +495,12 @@ class Application(BaseModel):
     @property
     def has_pre_meeting_scheduled(self) -> bool:
         """사전 미팅 일정 확정된 ActionItem 존재 여부."""
+        if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
+            return any(
+                a.action_type.code == "schedule_pre_meet"
+                and a.status == ActionItemStatus.DONE
+                for a in self._prefetched_objects_cache["action_items"]
+            )
         return self.action_items.filter(
             action_type__code="schedule_pre_meet",
             status=ActionItemStatus.DONE,
@@ -503,6 +509,15 @@ class Application(BaseModel):
     @property
     def pre_meeting_scheduled_at(self):
         """일정 확정된 ActionItem의 scheduled_at."""
+        if "action_items" in getattr(self, "_prefetched_objects_cache", {}):
+            done = [
+                a
+                for a in self._prefetched_objects_cache["action_items"]
+                if a.action_type.code == "schedule_pre_meet"
+                and a.status == ActionItemStatus.DONE
+            ]
+            done.sort(key=lambda a: a.completed_at or a.created_at, reverse=True)
+            return done[0].scheduled_at if done else None
         ai = (
             self.action_items.filter(
                 action_type__code="schedule_pre_meet",

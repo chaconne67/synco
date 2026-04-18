@@ -3354,6 +3354,7 @@ def action_propose_next(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def stage_contact_complete(request, pk):
     """접촉 단계 완료 — 응답 기록."""
@@ -3390,6 +3391,7 @@ def stage_contact_complete(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def stage_pre_meeting_schedule(request, pk):
     """사전 미팅 일정 확정."""
@@ -3421,6 +3423,7 @@ def stage_pre_meeting_schedule(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def stage_pre_meeting_record(request, pk):
     """사전 미팅 결과 기록 — pre_meeting ActionItem DONE + (선택) MeetingRecord 오디오."""
@@ -3463,6 +3466,7 @@ def stage_pre_meeting_record(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def stage_prep_submission_confirm(request, pk):
     """이력서 작성(제출용) 단계 — 컨설턴트 컨펌."""
@@ -3485,6 +3489,7 @@ def stage_prep_submission_confirm(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def stage_client_submit_single(request, pk):
     """이력서 제출 단계 — 이 후보자만 단독 제출."""
@@ -3512,6 +3517,7 @@ def stage_client_submit_single(request, pk):
 
 
 @login_required
+@membership_required
 @require_http_methods(["POST"])
 def stage_interview_complete(request, pk):
     """면접 단계 완료 — 결과 + (선택) After Interview Review."""
