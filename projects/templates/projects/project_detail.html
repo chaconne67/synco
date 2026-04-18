@@ -122,30 +122,35 @@
     </div>
   </section>
 
-  {# ============ Main — Applications ============ #}
-  <section id="project-main">
-    <div id="project-applications-container"
-         hx-get="{% url 'projects:project_applications' project.id %}"
-         hx-trigger="actionChanged from:body, applicationChanged from:body"
-         hx-swap="innerHTML">
-      <div class="bg-surface rounded-card shadow-card p-8">
-        <div class="flex items-center gap-4 mb-6">
-          <div class="eyebrow">Candidates · 후보자</div>
-          <div class="h-px flex-1 bg-line"></div>
-          <div class="text-xs text-muted tnum">{{ applications|length }}명</div>
-        </div>
-        <div class="space-y-3">
-          {% for application in applications %}
-            {% include "projects/partials/application_card.html" with application=application %}
-          {% empty %}
-            <div class="py-8 text-center">
-              <p class="text-sm text-muted font-medium">아직 매칭된 후보자가 없습니다</p>
-              <p class="mt-1 text-xs text-faint">우측 상단 <b>+ 후보자 추가</b> 버튼을 사용하세요</p>
-            </div>
-          {% endfor %}
+  {# 영역 A — 프로젝트 레벨 작업 (서칭 + 배치 제출) #}
+  {% include "projects/partials/project_area_a.html" %}
+
+  {# 영역 B — 후보자 카드 리스트 #}
+  <section id="project-area-b">
+    <section id="project-main">
+      <div id="project-applications-container"
+           hx-get="{% url 'projects:project_applications' project.id %}"
+           hx-trigger="actionChanged from:body, applicationChanged from:body"
+           hx-swap="innerHTML">
+        <div class="bg-surface rounded-card shadow-card p-8">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="eyebrow">Candidates · 후보자</div>
+            <div class="h-px flex-1 bg-line"></div>
+            <div class="text-xs text-muted tnum">{{ applications|length }}명</div>
+          </div>
+          <div class="space-y-3">
+            {% for application in applications %}
+              {% include "projects/partials/application_card.html" with application=application %}
+            {% empty %}
+              <div class="py-8 text-center">
+                <p class="text-sm text-muted font-medium">아직 매칭된 후보자가 없습니다</p>
+                <p class="mt-1 text-xs text-faint">우측 상단 <b>+ 후보자 추가</b> 버튼을 사용하세요</p>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </section>
 
 </div>
