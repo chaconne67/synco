@@ -72,6 +72,12 @@ urlpatterns = [
         views.stage_pre_meeting_record,
         name="stage_pre_meeting_record",
     ),
+    # Phase C: 제출용 이력서 작성 단계 — 컨설턴트 컨펌
+    path(
+        "applications/<uuid:pk>/stage/prep_submission/confirm/",
+        views.stage_prep_submission_confirm,
+        name="stage_prep_submission_confirm",
+    ),
     # Phase B: 이력서 수집 단계 — 3가지 방법
     path(
         "applications/<uuid:pk>/resume/use_db/",

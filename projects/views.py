@@ -3460,3 +3460,25 @@ def stage_pre_meeting_record(request, pk):
             created_by=request.user,
         )
     return redirect("projects:project_detail", pk=app.project.pk)
+
+
+@login_required
+@require_http_methods(["POST"])
+def stage_prep_submission_confirm(request, pk):
+    """이력서 작성(제출용) 단계 — 컨설턴트 컨펌."""
+    app = get_object_or_404(Application, pk=pk)
+    org = _get_org(request)
+    if app.project.organization != org:
+        return HttpResponseForbidden("cross-org access denied")
+
+    at = ActionType.objects.get(code="submit_to_pm")
+    ActionItem.objects.create(
+        application=app,
+        action_type=at,
+        title="제출용 이력서 컨펌",
+        status=ActionItemStatus.DONE,
+        completed_at=timezone.now(),
+        note="컨설턴트 컨펌 완료 (자동 생성 템플릿 미구현 — 수동 컨펌)",
+        created_by=request.user,
+    )
+    return redirect("projects:project_detail", pk=app.project.pk)

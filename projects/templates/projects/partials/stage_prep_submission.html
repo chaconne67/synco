@@ -1,1 +1,18 @@
-<div class="text-sm text-muted">(이력서 작성 단계 — Task 13에서 구현)</div>
+<div class="space-y-3">
+  <p class="text-sm font-medium">고객사 제출용 이력서 문서</p>
+  <div class="bg-line rounded-lg p-4 text-sm">
+    <p class="font-medium mb-2">📄 자동 생성 기능은 별도 설계 중입니다.</p>
+    <p class="text-muted">
+      현재는 컨설턴트가 문서를 외부에서 준비한 뒤 아래 버튼으로 컨펌하세요.
+      이 단계는 <strong class="text-ink2">건너뛸 수 없습니다</strong>.
+    </p>
+  </div>
+  <form method="post"
+        action="{% url 'projects:stage_prep_submission_confirm' application.pk %}">
+    {% csrf_token %}
+    <button type="submit"
+            class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+      ✓ 문서 컨펌 완료
+    </button>
+  </form>
+</div>
