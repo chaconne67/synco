@@ -61,6 +61,12 @@ urlpatterns = [
         views.stage_contact_complete,
         name="stage_contact_complete",
     ),
+    # Phase C: 면접 단계 완료
+    path(
+        "applications/<uuid:pk>/stage/interview/complete/",
+        views.stage_interview_complete,
+        name="stage_interview_complete",
+    ),
     # Phase C: 사전 미팅 단계 — 일정 확정 + 결과 기록
     path(
         "applications/<uuid:pk>/stage/pre_meeting/schedule/",

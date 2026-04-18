@@ -3509,3 +3509,41 @@ def stage_client_submit_single(request, pk):
         submitted_at=timezone.now(),
     )
     return redirect("projects:project_detail", pk=app.project.pk)
+
+
+@login_required
+@require_http_methods(["POST"])
+def stage_interview_complete(request, pk):
+    """면접 단계 완료 — 결과 + (선택) After Interview Review."""
+    from projects.models import ActionItem, ActionItemStatus, ActionType, DropReason
+
+    app = get_object_or_404(Application, pk=pk)
+    org = _get_org(request)
+    if app.project.organization != org:
+        return HttpResponseForbidden("cross-org access denied")
+
+    result = request.POST.get("result", "")
+    review = request.POST.get("review", "").strip()
+
+    if result not in ("passed", "failed", "pending"):
+        return HttpResponseBadRequest("invalid result")
+
+    if result == "failed":
+        app.dropped_at = timezone.now()
+        app.drop_reason = DropReason.CLIENT_REJECTED
+        app.drop_note = review
+        app.save(update_fields=["dropped_at", "drop_reason", "drop_note"])
+        return redirect("projects:project_detail", pk=app.project.pk)
+
+    at = ActionType.objects.get(code="interview_round")
+    ActionItem.objects.create(
+        application=app,
+        action_type=at,
+        title="면접 결과 수령",
+        status=ActionItemStatus.DONE,
+        completed_at=timezone.now(),
+        result=review,
+        note=f"결과: {result}",
+        created_by=request.user,
+    )
+    return redirect("projects:project_detail", pk=app.project.pk)

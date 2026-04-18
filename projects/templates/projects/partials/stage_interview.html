@@ -1,1 +1,22 @@
-<div class="text-sm text-muted">(면접 단계 — Task 15에서 구현)</div>
+<form method="post" action="{% url 'projects:stage_interview_complete' application.pk %}"
+      class="space-y-3">
+  {% csrf_token %}
+  <p class="text-sm font-medium">면접 결과 입력</p>
+  <select name="result" required
+          class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+    <option value="">선택…</option>
+    <option value="passed">합격 (다음 단계로)</option>
+    <option value="failed">탈락 (drop)</option>
+    <option value="pending">보류 (라운드 재진행)</option>
+  </select>
+  <textarea name="review" rows="4"
+            placeholder="(선택) After Interview Review — 질문·응답·인상 요약"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></textarea>
+  <p class="text-xs text-muted">
+    녹음 → STT → 요약 자동화는 별도 설계 중입니다. 지금은 수기 입력만 지원합니다.
+  </p>
+  <button type="submit"
+          class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+    면접 완료
+  </button>
+</form>
