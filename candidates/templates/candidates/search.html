@@ -64,8 +64,8 @@
       </button>
       <div id="tab-scroller" class="overflow-x-auto hide-scrollbar">
         <div class="flex gap-1 whitespace-nowrap">
-          <a href="/candidates/"
-             hx-get="/candidates/"
+          <a href="/candidates/{% if target_project %}?project={{ target_project.pk }}{% endif %}"
+             hx-get="/candidates/{% if target_project %}?project={{ target_project.pk }}{% endif %}"
              hx-target="#main-content"
              hx-push-url="true"
              class="flex-shrink-0 inline-flex items-center px-3.5 py-2 rounded-lg text-sm font-semibold transition
@@ -73,8 +73,8 @@
             전체
           </a>
           {% for cat in categories %}
-          <a href="/candidates/?category={{ cat.name }}"
-             hx-get="/candidates/?category={{ cat.name }}"
+          <a href="/candidates/?category={{ cat.name }}{% if target_project %}&project={{ target_project.pk }}{% endif %}"
+             hx-get="/candidates/?category={{ cat.name }}{% if target_project %}&project={{ target_project.pk }}{% endif %}"
              hx-target="#main-content"
              hx-push-url="true"
              class="flex-shrink-0 inline-flex items-center px-3.5 py-2 rounded-lg text-sm font-semibold transition

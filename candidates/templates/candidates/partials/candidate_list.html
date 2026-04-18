@@ -14,7 +14,7 @@
   {% endfor %}
 
   {% if has_more %}
-  <div hx-get="/candidates/?page={{ page|add:1 }}{% if active_category %}&category={{ active_category }}{% endif %}{% if session %}&session_id={{ session.pk }}{% endif %}{% if rec_status_filter %}&rec_status={{ rec_status_filter }}{% endif %}"
+  <div hx-get="/candidates/?page={{ page|add:1 }}{% if active_category %}&category={{ active_category }}{% endif %}{% if session %}&session_id={{ session.pk }}{% endif %}{% if rec_status_filter %}&rec_status={{ rec_status_filter }}{% endif %}{% if target_project %}&project={{ target_project.pk }}{% endif %}"
        hx-target="this"
        hx-swap="outerHTML"
        hx-trigger="revealed"
