@@ -140,6 +140,11 @@ urlpatterns = [
         name="submission_create",
     ),
     path(
+        "<uuid:pk>/submissions/batch/",
+        views.submission_batch_create,
+        name="submission_batch_create",
+    ),
+    path(
         "<uuid:pk>/submissions/<uuid:sub_pk>/edit/",
         views.submission_update,
         name="submission_update",

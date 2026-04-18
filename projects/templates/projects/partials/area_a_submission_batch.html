@@ -1,1 +1,27 @@
-<div class="text-sm text-muted">(배치 제출 관리 — Task 7에서 구현)</div>
+{% if pending_for_submission %}
+<form method="post" action="{% url 'projects:submission_batch_create' project.pk %}"
+      class="space-y-3">
+  {% csrf_token %}
+  <p class="text-sm text-muted mb-2">
+    이력서 작성(제출용)까지 완료된 후보자를 선택하여 한 번에 고객사에 제출하세요.
+  </p>
+  <ul class="space-y-2 mb-4">
+    {% for app in pending_for_submission %}
+      <li class="flex items-center gap-3">
+        <input type="checkbox" name="application_ids" value="{{ app.pk }}"
+               id="batch-{{ app.pk }}" class="rounded">
+        <label for="batch-{{ app.pk }}" class="text-sm flex-1 cursor-pointer">
+          <span class="font-medium">{{ app.candidate.name }}</span>
+          <span class="text-muted ml-2">— {{ app.current_stage_label }}</span>
+        </label>
+      </li>
+    {% endfor %}
+  </ul>
+  <button type="submit"
+          class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+    선택한 후보 묶어 제출
+  </button>
+</form>
+{% else %}
+  <div class="text-sm text-muted">제출 대기 중인 후보자가 없습니다.</div>
+{% endif %}

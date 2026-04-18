@@ -116,7 +116,9 @@ def project_list(request):
     is_owner = membership.role == "owner"
 
     # Filter query parameters (Owner만 consultant 필터 허용. Consultant는 본인 배정만 강제)
-    consultant_filter = request.GET.get("consultant") if is_owner else str(request.user.id)
+    consultant_filter = (
+        request.GET.get("consultant") if is_owner else str(request.user.id)
+    )
     client_filter = request.GET.get("client") or None
     search_filter = request.GET.get("q") or None
     phase_filter = request.GET.get("phase")  # legacy, 사용 안 함
@@ -153,7 +155,9 @@ def project_list(request):
 
     # 상단 헤더 요약 — 진행 중 · 이달 마감
     now = timezone.now()
-    active_count = len(cards[ProjectPhase.SEARCHING]) + len(cards[ProjectPhase.SCREENING])
+    active_count = len(cards[ProjectPhase.SEARCHING]) + len(
+        cards[ProjectPhase.SCREENING]
+    )
     this_month_deadline_count = Project.objects.filter(
         organization=org,
         status=ProjectStatus.OPEN,
@@ -163,6 +167,7 @@ def project_list(request):
 
     # Owner 는 필터 바에서 컨설턴트 선택 가능. 조직 멤버 리스트 필요.
     from accounts.models import Membership
+
     if is_owner:
         org_consultants = [
             m.user
@@ -386,6 +391,11 @@ def project_detail(request, pk):
 
     from projects.models import STAGES_ORDER
 
+    # Phase C Task 7: 배치 제출 대기 후보자 (current_stage == "client_submit")
+    pending_for_submission = [
+        app for app in applications if app.current_stage == "client_submit"
+    ]
+
     return render(
         request,
         "projects/project_detail.html",
@@ -393,6 +403,7 @@ def project_detail(request, pk):
             "project": project,
             "applications": applications,
             "stages_order": STAGES_ORDER,
+            "pending_for_submission": pending_for_submission,
         },
     )
 
@@ -417,10 +428,15 @@ def project_applications_partial(request, pk):
         )
     )
     from projects.models import STAGES_ORDER
+
     return render(
         request,
         "projects/partials/project_applications_list.html",
-        {"project": project, "applications": applications, "stages_order": STAGES_ORDER},
+        {
+            "project": project,
+            "applications": applications,
+            "stages_order": STAGES_ORDER,
+        },
     )
 
 
@@ -1042,6 +1058,45 @@ def submission_create(request, pk):
             "is_edit": False,
         },
     )
+
+
+@login_required
+@membership_required
+@require_http_methods(["POST"])
+def submission_batch_create(request, pk):
+    """선택한 여러 Application 을 한 batch_id 로 묶어 Submission 생성."""
+    org = _get_org(request)
+    project = get_object_or_404(Project, pk=pk, organization=org)
+    app_ids = request.POST.getlist("application_ids")
+    if not app_ids:
+        return HttpResponseBadRequest("application_ids required")
+
+    applications = Application.objects.filter(
+        pk__in=app_ids,
+        project=project,
+        dropped_at__isnull=True,
+        hired_at__isnull=True,
+    )
+    submit_type = ActionType.objects.get(code="submit_to_client")
+    batch_id = uuid.uuid4()
+
+    for app in applications:
+        ai = ActionItem.objects.create(
+            application=app,
+            action_type=submit_type,
+            title="이력서 고객사 제출",
+            status=ActionItemStatus.DONE,
+            completed_at=timezone.now(),
+            created_by=request.user,
+        )
+        Submission.objects.create(
+            action_item=ai,
+            consultant=request.user,
+            batch_id=batch_id,
+            submitted_at=timezone.now(),
+        )
+
+    return redirect("projects:project_detail", pk=project.pk)
 
 
 @login_required
@@ -2857,6 +2912,7 @@ def application_skip_stage(request, pk):
 def _create_receive_resume_action(application, actor, *, done, note, due_days=0):
     """Phase B 헬퍼: receive_resume ActionType 으로 ActionItem 생성."""
     from django.utils import timezone
+
     at = ActionType.objects.filter(code="receive_resume").first()
     if not at:
         return None
@@ -2894,7 +2950,8 @@ def application_resume_use_db(request, pk):
             status=400,
         )
     _create_receive_resume_action(
-        application, request.user,
+        application,
+        request.user,
         done=True,
         note=f"DB 기존 이력서 재사용 (파일: {current.filename or current.pk})",
     )
@@ -2916,7 +2973,8 @@ def application_resume_request_email(request, pk):
     if request.method == "POST":
         body = (request.POST.get("body") or "").strip() or "(본문 미입력)"
         _create_receive_resume_action(
-            application, request.user,
+            application,
+            request.user,
             done=False,
             note=f"이메일 요청 보냄\n\n{body}",
             due_days=3,
@@ -2946,6 +3004,7 @@ def application_resume_upload(request, pk):
         if not file:
             return HttpResponse("파일을 선택하세요.", status=400)
         from candidates.models import Resume
+
         resume = Resume.objects.create(
             candidate=application.candidate,
             filename=file.name,
@@ -2955,7 +3014,8 @@ def application_resume_upload(request, pk):
             application.candidate.current_resume = resume
             application.candidate.save(update_fields=["current_resume"])
         _create_receive_resume_action(
-            application, request.user,
+            application,
+            request.user,
             done=True,
             note=f"직접 업로드 — {file.name}",
         )
