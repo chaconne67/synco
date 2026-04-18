@@ -389,8 +389,6 @@ def project_detail(request, pk):
         )
     )
 
-    from projects.models import STAGES_ORDER
-
     # Phase C Task 7: 배치 제출 대기 후보자 (current_stage == "client_submit")
     pending_for_submission = [
         app for app in applications if app.current_stage == "client_submit"
@@ -402,7 +400,6 @@ def project_detail(request, pk):
         {
             "project": project,
             "applications": applications,
-            "stages_order": STAGES_ORDER,
             "pending_for_submission": pending_for_submission,
         },
     )
@@ -427,7 +424,6 @@ def project_applications_partial(request, pk):
             "-created_at",
         )
     )
-    from projects.models import STAGES_ORDER
 
     return render(
         request,
@@ -435,7 +431,6 @@ def project_applications_partial(request, pk):
         {
             "project": project,
             "applications": applications,
-            "stages_order": STAGES_ORDER,
         },
     )
 

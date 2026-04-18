@@ -234,7 +234,7 @@
   /* 8단계 진행 바 (Application 카드용) */
   .stage-progress {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 4px;
     margin-top: 8px;
   }
