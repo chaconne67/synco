@@ -97,10 +97,10 @@ STATE_FROM_ACTION_TYPE: dict[str, str] = {
 STAGES_ORDER = [
     ("sourcing",        "서칭"),
     ("contact",         "접촉"),
-    ("resume",          "이력서 수집"),
+    ("resume",          "이력서 준비"),
     ("pre_meeting",     "사전 미팅"),
-    ("prep_submission", "제출 준비"),
-    ("client_submit",   "고객사 제출"),
+    ("prep_submission", "이력서 작성(제출용)"),
+    ("client_submit",   "이력서 제출"),
     ("interview",       "면접"),
     ("hired",           "입사"),
 ]
