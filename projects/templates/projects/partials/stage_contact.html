@@ -1,1 +1,25 @@
-<div class="text-sm text-muted">(접촉 단계 — Task 10에서 구현)</div>
+<form method="post" action="{% url 'projects:stage_contact_complete' application.pk %}"
+      class="space-y-3">
+  {% csrf_token %}
+  <p class="text-sm font-medium">후보자에게 JD 공유 + 진행 의사 확인</p>
+  <div class="space-y-2 text-sm">
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="radio" name="response" value="positive" required class="text-ink3">
+      <span>긍정 — 진행 의사 있음</span>
+    </label>
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="radio" name="response" value="negative" class="text-ink3">
+      <span class="text-rose-600">부정 — 거절 (이 후보자 drop)</span>
+    </label>
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="radio" name="response" value="pending" class="text-ink3">
+      <span>보류 — 추후 결정</span>
+    </label>
+  </div>
+  <textarea name="note" placeholder="응답 요지 (선택)" rows="2"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></textarea>
+  <button type="submit"
+          class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink3/90 transition">
+    접촉 완료
+  </button>
+</form>

@@ -41,9 +41,7 @@ class ProjectForm(forms.ModelForm):
             "title": forms.TextInput(
                 attrs={"class": INPUT_CSS, "placeholder": "프로젝트명"}
             ),
-            "deadline": forms.DateInput(
-                attrs={"class": INPUT_CSS, "type": "date"}
-            ),
+            "deadline": forms.DateInput(attrs={"class": INPUT_CSS, "type": "date"}),
             "annual_salary": forms.NumberInput(
                 attrs={
                     "class": INPUT_CSS,
@@ -280,9 +278,7 @@ class PostingSiteForm(forms.ModelForm):
                 format="%Y-%m-%d",
             ),
             "is_active": forms.CheckboxInput(
-                attrs={
-                    "class": "rounded border-gray-300 text-ink3 focus:ring-ink3"
-                }
+                attrs={"class": "rounded border-gray-300 text-ink3 focus:ring-ink3"}
             ),
             "applicant_count": forms.NumberInput(attrs={"class": INPUT_CSS, "min": 0}),
             "url": forms.URLInput(
@@ -441,3 +437,13 @@ class ActionItemSkipForm(forms.Form):
 class ActionItemRescheduleForm(forms.Form):
     new_due_at = forms.DateTimeField(required=False)
     new_scheduled_at = forms.DateTimeField(required=False)
+
+
+class ContactCompleteForm(forms.Form):
+    RESPONSE_CHOICES = [
+        ("positive", "긍정 (진행 의사 있음)"),
+        ("negative", "부정 (거절)"),
+        ("pending", "보류 (추후 결정)"),
+    ]
+    response = forms.ChoiceField(choices=RESPONSE_CHOICES, widget=forms.RadioSelect)
+    note = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 2}))

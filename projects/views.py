@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db import models as db_models
@@ -48,6 +49,7 @@ from .forms import (
     ActionItemSkipForm,
     ApplicationCreateForm,
     ApplicationDropForm,
+    ContactCompleteForm,
     InterviewForm,
     InterviewResultForm,
     PostingEditForm,
@@ -64,6 +66,7 @@ from .models import (
     Application,
     DEFAULT_MASKING_CONFIG,
     DraftStatus,
+    DropReason,
     Interview,
     OutputLanguage,
     PostingSite,
@@ -3348,3 +3351,39 @@ def action_propose_next(request, pk):
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)
+
+
+@login_required
+@require_http_methods(["POST"])
+def stage_contact_complete(request, pk):
+    """접촉 단계 완료 — 응답 기록."""
+    app = get_object_or_404(Application, pk=pk)
+    org = _get_org(request)
+    if app.project.organization != org:
+        return HttpResponseForbidden("cross-org access denied")
+
+    form = ContactCompleteForm(request.POST)
+    if not form.is_valid():
+        return HttpResponseBadRequest(form.errors.as_text())
+
+    response = form.cleaned_data["response"]
+    note = form.cleaned_data["note"]
+
+    if response == "negative":
+        app.dropped_at = timezone.now()
+        app.drop_reason = DropReason.CANDIDATE_DECLINED
+        app.drop_note = note
+        app.save(update_fields=["dropped_at", "drop_reason", "drop_note"])
+    else:
+        reach_out = ActionType.objects.get(code="reach_out")
+        ActionItem.objects.create(
+            application=app,
+            action_type=reach_out,
+            title="연락 — 의사 확인",
+            status=ActionItemStatus.DONE,
+            completed_at=timezone.now(),
+            note=f"응답: {response}. {note}".strip(),
+            created_by=request.user,
+        )
+
+    return redirect("projects:project_detail", pk=app.project.pk)

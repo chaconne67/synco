@@ -55,6 +55,12 @@ urlpatterns = [
         views.application_skip_stage,
         name="application_skip_stage",
     ),
+    # Phase C: 접촉 단계 완료
+    path(
+        "applications/<uuid:pk>/stage/contact/complete/",
+        views.stage_contact_complete,
+        name="stage_contact_complete",
+    ),
     # Phase B: 이력서 수집 단계 — 3가지 방법
     path(
         "applications/<uuid:pk>/resume/use_db/",
