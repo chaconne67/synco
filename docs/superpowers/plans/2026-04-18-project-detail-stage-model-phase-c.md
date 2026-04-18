@@ -81,11 +81,11 @@ projects/templates/projects/partials/tab_*.html 레거시 템플릿
 **Files:**
 - Modify: `projects/models.py` (STAGES_ORDER — 3개 라벨만)
 - Create: `projects/management/commands/update_stage_labels.py`
-- Test: `tests/projects/test_stage_labels.py`
+- Test: `tests/test_stage_labels.py`
 
 ### Step 1.1: 테스트 작성 (실패 상태)
 
-- [ ] **Create `tests/projects/test_stage_labels.py`:**
+- [ ] **Create `tests/test_stage_labels.py`:**
 
 ```python
 import pytest
@@ -113,7 +113,7 @@ def test_unchanged_labels():
 - [ ] **Run test to confirm failure:**
 
 ```bash
-uv run pytest tests/projects/test_stage_labels.py::test_stages_order_renamed_labels -v
+uv run pytest tests/test_stage_labels.py::test_stages_order_renamed_labels -v
 ```
 Expected: FAIL — 현재 라벨은 "이력서 수집", "제출 준비", "고객사 제출"
 
@@ -137,7 +137,7 @@ STAGES_ORDER = [
 - [ ] **Run tests to verify pass:**
 
 ```bash
-uv run pytest tests/projects/test_stage_labels.py -v
+uv run pytest tests/test_stage_labels.py -v
 ```
 Expected: PASS 2/2
 
@@ -194,7 +194,7 @@ Expected: 각 code 별 "updated: ..." 라인 + 최종 "Done. N rows updated."
 - [ ] **Commit:**
 
 ```bash
-git add projects/models.py projects/management/commands/update_stage_labels.py tests/projects/test_stage_labels.py
+git add projects/models.py projects/management/commands/update_stage_labels.py tests/test_stage_labels.py
 git commit -m "refactor(projects): rename resume/submission stage labels per Phase C spec"
 ```
 
@@ -204,11 +204,11 @@ git commit -m "refactor(projects): rename resume/submission stage labels per Pha
 
 **Files:**
 - Modify: `projects/models.py` (CARD_STAGES_ORDER 추가, current_stage / stages_passed 는 그대로)
-- Test: `tests/projects/test_card_stages.py`
+- Test: `tests/test_card_stages.py`
 
 ### Step 2.1: 테스트 작성
 
-- [ ] **Create `tests/projects/test_card_stages.py`:**
+- [ ] **Create `tests/test_card_stages.py`:**
 
 ```python
 import pytest
@@ -244,7 +244,7 @@ def test_card_stages_labels_match_project_stages():
 - [ ] **Run: FAIL (CARD_STAGES_ORDER 없음)**
 
 ```bash
-uv run pytest tests/projects/test_card_stages.py -v
+uv run pytest tests/test_card_stages.py -v
 ```
 
 ### Step 2.2: 모델에 CARD_STAGES_ORDER 추가
@@ -265,7 +265,7 @@ CARD_STAGES_ORDER = [
 - [ ] **Commit:**
 
 ```bash
-git add projects/models.py tests/projects/test_card_stages.py
+git add projects/models.py tests/test_card_stages.py
 git commit -m "feat(projects): add CARD_STAGES_ORDER for per-candidate 7-stage view"
 ```
 
@@ -276,11 +276,11 @@ git commit -m "feat(projects): add CARD_STAGES_ORDER for per-candidate 7-stage v
 **Files:**
 - Modify: `projects/models.py` (Submission)
 - Create: `projects/migrations/NNNN_submission_batch_id.py`
-- Test: `tests/projects/test_submission_batch.py`
+- Test: `tests/test_submission_batch.py`
 
 ### Step 3.1: 테스트 작성 (실패)
 
-- [ ] **Create `tests/projects/test_submission_batch.py`:**
+- [ ] **Create `tests/test_submission_batch.py`:**
 
 ```python
 import uuid
@@ -310,7 +310,7 @@ def test_submissions_can_share_batch_id(submission_factory):
 - [ ] **Check if `submission_factory` fixture exists, else add to `tests/conftest.py`:**
 
 ```bash
-uv run pytest tests/projects/test_submission_batch.py -v
+uv run pytest tests/test_submission_batch.py -v
 ```
 Expected: ERROR — fixture missing 또는 field missing
 
@@ -367,7 +367,7 @@ uv run python manage.py migrate projects
 - [ ] **Run tests: PASS 2/2**
 
 ```bash
-uv run pytest tests/projects/test_submission_batch.py -v
+uv run pytest tests/test_submission_batch.py -v
 ```
 
 ### Step 3.3: 커밋
@@ -375,7 +375,7 @@ uv run pytest tests/projects/test_submission_batch.py -v
 - [ ] **Commit:**
 
 ```bash
-git add projects/models.py projects/migrations/*submission_batch_id*.py tests/projects/test_submission_batch.py tests/conftest.py
+git add projects/models.py projects/migrations/*submission_batch_id*.py tests/test_submission_batch.py tests/conftest.py
 git commit -m "feat(projects): add Submission.batch_id for grouping batch-submitted resumes"
 ```
 
@@ -386,11 +386,11 @@ git commit -m "feat(projects): add Submission.batch_id for grouping batch-submit
 **Files:**
 - Modify: `projects/templates/projects/project_detail.html`
 - Create: `projects/templates/projects/partials/project_area_a.html`
-- Test: `tests/projects/test_project_detail_layout.py`
+- Test: `tests/test_project_detail_layout.py`
 
 ### Step 4.1: 레이아웃 테스트 작성
 
-- [ ] **Create `tests/projects/test_project_detail_layout.py`:**
+- [ ] **Create `tests/test_project_detail_layout.py`:**
 
 ```python
 import pytest
@@ -411,7 +411,7 @@ def test_project_detail_has_area_a_and_b(client, consultant_user, project_factor
 - [ ] **Check `consultant_user` / `project_factory` fixtures exist in `tests/conftest.py`. If not, grep for similar fixtures and reuse patterns.**
 
 ```bash
-uv run pytest tests/projects/test_project_detail_layout.py -v
+uv run pytest tests/test_project_detail_layout.py -v
 ```
 Expected: FAIL — div id not present
 
@@ -482,7 +482,7 @@ wc -l projects/templates/projects/project_detail.html
 - [ ] **Run layout test: PASS**
 
 ```bash
-uv run pytest tests/projects/test_project_detail_layout.py -v
+uv run pytest tests/test_project_detail_layout.py -v
 ```
 
 ### Step 4.5: 수동 스모크 테스트
@@ -502,7 +502,7 @@ uv run pytest tests/projects/test_project_detail_layout.py -v
 - [ ] **Commit:**
 
 ```bash
-git add projects/templates/projects/project_detail.html projects/templates/projects/partials/project_area_a.html projects/templates/projects/partials/area_a_searching.html projects/templates/projects/partials/area_a_submission_batch.html tests/projects/test_project_detail_layout.py
+git add projects/templates/projects/project_detail.html projects/templates/projects/partials/project_area_a.html projects/templates/projects/partials/area_a_searching.html projects/templates/projects/partials/area_a_submission_batch.html tests/test_project_detail_layout.py
 git commit -m "refactor(projects): restructure project_detail into area A (project-level) + area B (candidate cards)"
 ```
 
@@ -516,11 +516,11 @@ git commit -m "refactor(projects): restructure project_detail into area A (proje
 - Modify: `candidates/views.py` (프로젝트 컨텍스트 모드 파라미터 받기)
 - Modify: `candidates/templates/candidates/partials/candidate_card.html` (프로젝트에 추가 버튼)
 - Modify: `projects/urls.py` (add_candidate_to_project 이미 존재 — project_add_candidate 재사용 검토)
-- Test: `tests/projects/test_searching_service.py`
+- Test: `tests/test_searching_service.py`
 
 ### Step 5.1: 서칭 서비스 테스트
 
-- [ ] **Create `tests/projects/test_searching_service.py`:**
+- [ ] **Create `tests/test_searching_service.py`:**
 
 ```python
 import pytest
@@ -661,7 +661,7 @@ def candidate_list(request):
 
 ### Step 5.6: 뷰 통합 테스트
 
-- [ ] **Append to `tests/projects/test_searching_service.py`:**
+- [ ] **Append to `tests/test_searching_service.py`:**
 
 ```python
 @pytest.mark.django_db
@@ -689,7 +689,7 @@ def test_project_add_candidate_view(client, consultant_user, project_factory, ca
 - [ ] **Commit:**
 
 ```bash
-git add projects/services/searching.py projects/templates/projects/partials/area_a_searching.html candidates/views.py candidates/templates/candidates/partials/candidate_card.html tests/projects/test_searching_service.py
+git add projects/services/searching.py projects/templates/projects/partials/area_a_searching.html candidates/views.py candidates/templates/candidates/partials/candidate_card.html tests/test_searching_service.py
 git commit -m "feat(projects): DB searching → candidate add flow in project detail area A"
 ```
 
@@ -731,11 +731,11 @@ git commit -m "feat(projects): add external channel placeholders (Jobkorea/Saram
 - Create: `projects/templates/projects/partials/area_a_submission_batch.html`
 - Modify: `projects/views.py` (submission_batch_create 뷰 신규)
 - Modify: `projects/urls.py`
-- Test: `tests/projects/test_submission_batch.py` (뷰 테스트 추가)
+- Test: `tests/test_submission_batch.py` (뷰 테스트 추가)
 
 ### Step 7.1: 뷰 테스트
 
-- [ ] **Append to `tests/projects/test_submission_batch.py`:**
+- [ ] **Append to `tests/test_submission_batch.py`:**
 
 ```python
 from django.urls import reverse
@@ -865,7 +865,7 @@ def submission_batch_create(request, pk):
 - [ ] **Commit:**
 
 ```bash
-git add projects/templates/projects/partials/area_a_submission_batch.html projects/views.py projects/urls.py tests/projects/test_submission_batch.py
+git add projects/templates/projects/partials/area_a_submission_batch.html projects/views.py projects/urls.py tests/test_submission_batch.py
 git commit -m "feat(projects): batch submission UI + view — creates Submissions sharing batch_id"
 ```
 
@@ -1005,7 +1005,7 @@ git commit -m "feat(projects): per-stage partial dispatch from application card"
 
 ### Step 10.1: 뷰/폼 테스트
 
-- [ ] **Create `tests/projects/test_stage_contact.py`:**
+- [ ] **Create `tests/test_stage_contact.py`:**
 
 ```python
 import pytest
@@ -1132,7 +1132,7 @@ def stage_contact_complete(request, pk):
 - [ ] 접촉 단계 카드 확인. URL 보고. Commit:
 
 ```bash
-git add projects/templates/projects/partials/stage_contact.html projects/views.py projects/urls.py projects/forms.py tests/projects/test_stage_contact.py
+git add projects/templates/projects/partials/stage_contact.html projects/views.py projects/urls.py projects/forms.py tests/test_stage_contact.py
 git commit -m "feat(projects): contact stage partial — completion check + response record"
 ```
 
@@ -1186,7 +1186,7 @@ git commit -m "refactor(projects): rename stage_resume_methods → stage_resume,
 
 ### Step 12.1: 테스트
 
-- [ ] **Create `tests/projects/test_stage_pre_meeting.py`:**
+- [ ] **Create `tests/test_stage_pre_meeting.py`:**
 
 ```python
 import pytest
@@ -1397,7 +1397,7 @@ def stage_pre_meeting_record(request, pk):
 - [ ] **Commit:**
 
 ```bash
-git add projects/templates/projects/partials/stage_pre_meeting.html projects/views.py projects/urls.py projects/forms.py projects/models.py tests/projects/test_stage_pre_meeting.py
+git add projects/templates/projects/partials/stage_pre_meeting.html projects/views.py projects/urls.py projects/forms.py projects/models.py tests/test_stage_pre_meeting.py
 git commit -m "feat(projects): pre_meeting stage with scheduling + result recording (audio optional)"
 ```
 
@@ -1412,7 +1412,7 @@ git commit -m "feat(projects): pre_meeting stage with scheduling + result record
 
 ### Step 13.1: 테스트
 
-- [ ] **Create `tests/projects/test_stage_prep_submission.py`:**
+- [ ] **Create `tests/test_stage_prep_submission.py`:**
 
 ```python
 import pytest
@@ -1500,7 +1500,7 @@ def stage_prep_submission_confirm(request, pk):
 - [ ] **Commit:**
 
 ```bash
-git add projects/templates/projects/partials/stage_prep_submission.html projects/views.py projects/urls.py tests/projects/test_stage_prep_submission.py
+git add projects/templates/projects/partials/stage_prep_submission.html projects/views.py projects/urls.py tests/test_stage_prep_submission.py
 git commit -m "feat(projects): prep_submission stage with consultant confirm (auto-gen deferred)"
 ```
 
@@ -1515,7 +1515,7 @@ git commit -m "feat(projects): prep_submission stage with consultant confirm (au
 
 ### Step 14.1: 테스트
 
-- [ ] **Create `tests/projects/test_stage_client_submit.py`:**
+- [ ] **Create `tests/test_stage_client_submit.py`:**
 
 ```python
 import pytest
@@ -1602,7 +1602,7 @@ def stage_client_submit_single(request, pk):
 - [ ] **Commit:**
 
 ```bash
-git add projects/templates/projects/partials/stage_client_submit.html projects/views.py projects/urls.py tests/projects/test_stage_client_submit.py
+git add projects/templates/projects/partials/stage_client_submit.html projects/views.py projects/urls.py tests/test_stage_client_submit.py
 git commit -m "feat(projects): client_submit stage — single-candidate submission path"
 ```
 
@@ -1617,7 +1617,7 @@ git commit -m "feat(projects): client_submit stage — single-candidate submissi
 
 ### Step 15.1: 테스트
 
-- [ ] **Create `tests/projects/test_stage_interview.py`:**
+- [ ] **Create `tests/test_stage_interview.py`:**
 
 ```python
 import pytest
@@ -1736,7 +1736,7 @@ def stage_interview_complete(request, pk):
 - [ ] **Commit:**
 
 ```bash
-git add projects/templates/projects/partials/stage_interview.html projects/views.py projects/urls.py tests/projects/test_stage_interview.py
+git add projects/templates/projects/partials/stage_interview.html projects/views.py projects/urls.py tests/test_stage_interview.py
 git commit -m "feat(projects): interview stage completion + optional after-interview review"
 ```
 

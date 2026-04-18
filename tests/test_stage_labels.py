@@ -1,4 +1,3 @@
-import pytest
 from projects.models import STAGES_ORDER
 
 
