@@ -47,11 +47,13 @@ def test_card_dispatches_stage_partial(client, user, project):
     """카드 진행바 아래에 현재 단계 partial이 include 되는지 확인."""
     # 새 Application — current_stage = "contact"
     c = Candidate.objects.create(name="스테이지디스패치")
-    Application.objects.create(project=project, candidate=c, created_by=user)
+    app = Application.objects.create(project=project, candidate=c, created_by=user)
 
     client.force_login(user)
     resp = client.get(reverse("projects:project_detail", args=[project.pk]))
     assert resp.status_code == 200
     content = resp.content.decode()
-    # stub text of contact stage partial
-    assert "(접촉 단계 — Task 10에서 구현)" in content
+    # 단계별 partial dispatch 확인: contact 단계에는 stage_contact.html 의
+    # form action URL이 포함되어야 함.
+    expected_action = reverse("projects:stage_contact_complete", args=[app.pk])
+    assert expected_action in content
