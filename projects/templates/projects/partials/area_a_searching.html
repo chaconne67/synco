@@ -1,11 +1,13 @@
 <div class="flex flex-wrap gap-3">
   <a href="{% url 'candidates:candidate_list' %}?project={{ project.pk }}"
-     class="inline-flex items-center px-4 h-9 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+     class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-ink3 text-white hover:bg-ink2 transition-colors">
     DB에서 찾기
   </a>
-  <span class="text-sm text-muted self-center">
-    (외부 채널 — Task 6에서 추가 예정)
-  </span>
+
+  {% include "projects/partials/area_a_channel_placeholder.html" with channel="잡코리아" %}
+  {% include "projects/partials/area_a_channel_placeholder.html" with channel="사람인" %}
+  {% include "projects/partials/area_a_channel_placeholder.html" with channel="LinkedIn" %}
+  {% include "projects/partials/area_a_channel_placeholder.html" with channel="이메일" %}
 </div>
 
 <p class="text-sm text-muted mt-3">
