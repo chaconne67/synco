@@ -1,4 +1,71 @@
 <section class="bg-surface rounded-card shadow-card p-6">
-  <div class="eyebrow">프로젝트</div>
-  <p class="text-sm text-muted mt-2">프로젝트 패널은 곧 추가됩니다.</p>
+  <div class="flex items-end justify-between mb-5">
+    <div>
+      <div class="eyebrow">Engagements</div>
+      <h3 class="text-lg font-semibold mt-1">프로젝트 <span class="text-muted tnum">{{ stats.offers }}</span></h3>
+    </div>
+    <div class="inline-flex rounded-lg border border-hair overflow-hidden text-xs font-semibold">
+      <button type="button"
+              hx-get="{% url 'clients:client_projects_panel' client.pk %}?status=active"
+              hx-target="#client-projects-panel" hx-swap="innerHTML"
+              class="px-3 h-8 {% if project_status_filter == 'active' %}bg-ink3 text-white{% else %}bg-surface text-muted hover:bg-line{% endif %}">
+        진행중 {{ stats.active }}
+      </button>
+      <button type="button"
+              hx-get="{% url 'clients:client_projects_panel' client.pk %}?status=closed"
+              hx-target="#client-projects-panel" hx-swap="innerHTML"
+              class="px-3 h-8 border-l border-hair {% if project_status_filter == 'closed' %}bg-ink3 text-white{% else %}bg-surface text-muted hover:bg-line{% endif %}">
+        완료
+      </button>
+      <button type="button"
+              hx-get="{% url 'clients:client_projects_panel' client.pk %}?status=all"
+              hx-target="#client-projects-panel" hx-swap="innerHTML"
+              class="px-3 h-8 border-l border-hair {% if project_status_filter == 'all' %}bg-ink3 text-white{% else %}bg-surface text-muted hover:bg-line{% endif %}">
+        전체 {{ stats.offers }}
+      </button>
+    </div>
+  </div>
+
+  {% if projects %}
+  <ul class="space-y-2">
+    {% for p in projects %}
+    <li>
+      <a href="{% url 'projects:project_detail' p.pk %}"
+         hx-get="{% url 'projects:project_detail' p.pk %}" hx-target="#main-content" hx-push-url="true"
+         class="flex items-center justify-between gap-4 px-4 py-3 rounded-lg hover:bg-line transition-colors">
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-semibold truncate">{{ p.title }}</div>
+          <div class="text-xs text-muted mt-0.5">
+            {{ p.get_phase_display }}
+            <span class="mx-1 text-faint">·</span>
+            {{ p.created_at|date:"Y-m-d" }}
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          {% if p.status == "closed" %}
+            {% if p.result == "success" %}
+            <span class="badge" style="background:#DCFCE7;color:#166534;">성사</span>
+            {% else %}
+            <span class="badge" style="background:#F1F5F9;color:#64748B;">종료</span>
+            {% endif %}
+          {% else %}
+            <span class="badge" style="background:#DBEAFE;color:#1E40AF;">진행중</span>
+          {% endif %}
+        </div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="py-10 text-center">
+    <p class="text-sm text-muted">{% if project_status_filter == "active" %}진행 중인 프로젝트가 없습니다{% elif project_status_filter == "closed" %}완료된 프로젝트가 없습니다{% else %}등록된 프로젝트가 없습니다{% endif %}</p>
+    {% if membership and membership.role == "owner" %}
+    <a href="{% url 'projects:project_create' %}?client={{ client.pk }}"
+       hx-get="{% url 'projects:project_create' %}?client={{ client.pk }}" hx-target="#main-content" hx-push-url="true"
+       class="inline-flex items-center gap-2 mt-4 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2">
+      + 새 프로젝트
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
 </section>

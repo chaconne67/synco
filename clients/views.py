@@ -157,6 +157,27 @@ def client_detail(request, pk):
 
 
 @login_required
+@membership_required
+def client_projects_panel(request, pk):
+    org = _get_org(request)
+    client = get_object_or_404(Client, pk=pk, organization=org)
+    status_filter = request.GET.get("status", "all")
+    if status_filter not in {"active", "closed", "all"}:
+        status_filter = "all"
+    projects = client_projects(client, status_filter=status_filter)[:20]
+    return render(
+        request,
+        "clients/partials/client_projects_panel.html",
+        {
+            "client": client,
+            "projects": projects,
+            "project_status_filter": status_filter,
+            "stats": client_stats(client),
+        },
+    )
+
+
+@login_required
 @role_required("owner")
 def client_update(request, pk):
     """Update an existing client."""
