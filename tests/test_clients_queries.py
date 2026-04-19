@@ -3,7 +3,13 @@ from django.utils import timezone
 
 from accounts.models import Organization
 from clients.models import Client, IndustryCategory
-from clients.services.client_queries import list_clients_with_stats
+from clients.services.client_queries import (
+    available_regions,
+    category_counts,
+    client_projects,
+    client_stats,
+    list_clients_with_stats,
+)
 from projects.models import Project, Application
 
 
@@ -108,3 +114,46 @@ def test_filter_by_success_status_no_offers(org):
     qs = list_clients_with_stats(org, success_status="no_offers")
     assert qs.count() == 1
     assert qs.first().name == "NoOffers"
+
+
+@pytest.mark.django_db
+def test_category_counts(org):
+    Client.objects.create(organization=org, name="A", industry="바이오/제약")
+    Client.objects.create(organization=org, name="B", industry="바이오/제약")
+    Client.objects.create(organization=org, name="C", industry="IT/SW")
+    counts = category_counts(org)
+    assert counts["BIO_PHARMA"] == 2
+    assert counts["IT_SW"] == 1
+    assert counts["FINANCE"] == 0
+
+
+@pytest.mark.django_db
+def test_available_regions(org):
+    Client.objects.create(organization=org, name="A", region="서울")
+    Client.objects.create(organization=org, name="B", region="서울")
+    Client.objects.create(organization=org, name="C", region="경기")
+    Client.objects.create(organization=org, name="D", region="")
+    regions = available_regions(org)
+    assert sorted(regions) == ["경기", "서울"]
+
+
+@pytest.mark.django_db
+def test_client_stats(org):
+    c = Client.objects.create(organization=org, name="A")
+    Project.objects.create(client=c, organization=org, title="P", status="open")
+    Project.objects.create(client=c, organization=org, title="Q", status="closed", result="success", closed_at=timezone.now())
+    stats = client_stats(c)
+    assert stats["offers"] == 2
+    assert stats["success"] == 1
+    assert stats["active"] == 1
+    assert stats["placed"] == 0
+
+
+@pytest.mark.django_db
+def test_client_projects_status_filter(org):
+    c = Client.objects.create(organization=org, name="A")
+    Project.objects.create(client=c, organization=org, title="P1", status="open")
+    Project.objects.create(client=c, organization=org, title="P2", status="closed", result="success", closed_at=timezone.now())
+    assert client_projects(c, status_filter="active").count() == 1
+    assert client_projects(c, status_filter="closed").count() == 1
+    assert client_projects(c, status_filter="all").count() == 2

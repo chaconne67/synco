@@ -82,3 +82,53 @@ def _apply_success_status(qs, status):
     if status == "no_offers":
         return qs.filter(offers_count=0)
     return qs
+
+
+def category_counts(org):
+    """카테고리 enum name -> 건수. 0건도 포함."""
+    counts = {c.name: 0 for c in IndustryCategory}
+    qs = (
+        Client.objects.filter(organization=org)
+        .values("industry")
+        .annotate(n=Count("id"))
+    )
+    value_to_name = {c.value: c.name for c in IndustryCategory}
+    for row in qs:
+        name = value_to_name.get(row["industry"])
+        if name:
+            counts[name] = row["n"]
+    return counts
+
+
+def available_regions(org):
+    """조직 내 사용 중인 region 값 리스트(가나다 순)."""
+    return sorted(
+        set(
+            v
+            for v in Client.objects.filter(organization=org)
+            .values_list("region", flat=True)
+            if v
+        )
+    )
+
+
+def client_stats(client):
+    """단일 고객사의 카드 통계 (리스트용과 동일 집계)."""
+    one = list_clients_with_stats(client.organization).filter(pk=client.pk).first()
+    if not one:
+        return {"offers": 0, "success": 0, "active": 0, "placed": 0}
+    return {
+        "offers": one.offers_count,
+        "success": one.success_count,
+        "active": one.active_count,
+        "placed": one.placed_count,
+    }
+
+
+def client_projects(client, *, status_filter="all"):
+    qs = client.projects.all().order_by("-created_at")
+    if status_filter == "active":
+        return qs.filter(status="open")
+    if status_filter == "closed":
+        return qs.filter(status="closed")
+    return qs

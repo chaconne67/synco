@@ -179,6 +179,9 @@ def submission_factory(db, project, user):
 def _disable_manifest_storage(settings):
     """Use plain static storage for tests (no collectstatic needed)."""
     settings.STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
