@@ -107,247 +107,117 @@
   {# ============================================================ #}
   {# Main 12-col grid                                             #}
   {# ============================================================ #}
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
     {# ============================================================ #}
-    {# LEFT — Work experience + narrative sections                 #}
+    {# LEFT — rebuilt in Task 10                                   #}
     {# ============================================================ #}
-    <div class="lg:col-span-8 space-y-8">
+    <div class="lg:col-span-8 space-y-6">
 
       {# ---- Summary ---- #}
       {% if candidate.summary %}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">Summary</h3>
-        <p class="text-base text-slate-700 leading-relaxed">{{ candidate.summary }}</p>
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Summary</h3>
+        <p class="text-sm text-ink2 leading-relaxed">{{ candidate.summary }}</p>
       </section>
       {% endif %}
 
       {# ---- Work Experience (timeline) ---- #}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-6 mb-10">
-          <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Work Experience</h3>
-          <div class="h-px flex-1 bg-slate-100"></div>
-        </div>
-
-        {% if careers %}
-        <div class="space-y-0">
+      {% if careers %}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-4">Work Experience</h3>
+        <div class="space-y-5 border-l-2 border-line pl-5 ml-2">
           {% for career in careers %}
-          <div class="relative pl-10 {% if not forloop.last %}pb-10{% endif %}">
-            {# timeline vertical line #}
-            {% if not forloop.last %}
-            <div class="absolute left-[7px] top-6 bottom-0 w-[2px] bg-slate-200"></div>
-            {% endif %}
-            {# dot #}
-            <div class="absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 bg-white z-10 {% if career.is_current %}border-ink3{% else %}border-slate-300{% endif %}"></div>
-
-            <div class="flex flex-col gap-1">
-              <div class="flex justify-between items-start gap-4">
-                <h4 class="text-xl font-bold text-slate-900">{{ career.position|default:"—" }}</h4>
-                {% if career.is_current %}
-                <span class="text-xs font-black text-ink3 uppercase bg-ink3/10 px-2.5 py-1 rounded-md tracking-[0.15em] whitespace-nowrap">Present</span>
-                {% else %}
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] whitespace-nowrap">Previous</span>
-                {% endif %}
+          <div class="relative">
+            <span class="absolute -left-[29px] top-1.5 w-3 h-3 rounded-full {% if career.is_current %}bg-ink3{% else %}bg-faint{% endif %} border-2 border-white"></span>
+            <div class="flex items-start justify-between gap-2 flex-wrap">
+              <div class="min-w-0">
+                <h4 class="text-base font-bold text-ink">{{ career.position }}</h4>
+                <p class="text-sm text-ink2 font-semibold">{{ career.company }}{% if career.department %} · {{ career.department }}{% endif %}</p>
+                <p class="eyebrow text-muted mt-1">
+                  {{ career.start_date_display }} — {{ career.end_date_display }}{% if career.duration_display %} · {{ career.duration_display }}{% endif %}
+                </p>
               </div>
-              <p class="text-base font-semibold text-ink3">
-                {{ career.company }}{% if career.department %}<span class="text-slate-400 font-medium"> · {{ career.department }}</span>{% endif %}
-              </p>
-              <p class="text-xs text-slate-400 font-bold tracking-[0.12em] uppercase mb-3">
-                {{ career.start_date_display|default:"" }} — {{ career.end_date_display|default:"현재" }}{% if career.duration_display %} • {{ career.duration_display }}{% endif %}
-                {% if career.uses_duration_inference %}<span class="ml-1.5 text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-full normal-case tracking-normal">기간 보정</span>{% endif %}
-              </p>
-
-              <div class="text-slate-600 text-sm leading-relaxed space-y-3">
-                {% if career.duties %}
-                <p>{{ career.duties|truncatewords:60 }}</p>
-                {% endif %}
-                {% if career.achievements %}
-                <div class="bg-slate-50 border border-slate-100 rounded-lg p-3.5">
-                  <p class="text-xs font-black text-slate-500 uppercase tracking-[0.15em] mb-1.5">주요 성과</p>
-                  <p class="text-slate-700 whitespace-pre-line">{{ career.achievements|linebreaksbr }}</p>
-                </div>
-                {% endif %}
-                {% if career.inferred_capabilities %}
-                <div class="bg-amber-50/50 border border-amber-200 rounded-lg p-3.5">
-                  <p class="text-xs font-black text-amber-700 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1 cursor-help" title="이력서의 직책·부서·경력 수준을 바탕으로 AI가 추정한 역량입니다.">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
-                    예상 역량 · AI 추정
-                  </p>
-                  <p class="text-slate-700">{{ career.inferred_capabilities }}</p>
-                </div>
-                {% endif %}
-                {% if career.salary %}
-                <p class="text-xs text-slate-500">연봉 <span class="font-semibold text-slate-700">{{ career.salary|intcomma }}만원</span></p>
-                {% endif %}
-                {% if career.reason_left and not career.is_current %}
-                <details>
-                  <summary class="py-1.5 text-xs text-slate-500 cursor-pointer hover:text-slate-700 select-none">퇴사 사유 보기</summary>
-                  <p class="text-sm text-slate-600 mt-1">{{ career.reason_left }}</p>
-                </details>
-                {% endif %}
-              </div>
+              {% if career.is_current %}
+              <span class="eyebrow bg-ink3/10 text-ink3 border border-ink3/20 rounded-full px-2 py-0.5">Present</span>
+              {% else %}
+              <span class="eyebrow text-faint border border-hair rounded-full px-2 py-0.5">Previous</span>
+              {% endif %}
             </div>
+            {% if career.duties %}
+            <p class="text-sm text-muted mt-3 leading-relaxed">{{ career.duties|truncatewords:60 }}</p>
+            {% endif %}
+            {% if career.achievements %}
+            <div class="mt-3 bg-line border-l-4 border-ink3 rounded-r-lg p-3">
+              <p class="eyebrow text-ink3 mb-1">주요 성과</p>
+              <p class="text-sm text-ink2 leading-relaxed">{{ career.achievements }}</p>
+            </div>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
-        {% else %}
-        <p class="text-xs font-medium text-slate-400 text-center py-8">등록된 경력이 없습니다.</p>
-        {% endif %}
-
-        {# Projects inside career section (preserved) #}
-        {% if projects_data %}
-        <div class="border-t border-slate-100 mt-8 pt-6">
-          <h4 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">프로젝트</h4>
-          <div class="space-y-3">
-            {% for project in projects_data %}
-            <div class="bg-slate-50 rounded-lg p-4">
-              <div class="flex items-start justify-between">
-                <span class="text-sm font-bold text-slate-900">{{ project.name }}</span>
-                {% if project.role %}<span class="text-xs font-bold text-ink3 bg-ink3/10 px-2 py-0.5 rounded-full ml-2">{{ project.role }}</span>{% endif %}
-              </div>
-              <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
-                {% if project.start_date or project.end_date %}<span>{{ project.start_date }}{% if project.end_date %} ~ {{ project.end_date }}{% endif %}</span>{% endif %}
-                {% if project.budget %}<span>예산 {{ project.budget }}</span>{% endif %}
-              </div>
-              {% if project.description %}<p class="text-sm text-slate-600 mt-2 leading-relaxed">{{ project.description }}</p>{% endif %}
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-
-        {# Career etc remaining (preserved) #}
-        {% if career_etc_remaining %}
-        <div class="border-t border-slate-100 mt-6 pt-6">
-          <h4 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">기타</h4>
-          <div class="space-y-3">
-            {% for item in career_etc_remaining %}
-            <div>
-              <div class="text-sm font-semibold text-slate-700">{{ item.name|default:item.type }}</div>
-              {% if item.company %}<div class="text-xs text-slate-500">{{ item.company }}</div>{% endif %}
-              {% if item.role %}<div class="text-xs text-slate-500">{{ item.role }}</div>{% endif %}
-              {% if item.start_date %}<div class="text-xs text-slate-400">{{ item.start_date }} ~ {{ item.end_date }}</div>{% endif %}
-              {% if item.description %}<div class="text-xs text-slate-600 mt-1">{{ item.description }}</div>{% endif %}
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
       </section>
+      {% endif %}
 
-      {# ---- Personal details ---- #}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-6 mb-6">
-          <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">인적사항 · Personal</h3>
-          <div class="h-px flex-1 bg-slate-100"></div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+      {# ---- Personal ---- #}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-4">Personal</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
           {% if candidate.birth_year %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">생년</p>
-            <p class="text-slate-900 font-semibold">
-              {{ candidate.birth_year }}
-              {% if "birth_year" in hallucinated_fields %}
-              <span class="inline-flex items-center gap-0.5 text-xs text-rose-700 bg-rose-50 border border-rose-100 px-1.5 rounded-full ml-1 align-middle">AI 생성</span>
-              {% elif fc.birth_year is not None and fc.birth_year < 0.9 %}
-              <span class="inline-flex items-center gap-0.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-1.5 rounded-full ml-1 align-middle">AI 추론</span>
-              {% endif %}
-            </p>
-          </div>
+          <div><span class="eyebrow text-muted">생년</span><p class="text-sm text-ink font-semibold">{{ candidate.birth_year }}</p></div>
           {% endif %}
           {% if candidate.gender %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">성별</p>
-            <p class="text-slate-900 font-semibold">{{ candidate.gender }}</p>
-          </div>
+          <div><span class="eyebrow text-muted">성별</span><p class="text-sm text-ink font-semibold">{{ candidate.gender }}</p></div>
           {% endif %}
           {% if candidate.primary_category %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">카테고리</p>
-            <p class="text-slate-900 font-semibold">{{ candidate.primary_category.name }}</p>
-          </div>
+          <div><span class="eyebrow text-muted">카테고리</span><p class="text-sm text-ink font-semibold">{{ candidate.primary_category.name_ko|default:candidate.primary_category.name }}</p></div>
           {% endif %}
           {% if candidate.email %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">이메일</p>
-            <p class="text-slate-900 font-semibold break-all">{{ candidate.email }}</p>
-          </div>
-          {% endif %}
-          {% if candidate.phone %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">연락처</p>
-            <p class="text-slate-900 font-semibold">{{ candidate.phone }}</p>
-          </div>
+          <div><span class="eyebrow text-muted">이메일</span><p class="text-sm text-ink font-semibold">{{ candidate.email }}</p></div>
           {% endif %}
           {% if candidate.current_salary %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">현재 연봉</p>
-            <p class="text-slate-900 font-semibold">{{ candidate.current_salary|intcomma }}만원</p>
-          </div>
+          <div><span class="eyebrow text-muted">현재 연봉</span><p class="text-sm text-ink font-semibold tnum">{{ candidate.current_salary }}</p></div>
           {% endif %}
           {% if candidate.desired_salary %}
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">희망 연봉</p>
-            <p class="text-ink3 font-bold">{{ candidate.desired_salary|intcomma }}만원</p>
-          </div>
+          <div><span class="eyebrow text-muted">희망 연봉</span><p class="text-sm text-ink font-semibold tnum">{{ candidate.desired_salary }}</p></div>
           {% endif %}
         </div>
-
-        {# Salary detail (preserved) #}
-        {% if salary_detail %}
-        <details class="mt-5 border-t border-slate-100 pt-4">
-          <summary class="text-xs font-bold uppercase tracking-widest text-slate-500 cursor-pointer hover:text-slate-700 select-none">
-            보수 상세 보기
-            <span class="text-xs font-bold text-ink3 bg-ink3/10 px-1.5 py-0.5 rounded-full ml-2">AI 추출</span>
-          </summary>
-          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            {% for key, value in salary_detail.items %}
-            {% if value %}
-            <p><span class="text-slate-500">{{ key }}:</span> <span class="text-slate-900 font-medium">{{ value }}</span></p>
-            {% endif %}
-            {% endfor %}
-          </div>
-        </details>
-        {% endif %}
-
-        {# Military service (preserved) #}
-        {% if military_service %}
-        <div class="border-t border-slate-100 mt-5 pt-4">
-          <h4 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-3">병역</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-            {% if military_service.branch %}<p><span class="text-slate-500">구분:</span> <span class="text-slate-900 font-medium">{{ military_service.branch }}</span></p>{% endif %}
-            {% if military_service.rank %}<p><span class="text-slate-500">계급:</span> <span class="text-slate-900 font-medium">{{ military_service.rank }}</span></p>{% endif %}
-            {% if military_service.unit %}<p><span class="text-slate-500">부대:</span> <span class="text-slate-900 font-medium">{{ military_service.unit }}</span></p>{% endif %}
-            {% if military_service.status %}<p><span class="text-slate-500">상태:</span> <span class="text-slate-900 font-medium">{{ military_service.status }}</span></p>{% endif %}
-            {% if military_service.start_date or military_service.end_date %}
-            <p class="md:col-span-2"><span class="text-slate-500">복무:</span> <span class="text-slate-900 font-medium">{{ military_service.start_date }}{% if military_service.end_date %} ~ {{ military_service.end_date }}{% endif %}</span></p>
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-
-        {# Personal etc (preserved) #}
-        {% if candidate.personal_etc %}
-        <div class="border-t border-slate-100 mt-5 pt-4">
-          <h4 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-3">기타</h4>
-          <div class="space-y-1.5 text-sm">
-            {% for item in candidate.personal_etc %}
-            <div class="text-slate-600"><span class="font-medium text-slate-500">{{ item.type }}:</span> {{ item.description }}</div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
       </section>
 
-      {# ---- Overseas experience (preserved) ---- #}
-      {% if overseas_experience %}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-6 mb-6">
-          <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">해외 경험 · Overseas</h3>
-          <span class="text-xs font-bold text-ink3 bg-ink3/10 px-2 py-0.5 rounded-full uppercase tracking-widest">AI 추출</span>
-          <div class="h-px flex-1 bg-slate-100"></div>
+      {# ---- Matched Projects ---- #}
+      {% if candidate_applications is not None %}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-4">Matched Projects</h3>
+        {% if candidate_applications %}
+        <div class="space-y-3">
+          {% for app in candidate_applications %}
+          <a href="{% url 'projects:project_detail' app.project.id %}"
+             hx-get="{% url 'projects:project_detail' app.project.id %}"
+             hx-target="#main-content" hx-push-url="true"
+             class="block border border-hair rounded-lg p-4 hover:bg-line transition">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-bold text-ink">{{ app.project.client.name }} · {{ app.project.title }}</p>
+                <p class="eyebrow text-muted mt-1">
+                  {{ app.current_state }}
+                  {% if app.dropped_at %}<span class="text-rose-500 ml-2">· 드롭 ({{ app.get_drop_reason_display }})</span>
+                  {% elif app.hired_at %}<span class="text-emerald-600 ml-2">· 입사 확정</span>{% endif %}
+                </p>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
         </div>
+        {% else %}
+        <p class="text-sm text-muted">아직 매칭된 프로젝트가 없습니다.</p>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      {# ---- Overseas experience ---- #}
+      {% if overseas_experience %}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-4">해외 경험 · Overseas</h3>
         <div class="space-y-3">
           {% for exp in overseas_experience %}
           <div class="flex items-start gap-3 text-sm">
@@ -355,10 +225,10 @@
               <svg class="w-4 h-4 text-ink3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-              <span class="font-bold text-slate-900">{{ exp.country }}</span>
-              {% if exp.purpose %}<span class="text-xs text-ink3 bg-ink3/10 border border-ink3/20 px-1.5 py-0.5 rounded-full ml-1.5 font-bold">{{ exp.purpose }}</span>{% endif %}
+              <span class="font-bold text-ink">{{ exp.country }}</span>
+              {% if exp.purpose %}<span class="eyebrow text-ink3 bg-ink3/10 border border-ink3/20 px-1.5 py-0.5 rounded-full ml-1.5">{{ exp.purpose }}</span>{% endif %}
               {% if exp.start_date or exp.end_date or exp.duration %}
-              <p class="text-xs text-slate-500 mt-0.5">{{ exp.start_date }}{% if exp.end_date %} ~ {{ exp.end_date }}{% endif %}{% if exp.duration %} ({{ exp.duration }}){% endif %}</p>
+              <p class="eyebrow text-muted mt-0.5">{{ exp.start_date }}{% if exp.end_date %} ~ {{ exp.end_date }}{% endif %}{% if exp.duration %} ({{ exp.duration }}){% endif %}</p>
               {% endif %}
             </div>
           </div>
@@ -367,95 +237,58 @@
       </section>
       {% endif %}
 
-      {# ---- Self introduction (preserved) ---- #}
+      {# ---- Self introduction ---- #}
       {% if self_introduction %}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-6 mb-4">
-          <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">자기소개 · Self Intro</h3>
-          <span class="text-xs font-bold text-ink3 bg-ink3/10 px-2 py-0.5 rounded-full uppercase tracking-widest">AI 추출</span>
-          <div class="h-px flex-1 bg-slate-100"></div>
-        </div>
-        <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{ self_introduction|truncatewords:120 }}</p>
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-4">자기소개 · Self Intro</h3>
+        <p class="text-sm text-ink2 leading-relaxed whitespace-pre-line">{{ self_introduction|truncatewords:120 }}</p>
         {% if self_introduction|length > 500 %}
         <details class="mt-2">
           <summary class="py-2 text-xs text-ink3 cursor-pointer hover:underline select-none font-semibold">전체 보기</summary>
-          <p class="text-sm text-slate-700 leading-relaxed mt-2 whitespace-pre-line">{{ self_introduction }}</p>
+          <p class="text-sm text-ink2 leading-relaxed mt-2 whitespace-pre-line">{{ self_introduction }}</p>
         </details>
         {% endif %}
       </section>
       {% endif %}
 
-      {# ---- Family info (preserved, sensitive) ---- #}
+      {# ---- Family info (sensitive, collapsed) ---- #}
       {% if family_info %}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
         <details>
           <summary class="flex items-center gap-3 cursor-pointer select-none">
-            <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">가족 사항 · Family</h3>
-            <span class="text-xs font-bold text-ink3 bg-ink3/10 px-2 py-0.5 rounded-full uppercase tracking-widest">AI 추출</span>
-            <svg class="w-4 h-4 text-slate-400 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <h3 class="eyebrow text-ink3">가족 사항 · Family</h3>
+            <svg class="w-4 h-4 text-muted ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </summary>
-          <div class="mt-4 pt-4 border-t border-slate-100">
+          <div class="mt-4 pt-4 border-t border-hair">
             <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 font-semibold">
               개인정보 보호 대상 항목입니다. 업무 목적으로만 열람해 주세요.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-              {% if family_info.marital_status %}<p><span class="text-slate-500">결혼:</span> <span class="text-slate-900 font-medium">{{ family_info.marital_status }}</span></p>{% endif %}
-              {% if family_info.children_count %}<p><span class="text-slate-500">자녀:</span> <span class="text-slate-900 font-medium">{{ family_info.children_count }}명</span></p>{% endif %}
-              {% if family_info.spouse %}<p><span class="text-slate-500">배우자:</span> <span class="text-slate-900 font-medium">{{ family_info.spouse }}</span></p>{% endif %}
-              {% if family_info.detail %}<p class="md:col-span-2"><span class="text-slate-500">상세:</span> <span class="text-slate-900 font-medium">{{ family_info.detail }}</span></p>{% endif %}
+              {% if family_info.marital_status %}<p><span class="text-muted">결혼:</span> <span class="text-ink font-medium">{{ family_info.marital_status }}</span></p>{% endif %}
+              {% if family_info.children_count %}<p><span class="text-muted">자녀:</span> <span class="text-ink font-medium">{{ family_info.children_count }}명</span></p>{% endif %}
+              {% if family_info.spouse %}<p><span class="text-muted">배우자:</span> <span class="text-ink font-medium">{{ family_info.spouse }}</span></p>{% endif %}
+              {% if family_info.detail %}<p class="md:col-span-2"><span class="text-muted">상세:</span> <span class="text-ink font-medium">{{ family_info.detail }}</span></p>{% endif %}
             </div>
           </div>
         </details>
       </section>
       {% endif %}
 
-      {# ---- Matched projects / applications (preserved) ---- #}
-      {% if candidate_applications is not None %}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-6 mb-5">
-          <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">매칭 프로젝트 · Applications</h3>
-          <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{{ candidate_applications|length }}</span>
-          <div class="h-px flex-1 bg-slate-100"></div>
-        </div>
-        <div class="space-y-3">
-          {% for app in candidate_applications %}
-          <a href="{% url 'projects:project_detail' app.project.id %}"
-             hx-get="{% url 'projects:project_detail' app.project.id %}"
-             hx-target="#main-content" hx-push-url="true"
-             class="block rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all p-4 group">
-            <p class="text-sm font-bold text-slate-900 group-hover:text-ink3 transition-colors">
-              {{ app.project.client.name }} <span class="mx-1 text-slate-300">·</span> {{ app.project.title }}
-            </p>
-            <p class="mt-1.5 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
-              {{ app.current_state }}
-              {% if app.dropped_at %}<span class="text-rose-500 ml-2">· 드롭 ({{ app.get_drop_reason_display }})</span>
-              {% elif app.hired_at %}<span class="text-emerald-600 ml-2">· 입사 확정</span>{% endif %}
-            </p>
-          </a>
-          {% empty %}
-          <p class="text-xs font-medium text-slate-400 text-center py-4">아직 매칭된 프로젝트가 없습니다.</p>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-      {# ---- Comments (preserved) ---- #}
-      <section class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-6 mb-5">
-          <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">코멘트 · Comments</h3>
-          <div class="h-px flex-1 bg-slate-100"></div>
-        </div>
+      {# ---- Comments ---- #}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-4">Comments</h3>
         {% include "candidates/partials/_comment_section.html" %}
         <div id="comment-list" class="mt-4">
           {% include "candidates/partials/_comment_list.html" %}
         </div>
       </section>
+
     </div>
 
     {# ============================================================ #}
-    {# RIGHT — Sidebar cards                                       #}
+    {# RIGHT — Task 11 will rebuild; existing content preserved    #}
     {# ============================================================ #}
-    <div class="lg:col-span-4 space-y-6">
+    <aside class="lg:col-span-4 space-y-6">
 
       {# ---- Core Expertise (skills + core_competencies) ---- #}
       {% if candidate.core_competencies or candidate.skills %}
@@ -609,7 +442,8 @@
         </div>
       </section>
       {% endif %}
-    </div>
+
+    </aside>
   </div>
 
   {# ============================================================ #}
