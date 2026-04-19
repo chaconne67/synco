@@ -6,6 +6,7 @@
 {% block page_title %}{{ client.name }}{% endblock %}
 
 {% block content %}
+<main class="w-full max-w-[1280px]">
 <div class="px-8 py-8 space-y-6 pb-32">
 
   <a href="{% url 'clients:client_list' %}"
@@ -52,4 +53,5 @@
   {% endif %}
 
 </div>
+</main>
 {% endblock %}

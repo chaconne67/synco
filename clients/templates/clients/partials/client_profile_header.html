@@ -19,9 +19,11 @@
   {% endif %}
 
   <div class="flex items-start gap-6">
-    <div class="client-logo-tile {% logo_class client %}" style="width:80px;height:80px;font-size:20px;border-radius:16px;">
-      {% if client.logo %}<img src="{{ client.logo.url }}" alt="" />{% endif %}
-      {{ client.name|client_initials }}
+    <div class="w-20 h-20 rounded-2xl bg-hair border-4 border-white shadow-[0_12px_24px_-8px_rgba(15,23,42,0.18),0_4px_8px_-4px_rgba(15,23,42,0.08)] flex items-center justify-center shrink-0">
+      <svg class="w-9 h-9 text-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M3 21h18M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16M9 7h2M9 11h2M9 15h2M13 7h2M13 11h2M13 15h2"/>
+      </svg>
     </div>
     <div class="min-w-0 flex-1">
       <div class="flex items-center gap-2 flex-wrap">
