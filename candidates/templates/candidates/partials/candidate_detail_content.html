@@ -198,11 +198,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-bold text-ink">{{ app.project.client.name }} · {{ app.project.title }}</p>
-                <p class="eyebrow text-muted mt-1">
-                  {{ app.current_state }}
-                  {% if app.dropped_at %}<span class="text-rose-500 ml-2">· 드롭 ({{ app.get_drop_reason_display }})</span>
-                  {% elif app.hired_at %}<span class="text-emerald-600 ml-2">· 입사 확정</span>{% endif %}
-                </p>
+                <p class="eyebrow text-muted mt-1">Stage · {{ app.get_current_state_display|default:app.current_state }}</p>
               </div>
             </div>
           </a>
