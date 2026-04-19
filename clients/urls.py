@@ -6,6 +6,7 @@ app_name = "clients"
 
 urlpatterns = [
     path("", views.client_list, name="client_list"),
+    path("page/", views.client_list_page, name="client_list_page"),
     path("new/", views.client_create, name="client_create"),
     path("<uuid:pk>/", views.client_detail, name="client_detail"),
     path("<uuid:pk>/edit/", views.client_update, name="client_update"),

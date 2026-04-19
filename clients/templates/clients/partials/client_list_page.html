@@ -1,0 +1,15 @@
+{% load clients_tags %}
+{% for client in page_obj %}
+  {% include "clients/partials/client_card.html" %}
+{% endfor %}
+
+{% if page_obj.has_next %}
+<div class="col-span-12 py-6 text-center"
+     hx-get="{% url 'clients:client_list_page' %}?page={{ page_obj.next_page_number }}{% for k, v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}"
+     hx-trigger="revealed"
+     hx-swap="outerHTML">
+  <div class="inline-flex items-center gap-2 text-xs font-semibold text-faint uppercase tracking-widest">더 불러오는 중…</div>
+</div>
+{% else %}
+<div class="col-span-12 py-6 text-center text-xs font-semibold text-faint uppercase tracking-widest">모두 불러왔어요</div>
+{% endif %}

@@ -32,3 +32,11 @@ def logo_class(client):
     raw = str(client.pk).replace("-", "")
     bucket = (int(raw[:2], 16) % 8) + 1
     return f"client-logo-{bucket}"
+
+
+@register.filter
+def get_item(d, key):
+    try:
+        return d.get(key, 0)
+    except AttributeError:
+        return 0

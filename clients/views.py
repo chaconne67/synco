@@ -4,38 +4,84 @@ from django.contrib.auth.decorators import login_required
 
 from accounts.decorators import membership_required, role_required
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.helpers import _get_org
 
 from .forms import ClientForm, ContractForm
-from .models import Client, Contract
+from .models import Client, Contract, IndustryCategory
+from .services.client_queries import (
+    available_regions,
+    category_counts,
+    list_clients_with_stats,
+)
 
 CLOSED_STATUSES = ["closed_success", "closed_fail", "closed_cancel", "on_hold"]
 PAGE_SIZE = 20
+GRID_PAGE_SIZE = 9
+
+
+def _parse_list_filters(request):
+    """GET 파라미터에서 필터 kwargs 추출."""
+    def _csv(key):
+        v = request.GET.get(key, "").strip()
+        return [x for x in v.split(",") if x] if v else None
+
+    cat = request.GET.get("cat", "").strip()
+    categories = [cat] if cat else None
+
+    return {
+        "categories": categories,
+        "sizes": _csv("size"),
+        "regions": _csv("region"),
+        "offers_range": request.GET.get("offers") or None,
+        "success_status": request.GET.get("success") or None,
+    }
 
 
 @login_required
 @membership_required
 def client_list(request):
-    """List clients with search and pagination."""
     org = _get_org(request)
-    clients = Client.objects.filter(organization=org)
+    filters = _parse_list_filters(request)
+    qs = list_clients_with_stats(org, **filters)
 
-    q = request.GET.get("q", "").strip()
-    if q:
-        clients = clients.filter(Q(name__icontains=q) | Q(industry__icontains=q))
-
-    paginator = Paginator(clients, PAGE_SIZE)
-    page_number = request.GET.get("page", 1)
-    page_obj = paginator.get_page(page_number)
+    paginator = Paginator(qs, GRID_PAGE_SIZE)
+    page_obj = paginator.get_page(1)
 
     return render(
         request,
         "clients/client_list.html",
-        {"page_obj": page_obj, "q": q},
+        {
+            "page_obj": page_obj,
+            "total": qs.count(),
+            "cat_counts": category_counts(org),
+            "regions": available_regions(org),
+            "filters": filters,
+            "active_cat": request.GET.get("cat", ""),
+            "industry_categories": [
+                {"name": c.name, "label": c.label} for c in IndustryCategory
+            ],
+        },
+    )
+
+
+@login_required
+@membership_required
+def client_list_page(request):
+    """Infinite scroll 페이지 응답 (카드 + 다음 sentinel)."""
+    org = _get_org(request)
+    filters = _parse_list_filters(request)
+    qs = list_clients_with_stats(org, **filters)
+    paginator = Paginator(qs, GRID_PAGE_SIZE)
+    page_number = int(request.GET.get("page", "2"))
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "clients/partials/client_list_page.html",
+        {"page_obj": page_obj, "filters": filters},
     )
 
 

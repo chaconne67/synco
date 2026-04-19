@@ -1,110 +1,97 @@
 {% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+{% load clients_tags %}
 
-{% block title %}고객사 관리 — synco{% endblock %}
+{% block title %}Clients — synco{% endblock %}
 {% block breadcrumb_current %}Clients{% endblock %}
 {% block page_title %}Clients{% endblock %}
 
 {% block content %}
-<div class="px-10 py-10 max-w-5xl">
-  <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+<div class="px-8 py-8 space-y-6 pb-32">
+
+  <section class="flex items-end justify-between gap-4">
     <div>
-      <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Account Roster</span>
-      <h2 class="text-4xl font-black text-slate-900 tracking-tight">고객사</h2>
-      <p class="mt-2 text-sm text-slate-500">등록된 모든 고객사 정보를 관리합니다.</p>
+      <div class="eyebrow">Active Corporate Relationships</div>
+      <h2 class="text-3xl font-bold tracking-tight mt-1">Clients</h2>
+      <p class="text-sm text-muted mt-1">
+        등록된 고객사 <span class="font-semibold text-ink tnum">{{ total }}</span>곳의 거래 이력과 진행 현황을 관리하세요
+      </p>
     </div>
-    {% if membership and membership.role == 'owner' %}
-    <a href="{% url 'clients:client_create' %}"
-       hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      New Client
-    </a>
-    {% endif %}
-  </div>
+    <div class="flex items-center gap-2">
+      <button type="button" id="filter-toggle"
+              class="inline-flex items-center gap-2 px-4 h-10 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon stroke-linecap="round" stroke-linejoin="round" points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filters
+      </button>
+      {% if membership and membership.role == "owner" %}
+      <a href="{% url 'clients:client_create' %}"
+         hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
+         class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line stroke-linecap="round" stroke-linejoin="round" x1="12" y1="5" x2="12" y2="19"/><line stroke-linecap="round" stroke-linejoin="round" x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Client
+      </a>
+      {% endif %}
+    </div>
+  </section>
 
-  <form method="get" action="{% url 'clients:client_list' %}"
-        hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
-        class="flex gap-3 mb-6">
-    <input type="text" name="q" value="{{ q }}"
-           placeholder="고객사명 또는 업종으로 검색"
-           class="flex-1 rounded-xl bg-white border border-slate-200 px-5 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition">
-    <button type="submit"
-            class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-6 shadow-sm hover:bg-slate-50 transition-all">
-      검색
-    </button>
-  </form>
+  <section id="filter-panel" class="hidden">
+    {# Task 13에서 client_filter_dropdown.html 추가 예정 #}
+  </section>
 
-  {% if page_obj.object_list %}
-  <div class="space-y-3">
-    {% for client in page_obj %}
-    <a href="{% url 'clients:client_detail' client.pk %}"
-       hx-get="{% url 'clients:client_detail' client.pk %}" hx-target="#main-content" hx-push-url="true"
-       class="block bg-white rounded-xl border border-slate-100 shadow-sm hover:border-slate-200 hover:shadow-md transition-all p-5 group">
-      <div class="flex items-center justify-between gap-4">
-        <div class="min-w-0 flex-1">
-          <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors">{{ client.name }}</h4>
-          <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-            {% if client.industry %}
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 px-2 py-1 rounded-full">{{ client.industry }}</span>
-            {% endif %}
-            {% if client.size %}
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-500">{{ client.get_size_display }}</span>
-            {% endif %}
-            {% if client.region %}
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-500">· {{ client.region }}</span>
-            {% endif %}
-          </div>
-        </div>
-        <svg class="w-4 h-4 text-slate-300 group-hover:text-ink3 transition-colors shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
+  <section>
+    <div class="overflow-x-auto hide-scrollbar -mx-1">
+      <div class="flex gap-2 px-1">
+        <button type="button"
+                hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
+                class="cat-chip {% if not active_cat %}is-active{% endif %}">전체 · {{ total }}</button>
+        {% for cat in industry_categories %}
+        <button type="button"
+                hx-get="{% url 'clients:client_list' %}?cat={{ cat.name }}" hx-target="#main-content" hx-push-url="true"
+                class="cat-chip {% if active_cat == cat.name %}is-active{% endif %}"
+                {% if cat_counts|get_item:cat.name == 0 %}aria-disabled="true"{% endif %}>
+          {{ cat.label }} · {{ cat_counts|get_item:cat.name }}
+        </button>
+        {% endfor %}
       </div>
-    </a>
-    {% endfor %}
-  </div>
-
-  {% if page_obj.has_other_pages %}
-  <div class="flex justify-center items-center gap-3 mt-8">
-    {% if page_obj.has_previous %}
-    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"
-       hx-get="{% url 'clients:client_list' %}?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"
-       hx-target="#main-content" hx-push-url="true"
-       class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
-      이전
-    </a>
-    {% endif %}
-    <span class="text-xs font-bold uppercase tracking-widest text-slate-400">
-      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-    </span>
-    {% if page_obj.has_next %}
-    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
-       hx-get="{% url 'clients:client_list' %}?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
-       hx-target="#main-content" hx-push-url="true"
-       class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
-      다음
-    </a>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  {% else %}
-  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-12 text-center">
-    <div class="w-14 h-14 mx-auto mb-4 bg-slate-50 rounded-full flex items-center justify-center">
-      <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
     </div>
-    {% if q %}
-    <p class="text-sm font-medium text-slate-500">'{{ q }}'에 해당하는 고객사가 없습니다</p>
-    {% elif membership and membership.role == 'owner' %}
-    <p class="text-sm font-medium text-slate-500 mb-5">등록된 고객사가 없습니다</p>
-    <a href="{% url 'clients:client_create' %}"
-       hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
-      첫 고객사 등록
-    </a>
-    {% else %}
-    <p class="text-sm font-medium text-slate-500">등록된 고객사가 없습니다</p>
+  </section>
+
+  <section id="client-grid" class="grid grid-cols-12 gap-6">
+    {% for client in page_obj %}
+      {% include "clients/partials/client_card.html" %}
+    {% empty %}
+      <div class="col-span-12 bg-white rounded-card shadow-card p-12 text-center">
+        {% if active_cat or filters.sizes or filters.regions or filters.offers_range or filters.success_status %}
+          <p class="text-sm font-medium text-muted">조건에 해당하는 고객사가 없습니다</p>
+        {% elif membership and membership.role == 'owner' %}
+          <p class="text-sm font-medium text-muted mb-5">등록된 고객사가 없습니다</p>
+          <a href="{% url 'clients:client_create' %}"
+             hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
+             class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2">첫 고객사 등록</a>
+        {% else %}
+          <p class="text-sm font-medium text-muted">등록된 고객사가 없습니다</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <div class="col-span-12 py-6 text-center"
+         hx-get="{% url 'clients:client_list_page' %}?page=2{% for k, v in request.GET.items %}&{{ k }}={{ v }}{% endfor %}"
+         hx-trigger="revealed"
+         hx-swap="outerHTML">
+      <div class="inline-flex items-center gap-2 text-xs font-semibold text-faint uppercase tracking-widest">더 불러오는 중…</div>
+    </div>
     {% endif %}
-  </div>
-  {% endif %}
+  </section>
+
 </div>
+
+<script>
+  (function() {
+    var toggle = document.getElementById('filter-toggle');
+    var panel = document.getElementById('filter-panel');
+    if (toggle && panel) {
+      toggle.addEventListener('click', function() { panel.classList.toggle('hidden'); });
+    }
+  })();
+</script>
 {% endblock %}
