@@ -43,10 +43,18 @@ def find_duplicate(email: str | None, phone: str | None) -> Candidate | None:
 def create_candidate(data: dict, user=None) -> Candidate:
     """Create a Candidate. Caller is responsible for duplicate check."""
     field_whitelist = {
-        "name", "email", "phone", "current_company", "current_position",
-        "birth_year", "source", "address",
+        "name",
+        "email",
+        "phone",
+        "current_company",
+        "current_position",
+        "birth_year",
+        "source",
+        "address",
     }
-    kwargs = {k: v for k, v in data.items() if k in field_whitelist and v not in (None, "")}
+    kwargs = {
+        k: v for k, v in data.items() if k in field_whitelist and v not in (None, "")
+    }
     if "birth_year" in kwargs:
         try:
             kwargs["birth_year"] = int(kwargs["birth_year"])
@@ -69,7 +77,9 @@ def _upload_to_drive(local_path: str, filename: str) -> str | None:
         from googleapiclient.http import MediaFileUpload
 
         svc = get_drive_service()
-        folder_id = find_category_folder(svc, DRIVE_PARENT_ID, MANUAL_UPLOAD_FOLDER_NAME)
+        folder_id = find_category_folder(
+            svc, DRIVE_PARENT_ID, MANUAL_UPLOAD_FOLDER_NAME
+        )
         if not folder_id:
             logger.warning("Drive manual-upload folder not found")
             return None

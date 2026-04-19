@@ -634,6 +634,7 @@ class Candidate(BaseModel):
         if not self.birth_year:
             return ""
         from datetime import date
+
         age = date.today().year - self.birth_year
         return f"{age}세 · {self.birth_year}년생"
 
@@ -1509,7 +1510,9 @@ from django.dispatch import receiver  # noqa: E402
 def _sync_category_candidate_count(sender, instance, action, pk_set, **kwargs):
     if action not in ("post_add", "post_remove", "post_clear"):
         return
-    affected = list(pk_set) if pk_set else list(Category.objects.values_list("pk", flat=True))
+    affected = (
+        list(pk_set) if pk_set else list(Category.objects.values_list("pk", flat=True))
+    )
     for cat_id in affected:
         cat = Category.objects.filter(pk=cat_id).first()
         if cat:

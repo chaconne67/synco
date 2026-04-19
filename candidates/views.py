@@ -509,6 +509,7 @@ def candidate_create(request):
         if resume_file:
             from candidates.services.candidate_create import attach_resume
             from django.contrib import messages
+
             try:
                 attach_resume(candidate, resume_file)
             except ValueError as e:
