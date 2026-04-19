@@ -32,6 +32,9 @@ class Client(BaseModel):
     size = models.CharField(max_length=20, choices=Size.choices, blank=True)
     region = models.CharField(max_length=100, blank=True)
     contact_persons = models.JSONField(default=list, blank=True)
+    website = models.URLField(blank=True)
+    logo = models.ImageField(upload_to="clients/logos/", blank=True, null=True)
+    description = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     organization = models.ForeignKey(
         "accounts.Organization",
