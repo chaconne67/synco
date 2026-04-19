@@ -311,7 +311,8 @@ def candidate_list(request):
     except (ValueError, TypeError):
         page = 1
 
-    categories = Category.objects.all()
+    categories = Category.objects.order_by("-candidate_count", "name")
+    total_candidates = Candidate.objects.count()
 
     # Get session for search state
     session_id = request.GET.get("session_id")
@@ -442,6 +443,7 @@ def candidate_list(request):
             "last_turn": last_turn,
             "rec_status_filter": rec_status_filter,
             "target_project": target_project,
+            "total_candidates": total_candidates,
         },
     )
 
