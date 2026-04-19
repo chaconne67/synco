@@ -1,0 +1,65 @@
+<form method="get" action="{% url 'clients:client_list' %}"
+      hx-get="{% url 'clients:client_list' %}" hx-target="#main-content" hx-push-url="true"
+      class="bg-surface rounded-card shadow-lift p-6 space-y-5">
+  {% if active_cat %}<input type="hidden" name="cat" value="{{ active_cat }}">{% endif %}
+
+  <div>
+    <div class="eyebrow mb-3">기업 규모</div>
+    <div class="flex flex-wrap gap-2">
+      {% for s in sizes %}
+      <label class="cursor-pointer">
+        <input type="checkbox" name="size" value="{{ s }}" class="hidden peer"
+               {% if filters.sizes and s in filters.sizes %}checked{% endif %}>
+        <span class="cat-chip peer-checked:is-active">{{ s }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="eyebrow mb-3">지역</div>
+    <div class="flex flex-wrap gap-2">
+      {% for r in regions %}
+      <label class="cursor-pointer">
+        <input type="checkbox" name="region" value="{{ r }}" class="hidden peer"
+               {% if filters.regions and r in filters.regions %}checked{% endif %}>
+        <span class="cat-chip peer-checked:is-active">{{ r }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="eyebrow mb-3">거래 건수</div>
+    <div class="flex flex-wrap gap-2">
+      {% for opt in offers_options %}
+      <label class="cursor-pointer">
+        <input type="radio" name="offers" value="{{ opt.value }}" class="hidden peer"
+               {% if filters.offers_range == opt.value %}checked{% endif %}>
+        <span class="cat-chip peer-checked:is-active">{{ opt.label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="eyebrow mb-3">성사 이력</div>
+    <div class="flex flex-wrap gap-2">
+      {% for opt in success_options %}
+      <label class="cursor-pointer">
+        <input type="radio" name="success" value="{{ opt.value }}" class="hidden peer"
+               {% if filters.success_status == opt.value %}checked{% endif %}>
+        <span class="cat-chip peer-checked:is-active">{{ opt.label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 pt-4 border-t border-line">
+    <a href="{% url 'clients:client_list' %}{% if active_cat %}?cat={{ active_cat }}{% endif %}"
+       hx-get="{% url 'clients:client_list' %}{% if active_cat %}?cat={{ active_cat }}{% endif %}"
+       hx-target="#main-content" hx-push-url="true"
+       class="text-sm text-muted hover:text-ink3">초기화</a>
+    <button type="submit" class="px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2">적용하기</button>
+  </div>
+</form>

@@ -21,20 +21,34 @@ CLOSED_STATUSES = ["closed_success", "closed_fail", "closed_cancel", "on_hold"]
 PAGE_SIZE = 20
 GRID_PAGE_SIZE = 9
 
+SIZE_CHOICES = [s.value for s in Client.Size]
+OFFERS_OPTIONS = [
+    {"value": "", "label": "전체"},
+    {"value": "0", "label": "0건"},
+    {"value": "1-5", "label": "1–5건"},
+    {"value": "6-10", "label": "6–10건"},
+    {"value": "10+", "label": "10건+"},
+]
+SUCCESS_OPTIONS = [
+    {"value": "", "label": "전체"},
+    {"value": "has", "label": "성사 있음"},
+    {"value": "none", "label": "성사 없음"},
+    {"value": "no_offers", "label": "거래 없음"},
+]
+
 
 def _parse_list_filters(request):
     """GET 파라미터에서 필터 kwargs 추출."""
-    def _csv(key):
-        v = request.GET.get(key, "").strip()
-        return [x for x in v.split(",") if x] if v else None
-
     cat = request.GET.get("cat", "").strip()
     categories = [cat] if cat else None
 
+    sizes = request.GET.getlist("size") or None
+    regions = request.GET.getlist("region") or None
+
     return {
         "categories": categories,
-        "sizes": _csv("size"),
-        "regions": _csv("region"),
+        "sizes": sizes,
+        "regions": regions,
         "offers_range": request.GET.get("offers") or None,
         "success_status": request.GET.get("success") or None,
     }
@@ -63,6 +77,9 @@ def client_list(request):
             "industry_categories": [
                 {"name": c.name, "label": c.label} for c in IndustryCategory
             ],
+            "sizes": SIZE_CHOICES,
+            "offers_options": OFFERS_OPTIONS,
+            "success_options": SUCCESS_OPTIONS,
         },
     )
 
