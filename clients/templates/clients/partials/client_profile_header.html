@@ -1,21 +1,12 @@
 {% load clients_tags %}
 <section class="bg-surface rounded-card shadow-card p-8 relative">
   {% if membership and membership.role == "owner" %}
-  <details class="absolute top-6 right-6">
-    <summary class="list-none cursor-pointer w-8 h-8 rounded-full hover:bg-line flex items-center justify-center text-muted">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-    </summary>
-    <div class="absolute right-0 mt-1 w-32 bg-surface rounded-lg shadow-lift border border-hair py-1 z-10">
-      <a href="{% url 'clients:client_update' client.pk %}"
-         hx-get="{% url 'clients:client_update' client.pk %}" hx-target="#main-content" hx-push-url="true"
-         class="block px-3 py-2 text-sm text-ink3 hover:bg-line">수정</a>
-      <button type="button"
-              hx-post="{% url 'clients:client_delete' client.pk %}"
-              hx-confirm="이 고객사를 삭제하시겠어요?"
-              hx-target="#main-content"
-              class="w-full text-left px-3 py-2 text-sm text-danger hover:bg-line">삭제</button>
-    </div>
-  </details>
+  <a href="{% url 'clients:client_update' client.pk %}"
+     hx-get="{% url 'clients:client_update' client.pk %}" hx-target="#main-content" hx-push-url="true"
+     class="absolute top-6 right-6 inline-flex items-center gap-1.5 px-3 h-8 rounded-lg border border-hair bg-surface text-xs font-semibold text-ink3 hover:bg-line transition-colors">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    수정
+  </a>
   {% endif %}
 
   <div class="flex items-start gap-6">
