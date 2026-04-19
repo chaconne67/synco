@@ -11,6 +11,7 @@ from accounts.helpers import _get_org
 
 from .forms import ClientForm, ContractForm
 from .models import Client, Contract, IndustryCategory
+from .services.client_create import apply_logo_upload, normalize_contact_persons
 from .services.client_queries import (
     available_regions,
     category_counts,
@@ -112,16 +113,16 @@ def client_create(request):
 
     cp_json_str = "[]"
     if request.method == "POST":
-        form = ClientForm(request.POST)
+        form = ClientForm(request.POST, request.FILES)
         cp_json_str = request.POST.get("contact_persons_json", "[]")
         if form.is_valid():
             client = form.save(commit=False)
             client.organization = org
-            # Parse contact_persons from hidden JSON input
             try:
-                client.contact_persons = json.loads(cp_json_str)
+                raw = json.loads(cp_json_str)
             except (json.JSONDecodeError, TypeError):
-                client.contact_persons = []
+                raw = []
+            client.contact_persons = normalize_contact_persons(raw)
             client.save()
             return redirect("clients:client_detail", pk=client.pk)
     else:
@@ -185,14 +186,17 @@ def client_update(request, pk):
     client = get_object_or_404(Client, pk=pk, organization=org)
 
     if request.method == "POST":
-        form = ClientForm(request.POST, instance=client)
+        form = ClientForm(request.POST, request.FILES, instance=client)
+        if request.POST.get("logo-clear") == "on" and client.logo and not request.FILES.get("logo"):
+            apply_logo_upload(client, None, delete=True)
         if form.is_valid():
             client = form.save(commit=False)
             cp_json = request.POST.get("contact_persons_json", "[]")
             try:
-                client.contact_persons = json.loads(cp_json)
+                raw = json.loads(cp_json)
             except (json.JSONDecodeError, TypeError):
-                pass  # keep existing contact_persons
+                raw = []
+            client.contact_persons = normalize_contact_persons(raw)
             client.save()
             return redirect("clients:client_detail", pk=client.pk)
     else:
