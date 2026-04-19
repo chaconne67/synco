@@ -1,4 +1,3 @@
-import pytest
 from types import SimpleNamespace
 from candidates.templatetags.candidate_ui import language_level_bars, review_notice_pill
 
