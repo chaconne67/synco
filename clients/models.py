@@ -28,7 +28,12 @@ class Client(BaseModel):
         STARTUP = "스타트업", "스타트업"
 
     name = models.CharField(max_length=200)
-    industry = models.CharField(max_length=100, blank=True)
+    industry = models.CharField(
+        max_length=30,
+        choices=IndustryCategory.choices,
+        default=IndustryCategory.ETC,
+        blank=True,
+    )
     size = models.CharField(max_length=20, choices=Size.choices, blank=True)
     region = models.CharField(max_length=100, blank=True)
     contact_persons = models.JSONField(default=list, blank=True)

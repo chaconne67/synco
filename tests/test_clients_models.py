@@ -48,3 +48,18 @@ def test_client_logo_upload_to_path(org):
     c = Client.objects.create(organization=org, name="X")
     field = c._meta.get_field("logo")
     assert field.upload_to == "clients/logos/"
+
+
+@pytest.mark.django_db
+def test_industry_default_is_etc(org):
+    c = Client.objects.create(organization=org, name="X")
+    assert c.industry == IndustryCategory.ETC.value
+
+
+@pytest.mark.django_db
+def test_industry_accepts_valid_category(org):
+    c = Client.objects.create(
+        organization=org, name="X", industry=IndustryCategory.BIO_PHARMA.value
+    )
+    c.refresh_from_db()
+    assert c.industry == "바이오/제약"
