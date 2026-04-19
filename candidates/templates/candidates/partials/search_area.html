@@ -1,3 +1,23 @@
+{% if session and last_turn %}
+<div class="mb-6 bg-white border border-hair rounded-card shadow-card px-5 py-4 flex items-start gap-3">
+  <div class="w-9 h-9 rounded-lg bg-line flex items-center justify-center shrink-0">
+    <svg class="w-4 h-4 text-ink3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="eyebrow text-ink3">검색 결과</span>
+      <span class="text-faint">·</span>
+      <span class="text-xs font-bold text-ink3 tnum">{{ last_turn.result_count }}명</span>
+    </div>
+    <p class="text-sm text-ink font-semibold truncate">"{{ last_turn.user_text }}"</p>
+    {% if last_turn.ai_response %}
+    <p class="text-xs text-muted mt-1 line-clamp-2">{{ last_turn.ai_response }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 <div id="candidate-list">
   {% include "candidates/partials/candidate_list.html" %}
 </div>

@@ -274,7 +274,7 @@ boxShadow: {
 <header class="h-[72px] bg-surface border-b border-hair px-8 flex items-center justify-between">
   <div>
     <div class="eyebrow">데스크 · 헤드헌팅</div>
-    <h1 class="text-[22px] font-bold tracking-tight mt-1">Executive Search Dashboard</h1>
+    <h1 class="text-2xl font-bold tracking-tight mt-1">Executive Search Dashboard</h1>
   </div>
   <div class="flex items-center gap-5">
     <div class="text-right">…date/time…</div>
@@ -285,7 +285,7 @@ boxShadow: {
 ```
 
 - 높이 `72px` 고정
-- 페이지 타이틀: eyebrow 브래드크럼 + H1 22px/700
+- 페이지 타이틀: eyebrow 브래드크럼 + H1 `text-2xl` (24px) / 700
 - 우측 액션: 32×32 둥근 아이콘 버튼들 + 좌측 디바이더 + 사용자 영역
 
 ### 4.3 Card (Standard)
@@ -311,7 +311,7 @@ boxShadow: {
 ```html
 <article class="bg-ink text-white rounded-card shadow-lift p-6 flex flex-col">
   <div class="eyebrow" style="color:#64748B">Estimated Revenue</div>
-  <div class="text-[40px] leading-none font-bold tnum mt-6">₩ 842,500</div>
+  <div class="text-4xl leading-none font-bold tnum mt-6">₩ 842,500</div>
   <div class="mt-auto pt-6">
     <div class="progress" style="background:#1E293B"><span style="width:76%; background:#fff"></span></div>
   </div>
@@ -325,13 +325,13 @@ boxShadow: {
 
 ```html
 <div class="flex items-baseline gap-3">
-  <span class="text-[40px] leading-none font-bold tnum">24</span>
+  <span class="text-4xl leading-none font-bold tnum">24</span>
   <span class="text-sm text-muted">Projects Closed</span>
 </div>
 ```
 
-- 메인 숫자 40px/700/tnum
-- 라벨 14px/regular/muted, baseline 정렬
+- 메인 숫자 `text-4xl` (36px) / 700 / tnum
+- 라벨 `text-sm` (14px) / regular / muted, baseline 정렬
 
 ### 4.6 Status Dot + Label
 
@@ -403,13 +403,13 @@ boxShadow: {
   </div>
   <div class="min-w-0">
     <div class="text-sm font-semibold leading-snug">Title</div>
-    <div class="text-[11px] text-faint mt-0.5">Meta · 2h ago</div>
+    <div class="text-xs text-faint mt-0.5">Meta · 2h ago</div>
   </div>
 </li>
 ```
 
 - 좌측 아이콘 칩: 28×28, semantic color의 50 톤 배경 + 본 컬러 아이콘
-- 메타 라인: 11px / faint, eyebrow 스타일 **사용 안 함**(소문자 그대로)
+- 메타 라인: `text-xs` (12px) / faint, eyebrow 스타일 **사용 안 함**(소문자 그대로)
 
 ### 4.11 Calendar
 

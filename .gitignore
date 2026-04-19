@@ -66,6 +66,9 @@ docs/**/forge/**/pause-before-*.sh
 # Multi-agent inspection reports (local-only scratch)
 docs/**/inspection/multi-agent/
 
+# UI QA screenshot artifacts (session-local)
+logs/ui-compare/
+
 # Local PDFs / binaries
 *.pdf
 !docs/**/*.pdf

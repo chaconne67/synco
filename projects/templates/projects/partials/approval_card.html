@@ -50,15 +50,15 @@
 
     <div class="flex flex-wrap gap-2">
       <button type="submit" name="decision" value="승인"
-              class="rounded-xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              class="rounded-xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-emerald-700 transition-all">
         승인
       </button>
       <button type="submit" name="decision" value="합류"
-              class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 transition-all">
         합류
       </button>
       <button type="submit" name="decision" value="반려"
-              class="rounded-xl bg-rose-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-rose-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              class="rounded-xl bg-rose-600 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-rose-700 transition-all"
               onclick="var reason = prompt('반려 사유를 입력해 주세요.'); if(reason === null) return false; this.form.querySelector('[name=response_text]').value = reason;">
         반려
       </button>

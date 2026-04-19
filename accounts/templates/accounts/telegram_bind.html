@@ -49,7 +49,7 @@
       <form method="post" action="{% url 'telegram:test' %}" class="flex-1">
         {% csrf_token %}
         <button type="submit"
-          class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
+          class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
           Test Message
         </button>
       </form>
@@ -65,7 +65,7 @@
     <form method="post" action="{% url 'telegram:bind' %}">
       {% csrf_token %}
       <button type="submit"
-        class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
+        class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
         Connect Telegram
       </button>
     </form>

@@ -15,7 +15,7 @@
     {% if membership and membership.role == 'owner' %}
     <a href="{% url 'clients:client_create' %}"
        hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
       New Client
     </a>
@@ -98,7 +98,7 @@
     <p class="text-sm font-medium text-slate-500 mb-5">등록된 고객사가 없습니다</p>
     <a href="{% url 'clients:client_create' %}"
        hx-get="{% url 'clients:client_create' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
+       class="inline-flex items-center gap-2 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
       첫 고객사 등록
     </a>
     {% else %}

@@ -45,13 +45,12 @@
 
   {# ── 7단계 진행 바 (서칭 제외) ── #}
   {% if not application.dropped_at %}
-  {% card_stages as stages %}
-  {% with passed=application.stages_passed cur=application.current_stage %}
+  {% card_stages_for application as stages %}
   <div class="stage-progress">
-    {% for stage_id, stage_label in stages %}
-    <div class="stage-step {% if stage_id in passed and stage_id != cur %}passed{% elif stage_id == cur %}current{% endif %}">
+    {% for stage_id, stage_label, state in stages %}
+    <div class="stage-step {% if state == 'passed' %}passed{% elif state == 'current' %}current{% endif %}">
       <div class="dot">
-        {% if stage_id in passed and stage_id != cur %}
+        {% if state == 'passed' %}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         {% else %}
           {{ forloop.counter }}
@@ -61,7 +60,6 @@
     </div>
     {% endfor %}
   </div>
-  {% endwith %}
 
   {# ── 현 단계 상자 + 할 일 리스트 + 2버튼 ── #}
   {% if application.hired_at %}

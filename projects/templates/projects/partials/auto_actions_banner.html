@@ -9,7 +9,7 @@
         <button hx-post="{% url 'projects:auto_action_apply' project.pk action.pk %}"
                 hx-target="#auto-actions-wrapper"
                 hx-swap="innerHTML"
-                class="rounded-lg bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-3 py-1.5 shadow-sm hover:bg-ink2 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                class="rounded-lg bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-3 py-1.5 shadow-sm hover:bg-ink2 transition-all">
           확인
         </button>
         <button hx-post="{% url 'projects:auto_action_dismiss' project.pk action.pk %}"

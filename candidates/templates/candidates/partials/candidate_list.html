@@ -1,25 +1,27 @@
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+{% if candidates %}
+<div class="columns-1 lg:columns-2 gap-4">
   {% for c in candidates %}
     {% include "candidates/partials/candidate_card_v2.html" with candidate=c %}
-  {% empty %}
-    <div class="col-span-full bg-white rounded-card border border-hair shadow-card p-12 text-center">
-      <div class="mx-auto w-14 h-14 rounded-full bg-line flex items-center justify-center mb-5">
-        <svg class="w-6 h-6 text-faint" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-      </div>
-      <p class="text-sm font-bold text-ink">검색 결과가 없습니다</p>
-      <p class="eyebrow text-faint mt-2">Try a different query</p>
-    </div>
   {% endfor %}
-
   {% if has_more %}
-  <div hx-get="/candidates/?page={{ page|add:1 }}{% if active_category %}&category={{ active_category }}{% endif %}{% if session %}&session_id={{ session.pk }}{% endif %}{% if rec_status_filter %}&rec_status={{ rec_status_filter }}{% endif %}{% if target_project %}&project={{ target_project.pk }}{% endif %}"
+  <div hx-get="/candidates/?page={{ page|add:1 }}{% if session %}&session_id={{ session.pk }}{% else %}{% if active_category %}&category={{ active_category }}{% endif %}{% endif %}{% if rec_status_filter %}&rec_status={{ rec_status_filter }}{% endif %}{% if target_project %}&project={{ target_project.pk }}{% endif %}"
        hx-target="this"
        hx-swap="outerHTML"
        hx-trigger="revealed"
-       class="col-span-full py-6 text-center">
+       class="py-6 text-center break-inside-avoid"
+       style="column-span: all;">
     <span class="eyebrow text-faint">Loading more...</span>
   </div>
   {% endif %}
 </div>
+{% else %}
+<div class="bg-white rounded-card border border-hair shadow-card p-12 text-center">
+  <div class="mx-auto w-14 h-14 rounded-full bg-line flex items-center justify-center mb-5">
+    <svg class="w-6 h-6 text-faint" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
+  </div>
+  <p class="text-sm font-bold text-ink">검색 결과가 없습니다</p>
+  <p class="eyebrow text-faint mt-2">Try a different query</p>
+</div>
+{% endif %}

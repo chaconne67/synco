@@ -46,9 +46,9 @@
           <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             <span>{% block breadcrumb_org %}{{ request.user.membership.organization.name|default:"synco" }}{% endblock %}</span>
             {% block breadcrumb_separator %}<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>{% endblock %}
-            <span class="text-slate-600">{% block breadcrumb_current %}{% endblock %}</span>
+            <span id="top-breadcrumb-current" class="text-slate-600">{% block breadcrumb_current %}{% endblock %}</span>
           </div>
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight">{% block page_title %}{% endblock %}</h2>
+          <h2 id="top-page-title" class="text-2xl font-black text-slate-900 tracking-tight">{% block page_title %}{% endblock %}</h2>
         </div>
 
         <div class="flex items-center gap-8">
@@ -78,7 +78,7 @@
       {% endblock %}
 
       <!-- Main content (flush, no rounded notch per spec) -->
-      <main id="main-content" class="flex-1 min-w-0 pb-20 lg:pb-0 bg-canvas min-h-screen">
+      <main id="main-content" class="flex-1 min-w-0 pb-32 lg:pb-28 bg-canvas min-h-screen">
         {% block content %}{% endblock %}
       </main>
     </div>
@@ -87,6 +87,11 @@
 
   <!-- Mobile bottom nav (< lg) -->
   {% block bottom_nav %}{% include "common/nav_bottom.html" %}{% endblock %}
+
+  <!-- Global voice/text command bar — 전 페이지 공통 (P14 voice-agent 설계) -->
+  {% if request.user.is_authenticated %}
+    {% include "candidates/partials/search_bar_fixed.html" %}
+  {% endif %}
 
   <!-- Modal overlay container — content swapped in by HTMX; each modal provides its own overlay -->
   <div id="modal-container"></div>
@@ -99,8 +104,6 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .btn-spinner { display: inline-block; width: 1em; height: 1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .5s linear infinite; vertical-align: middle; }
     #page-loading-bar { position: fixed; top: 0; left: 0; height: 3px; background: #334155; z-index: 9999; transition: width 0.3s ease; }
-    .eyebrow { font-size: 10px; line-height: 1; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #64748B; }
-    .tnum { font-variant-numeric: tabular-nums; }
   </style>
   <script>
   (function(){

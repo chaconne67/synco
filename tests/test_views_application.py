@@ -20,7 +20,8 @@ class TestAddCandidate:
             data={"candidate": str(c.pk), "notes": "test"},
             HTTP_HX_REQUEST="true",
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
+        assert response.content == b""
         assert response["HX-Trigger"] == "applicationChanged"
         assert Application.objects.filter(project=project, candidate=c).exists()
 
@@ -65,7 +66,8 @@ class TestApplicationDrop:
             data={"drop_reason": "unfit"},
             HTTP_HX_REQUEST="true",
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
+        assert response.content == b""
         assert response["HX-Trigger"] == "applicationChanged"
         application.refresh_from_db()
         assert application.dropped_at is not None

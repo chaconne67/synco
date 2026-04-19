@@ -51,19 +51,25 @@ def get_overdue_actions(user: User, org: Organization):
     ).select_related("application__project", "application__candidate", "action_type")
 
 
-def get_upcoming_actions(user: User, org: Organization, days=3):
-    """해당 사용자의 3일 내 예정 액션 (scheduled_at 또는 due_at 기준)."""
+def get_upcoming_actions(user: User, org: Organization, days=None):
+    """해당 사용자의 예정 액션 (오늘·overdue 제외한 모든 PENDING).
+
+    ToDoList 모델: 마감 기한은 사용자가 선택적으로 지정. 날짜 필터 없이
+    아직 처리되지 않은 모든 대기 항목을 노출한다.
+    """
     now = timezone.now()
-    soon = now + timedelta(days=days)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
     return (
         ActionItem.objects.filter(
             assigned_to=user,
             application__project__organization=org,
             status=ActionItemStatus.PENDING,
         )
-        .filter(
-            Q(scheduled_at__gte=now, scheduled_at__lte=soon)
-            | Q(due_at__gte=now, due_at__lte=soon)
+        .exclude(
+            Q(scheduled_at__gte=today_start, scheduled_at__lt=today_end)
+            | Q(due_at__gte=max(now, today_start), due_at__lt=today_end)
+            | Q(due_at__lt=now)
         )
         .select_related("application__project", "application__candidate", "action_type")
         .distinct()

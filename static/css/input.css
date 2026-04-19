@@ -69,21 +69,26 @@
   .col-pill-screening { background: #DBEAFE; color: #1E40AF; }  /* blue */
   .col-pill-closed    { background: #D1FAE5; color: #047857; }  /* green */
 
-  /* Card hover — top/position 기반. transform 쓰면 hover 시 텍스트 흐려진다 */
-  .rounded-card {
+  /* Card hover — 클릭 가능한 카드 (<a>, <button>)에만 적용.
+     일반 section/div 의 .rounded-card 는 정적 컨테이너이므로 hover 효과 없음.
+     transform 쓰면 hover 시 텍스트 흐려진다 → top/position 기반 사용. */
+  a.rounded-card,
+  button.rounded-card {
     position: relative;
     top: 0;
     transition:
       top 200ms cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .rounded-card:hover {
+  a.rounded-card:hover,
+  button.rounded-card:hover {
     top: -2px;
     box-shadow:
       0 12px 24px -10px rgba(15, 23, 42, 0.18),
       0 4px 8px -4px rgba(15, 23, 42, 0.08);
   }
-  .bg-ink.rounded-card:hover {
+  a.bg-ink.rounded-card:hover,
+  button.bg-ink.rounded-card:hover {
     box-shadow:
       0 16px 32px -12px rgba(15, 23, 42, 0.45),
       0 6px 12px -6px rgba(15, 23, 42, 0.2);
@@ -239,16 +244,16 @@
     margin-top: 8px;
   }
   .stage-step {
+    @apply text-xs font-semibold;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
     position: relative;
-    font-size: 11px;
-    font-weight: 600;
     color: #94A3B8;
   }
   .stage-step .dot {
+    @apply text-xs font-bold;
     width: 28px;
     height: 28px;
     border-radius: 999px;
@@ -258,8 +263,6 @@
     align-items: center;
     justify-content: center;
     color: #94A3B8;
-    font-size: 11px;
-    font-weight: 700;
     flex-shrink: 0;
   }
   .stage-step.passed .dot {

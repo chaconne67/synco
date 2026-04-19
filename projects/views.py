@@ -2154,7 +2154,7 @@ def dashboard(request):
 
     today_actions = get_today_actions(user, org)
     overdue_actions = get_overdue_actions(user, org)
-    upcoming_actions = get_upcoming_actions(user, org, days=3)
+    upcoming_actions = get_upcoming_actions(user, org)
 
     is_owner = False
     try:
@@ -2702,7 +2702,7 @@ def project_add_candidate(request, pk):
         add_candidates_to_project(project, [candidate_uuid], created_by=request.user)
 
         if request.headers.get("HX-Request"):
-            response = HttpResponse(status=204)
+            response = HttpResponse("")
             response["HX-Trigger"] = "applicationChanged"
             return response
         return redirect("projects:project_detail", pk=project.pk)
@@ -2734,7 +2734,7 @@ def project_add_candidate(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "applicationChanged"
         return response
     return redirect("projects:project_detail", pk=project.pk)
@@ -2784,7 +2784,7 @@ def application_drop(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "applicationChanged"
         return response
     return redirect("projects:project_detail", pk=application.project.pk)
@@ -2901,7 +2901,7 @@ def application_skip_stage(request, pk):
             created_by=request.user,
         )
         # 이벤트 trigger — 상세 페이지 리로드
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "applicationChanged"
         return response
 
@@ -2918,14 +2918,17 @@ def application_skip_stage(request, pk):
 
 
 def _create_receive_resume_action(application, actor, *, done, note, due_days=0):
-    """Phase B 헬퍼: receive_resume ActionType 으로 ActionItem 생성."""
+    """Phase B 헬퍼: receive_resume ActionType 으로 ActionItem 생성.
+
+    ToDoList 모델: due_days=0 이면 마감 기한 없음 (대기 항목). done=True 면 즉시 완료.
+    """
     from django.utils import timezone
 
     at = ActionType.objects.filter(code="receive_resume").first()
     if not at:
         return None
     now = timezone.now()
-    due = now + timedelta(days=due_days) if due_days else now
+    due = now + timedelta(days=due_days) if due_days else None
     return ActionItem.objects.create(
         application=application,
         action_type=at,
@@ -2963,7 +2966,7 @@ def application_resume_use_db(request, pk):
         done=True,
         note=f"DB 기존 이력서 재사용 (파일: {current.filename or current.pk})",
     )
-    response = HttpResponse(status=204)
+    response = HttpResponse("")
     response["HX-Trigger"] = "applicationChanged"
     return response
 
@@ -2985,9 +2988,8 @@ def application_resume_request_email(request, pk):
             request.user,
             done=False,
             note=f"이메일 요청 보냄\n\n{body}",
-            due_days=3,
         )
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "applicationChanged"
         return response
     return render(
@@ -3027,7 +3029,7 @@ def application_resume_upload(request, pk):
             done=True,
             note=f"직접 업로드 — {file.name}",
         )
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "applicationChanged"
         return response
     return render(
@@ -3129,7 +3131,9 @@ def action_create(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = HttpResponse(status=204)
+        # 빈 200으로 반환해 #modal-container innerHTML 이 비워지며 모달이 닫힌다.
+        # (htmx 2.x 는 204 응답 시 swap 을 수행하지 않아 모달이 남아있다.)
+        response = HttpResponse("")
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=application.project.pk)
@@ -3191,7 +3195,7 @@ def action_complete(request, pk):
         return response
 
     if request.headers.get("HX-Request"):
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)
@@ -3239,7 +3243,7 @@ def action_skip(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)
@@ -3290,7 +3294,7 @@ def action_reschedule(request, pk):
         )
 
     if request.headers.get("HX-Request"):
-        response = HttpResponse(status=204)
+        response = HttpResponse("")
         response["HX-Trigger"] = "actionChanged"
         return response
     return redirect("projects:project_detail", pk=action.application.project.pk)
@@ -3318,7 +3322,7 @@ def action_propose_next(request, pk):
     selected_ids = request.POST.getlist("next_action_type_ids")
     if not selected_ids:
         if request.headers.get("HX-Request"):
-            response = HttpResponse(status=204)
+            response = HttpResponse("")
             response["HX-Trigger"] = "actionChanged"
             return response
         return redirect("projects:project_detail", pk=action.application.project.pk)

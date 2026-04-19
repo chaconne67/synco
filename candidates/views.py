@@ -719,6 +719,35 @@ def search_chat(request):
 
 
 @login_required
+def search_session_turns(request, pk):
+    """현재 세션의 과거 대화를 JSON으로 반환. 페이지 로드 시 채팅 로그 복원용."""
+    session = SearchSession.objects.filter(pk=pk, user=request.user).first()
+    if not session:
+        return JsonResponse({"turns": [], "is_active": False})
+    turns = session.turns.order_by("turn_number").values(
+        "turn_number", "input_type", "user_text", "ai_response", "result_count"
+    )
+    return JsonResponse(
+        {
+            "session_id": str(session.pk),
+            "is_active": session.is_active,
+            "turns": list(turns),
+        }
+    )
+
+
+@login_required
+def search_session_reset(request):
+    """현재 사용자의 활성 세션을 종료. 새 대화 시작용."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    SearchSession.objects.filter(user=request.user, is_active=True).update(
+        is_active=False
+    )
+    return JsonResponse({"ok": True})
+
+
+@login_required
 def voice_transcribe(request):
     """Handle voice audio upload → Whisper transcription. Returns JSON."""
     if request.method != "POST":

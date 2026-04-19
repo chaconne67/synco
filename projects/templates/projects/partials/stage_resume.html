@@ -25,9 +25,9 @@
     <button hx-get="{% url 'projects:application_resume_request_email' application.id %}"
             hx-target="#modal-container" hx-swap="innerHTML"
             class="text-left p-3 rounded-lg bg-surface border border-hair hover:border-ink3 transition-colors group"
-            title="후보자에게 이메일로 이력서를 요청합니다. 응답 대기 상태가 됩니다">
+            title="후보자에게 이메일로 이력서를 요청합니다. 할 일 목록에 대기 항목으로 추가됩니다">
       <div class="text-xs font-bold text-ink mb-1">② 이메일로 요청</div>
-      <p class="text-xs text-muted">요청 발송 후 3일 응답 대기</p>
+      <p class="text-xs text-muted">할 일 목록에 대기 항목 추가</p>
     </button>
 
     {# ③ 직접 업로드 #}

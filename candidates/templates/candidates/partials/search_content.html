@@ -1,4 +1,7 @@
 {% load static %}
+{# OOB: HTMX 스왑 시 상단바 title/breadcrumb 동기화 #}
+<span id="top-breadcrumb-current" hx-swap-oob="true" class="text-slate-600">Candidates</span>
+<h2 id="top-page-title" hx-swap-oob="true" class="text-2xl font-black text-slate-900 tracking-tight">Candidates</h2>
 <style>
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -31,7 +34,7 @@
          hx-get="/candidates/new/"
          hx-target="#main-content"
          hx-push-url="true"
-         class="inline-flex items-center gap-2 rounded-xl bg-ink3 hover:bg-ink2 text-white text-xs font-bold uppercase tracking-widest px-5 py-3 shadow-lift hover:scale-[1.01] active:scale-[0.99] transition-all">
+         class="inline-flex items-center gap-2 rounded-xl bg-ink3 hover:bg-ink2 text-white text-xs font-bold uppercase tracking-widest px-5 py-3 shadow-lift transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
         Add Candidate
       </a>
@@ -71,14 +74,10 @@
     </div>
 
     <div id="search-area">
-      <div id="candidate-list">
-        {% include "candidates/partials/candidate_list.html" %}
-      </div>
+      {% include "candidates/partials/search_area.html" %}
     </div>
 
 </div>
-
-{% include "candidates/partials/search_bar_fixed.html" %}
 
 <script>
 (function() {

@@ -1,7 +1,7 @@
 {% load candidate_ui %}
 {% review_notice_pill candidate as notice %}
 
-<div class="flex flex-col gap-1.5">
+<div class="flex flex-col gap-1.5 mb-4 break-inside-avoid">
 <a href="/candidates/{{ candidate.pk }}/"
    hx-get="/candidates/{{ candidate.pk }}/"
    hx-target="#main-content"

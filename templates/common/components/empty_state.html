@@ -6,7 +6,7 @@
   {% if cta_url and cta_text %}
   <a href="{{ cta_url }}"
      hx-get="{{ cta_url }}" hx-target="#main-content" hx-push-url="true"
-     class="bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3 px-6 rounded-xl shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.02] active:scale-95 transition-all">
+     class="bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3 px-6 rounded-xl shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
     {{ cta_text }}
   </a>
   {% endif %}

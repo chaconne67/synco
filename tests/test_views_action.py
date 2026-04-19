@@ -31,7 +31,8 @@ class TestActionCreate:
             },
             HTTP_HX_REQUEST="true",
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
+        assert response.content == b""
         assert response["HX-Trigger"] == "actionChanged"
         assert ActionItem.objects.filter(
             application=application, action_type=action_type_reach_out
@@ -89,7 +90,8 @@ class TestActionSkip:
             data={"note": "skip reason"},
             HTTP_HX_REQUEST="true",
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
+        assert response.content == b""
         assert response["HX-Trigger"] == "actionChanged"
         action.refresh_from_db()
         assert action.status == ActionItemStatus.SKIPPED
@@ -107,7 +109,8 @@ class TestActionReschedule:
             data={"new_due_at": new_due},
             HTTP_HX_REQUEST="true",
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
+        assert response.content == b""
         assert response["HX-Trigger"] == "actionChanged"
 
 
@@ -142,7 +145,7 @@ class TestActionProposeNext:
     def test_propose_next_empty_selection(
         self, logged_in_client, application, action_type_reach_out, user
     ):
-        """POST propose_next with no selection -> 204."""
+        """POST propose_next with no selection -> empty 200 (modal closes)."""
         action = create_action(application, action_type_reach_out, user)
         complete_action(action, user)
 
@@ -151,7 +154,8 @@ class TestActionProposeNext:
             data={},
             HTTP_HX_REQUEST="true",
         )
-        assert response.status_code == 204
+        assert response.status_code == 200
+        assert response.content == b""
 
 
 class TestActionOrgIsolation:

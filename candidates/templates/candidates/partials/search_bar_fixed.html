@@ -1,9 +1,31 @@
 {% load static %}
 {# Fixed bottom search bar — voice-first with text fallback. #}
 <div id="search-bar-wrapper"
-     class="fixed bottom-0 left-0 right-0 lg:left-64 z-30 pointer-events-none px-4 pb-6 pt-8
-            bg-gradient-to-t from-canvas via-canvas/90 to-transparent">
-  <div class="pointer-events-auto mx-auto max-w-3xl bg-white border border-hair rounded-full shadow-searchbar flex items-center gap-2 px-4 py-2.5">
+     class="fixed bottom-0 left-0 right-0 lg:left-64 z-30 pointer-events-none px-4 pb-6 pt-8">
+
+  {# 채팅 로그 패널 — 검색 바 위에 슬라이드업 (rounded-card + 헤더/스크롤 분리) #}
+  <div class="max-w-[1280px] px-10 mb-3">
+    <div id="sb-chat-panel"
+         class="pointer-events-auto mx-auto w-full lg:w-1/3 max-h-[50vh]
+                bg-surface border border-hair rounded-card shadow-lift overflow-hidden
+                hidden opacity-0 translate-y-3 flex flex-col
+                transition-[opacity,transform] duration-300 ease-out">
+      <div class="flex items-center justify-between px-4 h-11 border-b border-hair shrink-0">
+        <span class="text-xs font-bold uppercase tracking-wider text-muted">검색 대화</span>
+        <button id="sb-close-btn" type="button"
+                class="text-xs font-semibold text-muted hover:text-ink3 transition-colors inline-flex items-center gap-1.5"
+                aria-label="대화창 닫기">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          닫기
+        </button>
+      </div>
+      <div id="sb-chat-log" class="flex-1 overflow-y-auto px-4 py-3 space-y-3 sb-scroll"></div>
+    </div>
+  </div>
+
+  {# 후보자 리스트와 동일한 박스(px-10 max-w-[1280px], mx-auto 없음 → 좌측정렬)로 감싼 뒤, 그 안에서 1/3 너비·중앙정렬 #}
+  <div class="max-w-[1280px] px-10">
+    <div class="pointer-events-auto mx-auto w-full lg:w-1/3 bg-white border border-hair rounded-2xl shadow-searchbar flex items-center gap-2 px-4 py-2.5">
 
     <!-- Search icon (left) -->
     <svg class="w-5 h-5 text-faint shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -34,30 +56,38 @@
 
     <!-- Action buttons (right) — swap between mic / send / stop -->
     <button id="sb-mic-btn" type="button"
-            class="w-10 h-10 rounded-full bg-ink3 hover:bg-ink2 text-white flex items-center justify-center shrink-0 transition-colors"
+            class="w-10 h-10 rounded-xl bg-ink3 hover:bg-ink2 text-white flex items-center justify-center shrink-0 transition-colors"
             aria-label="마이크로 검색">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
     </button>
     <button id="sb-send-btn" type="button"
-            class="hidden w-10 h-10 rounded-full bg-ink3 hover:bg-ink2 text-white flex items-center justify-center shrink-0 transition-colors"
+            class="hidden w-10 h-10 rounded-xl bg-ink3 hover:bg-ink2 text-white flex items-center justify-center shrink-0 transition-colors"
             aria-label="검색 전송">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
     </button>
     <button id="sb-stop-btn" type="button"
-            class="hidden w-10 h-10 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shrink-0 transition-colors animate-pulse"
+            class="hidden w-10 h-10 rounded-xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shrink-0 transition-colors animate-pulse"
             aria-label="녹음 정지">
       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
     </button>
+    </div>
   </div>
 </div>
 
 <style>
   .sb-bar { flex: 1; min-width: 2px; max-width: 3px; height: 4px; background: #F43F5E; border-radius: 9999px; transition: height 0.06s ease-out; }
+  /* 얇은 스크롤바 — 패널 라운드 모서리와 조화 */
+  .sb-scroll { scrollbar-width: thin; scrollbar-color: #CBD5E1 transparent; }
+  .sb-scroll::-webkit-scrollbar { width: 6px; }
+  .sb-scroll::-webkit-scrollbar-track { background: transparent; }
+  .sb-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+  .sb-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 </style>
 
 <script>
   window.SEARCH_URL = "{% url 'candidates:search_chat' %}";
   window.VOICE_URL = "{% url 'candidates:voice_transcribe' %}";
+  window.SESSION_TURNS_URL_TEMPLATE = "/candidates/search_session/__ID__/turns/";
   window.CSRF_TOKEN = "{{ csrf_token }}";
 </script>
 <script src="{% static 'candidates/search_bar.js' %}" defer></script>

@@ -17,6 +17,16 @@ urlpatterns = [
     path("new/", views.candidate_create, name="candidate_create"),
     path("<uuid:pk>/", views.candidate_detail, name="candidate_detail"),
     path("search/", views.search_chat, name="search_chat"),
+    path(
+        "search_session/<uuid:pk>/turns/",
+        views.search_session_turns,
+        name="search_session_turns",
+    ),
+    path(
+        "search_session/reset/",
+        views.search_session_reset,
+        name="search_session_reset",
+    ),
     path("voice/", views.voice_transcribe, name="voice_transcribe"),
     # Phase 1: Review UI
     path("review/", views.review_list, name="review_list"),

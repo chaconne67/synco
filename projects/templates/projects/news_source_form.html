@@ -37,7 +37,7 @@
 
     <div class="flex gap-3">
       <button type="submit"
-              class="flex-1 rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-4 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.005] active:scale-[0.995] transition-all">
+              class="flex-1 rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-4 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
         {% if is_edit %}수정{% else %}추가{% endif %}
       </button>
       <a href="{% url 'news:news_sources' %}"

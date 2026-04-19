@@ -32,8 +32,9 @@
       </div>
     </div>
 
-    <!-- Reason codes -->
-    <div>
+    <!-- Reason codes — 비추천/보류 선택 시에만 노출 -->
+    {% with current=candidate.recommendation_status %}
+    <div id="reason-codes-wrapper"{% if current != "not_recommended" and current != "on_hold" %} hidden{% endif %}>
       <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">사유 선택 · Reasons</label>
       <div class="grid grid-cols-2 gap-2">
         {% for code, label in reason_codes.items %}
@@ -45,6 +46,7 @@
         {% endfor %}
       </div>
     </div>
+    {% endwith %}
 
     <!-- Content with voice input -->
     <div>
@@ -66,8 +68,24 @@
     </div>
 
     <button type="submit"
-            class="w-full rounded-xl bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3.5 shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
-      Save Verdict
+            class="w-full rounded-xl bg-ink3 text-white font-bold text-sm tracking-wide py-3.5 shadow-lg shadow-ink3/20 hover:bg-ink2 transition-all">
+      판정 저장
     </button>
   </form>
 </div>
+
+<script>
+  (function () {
+    const form = document.currentScript.previousElementSibling.querySelector('form');
+    const wrapper = form && form.querySelector('#reason-codes-wrapper');
+    if (!form || !wrapper) return;
+    form.addEventListener('change', (e) => {
+      if (e.target.name !== 'recommendation_status') return;
+      const show = e.target.value === 'not_recommended' || e.target.value === 'on_hold';
+      wrapper.hidden = !show;
+      if (!show) {
+        wrapper.querySelectorAll('input[type=checkbox]').forEach((cb) => { cb.checked = false; });
+      }
+    });
+  })();
+</script>
