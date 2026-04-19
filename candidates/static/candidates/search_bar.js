@@ -18,6 +18,8 @@
   let recordStart = 0;
   let timerId = null;
   let animId = null;
+  let autostopId = null;
+  let isStopping = false;
   let audioCtx = null;
   let sessionId = sessionStorage.getItem('synco_session_id') || null;
 
@@ -100,15 +102,17 @@
       setState('recording');
       startTimer();
       startWaveform(stream);
-      setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); }, 60000);
+      autostopId = setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); }, 60000);
     } catch (err) {
       console.error('mic denied', err);
+      setState('idle');
       alert('마이크 권한이 필요합니다.');
     }
   }
 
   function stopRecording() {
-    if (!mediaRecorder) return;
+    if (!mediaRecorder || isStopping) return;
+    isStopping = true;
     const elapsed = Date.now() - recordStart;
     if (elapsed < 500) {
       try { mediaRecorder.stop(); } catch (e) {}
@@ -152,10 +156,12 @@
   }
 
   function cleanupRecording() {
+    if (autostopId) { clearTimeout(autostopId); autostopId = null; }
     if (timerId) { clearInterval(timerId); timerId = null; }
     if (animId) { cancelAnimationFrame(animId); animId = null; }
     if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
     timerEl.textContent = '00:00';
+    isStopping = false;
   }
 
   async function onRecordingStopped() {
