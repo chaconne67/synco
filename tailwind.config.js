@@ -19,9 +19,13 @@ module.exports = {
     'col-container-closed',
     // av-{{ forloop.counter }} 동적 생성
     'av-1', 'av-2', 'av-3', 'av-4', 'av-5', 'av-6',
+    // Client card utilities — category chips, badges, meta tags, stats
+    'cat-chip', 'meta-tag', 'stat',
+    'badge.enterprise', 'badge.midcap', 'badge.sme', 'badge.foreign', 'badge.startup',
     // Client logo tile gradients — 8 variations
     'client-logo-1', 'client-logo-2', 'client-logo-3', 'client-logo-4',
     'client-logo-5', 'client-logo-6', 'client-logo-7', 'client-logo-8',
+    'client-logo-tile', 'hide-scrollbar',
   ],
   theme: {
     extend: {
