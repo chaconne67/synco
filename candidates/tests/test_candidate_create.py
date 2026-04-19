@@ -53,3 +53,18 @@ def test_duplicate_email_warns(auth_client):
     assert b"duplicate" in resp.content.lower() or "기존후보자A".encode("utf-8") in resp.content
     # Should NOT have created the new one (still duplicate warning screen)
     assert not Candidate.objects.filter(name="신규후보자A").exists()
+
+
+@pytest.mark.django_db
+def test_duplicate_phone_warns(auth_client):
+    Candidate.objects.create(name="기존후보자B", phone="010-1234-5678")
+    resp = auth_client.post(
+        "/candidates/new/",
+        {
+            "name": "신규후보자B",
+            "phone": "01012345678",
+        },
+    )
+    assert resp.status_code == 200
+    assert "기존후보자B".encode("utf-8") in resp.content
+    assert not Candidate.objects.filter(name="신규후보자B").exists()

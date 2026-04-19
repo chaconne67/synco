@@ -6,15 +6,22 @@ from candidates.models import Candidate
 
 
 def find_duplicate(email: str | None, phone: str | None) -> Candidate | None:
-    """Return existing candidate matching email or phone (exact), else None."""
+    """Return existing candidate matching email or phone, else None.
+
+    Mirrors `identify_candidate()`'s matching rules:
+      1. email exact (case-insensitive)
+      2. phone_normalized exact (requires >= 10 digits after normalization)
+    """
+    from candidates.services.candidate_identity import normalize_phone_for_matching
+
     if email:
         hit = Candidate.objects.filter(email__iexact=email.strip()).first()
         if hit:
             return hit
     if phone:
-        normalized = "".join(c for c in phone if c.isdigit())
-        if normalized:
-            hit = Candidate.objects.filter(phone__contains=normalized[-8:]).first()
+        normalized = normalize_phone_for_matching(phone)
+        if len(normalized) >= 10:
+            hit = Candidate.objects.filter(phone_normalized=normalized).first()
             if hit:
                 return hit
     return None
