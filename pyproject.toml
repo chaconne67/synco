@@ -25,6 +25,7 @@ dependencies = [
     "python-telegram-bot>=21.0",
     "feedparser>=6.0.12",
     "cryptography>=46.0.6",
+    "pillow>=12.2.0",
 ]
 
 [project.optional-dependencies]
