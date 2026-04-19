@@ -20,7 +20,6 @@ from .services.client_queries import (
     list_clients_with_stats,
 )
 
-CLOSED_STATUSES = ["closed_success", "closed_fail", "closed_cancel", "on_hold"]
 PAGE_SIZE = 20
 GRID_PAGE_SIZE = 9
 
@@ -217,15 +216,14 @@ def client_update(request, pk):
 @login_required
 @role_required("owner")
 def client_delete(request, pk):
-    """Delete a client. Block if active projects exist."""
+    """Delete a client. Block if any projects exist (open or closed)."""
     if request.method != "POST":
         return HttpResponse(status=405)
 
     org = _get_org(request)
     client = get_object_or_404(Client, pk=pk, organization=org)
-    active_projects = client.projects.exclude(status__in=CLOSED_STATUSES)
 
-    if active_projects.exists():
+    if client.projects.exists():
         return render(
             request,
             "clients/client_detail.html",
@@ -236,7 +234,10 @@ def client_delete(request, pk):
                 "stats": client_stats(client),
                 "contract_form": ContractForm(),
                 "project_status_filter": "all",
-                "error_message": "진행중인 프로젝트가 있어 삭제할 수 없습니다.",
+                "error_message": (
+                    f"연결된 프로젝트 {client.projects.count()}건이 있어 삭제할 수 없습니다. "
+                    "프로젝트를 먼저 정리하거나 조직 관리자에게 문의하세요."
+                ),
             },
         )
 
