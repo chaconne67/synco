@@ -282,57 +282,36 @@
     </div>
 
     {# ============================================================ #}
-    {# RIGHT — Task 11 will rebuild; existing content preserved    #}
+    {# RIGHT — Task 11: rebuilt with new design tokens             #}
     {# ============================================================ #}
     <aside class="lg:col-span-4 space-y-6">
 
-      {# ---- Core Expertise (skills + core_competencies) ---- #}
-      {% if candidate.core_competencies or candidate.skills %}
-      <section class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Core Expertise</h3>
-        <div class="flex flex-wrap gap-2">
-          {% for comp in candidate.core_competencies %}
-          <span class="bg-ink3/10 text-ink3 px-3 py-1.5 rounded-md text-xs font-bold">{{ comp }}</span>
-          {% endfor %}
+      {# ---- Step 1: Core Expertise ---- #}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Core Expertise</h3>
+        <div class="flex flex-wrap gap-1.5">
+          {% for item in candidate.core_competencies %}
+          <span class="text-xs font-semibold bg-ink text-white px-2 py-1 rounded-lg">{% if item.name %}{{ item.name }}{% else %}{{ item }}{% endif %}</span>
+          {% empty %}{% endfor %}
           {% for skill in candidate.skills %}
-          {% with name=skill|skill_name desc=skill|skill_description %}
-          {% if desc %}
-          <span class="relative group cursor-help">
-            <span class="bg-slate-100 hover:bg-slate-200 transition-colors px-3 py-1.5 rounded-md text-xs font-bold text-slate-600 block">{{ name }}</span>
-            <span class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg transition-all z-10 pointer-events-none">{{ desc }}</span>
-          </span>
-          {% else %}
-          <span class="bg-slate-100 hover:bg-slate-200 transition-colors px-3 py-1.5 rounded-md text-xs font-bold text-slate-600">{{ name }}</span>
-          {% endif %}
-          {% endwith %}
+          <span class="text-xs font-medium text-ink2 bg-line border border-hair px-2 py-1 rounded-lg">{% if skill.name %}{{ skill.name }}{% else %}{{ skill }}{% endif %}</span>
           {% endfor %}
         </div>
       </section>
-      {% endif %}
 
-      {# ---- Education ---- #}
+      {# ---- Step 2: Education ---- #}
+      {# Note: model field is end_year (not graduation_year) #}
       {% if educations %}
-      <section class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Education</h3>
-        <div class="space-y-6">
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Education</h3>
+        <div class="space-y-3">
           {% for edu in educations %}
-          <div class="flex gap-4">
-            <div class="w-10 h-10 shrink-0 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100">
-              <svg class="w-5 h-5 text-ink3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-              </svg>
-            </div>
+          <div class="flex gap-3">
+            <svg class="w-5 h-5 text-faint shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9z"/></svg>
             <div class="min-w-0">
-              <h4 class="text-sm font-bold text-slate-900 leading-tight">
-                {{ edu.degree|default:"" }}{% if edu.degree and edu.major %} · {% endif %}{{ edu.major|default:"" }}{% if not edu.degree and not edu.major %}—{% endif %}
-                {% if edu.is_abroad %}<span class="text-xs font-bold text-ink3 bg-ink3/10 border border-ink3/20 px-1.5 py-0.5 rounded-full ml-1 align-middle">해외</span>{% endif %}
-              </h4>
-              <p class="text-xs text-ink3 font-bold mt-0.5">{{ edu.institution }}</p>
-              <div class="flex items-center gap-2 mt-1.5">
-                {% if edu.end_year %}<p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Class of {{ edu.end_year }}</p>{% endif %}
-                {% if edu.gpa %}<p class="text-xs text-slate-400 font-bold uppercase tracking-wider">GPA {{ edu.gpa }}</p>{% endif %}
-              </div>
+              <p class="text-sm font-bold text-ink truncate">{{ edu.institution }}</p>
+              <p class="text-xs text-muted">{{ edu.degree|default:"" }}{% if edu.major %} · {{ edu.major }}{% endif %}</p>
+              {% if edu.end_year %}<p class="eyebrow text-faint mt-0.5">Class of {{ edu.end_year }}</p>{% endif %}
             </div>
           </div>
           {% endfor %}
@@ -340,14 +319,14 @@
 
         {# Trainings subsection (preserved) #}
         {% if trainings_data %}
-        <div class="border-t border-slate-100 mt-6 pt-5">
-          <h4 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-3">교육/훈련</h4>
+        <div class="border-t border-hair mt-5 pt-4">
+          <h4 class="eyebrow text-ink3 mb-3">교육/훈련</h4>
           <div class="space-y-2">
             {% for item in trainings_data %}
             <div class="text-sm">
-              <p class="font-semibold text-slate-900">{{ item.name }}</p>
-              {% if item.institution %}<p class="text-xs text-slate-500">{{ item.institution }}</p>{% endif %}
-              {% if item.date %}<p class="text-xs text-slate-400 font-bold uppercase tracking-wider">{{ item.date }}{% if item.duration %} · {{ item.duration }}{% endif %}</p>{% endif %}
+              <p class="font-semibold text-ink">{{ item.name }}</p>
+              {% if item.institution %}<p class="text-xs text-muted">{{ item.institution }}</p>{% endif %}
+              {% if item.date %}<p class="eyebrow text-faint mt-0.5">{{ item.date }}{% if item.duration %} · {{ item.duration }}{% endif %}</p>{% endif %}
             </div>
             {% endfor %}
           </div>
@@ -356,50 +335,60 @@
       </section>
       {% endif %}
 
-      {# ---- Certifications ---- #}
+      {# ---- Step 3: Certifications ---- #}
+      {# Note: model fields are issuer (not issuing_org) and acquired_date (not acquisition_date) #}
       {% if certifications %}
-      <section class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Certifications</h3>
-        <div class="space-y-3">
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Certifications</h3>
+        <div class="space-y-2">
           {% for cert in certifications %}
-          <div class="p-4 border border-slate-100 rounded-xl hover:border-ink3/20 transition-colors group">
-            <h4 class="text-xs font-bold text-slate-900 mb-1 group-hover:text-ink3 transition-colors">{{ cert.name }}</h4>
-            <p class="text-xs text-ink3 font-bold uppercase tracking-wider">
-              {{ cert.issuer|default:cert.acquired_date }}{% if cert.issuer and cert.acquired_date %} · {{ cert.acquired_date }}{% endif %}
-            </p>
+          <div class="border border-hair rounded-lg p-3">
+            <p class="text-sm font-bold text-ink">{{ cert.name }}</p>
+            {% if cert.issuer %}<p class="text-xs text-muted">{{ cert.issuer }}</p>{% endif %}
+            {% if cert.acquired_date %}<p class="eyebrow text-faint mt-1">{{ cert.acquired_date }}</p>{% endif %}
           </div>
           {% endfor %}
         </div>
       </section>
       {% endif %}
 
-      {# ---- Languages ---- #}
+      {# ---- Step 4: Languages with 4-dot bars ---- #}
       {% if language_skills %}
-      <section class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Languages</h3>
-        <div class="grid grid-cols-2 gap-6">
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Languages</h3>
+        <div class="space-y-3">
           {% for lang in language_skills %}
+          {% language_level_bars lang as bars %}
           <div>
-            <p class="text-xs font-bold text-slate-900">{{ lang.language }}</p>
-            <div class="flex gap-1 mt-2">
-              <div class="h-1.5 flex-1 rounded-full bg-ink3"></div>
-              <div class="h-1.5 flex-1 rounded-full {% if lang.score or lang.test_name or lang.level %}bg-ink3{% else %}bg-slate-200{% endif %}"></div>
-              <div class="h-1.5 flex-1 rounded-full {% if lang.score and lang.level %}bg-ink3{% else %}bg-slate-200{% endif %}"></div>
-              <div class="h-1.5 flex-1 rounded-full {% if lang.level == '상' or lang.level == 'Native' or lang.level == '원어민' %}bg-ink3{% else %}bg-slate-200{% endif %}"></div>
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-bold text-ink">{{ lang.language }}</p>
+              <p class="eyebrow text-muted">{{ lang.level|default:lang.test_name|default:"—" }}</p>
             </div>
-            <p class="text-xs text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-              {{ lang.level|default:lang.test_name|default:"" }}{% if lang.score %} {{ lang.score }}{% endif %}
-            </p>
+            <div class="flex gap-1 mt-1.5">
+              {% for i in "1234" %}
+              <span class="w-1/4 h-1.5 rounded-full {% if forloop.counter <= bars %}bg-ink3{% else %}bg-line{% endif %}"></span>
+              {% endfor %}
+            </div>
           </div>
           {% endfor %}
         </div>
       </section>
       {% endif %}
 
-      {# ---- Awards (preserved) ---- #}
+      {# ---- Step 5: Activity Snapshot ---- #}
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Activity Snapshot</h3>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between"><dt class="text-muted">Profile views</dt><dd class="text-faint">준비중</dd></div>
+          <div class="flex justify-between"><dt class="text-muted">Last contacted</dt><dd class="text-faint">준비중</dd></div>
+          <div class="flex justify-between"><dt class="text-muted">Added to pipeline</dt><dd class="text-ink font-semibold tnum">{{ candidate.created_at|date:"Y-m-d" }}</dd></div>
+        </dl>
+      </section>
+
+      {# ---- Step 6: Awards (restyled, preserved) ---- #}
       {% if awards_data %}
-      <section class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Awards</h3>
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Awards</h3>
         <div class="space-y-3">
           {% for award in awards_data %}
           {% if award.name or award.project %}
@@ -408,9 +397,9 @@
               <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
             </div>
             <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-900">{{ award.name|default:award.project }}</p>
-              {% if award.issuer %}<p class="text-xs text-ink3 font-bold uppercase tracking-wider mt-0.5">{{ award.issuer }}</p>{% endif %}
-              {% if award.date %}<p class="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">{{ award.date }}</p>{% endif %}
+              <p class="text-sm font-bold text-ink">{{ award.name|default:award.project }}</p>
+              {% if award.issuer %}<p class="text-xs text-ink2 mt-0.5">{{ award.issuer }}</p>{% endif %}
+              {% if award.date %}<p class="eyebrow text-faint mt-0.5">{{ award.date }}</p>{% endif %}
             </div>
           </div>
           {% endif %}
@@ -419,19 +408,19 @@
       </section>
       {% endif %}
 
-      {# ---- Patents (preserved) ---- #}
+      {# ---- Step 6: Patents (restyled, preserved) ---- #}
       {% if patents_data %}
-      <section class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100">
-        <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Patents</h3>
+      <section class="bg-white border border-hair rounded-card shadow-card p-6">
+        <h3 class="eyebrow text-ink3 mb-3">Patents</h3>
         <div class="space-y-3">
           {% for patent in patents_data %}
-          <div class="p-3 border border-slate-100 rounded-lg">
-            <p class="text-xs font-bold text-slate-900">{{ patent.title }}</p>
-            {% if patent.number %}<p class="text-xs text-slate-500 mt-0.5">{{ patent.number }}</p>{% endif %}
+          <div class="border border-hair rounded-lg p-3">
+            <p class="text-sm font-bold text-ink">{{ patent.title }}</p>
+            {% if patent.number %}<p class="text-xs text-muted mt-0.5">{{ patent.number }}</p>{% endif %}
             <div class="flex items-center gap-2 mt-1.5">
-              {% if patent.type %}<span class="text-xs px-1.5 py-0.5 rounded-full font-bold {% if patent.type == 'registered' %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-slate-600{% endif %}">{{ patent.type }}</span>{% endif %}
-              {% if patent.country %}<span class="text-xs text-slate-500">{{ patent.country }}</span>{% endif %}
-              {% if patent.date %}<span class="text-xs text-slate-500">{{ patent.date }}</span>{% endif %}
+              {% if patent.type %}<span class="text-xs px-1.5 py-0.5 rounded-full font-bold {% if patent.type == 'registered' %}bg-emerald-50 text-emerald-700{% else %}bg-line text-ink2{% endif %}">{{ patent.type }}</span>{% endif %}
+              {% if patent.country %}<span class="text-xs text-muted">{{ patent.country }}</span>{% endif %}
+              {% if patent.date %}<span class="text-xs text-muted">{{ patent.date }}</span>{% endif %}
             </div>
           </div>
           {% endfor %}
