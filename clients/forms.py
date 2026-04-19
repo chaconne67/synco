@@ -6,7 +6,7 @@ from .models import Client, Contract
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ["name", "industry", "size", "region", "notes"]
+        fields = ["name", "industry", "size", "region", "website", "logo", "description", "notes"]
         widgets = {
             "name": forms.TextInput(
                 attrs={
@@ -14,10 +14,9 @@ class ClientForm(forms.ModelForm):
                     "placeholder": "고객사명",
                 }
             ),
-            "industry": forms.TextInput(
+            "industry": forms.Select(
                 attrs={
                     "class": "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-ink3 focus:border-ink3",
-                    "placeholder": "예: IT, 금융, 제조",
                 }
             ),
             "size": forms.Select(
@@ -30,6 +29,15 @@ class ClientForm(forms.ModelForm):
                     "class": "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] focus:ring-2 focus:ring-ink3 focus:border-ink3",
                     "placeholder": "예: 서울, 경기",
                 }
+            ),
+            "website": forms.URLInput(
+                attrs={"class": "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px]"}
+            ),
+            "logo": forms.ClearableFileInput(
+                attrs={"class": "w-full text-sm"}
+            ),
+            "description": forms.Textarea(
+                attrs={"class": "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px]", "rows": 2}
             ),
             "notes": forms.Textarea(
                 attrs={
@@ -44,6 +52,9 @@ class ClientForm(forms.ModelForm):
             "industry": "업종",
             "size": "기업 규모",
             "region": "지역",
+            "website": "웹사이트",
+            "logo": "로고",
+            "description": "설명",
             "notes": "비고",
         }
 
