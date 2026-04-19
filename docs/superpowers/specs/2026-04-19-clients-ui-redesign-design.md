@@ -239,7 +239,7 @@ size 공란 → 배지 생략.
 
 ### 7.3 Left col — 담당자 & 계약
 
-- **담당자 카드**: `contact_persons` JSONField 리스트. 각 항목 avatar(이니셜 원 28px `bg-ink2 text-white`) + 이름 + 역할 + 이메일/전화(클릭 시 `mailto:`/`tel:`).
+- **담당자 카드**: `contact_persons` JSONField 리스트(`{name, position, phone, email}`). 각 항목 avatar(이니셜 원 28px `bg-ink2 text-white`) + 이름 + 직책(position) + 이메일/전화(클릭 시 `mailto:`/`tel:`).
   - 비어있음 + owner → "담당자 추가" 링크 → `/clients/<pk>/edit/#contacts` 앵커.
 - **계약 요약 카드**: 기존 `partials/contract_section.html` 을 디자인 토큰으로 재스타일. 로직(`contract_create`/`update`/`delete`) 유지.
   - 각 항목: 시작일 – 종료일, status 배지(협의중/체결/만료/해지), terms 한 줄 요약.
@@ -287,7 +287,7 @@ size 공란 → 배지 생략.
 
 2. **담당자** (`contact_persons` JSONField 편집)
    - 동적 리스트 UI. alpine.js `x-data` 배열 + `<template x-for>` 반복.
-   - 각 행: 이름 / 역할 / 이메일 / 전화 입력 + 우측 [삭제] 버튼.
+   - 각 행: 이름 / 직책(position) / 전화 / 이메일 입력 + 우측 [삭제] 버튼. 스키마: `{name, position, phone, email}` (기존 JSONField 구조 유지)
    - 하단 `[+ 담당자 추가]` 빈 행 추가.
    - 저장 시: 빈 행(이름 공란) 제외. 정렬은 사용자 입력 순.
    - hidden input `contact_persons_json` 에 JSON 직렬화.
