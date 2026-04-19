@@ -304,6 +304,73 @@
   .av-4 { background: linear-gradient(135deg, #6ee7b7 0%, #059669 100%); }
   .av-5 { background: linear-gradient(135deg, #fda4af 0%, #be123c 100%); }
   .av-6 { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%); }
+
+  /* Client card — category chips */
+  .cat-chip {
+    @apply inline-flex items-center shrink-0 rounded-full text-xs font-semibold;
+    padding: 9px 18px;
+    color: #475569;
+    background: transparent;
+    border: 1.5px solid transparent;
+    white-space: nowrap;
+    transition: all .15s ease;
+  }
+  .cat-chip:hover { background: #F1F5F9; color: #0F172A; }
+  .cat-chip.is-active { background: #334155; color: #fff; }
+  .cat-chip[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
+
+  /* Client card — size badges */
+  .badge.enterprise { background: #F1F5F9; color: #334155; }
+  .badge.midcap     { background: #DBEAFE; color: #1E40AF; }
+  .badge.sme        { background: #FFEDD5; color: #9A3412; }
+  .badge.foreign    { background: #EDE9FE; color: #5B21B6; }
+  .badge.startup    { background: #DCFCE7; color: #166534; }
+
+  /* Client card — meta tags */
+  .meta-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 500;
+    color: #475569; background: #F1F5F9;
+  }
+
+  /* Client card — stat block */
+  .stat {
+    display: flex; flex-direction: column;
+    padding: 10px 0;
+  }
+  .stat + .stat { border-left: 1px solid #F1F5F9; padding-left: 16px; }
+  .stat .num { font-size: 20px; font-weight: 800; line-height: 1; color: #0F172A; letter-spacing: -0.01em; }
+  .stat .num .unit { font-size: 11px; font-weight: 600; color: #94A3B8; margin-left: 2px; }
+  .stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-top: 6px; }
+
+  /* Client logo tile — 8 gradients */
+  .client-logo-tile {
+    width: 56px; height: 56px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 16px;
+    flex-shrink: 0; letter-spacing: -0.02em;
+    position: relative; overflow: hidden;
+  }
+  .client-logo-tile img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 8px;
+  }
+  .client-logo-1 { background: linear-gradient(135deg, #60a5fa 0%, #1e3a8a 100%); }
+  .client-logo-2 { background: linear-gradient(135deg, #f87171 0%, #991b1b 100%); }
+  .client-logo-3 { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%); }
+  .client-logo-4 { background: linear-gradient(135deg, #fcd34d 0%, #b45309 100%); }
+  .client-logo-5 { background: linear-gradient(135deg, #f9a8d4 0%, #9f1239 100%); }
+  .client-logo-6 { background: linear-gradient(135deg, #fdba74 0%, #c2410c 100%); }
+  .client-logo-7 { background: linear-gradient(135deg, #5eead4 0%, #115e59 100%); }
+  .client-logo-8 { background: linear-gradient(135deg, #86efac 0%, #15803d 100%); }
+
+  /* Horizontal scroll — hide scrollbar */
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 /* ---------------------------------------------------------------------------

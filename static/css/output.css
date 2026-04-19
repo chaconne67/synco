@@ -1013,6 +1013,124 @@ a.bg-ink.rounded-card:hover,
   background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%);
 }
 
+/* Client card — category chips */
+
+.cat-chip.is-active {
+  background: #334155;
+  color: #fff;
+}
+
+/* Client card — size badges */
+
+.badge.enterprise {
+  background: #F1F5F9;
+  color: #334155;
+}
+
+.badge.midcap     {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badge.sme        {
+  background: #FFEDD5;
+  color: #9A3412;
+}
+
+.badge.foreign    {
+  background: #EDE9FE;
+  color: #5B21B6;
+}
+
+.badge.startup    {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+/* Client card — meta tags */
+
+/* Client card — stat block */
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+}
+
+.stat + .stat {
+  border-left: 1px solid #F1F5F9;
+  padding-left: 16px;
+}
+
+.stat .num {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+}
+
+.stat .num .unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94A3B8;
+  margin-left: 2px;
+}
+
+.stat .lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  margin-top: 6px;
+}
+
+/* Client logo tile — 8 gradients */
+
+.client-logo-1 {
+  background: linear-gradient(135deg, #60a5fa 0%, #1e3a8a 100%);
+}
+
+.client-logo-2 {
+  background: linear-gradient(135deg, #f87171 0%, #991b1b 100%);
+}
+
+.client-logo-3 {
+  background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%);
+}
+
+.client-logo-4 {
+  background: linear-gradient(135deg, #fcd34d 0%, #b45309 100%);
+}
+
+.client-logo-5 {
+  background: linear-gradient(135deg, #f9a8d4 0%, #9f1239 100%);
+}
+
+.client-logo-6 {
+  background: linear-gradient(135deg, #fdba74 0%, #c2410c 100%);
+}
+
+.client-logo-7 {
+  background: linear-gradient(135deg, #5eead4 0%, #115e59 100%);
+}
+
+.client-logo-8 {
+  background: linear-gradient(135deg, #86efac 0%, #15803d 100%);
+}
+
+/* Horizontal scroll — hide scrollbar */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -2595,10 +2713,6 @@ a.bg-ink.rounded-card:hover,
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
 }
 
-.bg-gradient-to-t {
-  background-image: linear-gradient(to top, var(--tw-gradient-stops));
-}
-
 .from-\[color\:var\(--brand\)\] {
   --tw-gradient-from: var(--brand) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
@@ -2614,12 +2728,6 @@ a.bg-ink.rounded-card:hover,
 .from-amber-500 {
   --tw-gradient-from: #f59e0b var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(245 158 11 / 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-canvas {
-  --tw-gradient-from: #F8FAFC var(--tw-gradient-from-position);
-  --tw-gradient-to: rgb(248 250 252 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
@@ -2651,11 +2759,6 @@ a.bg-ink.rounded-card:hover,
   --tw-gradient-from: #38bdf8 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(56 189 248 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.via-canvas\/90 {
-  --tw-gradient-to: rgb(248 250 252 / 0)  var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), rgb(248 250 252 / 0.9) var(--tw-gradient-via-position), var(--tw-gradient-to);
 }
 
 .via-transparent {
@@ -2892,6 +2995,10 @@ a.bg-ink.rounded-card:hover,
 
 .pb-3 {
   padding-bottom: 0.75rem;
+}
+
+.pb-32 {
+  padding-bottom: 8rem;
 }
 
 .pb-4 {
@@ -3629,10 +3736,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   margin-right: 0.75rem;
 }
 
-.file\:mr-4::file-selector-button {
-  margin-right: 1rem;
-}
-
 .file\:cursor-pointer::file-selector-button {
   cursor: pointer;
 }
@@ -3641,27 +3744,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   border-radius: 0.5rem;
 }
 
-.file\:border::file-selector-button {
-  border-width: 1px;
-}
-
 .file\:border-0::file-selector-button {
   border-width: 0px;
-}
-
-.file\:border-hair::file-selector-button {
-  --tw-border-opacity: 1;
-  border-color: rgb(226 232 240 / var(--tw-border-opacity, 1));
 }
 
 .file\:bg-ink3::file-selector-button {
   --tw-bg-opacity: 1;
   background-color: rgb(51 65 85 / var(--tw-bg-opacity, 1));
-}
-
-.file\:bg-line::file-selector-button {
-  --tw-bg-opacity: 1;
-  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
 }
 
 .file\:bg-slate-100::file-selector-button {
@@ -3705,11 +3794,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 .file\:font-semibold::file-selector-button {
   font-weight: 600;
-}
-
-.file\:text-ink3::file-selector-button {
-  --tw-text-opacity: 1;
-  color: rgb(51 65 85 / var(--tw-text-opacity, 1));
 }
 
 .file\:text-slate-700::file-selector-button {
@@ -3832,24 +3916,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
-.hover\:scale-\[1\.005\]:hover {
-  --tw-scale-x: 1.005;
-  --tw-scale-y: 1.005;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.hover\:scale-\[1\.01\]:hover {
-  --tw-scale-x: 1.01;
-  --tw-scale-y: 1.01;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.hover\:scale-\[1\.02\]:hover {
-  --tw-scale-x: 1.02;
-  --tw-scale-y: 1.02;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
 .hover\:border-danger:hover {
   --tw-border-opacity: 1;
   border-color: rgb(239 68 68 / var(--tw-border-opacity, 1));
@@ -3915,6 +3981,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .hover\:bg-emerald-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(4 120 87 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-hair:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-ink2:hover {
@@ -4086,6 +4157,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   text-decoration-line: underline;
 }
 
+.hover\:shadow-card:hover {
+  --tw-shadow: 0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color), 0 1px 3px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
 .hover\:shadow-lift:hover {
   --tw-shadow: 0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.04);
   --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
@@ -4102,11 +4179,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-}
-
-.hover\:file\:bg-hair::file-selector-button:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:file\:bg-slate-200::file-selector-button:hover {
@@ -4170,30 +4242,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .focus\:ring-rose-300:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(253 164 175 / var(--tw-ring-opacity, 1));
-}
-
-.active\:scale-95:active {
-  --tw-scale-x: .95;
-  --tw-scale-y: .95;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.active\:scale-\[0\.98\]:active {
-  --tw-scale-x: 0.98;
-  --tw-scale-y: 0.98;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.active\:scale-\[0\.995\]:active {
-  --tw-scale-x: 0.995;
-  --tw-scale-y: 0.995;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.active\:scale-\[0\.99\]:active {
-  --tw-scale-x: 0.99;
-  --tw-scale-y: 0.99;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
 .group[open] .group-open\:rotate-180 {
@@ -4506,10 +4554,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   .lg\:py-28 {
     padding-top: 7rem;
     padding-bottom: 7rem;
-  }
-
-  .lg\:pb-0 {
-    padding-bottom: 0px;
   }
 
   .lg\:pb-28 {
