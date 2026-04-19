@@ -505,6 +505,15 @@ def candidate_create(request):
                 pass
         candidate = create_candidate(payload, user=request.user)
 
+        resume_file = request.FILES.get("resume_file")
+        if resume_file:
+            from candidates.services.candidate_create import attach_resume
+            from django.contrib import messages
+            try:
+                attach_resume(candidate, resume_file)
+            except ValueError as e:
+                messages.error(request, str(e))
+
         return redirect("candidates:candidate_detail", pk=candidate.pk)
 
     return render(
