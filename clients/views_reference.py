@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 
 from accounts.decorators import membership_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
@@ -28,6 +28,36 @@ from .models import CompanyProfile, PreferredCert, UniversityTier
 from .services.csv_handler import export_csv, import_csv
 
 PAGE_SIZE = 30
+
+# Category chip → strength keyword list (for JSON text match on strengths field).
+# "regional" / "overseas" are handled separately via tier filter.
+UNI_CATEGORY_KEYWORDS: dict[str, list[str]] = {
+    "engineering": [
+        "공학",
+        "공대",
+        "기계",
+        "전기전자",
+        "건축",
+        "화학공학",
+        "반도체",
+        "재료",
+    ],
+    "science": ["물리", "화학", "생명", "자연과학"],
+    "it": ["IT", "컴퓨터", "AI", "SW"],
+    "business": ["경영", "경제", "재무"],
+    "law": ["법학", "로스쿨"],
+    "humanities": [
+        "인문",
+        "사회학",
+        "언론",
+        "철학",
+        "영문",
+        "외국어",
+        "국제학",
+        "통번역",
+        "여성학",
+    ],
+}
 
 
 # --- Index (defaults to university tab) ---
@@ -51,6 +81,7 @@ def reference_universities(request):
     q = request.GET.get("q", "").strip()
     country = request.GET.get("country", "").strip()
     tier = request.GET.get("tier", "").strip()
+    category = request.GET.get("category", "").strip()
 
     if q:
         qs = qs.filter(Q(name__icontains=q) | Q(name_en__icontains=q))
@@ -58,16 +89,30 @@ def reference_universities(request):
         qs = qs.filter(country=country)
     if tier:
         qs = qs.filter(tier=tier)
+    if category == "regional":
+        qs = qs.filter(tier=UniversityTier.Tier.REGIONAL)
+    elif category == "overseas":
+        qs = qs.filter(tier__startswith="OVERSEAS")
+    elif category in UNI_CATEGORY_KEYWORDS:
+        keyword_q = Q()
+        for kw in UNI_CATEGORY_KEYWORDS[category]:
+            keyword_q |= Q(strengths__icontains=kw)
+        qs = qs.filter(keyword_q)
 
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
+    tier_counts_qs = UniversityTier.objects.values("tier").annotate(n=Count("id"))
+    tier_counts = {row["tier"]: row["n"] for row in tier_counts_qs}
     ctx = {
         "page_obj": page_obj,
         "q": q,
         "country": country,
         "tier": tier,
+        "category": category,
         "tier_choices": UniversityTier.Tier.choices,
+        "tier_counts": tier_counts,
+        "total_universities": UniversityTier.objects.count(),
         "countries": UniversityTier.objects.values_list("country", flat=True)
         .distinct()
         .order_by("country"),
@@ -76,7 +121,7 @@ def reference_universities(request):
         "import_form": CSVImportForm(),
     }
 
-    if request.headers.get("HX-Request"):
+    if request.headers.get("HX-Target") == "ref-tab-content":
         return render(request, "clients/partials/ref_universities.html", ctx)
     return _render_reference_page(request, "universities", ctx)
 
@@ -207,6 +252,12 @@ def reference_companies(request):
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
+    listed_counts_qs = CompanyProfile.objects.values("listed").annotate(n=Count("id"))
+    listed_counts = {row["listed"]: row["n"] for row in listed_counts_qs}
+    size_counts_qs = CompanyProfile.objects.values("size_category").annotate(
+        n=Count("id")
+    )
+    size_counts = {row["size_category"]: row["n"] for row in size_counts_qs}
     ctx = {
         "page_obj": page_obj,
         "q": q,
@@ -215,12 +266,15 @@ def reference_companies(request):
         "industry_filter": industry,
         "listed_choices": CompanyProfile.Listed.choices,
         "size_choices": CompanyProfile.SizeCategory.choices,
+        "listed_counts": listed_counts,
+        "size_counts": size_counts,
+        "total_companies": CompanyProfile.objects.count(),
         "active_tab": "companies",
         "is_staff": request.user.is_staff,
         "import_form": CSVImportForm(),
     }
 
-    if request.headers.get("HX-Request"):
+    if request.headers.get("HX-Target") == "ref-tab-content":
         return render(request, "clients/partials/ref_companies.html", ctx)
     return _render_reference_page(request, "companies", ctx)
 
@@ -394,6 +448,10 @@ def reference_certs(request):
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
+    category_counts_qs = PreferredCert.objects.values("category").annotate(
+        n=Count("id")
+    )
+    category_counts = {row["category"]: row["n"] for row in category_counts_qs}
     ctx = {
         "page_obj": page_obj,
         "q": q,
@@ -401,12 +459,14 @@ def reference_certs(request):
         "level_filter": level,
         "category_choices": PreferredCert.Category.choices,
         "level_choices": PreferredCert.Level.choices,
+        "category_counts": category_counts,
+        "total_certs": PreferredCert.objects.count(),
         "active_tab": "certs",
         "is_staff": request.user.is_staff,
         "import_form": CSVImportForm(),
     }
 
-    if request.headers.get("HX-Request"):
+    if request.headers.get("HX-Target") == "ref-tab-content":
         return render(request, "clients/partials/ref_certs.html", ctx)
     return _render_reference_page(request, "certs", ctx)
 
@@ -512,7 +572,12 @@ def cert_export(request):
 
 def _render_reference_page(request, active_tab, tab_ctx=None):
     """Render full reference page with tab content."""
-    ctx = {"active_tab": active_tab}
+    ctx = {
+        "active_tab": active_tab,
+        "total_universities": UniversityTier.objects.count(),
+        "total_companies": CompanyProfile.objects.count(),
+        "total_certs": PreferredCert.objects.count(),
+    }
     if tab_ctx:
         ctx.update(tab_ctx)
     # No default data loading — each tab view provides its own context

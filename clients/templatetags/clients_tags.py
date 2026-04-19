@@ -40,3 +40,70 @@ def get_item(d, key):
         return d.get(key, 0)
     except AttributeError:
         return 0
+
+
+_TIER_PILL_MAP = {
+    "SKY": "sky",
+    "SSG": "ssg",
+    "JKOS": "jkos",
+    "KDH": "kdh",
+    "INSEOUL": "inseoul",
+    "SCIENCE_ELITE": "ktech",
+    "REGIONAL": "regional",
+    "OVERSEAS_TOP": "overseas",
+    "OVERSEAS_HIGH": "overseas",
+    "OVERSEAS_GOOD": "overseas",
+}
+
+
+@register.filter
+def tier_pill_class(tier):
+    return _TIER_PILL_MAP.get(tier, "inseoul")
+
+
+_LISTED_PILL_MAP = {
+    "KOSPI": "kospi",
+    "KOSDAQ": "kosdaq",
+    "해외상장": "global",
+    "비상장": "private",
+}
+
+
+@register.filter
+def listed_pill_class(listed):
+    return _LISTED_PILL_MAP.get(listed, "private")
+
+
+_SIZE_PILL_MAP = {
+    "대기업": "enterprise",
+    "중견": "midcap",
+    "중소": "sme",
+    "외국계": "foreign",
+    "스타트업": "startup",
+}
+
+
+@register.filter
+def size_pill_class(size):
+    return _SIZE_PILL_MAP.get(size, "enterprise")
+
+
+_LEVEL_PILL_MAP = {
+    "상": "lvl-high",
+    "중": "lvl-mid",
+    "하": "lvl-low",
+}
+
+
+@register.filter
+def level_pill_class(level):
+    return _LEVEL_PILL_MAP.get(level, "lvl-low")
+
+
+@register.simple_tag
+def rlogo_class(name):
+    """Deterministic 1–8 bucket from company name (for gradient tile)."""
+    if not name:
+        return "rlogo-1"
+    code = sum(ord(c) for c in name)
+    return f"rlogo-{(code % 8) + 1}"

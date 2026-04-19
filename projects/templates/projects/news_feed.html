@@ -4,78 +4,586 @@
 {% block breadcrumb_current %}Newsfeed{% endblock %}
 {% block page_title %}Newsfeed{% endblock %}
 
+{% block extra_head %}
+<style>
+  .tnum { font-feature-settings: "tnum" 1, "ss01" 1; font-variant-numeric: tabular-nums; }
+  .eyebrow-news { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; }
+
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .cat-chip {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center;
+    padding: 9px 18px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    color: #475569; background: transparent;
+    border: 1.5px solid transparent;
+    transition: all .15s ease; white-space: nowrap;
+  }
+  .cat-chip:hover { background: #F1F5F9; color: #0F172A; }
+  .cat-chip.is-active { background: #334155; color: #fff; }
+
+  .news-card {
+    position: relative; top: 0;
+    transition: top 200ms cubic-bezier(0.4,0,0.2,1), box-shadow 200ms cubic-bezier(0.4,0,0.2,1);
+  }
+  .news-card:hover {
+    top: -2px;
+    box-shadow: 0 12px 24px -10px rgba(15,23,42,0.18), 0 4px 8px -4px rgba(15,23,42,0.08);
+  }
+
+  .cat {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .cat.hiring   { background: #DBEAFE; color: #1E40AF; }
+  .cat.hr       { background: #CCFBF1; color: #115E59; }
+  .cat.industry { background: #EDE9FE; color: #5B21B6; }
+  .cat.economy  { background: #FEF3C7; color: #92400E; }
+
+  .art-tag {
+    display: inline-flex; align-items: center;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 600;
+    color: #475569; background: #F1F5F9;
+    margin-right: 4px;
+  }
+
+  .source {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; color: #64748B;
+  }
+  .source .src-dot {
+    width: 4px; height: 4px; border-radius: 999px; background: #CBD5E1;
+    margin: 0 4px;
+  }
+
+  .hero-tile {
+    height: 200px;
+    border-radius: 12px;
+    background:
+      radial-gradient(circle at 20% 80%, rgba(59,130,246,0.6) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(139,92,246,0.5) 0%, transparent 50%),
+      linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    position: relative; overflow: hidden;
+    display: flex; align-items: flex-end; padding: 20px;
+  }
+  .hero-tile::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 60% 40%, rgba(255,255,255,0.06) 0%, transparent 60%);
+  }
+  .hero-tile .label {
+    position: relative; z-index: 2;
+    color: #fff; font-weight: 800;
+    font-size: 13px; letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .hero-tile .label .big {
+    display: block; font-size: 36px; font-weight: 900;
+    line-height: 1; margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tag-cloud a {
+    display: inline-flex; align-items: center;
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    color: #334155; background: #F1F5F9;
+    margin: 0 4px 6px 0;
+    transition: all .15s ease;
+  }
+  .tag-cloud a:hover { background: #0F172A; color: #fff; }
+
+  .pulse-item {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid #F1F5F9;
+  }
+  .pulse-item:last-child { border-bottom: 0; }
+  .pulse-item .num {
+    flex-shrink: 0;
+    font-size: 11px; font-weight: 800; color: #94A3B8;
+    font-variant-numeric: tabular-nums;
+    width: 16px;
+  }
+  .pulse-item .title {
+    font-size: 13px; font-weight: 600; color: #0F172A;
+    line-height: 1.4;
+  }
+  .pulse-item .meta {
+    font-size: 11px; color: #94A3B8; margin-top: 4px;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="px-10 py-10 max-w-5xl">
-  <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+<div class="w-full max-w-[1280px]">
+<div class="px-8 py-8 space-y-6 pb-32">
+
+  <!-- Page header -->
+  <section class="flex items-end justify-between gap-4">
     <div>
-      <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Market Intelligence</span>
-      <h2 class="text-4xl font-black text-slate-900 tracking-tight">뉴스피드</h2>
-      <p class="mt-2 text-sm text-slate-500">프로젝트와 관련된 최신 소식을 모아보세요.</p>
+      <div class="eyebrow-news">HR · Executive Search · 업계 동향</div>
+      <h2 class="text-[28px] font-bold tracking-tight mt-1">Newsfeed</h2>
+      <p class="text-sm text-muted mt-1">
+        임원 인사·채용·업계 동향을 한 곳에서 매일 업데이트합니다. AI 요약 기반, 관련도 순 정렬.
+      </p>
     </div>
-    {% if is_staff %}
-    <a href="{% url 'news:news_sources' %}"
-       hx-get="{% url 'news:news_sources' %}" hx-target="#main-content" hx-push-url="true"
-       class="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-3 shadow-sm hover:bg-slate-50 transition-all">
-      소스 관리
-    </a>
-    {% endif %}
-  </div>
-
-  <div class="flex gap-2 overflow-x-auto pb-2 mb-8 no-scrollbar">
-    <button hx-get="{% url 'news:news_filter' %}" hx-target="#news-list" hx-swap="innerHTML"
-            class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors
-            {% if not active_category %}bg-ink3 text-white shadow-lg shadow-ink3/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
-      All Disciplines
-    </button>
-    {% for value, label in categories %}
-    <button hx-get="{% url 'news:news_filter' %}?category={{ value }}" hx-target="#news-list" hx-swap="innerHTML"
-            class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors
-            {% if active_category == value %}bg-ink3 text-white shadow-lg shadow-ink3/20{% else %}bg-white border border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
-      {{ label }}
-    </button>
-    {% endfor %}
-  </div>
-
-  {% if related_articles %}
-  <div class="mb-10">
-    <div class="flex items-center gap-4 mb-5">
-      <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">내 프로젝트 관련 뉴스 · For You</h3>
-      <div class="h-px flex-1 bg-slate-100"></div>
+    <div class="flex items-center gap-2">
+      <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+        소스 관리
+      </button>
+      <button class="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+        새로 가져오기
+      </button>
     </div>
-    <div class="space-y-3">
-      {% for article in related_articles %}
-      <a href="{{ article.url }}" target="_blank" rel="noopener"
-         class="block rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-ink3/20 transition-all p-5 group">
-        <div class="flex items-start gap-3">
-          <span class="text-xs font-bold text-ink3 bg-ink3/10 px-2 py-1 rounded-full uppercase tracking-widest whitespace-nowrap shrink-0">
-            {{ article.get_category_display|default:"기타" }}
-          </span>
-          <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors line-clamp-2">{{ article.title }}</h4>
+  </section>
+
+  <!-- Category chips -->
+  <section>
+    <div class="overflow-x-auto hide-scrollbar -mx-1">
+      <div class="flex gap-2 px-1">
+        <button class="cat-chip is-active">전체 · 54</button>
+        <button class="cat-chip">인사 · 18</button>
+        <button class="cat-chip">채용 · 16</button>
+        <button class="cat-chip">업계동향 · 12</button>
+        <button class="cat-chip">경제 · 실업 · 8</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main layout: feed (8) + sidebar (4) -->
+  <section class="grid grid-cols-12 gap-6">
+
+    <!-- FEED COLUMN -->
+    <div class="col-span-8 space-y-6">
+
+      <!-- Featured -->
+      <a href="https://news.samsung.com/kr/%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90-2026%EB%85%84-%EC%A0%95%EA%B8%B0-%EC%9E%84%EC%9B%90-%EC%9D%B8%EC%82%AC" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6 group">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="eyebrow-news" style="color:#DC2626">● Featured</span>
+          <span class="cat hr">인사</span>
         </div>
-        {% if article.summary %}
-        <p class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">{{ article.summary }}</p>
-        {% endif %}
-        <div class="flex items-center gap-2 mt-3 text-xs font-bold uppercase tracking-widest text-slate-400">
-          <span>{{ article.source.name }}</span>
-          {% if article.published_at %}
-          <span class="text-slate-200">·</span>
-          <span>{{ article.published_at|date:"m/d H:i" }}</span>
-          {% endif %}
+        <div class="hero-tile mb-5">
+          <div class="label">
+            <span class="big tnum">161</span>
+            SAMSUNG ELECTRONICS<br/>2026 EXECUTIVE PROMOTIONS
+          </div>
+        </div>
+        <h3 class="text-[22px] font-bold tracking-tight leading-snug">
+          삼성전자, 2026년 정기 임원 인사 단행 — 총 161명 승진
+        </h3>
+        <p class="text-sm text-ink3 mt-3 leading-relaxed">
+          부사장 51명, 상무 93명, 펠로우 1명, 마스터 16명 등 총 161명 규모의 2026년 정기 임원 인사가 2025년 11월 25일 단행됐다. 전년 대비 승진자 수가 24명 증가했으며, 회사는 AI·로봇·반도체 등 미래 기술 분야 리더 중용에 무게를 뒀다. 산업 패러다임 변화에 선제 대응하기 위한 세대교체 기조가 핵심 키워드다.
+        </p>
+        <div class="flex items-center gap-1 mt-4">
+          <span class="art-tag">반도체</span>
+          <span class="art-tag">AI</span>
+          <span class="art-tag">임원인사</span>
+          <span class="art-tag">대기업</span>
+          <span class="art-tag">세대교체</span>
+        </div>
+        <div class="flex items-center justify-between mt-5 pt-5 border-t border-line">
+          <div class="source">
+            <span>Samsung Newsroom Korea</span>
+            <span class="src-dot"></span>
+            <span class="tnum">2025.11.25</span>
+            <span class="src-dot"></span>
+            <span>3분 소요</span>
+          </div>
+          <div class="flex items-center gap-3 text-faint">
+            <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            <button class="hover:text-ink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+          </div>
         </div>
       </a>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 
-  <div>
-    <div class="flex items-center gap-4 mb-5">
-      <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">최신 뉴스 · Latest</h3>
-      <div class="h-px flex-1 bg-slate-100"></div>
+      <!-- Regular cards (2-col inner) -->
+      <div class="grid grid-cols-2 gap-6">
+
+        <a href="https://www.youthdaily.co.kr/news/article.html?no=206721" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat hr">인사</span>
+            <span class="source"><span>청년일보</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            현대차그룹, 사장 4명 포함 총 219명 승진 인사 단행
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            사장 4명·부사장 14명·전무 25명·상무 신규 176명 등 219명 규모의 정기 임원 인사. 기술 인재 중용과 세대교체가 인사 방점으로, 전동화·SDV 전환 가속에 따른 조직 재편.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">현대차</span>
+            <span class="art-tag">SDV</span>
+            <span class="art-tag">모빌리티</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2025.11.28</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://www.sisajournal.com/news/articleView.html?idxno=354405" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat hr">인사</span>
+            <span class="source"><span>시사저널</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            롯데 3세 신유열 부사장, 바이오로직스 각자대표 내정
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            롯데그룹이 36개 계열사 이사회를 열고 2026년 정기 임원 인사를 발표. CEO 20명을 교체하는 고강도 쇄신과 함께 오너 3세 신유열 부사장이 롯데바이오로직스 각자대표로 선임됐다.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">롯데</span>
+            <span class="art-tag">바이오</span>
+            <span class="art-tag">오너3세</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2025.11.26</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://blog.greetinghr.com/2026-ai-recruitment-trends/" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat industry">업계동향</span>
+            <span class="source"><span>Greeting HR</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            가트너 "2026 채용 시장, AI 혁명과 비용 압박이 양대 축"
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            가트너가 2026년 채용 시장의 핵심 동력으로 AI 혁명과 비용 압박을 지목. 대량 채용 분야에서 AI-First 접근이 본격화되며, 지원자 데이터 정리·점수화·일정 자동화가 각각 별도 AI 에이전트로 분업되는 구조가 등장.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">Gartner</span>
+            <span class="art-tag">AI-First</span>
+            <span class="art-tag">에이전트</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.01.14</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://www.mordorintelligence.com/industry-reports/executive-search-market" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat industry">업계동향</span>
+            <span class="source"><span>Mordor Intelligence</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            글로벌 Executive Search 시장 64조원… APAC 10.71% 성장
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            2026년 글로벌 임원 서치 시장 규모는 약 640억 달러로 추산, 2031년 1,035억 달러까지 연평균 10.11% 성장 전망. 아시아·태평양 지역은 10.71%로 글로벌 평균을 상회하며 가장 빠른 성장세.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">글로벌 시장</span>
+            <span class="art-tag">APAC</span>
+            <span class="art-tag">성장률</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.03.02</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://www.sedaily.com/article/20016692" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat economy">경제·실업</span>
+            <span class="source"><span>서울경제</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            한국 AI 인재 순유입 세계 최하위… 이공계 대학 정원 미달
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            한국의 AI 인재 순유입이 인구 1만명당 -0.36명으로 세계 최하위권. 해외 이주를 계획 중인 박사 취득자가 3년 연속 증가. 이공계 대학들도 정원을 채우지 못하는 구조적 인력난이 심화.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">AI</span>
+            <span class="art-tag">브레인드레인</span>
+            <span class="art-tag">이공계</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.02.18</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://www.etoday.co.kr/news/view/2557516" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat industry">업계동향</span>
+            <span class="source"><span>이투데이</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            AI 칩 전쟁, '人'으로 번졌다 — 빅테크·반도체·완성차 교차 영입
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            완성차·빅테크·반도체 기업 간 인재 교차 이동이 구조적 흐름으로 자리. 한국이 HBM과 시스템 설계를 동시에 보유한 몇 안 되는 국가라는 점에서 국내 시니어 엔지니어를 둘러싼 글로벌 영입전 가열.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">HBM</span>
+            <span class="art-tag">AI 칩</span>
+            <span class="art-tag">영입전</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.03.05</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://blog.wantedlab.com/hr/report/hr-trend-report-2026" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat economy">경제·실업</span>
+            <span class="source"><span>Wanted Lab</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            2026 HR 예산 증가율 0.7%로 급락 — 전략 채용 기조 뚜렷
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            2025년 2.4%에서 2026년 0.7%로 예산 증가율이 급락. 신규 인력 채용 성장 기대치도 6%에서 2%로 축소. 전사 채용 볼륨 감소에도 핵심 전문직 서치 수요는 유지되며 선별적·전략적 채용 기조가 강화.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">예산</span>
+            <span class="art-tag">채용축소</span>
+            <span class="art-tag">전략채용</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.02.09</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://www.workday.com/ko-kr/topics/ai/ai-in-hr.html" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat hiring">채용</span>
+            <span class="source"><span>Workday Korea</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            국내 500대 기업 86.7% HR에 AI 도입… 컬처핏 평가는 아직
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            매출 상위 500대 국내 기업 중 86.7%가 이미 인사 업무에 AI를 활용. 다만 역량 검증·컬처핏 판단 등 핵심 평가 영역에서 AI를 전적으로 신뢰한다는 응답은 15%에 불과해, 도입 수준과 신뢰도 사이의 간극이 존재.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">AI 도입</span>
+            <span class="art-tag">컬처핏</span>
+            <span class="art-tag">대기업</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.01.22</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://www.rp4rp.com/post/korea-s-recent-recruiting-trends-2025-2026-top-10-trends-shaping-the-market" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat hiring">채용</span>
+            <span class="source"><span>RP4RP</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            '스펙'에서 '스킬'로 — 한국 비즈니스 리더 80% 긍정
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            한국 비즈니스 리더 80%가 스킬 중심 조직 전환이 경제 성장에 긍정적이라고 응답. 학력·연차 기반 평가에서 실제 직무 역량 기반 평가로의 전환이 가속되며, 경력 5년 이하 직무에서 가장 빠른 확산.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">skills-based</span>
+            <span class="art-tag">스킬</span>
+            <span class="art-tag">전환</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2026.02.14</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+        <a href="https://kormedi.com/2778042/" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6">
+          <div class="flex items-center gap-2">
+            <span class="cat hr">인사</span>
+            <span class="source"><span>코메디닷컴</span></span>
+          </div>
+          <h3 class="text-[15px] font-bold tracking-tight leading-snug mt-3 line-clamp-2">
+            종근당, 2026 임원 인사 단행 — 바이오 R&D 역량 강화 방점
+          </h3>
+          <p class="text-sm text-ink3 mt-2 leading-relaxed line-clamp-3">
+            종근당과 계열사가 2026년 1월 1일자 임원 인사를 단행. 종근당바이오 김진오 이사 승진 등 R&D 축을 중심으로 한 보강이 특징. 신약 개발 파이프라인 확대 흐름에서 나온 조직 재편.
+          </p>
+          <div class="flex items-center gap-1 mt-3">
+            <span class="art-tag">종근당</span>
+            <span class="art-tag">바이오</span>
+            <span class="art-tag">R&D</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-line">
+            <div class="source tnum">2025.12.27</div>
+            <div class="flex items-center gap-3 text-faint">
+              <button class="hover:text-ink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <div class="py-4 text-center">
+        <div class="inline-flex items-center gap-2 text-xs font-semibold text-faint uppercase tracking-widest">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>
+          Loading more stories…
+        </div>
+      </div>
+
     </div>
-    <div id="news-list">
-      {% include "projects/partials/news_list.html" with articles=all_articles %}
-    </div>
-  </div>
+
+    <!-- SIDEBAR -->
+    <aside class="col-span-4 space-y-6">
+
+      <article class="bg-ink rounded-card shadow-card p-6 text-white">
+        <div class="eyebrow-news" style="color:#64748B">Industry Pulse</div>
+        <div class="mt-2 text-[13px] font-semibold text-white/80 leading-relaxed">
+          이번 주 수집된 임원 인사·HR 기사
+        </div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <div class="text-[44px] font-black leading-none tnum">54</div>
+          <div class="text-sm text-white/60">건</div>
+        </div>
+        <div class="mt-2 text-xs text-white/50">전주 대비 <span class="text-success font-semibold">+12건</span></div>
+        <div class="mt-5 pt-5 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
+          <div>
+            <div class="text-lg font-bold tnum">18</div>
+            <div class="text-[10px] text-white/50 uppercase tracking-widest mt-1">인사</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold tnum">16</div>
+            <div class="text-[10px] text-white/50 uppercase tracking-widest mt-1">채용</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold tnum">12</div>
+            <div class="text-[10px] text-white/50 uppercase tracking-widest mt-1">동향</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="bg-surface rounded-card shadow-card p-6">
+        <div class="flex items-center justify-between">
+          <div class="eyebrow-news">인기 태그</div>
+          <span class="text-[10px] text-faint">Last 7 days</span>
+        </div>
+        <div class="tag-cloud mt-4">
+          <a href="#">#임원인사</a>
+          <a href="#">#AI</a>
+          <a href="#">#반도체</a>
+          <a href="#">#바이오</a>
+          <a href="#">#삼성</a>
+          <a href="#">#현대차</a>
+          <a href="#">#HBM</a>
+          <a href="#">#외국계</a>
+          <a href="#">#스킬기반</a>
+          <a href="#">#브레인드레인</a>
+          <a href="#">#롯데</a>
+          <a href="#">#R&amp;D</a>
+          <a href="#">#채용축소</a>
+          <a href="#">#세대교체</a>
+        </div>
+      </article>
+
+      <article class="bg-surface rounded-card shadow-card p-6">
+        <div class="flex items-center justify-between">
+          <div class="eyebrow-news">오늘의 주요 이슈</div>
+          <span class="text-[10px] text-faint">관련도 순</span>
+        </div>
+        <div class="mt-2">
+          <div class="pulse-item">
+            <div class="num tnum">01</div>
+            <div>
+              <div class="title">AI 반도체 인재 글로벌 영입전, 국내 시니어 엔지니어 몸값 급등</div>
+              <div class="meta tnum">이투데이 · 2026.03.05</div>
+            </div>
+          </div>
+          <div class="pulse-item">
+            <div class="num tnum">02</div>
+            <div>
+              <div class="title">롯데 쇄신 인사 — CEO 20명 교체, 바이오 각자대표 신설</div>
+              <div class="meta tnum">시사저널 · 2025.11.26</div>
+            </div>
+          </div>
+          <div class="pulse-item">
+            <div class="num tnum">03</div>
+            <div>
+              <div class="title">2026 HR 예산 성장률 0.7%로 급락 — 전략 채용으로 전환</div>
+              <div class="meta tnum">Wanted · 2026.02.09</div>
+            </div>
+          </div>
+          <div class="pulse-item">
+            <div class="num tnum">04</div>
+            <div>
+              <div class="title">한국 AI 박사 인재 순유입 세계 최하위권</div>
+              <div class="meta tnum">서울경제 · 2026.02.18</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="bg-surface rounded-card shadow-card p-6">
+        <div class="flex items-center justify-between">
+          <div class="eyebrow-news">저장한 기사</div>
+          <a href="#" class="text-[10px] font-semibold text-ink3 hover:underline">모두 보기 →</a>
+        </div>
+        <div class="mt-4 space-y-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-line flex items-center justify-center text-ink3 flex-shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[13px] font-semibold leading-snug line-clamp-2">삼성전자 2026 정기 임원 인사 — 161명 승진</div>
+              <div class="text-[11px] text-faint mt-1 tnum">2025.11.25 저장</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-line flex items-center justify-center text-ink3 flex-shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[13px] font-semibold leading-snug line-clamp-2">가트너 2026 채용 시장, AI 혁명과 비용 압박</div>
+              <div class="text-[11px] text-faint mt-1 tnum">2026.01.14 저장</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-line flex items-center justify-center text-ink3 flex-shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[13px] font-semibold leading-snug line-clamp-2">글로벌 Executive Search 시장 64조원 규모</div>
+              <div class="text-[11px] text-faint mt-1 tnum">2026.03.02 저장</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </aside>
+  </section>
+
+</div>
 </div>
 {% endblock %}

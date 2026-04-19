@@ -1,98 +1,360 @@
-<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-  <form hx-get="/reference/companies/" hx-target="#ref-tab-content" class="flex flex-wrap gap-3 mb-6">
-    <input type="text" name="q" value="{{ q }}" placeholder="회사명 검색"
-           class="flex-1 min-w-[200px] rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition">
-    <select name="listed" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition">
-      <option value="">전체 상장</option>
-      {% for val, label in listed_choices %}
-      <option value="{{ val }}" {% if listed_filter == val %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-    <select name="size" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none transition">
-      <option value="">전체 규모</option>
-      {% for val, label in size_choices %}
-      <option value="{{ val }}" {% if size_filter == val %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-    <button type="submit" class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 shadow-sm hover:bg-slate-50 transition-all">검색</button>
-  </form>
+{% load clients_tags %}
 
-  {% if page_obj.object_list %}
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="border-b border-slate-100 text-left">
-          <th class="pb-3 text-xs font-bold uppercase tracking-widest text-slate-400">회사명</th>
-          <th class="pb-3 text-xs font-bold uppercase tracking-widest text-slate-400">업종</th>
-          <th class="pb-3 text-xs font-bold uppercase tracking-widest text-slate-400">규모</th>
-          <th class="pb-3 text-xs font-bold uppercase tracking-widest text-slate-400">상장</th>
-          <th class="pb-3 text-xs font-bold uppercase tracking-widest text-slate-400">소재지</th>
-          {% if is_staff %}<th class="pb-3"></th>{% endif %}
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100">
-        {% for c in page_obj %}
-        <tr class="hover:bg-slate-50/60 transition-colors">
-          <td class="py-3 font-bold text-slate-900">{{ c.name }}</td>
-          <td class="py-3 text-slate-600">{{ c.industry|default:"-" }}</td>
-          <td class="py-3 text-slate-600">{{ c.get_size_category_display|default:"-" }}</td>
-          <td class="py-3 text-slate-600">{{ c.get_listed_display|default:"-" }}</td>
-          <td class="py-3 text-slate-600">{{ c.region|default:"-" }}</td>
-          {% if is_staff %}
-          <td class="py-3 text-right space-x-1">
-            <button hx-get="/reference/companies/{{ c.pk }}/edit/" hx-target="#ref-form-area"
-                    class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2 px-2 py-1 rounded-lg hover:bg-ink3/5 transition-colors">수정</button>
-            <button hx-post="/reference/companies/{{ c.pk }}/delete/" hx-confirm="정말 삭제하시겠습니까?"
-                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                    class="text-xs font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors">삭제</button>
-          </td>
-          {% endif %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<!-- Sub-filters (hardcoded mockup chips + filters — display only) -->
+<div class="flex items-center justify-between gap-4 flex-wrap">
+  <div class="overflow-x-auto hide-scrollbar -mx-1 flex-1">
+    <div class="flex gap-1 px-1">
+      <button type="button" class="cat-chip is-active">전체 · 18</button>
+      <button type="button" class="cat-chip">KOSPI · 14</button>
+      <button type="button" class="cat-chip">KOSDAQ · 2</button>
+      <button type="button" class="cat-chip">해외상장 · 1</button>
+      <button type="button" class="cat-chip">비상장 · 2</button>
+      <div class="cat-divider"></div>
+      <button type="button" class="cat-chip">대기업</button>
+      <button type="button" class="cat-chip">중견</button>
+      <button type="button" class="cat-chip">스타트업</button>
+    </div>
   </div>
-
-  {% if page_obj.has_other_pages %}
-  <div class="flex justify-center items-center gap-3 mt-6">
-    {% if page_obj.has_previous %}
-    <button hx-get="/reference/companies/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ page_obj.previous_page_number }}"
-            hx-target="#ref-tab-content"
-            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">이전</button>
-    {% endif %}
-    <span class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-    <button hx-get="/reference/companies/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ page_obj.next_page_number }}"
-            hx-target="#ref-tab-content"
-            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">다음</button>
-    {% endif %}
-  </div>
-  {% endif %}
-  {% else %}
-  <p class="text-center text-xs font-medium text-slate-400 py-12">{% if q %}검색 결과가 없습니다.{% else %}등록된 기업이 없습니다.{% endif %}</p>
-  {% endif %}
-
-  <div class="flex gap-2 pt-6 mt-6 border-t border-slate-100">
-    {% if is_staff %}
-    <button hx-get="/reference/companies/new/" hx-target="#ref-form-area"
-            class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 transition-all">+ 추가</button>
-    <form hx-post="/reference/companies/import/" hx-target="#ref-import-result" hx-encoding="multipart/form-data" class="flex gap-2">
-      {% csrf_token %}
-      {{ import_form.csv_file }}
-      <button type="submit" class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">CSV 가져오기</button>
-    </form>
-    {% endif %}
-    <a href="/reference/companies/export/?{% if q %}q={{ q }}&{% endif %}{% if listed_filter %}listed={{ listed_filter }}&{% endif %}{% if size_filter %}size={{ size_filter }}{% endif %}"
-       hx-boost="false"
-       class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all flex items-center">CSV 내보내기</a>
+  <div class="flex items-center gap-2">
+    <div class="relative">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="회사명 · 업종 검색" class="filter-input w-[240px]" disabled />
+    </div>
+    <select class="filter-select" disabled>
+      <option>전체 업종</option>
+      <option>IT · 플랫폼</option>
+      <option>반도체 · 전자</option>
+      <option>바이오 · 제약</option>
+      <option>금융</option>
+      <option>제조 · 모빌리티</option>
+      <option>에너지 · 화학</option>
+    </select>
   </div>
 </div>
 
-<div id="ref-form-area"></div>
-<div id="ref-import-result"></div>
-
-<script>
-document.body.addEventListener('companyChanged', function() {
-  htmx.ajax('GET', '/reference/companies/', {target: '#ref-tab-content'});
-});
-</script>
+<!-- Table -->
+<article class="bg-surface rounded-card shadow-card mt-6 overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th style="width:260px">회사명</th>
+          <th style="width:160px">업종</th>
+          <th style="width:100px">상장</th>
+          <th style="width:90px">규모</th>
+          <th style="width:120px">소재지</th>
+          <th class="tnum-col" style="width:110px">직원</th>
+          <th>소개</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-1">삼</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">삼성전자</div>
+                <div class="text-xs text-muted">Samsung Electronics</div>
+              </div>
+            </div>
+          </td>
+          <td>반도체 · 전자</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경기 수원</td>
+          <td class="tnum-col">100,000+</td>
+          <td class="note">글로벌 메모리 반도체·가전·모바일 선두. 매출 300조원대.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-3">SK</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">SK하이닉스</div>
+                <div class="text-xs text-muted">SK Hynix</div>
+              </div>
+            </div>
+          </td>
+          <td>반도체</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경기 이천</td>
+          <td class="tnum-col">30,000~50,000</td>
+          <td class="note">세계 2위 메모리 반도체 전문. HBM 시장 주도.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-5">LG</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">LG에너지솔루션</div>
+                <div class="text-xs text-muted">LG Energy Solution</div>
+              </div>
+            </div>
+          </td>
+          <td>2차전지</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>서울 영등포</td>
+          <td class="tnum-col">20,000~30,000</td>
+          <td class="note">글로벌 전기차 배터리 2위. LG화학 분할 상장.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-2">현</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">현대자동차</div>
+                <div class="text-xs text-muted">Hyundai Motor</div>
+              </div>
+            </div>
+          </td>
+          <td>자동차</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>서울 서초</td>
+          <td class="tnum-col">70,000+</td>
+          <td class="note">국내 1위 완성차. 전동화·SDV 전환 본격화.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-7">N</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">NAVER</div>
+                <div class="text-xs text-muted">NAVER Corp.</div>
+              </div>
+            </div>
+          </td>
+          <td>IT · 플랫폼</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경기 성남</td>
+          <td class="tnum-col">5,000~10,000</td>
+          <td class="note">국내 1위 포털·커머스·핀테크·웹툰 지주.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-4">K</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">카카오</div>
+                <div class="text-xs text-muted">Kakao Corp.</div>
+              </div>
+            </div>
+          </td>
+          <td>IT · 플랫폼</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경기 성남</td>
+          <td class="tnum-col">5,000~10,000</td>
+          <td class="note">메신저·핀테크·모빌리티 중심 플랫폼 그룹.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-2">포</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">포스코홀딩스</div>
+                <div class="text-xs text-muted">POSCO Holdings</div>
+              </div>
+            </div>
+          </td>
+          <td>철강</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경북 포항</td>
+          <td class="tnum-col">20,000~30,000</td>
+          <td class="note">국내 1위 철강. 2차전지 소재 사업 확장.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-4">KB</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">KB금융지주</div>
+                <div class="text-xs text-muted">KB Financial Group</div>
+              </div>
+            </div>
+          </td>
+          <td>금융</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>서울 영등포</td>
+          <td class="tnum-col">20,000~30,000</td>
+          <td class="note">국내 1위 금융지주. 국민은행 중심.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-3">신</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">신한금융지주</div>
+                <div class="text-xs text-muted">Shinhan Financial Group</div>
+              </div>
+            </div>
+          </td>
+          <td>금융</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>서울 중구</td>
+          <td class="tnum-col">20,000~30,000</td>
+          <td class="note">국내 2위 금융지주. 비은행 부문 강세.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-7">셀</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">셀트리온</div>
+                <div class="text-xs text-muted">Celltrion</div>
+              </div>
+            </div>
+          </td>
+          <td>바이오 · 제약</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>인천 연수</td>
+          <td class="tnum-col">5,000~10,000</td>
+          <td class="note">국내 1위 바이오시밀러. 글로벌 판매 확대.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-6">쿠</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">쿠팡</div>
+                <div class="text-xs text-muted">Coupang Inc.</div>
+              </div>
+            </div>
+          </td>
+          <td>이커머스</td>
+          <td><span class="pill global">해외상장</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>서울 송파</td>
+          <td class="tnum-col">50,000~70,000</td>
+          <td class="note">NYSE 상장. 국내 1위 이커머스 · 로켓배송.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-6">K</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">크래프톤</div>
+                <div class="text-xs text-muted">Krafton</div>
+              </div>
+            </div>
+          </td>
+          <td>게임</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>서울 강남</td>
+          <td class="tnum-col">1,000~3,000</td>
+          <td class="note">PUBG 개발사. 글로벌 배틀로얄 선두.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-1">두</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">두산에너빌리티</div>
+                <div class="text-xs text-muted">Doosan Enerbility</div>
+              </div>
+            </div>
+          </td>
+          <td>에너지 · 플랜트</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경남 창원</td>
+          <td class="tnum-col">10,000~20,000</td>
+          <td class="note">원자력·가스터빈 중심 에너지 플랜트.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-2">한</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">한화에어로스페이스</div>
+                <div class="text-xs text-muted">Hanwha Aerospace</div>
+              </div>
+            </div>
+          </td>
+          <td>방산 · 항공</td>
+          <td><span class="pill kospi">KOSPI</span></td>
+          <td><span class="pill enterprise">대기업</span></td>
+          <td>경남 창원</td>
+          <td class="tnum-col">10,000~20,000</td>
+          <td class="note">국내 대표 방산. K9 자주포·장갑차 수출.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-8">에</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">에코프로비엠</div>
+                <div class="text-xs text-muted">Ecopro BM</div>
+              </div>
+            </div>
+          </td>
+          <td>2차전지 소재</td>
+          <td><span class="pill kosdaq">KOSDAQ</span></td>
+          <td><span class="pill midcap">중견</span></td>
+          <td>경북 포항</td>
+          <td class="tnum-col">1,000~3,000</td>
+          <td class="note">양극재 생산. KOSDAQ 시총 상위.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-3">리</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">리노공업</div>
+                <div class="text-xs text-muted">LEENO Industrial</div>
+              </div>
+            </div>
+          </td>
+          <td>반도체 장비</td>
+          <td><span class="pill kosdaq">KOSDAQ</span></td>
+          <td><span class="pill midcap">중견</span></td>
+          <td>부산</td>
+          <td class="tnum-col">500~1,000</td>
+          <td class="note">반도체 테스트 핀 세계 1위. KOSDAQ 우량주.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-3">토</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">토스뱅크</div>
+                <div class="text-xs text-muted">Toss Bank</div>
+              </div>
+            </div>
+          </td>
+          <td>금융 · 핀테크</td>
+          <td><span class="pill private">비상장</span></td>
+          <td><span class="pill startup">스타트업</span></td>
+          <td>서울 강남</td>
+          <td class="tnum-col">500~1,000</td>
+          <td class="note">국내 3번째 인터넷전문은행. 비바리퍼블리카 그룹.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="rlogo rlogo-4">야</div>
+              <div class="min-w-0">
+                <div class="font-bold text-ink text-sm">야놀자</div>
+                <div class="text-xs text-muted">Yanolja</div>
+              </div>
+            </div>
+          </td>
+          <td>여행 · IT</td>
+          <td><span class="pill private">비상장</span></td>
+          <td><span class="pill startup">스타트업</span></td>
+          <td>서울 강남</td>
+          <td class="tnum-col">1,000~3,000</td>
+          <td class="note">숙박·여행 플랫폼 1위. 글로벌 호스피탈리티 SaaS 확장.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</article>

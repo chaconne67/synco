@@ -371,6 +371,181 @@
   /* Horizontal scroll — hide scrollbar */
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ---- References page — underline 3-tab selector ---- */
+  .ref-tab {
+    @apply inline-flex items-center text-sm font-semibold whitespace-nowrap;
+    position: relative;
+    padding: 16px 4px;
+    margin-right: 32px;
+    gap: 10px;
+    color: #94A3B8;
+    transition: color .15s ease;
+  }
+  .ref-tab::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 2px; background: transparent;
+    transition: background .15s ease;
+  }
+  .ref-tab:hover { color: #334155; }
+  .ref-tab.is-active { color: #0F172A; }
+  .ref-tab.is-active::after { background: #0F172A; }
+  .ref-tab .count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 20px; padding: 0 7px;
+    border-radius: 999px;
+    background: #F1F5F9; color: #64748B;
+    font-size: 10px; font-weight: 700;
+  }
+  .ref-tab.is-active .count { background: #0F172A; color: #fff; }
+
+  /* ---- Reference filter input/select ---- */
+  .filter-input {
+    @apply text-sm text-ink;
+    height: 40px;
+    padding: 0 14px 0 38px;
+    border-radius: 10px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .filter-input::placeholder { color: #94A3B8; }
+  .filter-input:focus {
+    border-color: #334155;
+    box-shadow: 0 0 0 3px rgba(51,65,85,0.08);
+  }
+  .filter-select {
+    @apply text-xs font-semibold;
+    height: 40px;
+    padding: 0 34px 0 14px;
+    border-radius: 10px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #334155;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .filter-select:focus { border-color: #334155; }
+
+  /* ---- Reference table ---- */
+  .ref-table { width: 100%; border-collapse: collapse; }
+  .ref-table thead th {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #94A3B8;
+    border-bottom: 1px solid #E2E8F0;
+    white-space: nowrap;
+  }
+  .ref-table thead th.tnum-col { text-align: right; }
+  .ref-table tbody tr { transition: background .12s ease; }
+  .ref-table tbody tr:hover { background: #F8FAFC; }
+  .ref-table tbody td {
+    padding: 14px 16px;
+    font-size: 13px; color: #334155;
+    border-bottom: 1px solid #F1F5F9;
+    vertical-align: middle;
+  }
+  .ref-table tbody tr:last-child td { border-bottom: 0; }
+  .ref-table tbody td.tnum-col {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: #64748B;
+  }
+  .ref-table tbody td.primary {
+    font-weight: 700;
+    color: #0F172A;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+  }
+  .ref-table tbody td.en { color: #64748B; font-size: 12px; }
+  .ref-table tbody td.note { color: #64748B; font-size: 12px; }
+
+  /* Rank chip (universities) */
+  .ref-table .rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px;
+    background: #F1F5F9; color: #334155;
+    border-radius: 8px;
+    font-size: 11px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .ref-table .rank.rank-top { background: #0F172A; color: #fff; }
+
+  /* Strength tag (universities — 강점 분야) */
+  .strength-tag {
+    display: inline-flex; align-items: center;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 600;
+    color: #475569; background: #F1F5F9;
+    margin-right: 4px;
+  }
+
+  /* Company row logo tile — 8 gradients (smaller than client-logo-tile) */
+  .rlogo {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 11px;
+    flex-shrink: 0; letter-spacing: -0.02em;
+    position: relative; overflow: hidden;
+  }
+  .rlogo-1 { background: linear-gradient(135deg, #60a5fa 0%, #1e3a8a 100%); }
+  .rlogo-2 { background: linear-gradient(135deg, #f87171 0%, #991b1b 100%); }
+  .rlogo-3 { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 100%); }
+  .rlogo-4 { background: linear-gradient(135deg, #fcd34d 0%, #b45309 100%); }
+  .rlogo-5 { background: linear-gradient(135deg, #f9a8d4 0%, #9f1239 100%); }
+  .rlogo-6 { background: linear-gradient(135deg, #fdba74 0%, #c2410c 100%); }
+  .rlogo-7 { background: linear-gradient(135deg, #5eead4 0%, #115e59 100%); }
+  .rlogo-8 { background: linear-gradient(135deg, #86efac 0%, #15803d 100%); }
+
+  /* Pill — small semantic badge (tier/listed/size/cert-level) */
+  .pill {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  /* University tier */
+  .pill.sky       { background: #0F172A; color: #ffffff; }
+  .pill.ssg       { background: #DBEAFE; color: #1E40AF; }
+  .pill.jkos      { background: #FEF3C7; color: #92400E; }
+  .pill.kdh       { background: #ECFCCB; color: #3F6212; }
+  .pill.inseoul   { background: #F1F5F9; color: #334155; }
+  .pill.ktech     { background: #CCFBF1; color: #115E59; }
+  .pill.regional  { background: #EDE9FE; color: #5B21B6; }
+  .pill.overseas  { background: #FCE7F3; color: #9D174D; }
+  /* Listed market */
+  .pill.kospi     { background: #DBEAFE; color: #1E40AF; }
+  .pill.kosdaq    { background: #CCFBF1; color: #115E59; }
+  .pill.global    { background: #EDE9FE; color: #5B21B6; }
+  .pill.private   { background: #F1F5F9; color: #64748B; }
+  /* Company size */
+  .pill.enterprise { background: #F1F5F9; color: #334155; }
+  .pill.midcap     { background: #DBEAFE; color: #1E40AF; }
+  .pill.sme        { background: #FFEDD5; color: #9A3412; }
+  .pill.foreign    { background: #EDE9FE; color: #5B21B6; }
+  .pill.startup    { background: #DCFCE7; color: #166534; }
+  /* Cert level */
+  .pill.lvl-high   { background: #FEE2E2; color: #991B1B; }
+  .pill.lvl-mid    { background: #FEF3C7; color: #92400E; }
+  .pill.lvl-low    { background: #F1F5F9; color: #64748B; }
+
+  /* Sub-filter chip divider (reused) */
+  .cat-divider {
+    width: 1px; height: 20px;
+    background: #E2E8F0;
+    margin: 0 6px;
+    flex-shrink: 0;
+    align-self: center;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -386,6 +561,8 @@
 input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: none;
 }
+/* 다크 사이드바의 탭은 자체 active 스타일(border-r-4)만 사용 — 포커스 outline 제거 */
+.sidebar-tab:focus-visible { outline: none; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

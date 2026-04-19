@@ -66,15 +66,13 @@
     <span class="text-sm font-medium tracking-wide uppercase">Newsfeed</span>
     {% if has_new_news %}<span class="w-1.5 h-1.5 bg-ink3 rounded-full ml-1"></span>{% endif %}
   </a>
-  {% if membership and membership.role == 'owner' %}
-  <a href="/org/"
-     hx-get="/org/" hx-target="#main-content" hx-push-url="true"
-     data-nav="org"
+  <a href="/team/"
+     hx-get="/team/" hx-target="#main-content" hx-push-url="true"
+     data-nav="team"
      class="sidebar-tab w-full flex items-center gap-3 px-6 py-3.5 transition-all duration-200 group text-slate-400 hover:text-white hover:bg-white/5">
     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5M10 6V5a2 2 0 114 0v1m-4 0a2 2 0 104 0M9.5 13a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 0c1.1 0 2 .7 2.3 1.7M9.5 13c-1.1 0-2 .7-2.3 1.7M14 11h3m-3 3h2"/></svg>
     <span class="text-sm font-medium tracking-wide uppercase">Team</span>
   </a>
-  {% endif %}
 </nav>
 
 <div class="mt-auto pb-4">
@@ -103,7 +101,7 @@
                    (key === 'reference' && path.startsWith('/reference')) ||
                    (key === 'approvals' && path.startsWith('/projects/approvals')) ||
                    (key === 'news' && path.startsWith('/news')) ||
-                   (key === 'org' && path.startsWith('/org')) ||
+                   (key === 'team' && path.startsWith('/team')) ||
                    (key === 'settings' && path.includes('/settings'));
       // Preserve all existing classes except the state-dependent ones
       tab.classList.remove('bg-white/10', 'text-white', 'border-r-4', 'border-ink3', 'text-slate-400', 'hover:text-white', 'hover:bg-white/5');

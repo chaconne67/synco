@@ -7,7 +7,6 @@
   const sendBtn = el('sb-send-btn');
   const stopBtn = el('sb-stop-btn');
   const recWrap = el('sb-recording');
-  const procWrap = el('sb-processing');
   const timerEl = el('sb-timer');
   const bars = document.querySelectorAll('.sb-bar');
   const chatPanel = el('sb-chat-panel');
@@ -18,16 +17,20 @@
 
   function showChatPanel() {
     if (!chatPanel) return;
+    if (!chatPanel.classList.contains('hidden')) return;
     chatPanel.classList.remove('hidden');
-    // next frame to trigger transition
+    // next frame to trigger slide-up transition
     requestAnimationFrame(() => {
-      chatPanel.classList.remove('opacity-0', 'translate-y-3');
+      chatPanel.classList.remove('translate-y-full');
     });
   }
 
   function scrollChatToBottom() {
-    if (!chatPanel) return;
-    chatPanel.scrollTop = chatPanel.scrollHeight;
+    if (!chatLog) return;
+    // 렌더 직후엔 scrollHeight가 아직 반영 안 된 경우가 있어 다음 프레임에서 스크롤.
+    requestAnimationFrame(() => {
+      chatLog.scrollTop = chatLog.scrollHeight;
+    });
   }
 
   function addUserBubble(text) {
@@ -98,12 +101,11 @@
 
   function setState(s) {
     // idle | text | recording | processing
-    input.classList.toggle('hidden', s === 'recording' || s === 'processing');
+    // processing은 시각적으로 idle과 동일 — 피드백은 채팅 패널의 typing bubble이 담당
+    input.classList.toggle('hidden', s === 'recording');
     recWrap.classList.toggle('hidden', s !== 'recording');
     recWrap.classList.toggle('flex', s === 'recording');
-    procWrap.classList.toggle('hidden', s !== 'processing');
-    procWrap.classList.toggle('flex', s === 'processing');
-    micBtn.classList.toggle('hidden', s !== 'idle');
+    micBtn.classList.toggle('hidden', s === 'recording' || s === 'text');
     sendBtn.classList.toggle('hidden', s !== 'text');
     stopBtn.classList.toggle('hidden', s !== 'recording');
   }
@@ -131,8 +133,8 @@
   function hideChatPanel() {
     if (!chatPanel) return;
     sessionStorage.setItem('synco_chat_dismissed', '1');
-    chatPanel.classList.add('opacity-0', 'translate-y-3');
-    setTimeout(() => chatPanel.classList.add('hidden'), 300);
+    chatPanel.classList.add('translate-y-full');
+    setTimeout(() => chatPanel.classList.add('hidden'), 200);
   }
 
   async function restoreSessionHistory() {
@@ -231,6 +233,9 @@
       mediaRecorder.start();
       recordStart = Date.now();
       setState('recording');
+      // 음성 입력 시작과 동시에 채팅 패널을 먼저 띄워두고, 이후 전사·검색 결과를 패널에 업데이트.
+      sessionStorage.removeItem('synco_chat_dismissed');
+      showChatPanel();
       startTimer();
       startWaveform(stream);
       autostopId = setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); }, 60000);
@@ -317,7 +322,6 @@
       const data = await resp.json();
       if (data.text) {
         input.value = data.text;
-        setState('text');
         await sendQuery('voice');
       } else {
         setState('idle');

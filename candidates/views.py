@@ -359,12 +359,19 @@ def candidate_list(request):
         ].exists()
     elif session and has_active_filters(filters):
         qs = build_search_queryset(filters)
-        total = qs.count()
-        offset = (page - 1) * SEARCH_PAGE_SIZE
-        page_candidates = qs[offset : offset + SEARCH_PAGE_SIZE]
-        has_more = qs[
-            offset + SEARCH_PAGE_SIZE : offset + SEARCH_PAGE_SIZE + 1
-        ].exists()
+        limit = filters.get("limit")
+        if limit:
+            # 사용자가 "N명만" 명시한 경우: 페이지네이션 없이 상위 N명만 노출
+            total = min(qs.count(), limit)
+            page_candidates = qs[:limit]
+            has_more = False
+        else:
+            total = qs.count()
+            offset = (page - 1) * SEARCH_PAGE_SIZE
+            page_candidates = qs[offset : offset + SEARCH_PAGE_SIZE]
+            has_more = qs[
+                offset + SEARCH_PAGE_SIZE : offset + SEARCH_PAGE_SIZE + 1
+            ].exists()
     else:
         qs = (
             Candidate.objects.select_related("primary_category")

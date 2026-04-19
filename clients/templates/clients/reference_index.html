@@ -2,33 +2,48 @@
 
 {% block title %}레퍼런스 관리 — synco{% endblock %}
 {% block breadcrumb_current %}References{% endblock %}
-{% block page_title %}레퍼런스 관리{% endblock %}
+{% block page_title %}References{% endblock %}
 
 {% block content %}
-<div class="px-10 py-10 max-w-6xl">
-  <div class="mb-10">
-    <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Reference Library</span>
-    <h2 class="text-4xl font-black text-slate-900 tracking-tight">레퍼런스 관리</h2>
-    <p class="mt-2 text-sm text-slate-500">대학·기업·자격증 마스터 데이터를 관리합니다.</p>
-  </div>
+<main class="w-full max-w-[1280px]">
+<div class="px-8 py-8 space-y-6 pb-32">
 
-  <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-2 mb-6 inline-flex items-center gap-1">
-    <button hx-get="/reference/universities/" hx-target="#ref-tab-content" hx-push-url="/reference/universities/"
-            class="ref-tab px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'universities' %}bg-ink3 text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
-            data-tab="universities">
-      대학 랭킹
-    </button>
-    <button hx-get="/reference/companies/" hx-target="#ref-tab-content" hx-push-url="/reference/companies/"
-            class="ref-tab px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'companies' %}bg-ink3 text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
-            data-tab="companies">
-      기업 DB
-    </button>
-    <button hx-get="/reference/certs/" hx-target="#ref-tab-content" hx-push-url="/reference/certs/"
-            class="ref-tab px-5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors {% if active_tab == 'certs' %}bg-ink3 text-white{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}"
-            data-tab="certs">
-      자격증
-    </button>
-  </div>
+  <section>
+    <div class="eyebrow">Master Data Library</div>
+    <h2 class="text-3xl font-bold tracking-tight mt-1">References</h2>
+    <p class="text-sm text-muted mt-1">
+      대학 랭킹 · 상장사 DB · 자격증 마스터 데이터를 한 곳에서 열람·관리하세요
+    </p>
+  </section>
+
+  <section class="border-b border-hair">
+    <nav class="flex items-center -mb-px">
+      <button type="button"
+              hx-get="/reference/universities/" hx-target="#main-content" hx-push-url="true"
+              data-tab="universities"
+              class="ref-tab {% if active_tab == 'universities' %}is-active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10v6M2 10l10-5 10 5-10 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        대학 랭킹
+        <span class="count tnum">{{ total_universities }}</span>
+      </button>
+      <button type="button"
+              hx-get="/reference/companies/" hx-target="#main-content" hx-push-url="true"
+              data-tab="companies"
+              class="ref-tab {% if active_tab == 'companies' %}is-active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 21V7l8-4v18"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V11l-6-4"/></svg>
+        기업 DB
+        <span class="count tnum">18</span>
+      </button>
+      <button type="button"
+              hx-get="/reference/certs/" hx-target="#main-content" hx-push-url="true"
+              data-tab="certs"
+              class="ref-tab {% if active_tab == 'certs' %}is-active{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        자격증
+        <span class="count tnum">20</span>
+      </button>
+    </nav>
+  </section>
 
   <div id="ref-tab-content">
     {% if active_tab == "universities" %}
@@ -39,23 +54,7 @@
       {% include "clients/partials/ref_certs.html" %}
     {% endif %}
   </div>
-</div>
 
-<script>
-document.body.addEventListener('htmx:afterSwap', function(e) {
-  if (e.detail.target.id === 'ref-tab-content') {
-    var path = window.location.pathname;
-    document.querySelectorAll('.ref-tab').forEach(function(tab) {
-      var key = tab.dataset.tab;
-      var active = path.includes('/' + key);
-      tab.classList.remove('bg-ink3', 'text-white', 'text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
-      if (active) {
-        tab.classList.add('bg-ink3', 'text-white');
-      } else {
-        tab.classList.add('text-slate-500', 'hover:text-slate-900', 'hover:bg-slate-50');
-      }
-    });
-  }
-});
-</script>
+</div>
+</main>
 {% endblock %}

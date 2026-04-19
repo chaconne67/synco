@@ -12,7 +12,16 @@ _TEXTAREA = _INPUT
 class UniversityTierForm(forms.ModelForm):
     class Meta:
         model = UniversityTier
-        fields = ["name", "name_en", "country", "tier", "ranking", "notes"]
+        fields = [
+            "name",
+            "name_en",
+            "country",
+            "tier",
+            "university_type",
+            "ranking",
+            "strengths",
+            "notes",
+        ]
         widgets = {
             "name": forms.TextInput(attrs={"class": _INPUT, "placeholder": "대학명"}),
             "name_en": forms.TextInput(
@@ -22,9 +31,11 @@ class UniversityTierForm(forms.ModelForm):
                 attrs={"class": _INPUT, "placeholder": "KR", "maxlength": "10"}
             ),
             "tier": forms.Select(attrs={"class": _SELECT}),
+            "university_type": forms.Select(attrs={"class": _SELECT}),
             "ranking": forms.NumberInput(
                 attrs={"class": _INPUT, "placeholder": "순위 (선택)", "min": "1"}
             ),
+            "strengths": forms.HiddenInput(),
             "notes": forms.Textarea(
                 attrs={"class": _TEXTAREA, "rows": 2, "placeholder": "비고"}
             ),
@@ -34,9 +45,35 @@ class UniversityTierForm(forms.ModelForm):
             "name_en": "영문명",
             "country": "국가 코드",
             "tier": "티어",
+            "university_type": "유형",
             "ranking": "순위",
+            "strengths": "강점 분야",
             "notes": "비고",
         }
+
+    strengths_text = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": _INPUT,
+                "placeholder": "강점 분야 (세미콜론 구분, 예: 경영;법학;AI)",
+            }
+        ),
+        label="강점 분야",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.strengths:
+            self.fields["strengths_text"].initial = ";".join(self.instance.strengths)
+
+    def clean(self):
+        cleaned = super().clean()
+        text = cleaned.get("strengths_text", "")
+        cleaned["strengths"] = (
+            [s.strip() for s in text.split(";") if s.strip()] if text else []
+        )
+        return cleaned
 
 
 class CompanyProfileForm(forms.ModelForm):

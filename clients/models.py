@@ -91,23 +91,35 @@ class UniversityTier(BaseModel):
         SKY = "SKY", "SKY"
         SSG = "SSG", "서성한"
         JKOS = "JKOS", "중경외시"
-        KDH = "KDH", "건동홍"
-        INSEOUL = "INSEOUL", "인서울 기타"
-        SCIENCE_ELITE = "SCIENCE_ELITE", "이공계 명문"
-        REGIONAL = "REGIONAL", "지방 거점 국립"
+        KDH = "KDH", "건동홍숙이"
+        INSEOUL = "INSEOUL", "인서울"
+        SCIENCE_ELITE = "SCIENCE_ELITE", "과기특"
+        REGIONAL = "REGIONAL", "지방거점"
         OVERSEAS_TOP = "OVERSEAS_TOP", "해외 최상위"
         OVERSEAS_HIGH = "OVERSEAS_HIGH", "해외 상위"
         OVERSEAS_GOOD = "OVERSEAS_GOOD", "해외 우수"
+
+    class UniversityType(models.TextChoices):
+        NATIONAL = "국립", "국립"
+        NATIONAL_SPECIAL = "국립(특수)", "국립(특수)"
+        PRIVATE = "사립", "사립"
+        PRIVATE_SPECIAL = "사립(특수)", "사립(특수)"
+        MUNICIPAL = "시립", "시립"
+        OVERSEAS = "해외", "해외"
 
     name = models.CharField(max_length=200)
     name_en = models.CharField(max_length=200, blank=True)
     country = models.CharField(max_length=10, default="KR")
     tier = models.CharField(max_length=20, choices=Tier.choices)
+    university_type = models.CharField(
+        max_length=20, choices=UniversityType.choices, blank=True
+    )
     ranking = models.PositiveSmallIntegerField(null=True, blank=True)
+    strengths = models.JSONField(default=list, blank=True)
     notes = models.TextField(blank=True)
 
     class Meta:
-        ordering = ["tier", "ranking"]
+        ordering = [models.F("ranking").asc(nulls_last=True), "tier", "name"]
         unique_together = [("name", "country")]
 
     def __str__(self) -> str:

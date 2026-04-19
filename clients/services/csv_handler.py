@@ -17,7 +17,16 @@ if TYPE_CHECKING:
 # --- Column definitions per model ---
 
 COLUMNS: dict[type[Model], list[str]] = {
-    UniversityTier: ["name", "name_en", "country", "tier", "ranking", "notes"],
+    UniversityTier: [
+        "name",
+        "name_en",
+        "country",
+        "tier",
+        "university_type",
+        "ranking",
+        "strengths",
+        "notes",
+    ],
     CompanyProfile: [
         "name",
         "name_en",
@@ -50,6 +59,7 @@ REQUIRED_COLUMNS: dict[type[Model], list[str]] = {
 _CHOICE_FIELDS: dict[type[Model], dict[str, set[str]]] = {
     UniversityTier: {
         "tier": {c.value for c in UniversityTier.Tier},
+        "university_type": {c.value for c in UniversityTier.UniversityType} | {""},
     },
     CompanyProfile: {
         "size_category": {c.value for c in CompanyProfile.SizeCategory} | {""},
@@ -71,7 +81,7 @@ def _parse_row(columns: list[str], row: dict[str, str]) -> dict:
     data = {}
     for col in columns:
         val = row.get(col, "").strip()
-        if col == "aliases":
+        if col in ("aliases", "strengths"):
             data[col] = [a.strip() for a in val.split(";") if a.strip()] if val else []
         elif col == "ranking":
             data[col] = int(val) if val else None
@@ -180,7 +190,7 @@ def export_csv(model: type[Model], queryset: QuerySet) -> io.StringIO:
         row = {}
         for col in columns:
             val = getattr(obj, col, "")
-            if col == "aliases" and isinstance(val, list):
+            if col in ("aliases", "strengths") and isinstance(val, list):
                 row[col] = ";".join(val)
             elif val is None:
                 row[col] = ""

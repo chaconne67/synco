@@ -1,21 +1,35 @@
-name,name_en,country,tier,ranking,notes
-서울대학교,Seoul National University,KR,SKY,1,
-연세대학교,Yonsei University,KR,SKY,2,
-고려대학교,Korea University,KR,SKY,3,
-성균관대학교,Sungkyunkwan University,KR,SSG,1,
-서강대학교,Sogang University,KR,SSG,2,
-한양대학교,Hanyang University,KR,SSG,3,
-중앙대학교,Chung-Ang University,KR,JKOS,1,
-경희대학교,Kyung Hee University,KR,JKOS,2,
-한국외국어대학교,Hankuk University of Foreign Studies,KR,JKOS,3,
-시립대학교,University of Seoul,KR,JKOS,4,
-건국대학교,Konkuk University,KR,KDH,1,
-동국대학교,Dongguk University,KR,KDH,2,
-홍익대학교,Hongik University,KR,KDH,3,
-KAIST,KAIST,KR,SCIENCE_ELITE,1,
-포항공과대학교,POSTECH,KR,SCIENCE_ELITE,2,
-부산대학교,Pusan National University,KR,REGIONAL,1,
-경북대학교,Kyungpook National University,KR,REGIONAL,2,
-Harvard University,Harvard University,US,OVERSEAS_TOP,1,
-MIT,MIT,US,OVERSEAS_TOP,2,
-University of Oxford,University of Oxford,GB,OVERSEAS_TOP,3,
+name,name_en,country,tier,university_type,ranking,strengths,notes
+서울대학교,Seoul National University,KR,SKY,국립,1,전 분야,부동의 국내 1위
+KAIST,KAIST,KR,SCIENCE_ELITE,국립(특수),2,전기전자;컴퓨터;기계,이공계 특화·종합 2위
+연세대학교,Yonsei University,KR,SKY,사립,3,경영;사회학;언론,QS 아시아 국내 1위
+고려대학교,Korea University,KR,SKY,사립,4,경영;법학;AI,THE 경영 국내 1위
+포항공과대학교,POSTECH,KR,SCIENCE_ELITE,사립(특수),5,화학;재료;물리,이공계 특화
+성균관대학교,Sungkyunkwan University,KR,SSG,사립,6,반도체;화학공학,THE 100위 첫 진입
+한양대학교,Hanyang University,KR,SSG,사립,7,건축;기계;전기전자,공대 강세
+서강대학교,Sogang University,KR,SSG,사립,8,경영;철학;영문,인문·경영 강세
+중앙대학교,Chung-Ang University,KR,JKOS,사립,9,예술;경영,경영학부 급성장
+경희대학교,Kyung Hee University,KR,JKOS,사립,10,한의학;국제학,한의학·국제학
+한국외국어대학교,Hankuk University of Foreign Studies,KR,JKOS,사립,11,외국어;국제학;통번역,외국어·국제학 특화
+서울시립대학교,University of Seoul,KR,JKOS,시립,12,도시공학;세무,입결 대비 가성비
+건국대학교,Konkuk University,KR,KDH,사립,13,부동산;경영,부동산·경영
+동국대학교,Dongguk University,KR,KDH,사립,14,경찰;영화,경찰·영화
+홍익대학교,Hongik University,KR,KDH,사립,15,미술;디자인,미술·디자인 1위
+숙명여자대학교,Sookmyung Women's University,KR,KDH,사립,16,경영;미디어,여대 1~2위
+이화여자대학교,Ewha Womans University,KR,KDH,사립,17,여성학;약학;교육,여대 1~2위·의약학
+국민대학교,Kookmin University,KR,INSEOUL,사립,18,자동차;디자인,자동차·디자인
+숭실대학교,Soongsil University,KR,INSEOUL,사립,19,IT;컴퓨터,IT·컴퓨터
+세종대학교,Sejong University,KR,INSEOUL,사립,20,호텔관광;AI,호텔관광·AI
+UNIST,Ulsan National Institute of Science and Technology,KR,SCIENCE_ELITE,국립(특수),,에너지;재료,이공계 특수·울산
+GIST,Gwangju Institute of Science and Technology,KR,SCIENCE_ELITE,국립(특수),,광학;전기전자,이공계 특수·광주
+DGIST,Daegu Gyeongbuk Institute of Science and Technology,KR,SCIENCE_ELITE,국립(특수),,로봇;뇌과학,이공계 특수·대구
+부산대학교,Pusan National University,KR,REGIONAL,국립,,공학;의학,공대·의대·법학
+경북대학교,Kyungpook National University,KR,REGIONAL,국립,,공학;의학,공대·의대·농학
+전남대학교,Chonnam National University,KR,REGIONAL,국립,,의학;농학,의대·농학·수산
+전북대학교,Jeonbuk National University,KR,REGIONAL,국립,,공학;농학,공대·농학
+충남대학교,Chungnam National University,KR,REGIONAL,국립,,약학;공학,약학·공학
+충북대학교,Chungbuk National University,KR,REGIONAL,국립,,법학;농학,법학·농학
+강원대학교,Kangwon National University,KR,REGIONAL,국립,,산림;의학,산림·의대
+제주대학교,Jeju National University,KR,REGIONAL,국립,,해양;관광,해양·관광
+Harvard University,Harvard University,US,OVERSEAS_TOP,해외,,경영;법학;의학,아이비리그
+MIT,Massachusetts Institute of Technology,US,OVERSEAS_TOP,해외,,공학;컴퓨터;자연과학,이공계 세계 최상위
+University of Oxford,University of Oxford,GB,OVERSEAS_TOP,해외,,인문;자연과학;법학,영국 최상위
