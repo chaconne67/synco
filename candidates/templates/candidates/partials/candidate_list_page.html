@@ -1,5 +1,5 @@
 {% for c in candidates %}
-  {% include "candidates/partials/candidate_card.html" with candidate=c %}
+  {% include "candidates/partials/candidate_card_v2.html" with candidate=c %}
 {% endfor %}
 
 {% if has_more %}
@@ -7,7 +7,7 @@
      hx-target="this"
      hx-swap="outerHTML"
      hx-trigger="revealed"
-     class="py-6 text-center">
-  <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Loading more...</span>
+     class="col-span-full py-6 text-center">
+  <span class="eyebrow text-faint">Loading more...</span>
 </div>
 {% endif %}

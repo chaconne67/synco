@@ -630,6 +630,14 @@ class Candidate(BaseModel):
         )
 
     @property
+    def age_display(self) -> str:
+        if not self.birth_year:
+            return ""
+        from datetime import date
+        age = date.today().year - self.birth_year
+        return f"{age}세 · {self.birth_year}년생"
+
+    @property
     def experience_discrepancy_months(self) -> int | None:
         computed = (
             self.reference_total_experience_months
