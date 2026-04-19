@@ -1,26 +1,30 @@
-{% load humanize candidate_extras %}
+{% load humanize candidate_extras candidate_ui %}
+{% review_notice_pill candidate as notice %}
 
 <div>
   {# ============================================================ #}
-  {# Back button                                                  #}
+  {# Back to Talent Pool                                          #}
   {# ============================================================ #}
   <div class="mb-6">
-    <a href="javascript:void(0)" onclick="history.back()"
-       class="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-      </svg>
-      뒤로
+    <a href="/candidates/"
+       hx-get="/candidates/"
+       hx-target="#main-content"
+       hx-push-url="true"
+       class="text-xs font-bold text-muted hover:text-ink3 uppercase tracking-widest inline-flex items-center gap-1">
+      ← Back to Talent Pool
     </a>
   </div>
 
   {# ============================================================ #}
-  {# Review notice + resume parse error                           #}
+  {# Review notice (preserved)                                    #}
   {# ============================================================ #}
   {% include "candidates/partials/_review_notice_section.html" with candidate=candidate %}
 
+  {# ============================================================ #}
+  {# Resume parse error (preserved)                               #}
+  {# ============================================================ #}
   {% if primary_resume and primary_resume.error_message %}
-  <div class="bg-rose-50 border border-rose-100 rounded-xl px-5 py-4 mb-6">
+  <div class="bg-rose-50 border border-rose-100 rounded-card px-5 py-4 mb-6">
     <div class="flex items-start gap-3">
       <svg class="w-4 h-4 text-rose-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -39,91 +43,66 @@
   {% endif %}
 
   {# ============================================================ #}
-  {# Profile header — skeleton avatar + name + meta + CTAs        #}
+  {# Profile header — avatar + name + meta + CTAs                 #}
   {# ============================================================ #}
-  <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
-    <div class="flex items-start gap-8">
-      {# Skeleton avatar + status pill #}
-      <div class="relative shrink-0">
-        <div class="w-32 h-32 rounded-2xl bg-slate-100 border-4 border-white shadow-xl flex items-center justify-center">
-          <svg class="w-14 h-14 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-        </div>
-        <div class="absolute -bottom-2 -right-2 bg-white p-1 rounded-lg shadow-lg">
-          <div class="bg-slate-900 px-2.5 py-1 rounded-md text-xs font-black tracking-[0.15em] text-white uppercase">
-            {{ candidate.get_status_display }}
-          </div>
-        </div>
+  <section class="bg-white border border-hair rounded-card shadow-card p-8 mb-6 flex flex-col lg:flex-row lg:items-center gap-6">
+    <div class="relative shrink-0">
+      <div class="w-32 h-32 rounded-2xl bg-line flex items-center justify-center">
+        <svg class="w-16 h-16 text-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
       </div>
+      {% if notice %}
+      <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 eyebrow border rounded-full px-3 py-1 shadow-card {{ notice.classes }}">
+        {{ notice.label }}
+      </span>
+      {% endif %}
+    </div>
 
-      {# Name + title + meta pills #}
-      <div class="pt-2 min-w-0">
-        <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Candidate Profile</span>
-        <div class="flex items-center gap-3 flex-wrap mb-2">
-          <h1 class="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-none">{{ candidate.name }}</h1>
-          <span id="recommendation-badge">{% include "candidates/partials/_recommendation_badge.html" %}</span>
-        </div>
-        {% if candidate.current_position or candidate.current_company %}
-        <p class="text-xl text-slate-500 font-medium mb-5">
-          {% if candidate.current_position %}{{ candidate.current_position }}{% endif %}
-          {% if candidate.current_position and candidate.current_company %}<span class="mx-2 text-slate-300">·</span>{% endif %}
-          {% if candidate.current_company %}<span class="text-slate-700 font-bold">{{ candidate.current_company }}</span>{% endif %}
-        </p>
+    <div class="flex-1 min-w-0">
+      <span class="eyebrow text-ink3 block">Candidate Profile</span>
+      <h1 class="text-4xl font-black text-ink tracking-tight mt-2 flex items-center gap-3 flex-wrap">
+        {{ candidate.name }}
+        {% if candidate.age_display %}<span class="text-lg font-semibold text-muted">({{ candidate.age_display }})</span>{% endif %}
+      </h1>
+      <p class="text-base text-ink2 font-semibold mt-1">
+        {% if candidate.current_position %}{{ candidate.current_position }}{% endif %}
+        {% if candidate.current_company %}<span class="mx-1 text-faint">·</span>{{ candidate.current_company }}{% endif %}
+      </p>
+
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        {% if candidate.address %}
+        <span class="eyebrow border border-hair bg-line rounded-full px-3 py-1 text-muted">{{ candidate.address }}</span>
         {% endif %}
-        <div class="flex flex-wrap gap-3">
-          {% if candidate.address %}
-          <div class="bg-white border border-slate-100 px-4 py-2 rounded-xl flex items-center gap-2.5 shadow-sm">
-            <svg class="w-3.5 h-3.5 text-ink3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <span class="text-xs font-bold text-slate-600">{{ candidate.address }}</span>
-          </div>
-          {% endif %}
-          {% if candidate.validation_status == "confirmed" or candidate.validation_status == "auto_confirmed" %}
-          <div class="bg-white border border-slate-100 px-4 py-2 rounded-xl flex items-center gap-2.5 shadow-sm">
-            <svg class="w-3.5 h-3.5 text-ink3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-            <span class="text-xs font-bold text-slate-600">검증 완료</span>
-          </div>
-          {% endif %}
-          {% if candidate.total_experience_display %}
-          <div class="bg-white border border-slate-100 px-4 py-2 rounded-xl flex items-center gap-2.5 shadow-sm">
-            <svg class="w-3.5 h-3.5 text-ink3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span class="text-xs font-bold text-slate-600">총 경력 {{ candidate.total_experience_display }}</span>
-          </div>
-          {% endif %}
-        </div>
+        {% if candidate.validation_status == "confirmed" or candidate.validation_status == "auto_confirmed" %}
+        <span class="eyebrow border border-emerald-100 bg-emerald-50 text-emerald-700 rounded-full px-3 py-1">
+          ✓ Identity Verified
+        </span>
+        {% endif %}
+        {% if candidate.total_experience_display %}
+        <span class="eyebrow border border-ink3/20 bg-ink3/10 text-ink3 rounded-full px-3 py-1">
+          총 경력 {{ candidate.total_experience_display }}
+        </span>
+        {% endif %}
       </div>
     </div>
 
-    {# Right-side CTA buttons #}
-    <div class="flex gap-3 h-fit shrink-0">
-      {% if primary_resume and primary_resume.drive_file_id %}
-      <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view"
-         target="_blank" rel="noopener"
-         class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-        </svg>
+    <div class="flex items-center gap-2 lg:self-start shrink-0">
+      {% if primary_resume.drive_file_id %}
+      <a href="https://drive.google.com/file/d/{{ primary_resume.drive_file_id }}/view" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-2 border border-hair rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest text-ink2 hover:bg-line transition">
         Export PDF
       </a>
       {% endif %}
       {% if candidate.email %}
       <a href="mailto:{{ candidate.email }}"
-         class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest shadow-lg shadow-ink3/20 hover:bg-ink2 hover:scale-[1.01] active:scale-[0.99] transition-all">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-        </svg>
+         class="inline-flex items-center gap-2 rounded-lg bg-ink3 hover:bg-ink2 text-white px-4 py-2 text-xs font-bold uppercase tracking-widest transition">
         Contact Candidate
       </a>
       {% endif %}
     </div>
-  </div>
+  </section>
 
   {# ============================================================ #}
   {# Main 12-col grid                                             #}
