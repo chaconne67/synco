@@ -303,7 +303,7 @@ SEARCH_PAGE_SIZE = 20
 
 @login_required
 def candidate_list(request):
-    """Main search page: candidate list + category tabs + floating chatbot."""
+    """Main search page: candidate list + category tabs + fixed bottom search bar."""
     category_filter = request.GET.get("category")
     rec_status_filter = request.GET.get("rec_status", "")
     try:

@@ -632,7 +632,7 @@ templates/
 candidates/templates/candidates/
 ├── candidate_list.html · detail.html · search.html
 ├── review_list.html · review_detail.html
-└── partials/                  candidate_card, chatbot, chat_messages, comment_*, search_*
+└── partials/                  candidate_card_v2, comment_*, search_bar_fixed, search_content
 
 projects/templates/projects/
 ├── project_list.html · project_detail.html · project_form.html
