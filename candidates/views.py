@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from django.db import transaction
 
@@ -445,6 +445,72 @@ def candidate_list(request):
             "target_project": target_project,
             "total_candidates": total_candidates,
         },
+    )
+
+
+@login_required
+def candidate_create(request):
+    """Render Add Candidate form (GET) or create (POST)."""
+    from candidates.services.candidate_create import create_candidate, find_duplicate
+
+    categories = Category.objects.order_by("name")
+
+    if request.method == "POST":
+        data = request.POST
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip() or None
+        phone = data.get("phone", "").strip() or None
+
+        errors = {}
+        if not name:
+            errors["name"] = "이름은 필수입니다."
+        if not email and not phone:
+            errors["contact"] = "이메일 또는 전화번호 중 하나 이상 입력해주세요."
+
+        if errors:
+            return render(
+                request,
+                "candidates/candidate_form.html",
+                {"errors": errors, "form_data": data, "categories": categories},
+                status=400,
+            )
+
+        if not data.get("confirm_duplicate"):
+            dup = find_duplicate(email, phone)
+            if dup:
+                return render(
+                    request,
+                    "candidates/candidate_form.html",
+                    {
+                        "duplicate": dup,
+                        "form_data": data,
+                        "categories": categories,
+                    },
+                )
+
+        payload = {
+            "name": name,
+            "email": email or "",
+            "phone": phone or "",
+            "current_company": data.get("current_company") or "",
+            "current_position": data.get("current_position") or "",
+            "birth_year": data.get("birth_year") or None,
+            "source": data.get("source") or "manual",
+        }
+        cat_id = data.get("primary_category")
+        if cat_id:
+            try:
+                payload["primary_category"] = Category.objects.get(pk=cat_id)
+            except (Category.DoesNotExist, ValueError):
+                pass
+        candidate = create_candidate(payload, user=request.user)
+
+        return redirect("candidates:candidate_detail", pk=candidate.pk)
+
+    return render(
+        request,
+        "candidates/candidate_form.html",
+        {"categories": categories, "form_data": {}, "errors": {}},
     )
 
 

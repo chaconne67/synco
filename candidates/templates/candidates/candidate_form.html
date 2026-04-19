@@ -1,0 +1,198 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+{% load static %}
+
+{% block title %}후보자 추가 — synco{% endblock %}
+{% block breadcrumb_current %}Add Candidate{% endblock %}
+{% block page_title %}Add Candidate{% endblock %}
+
+{% block content %}
+<div class="px-10 py-10 max-w-3xl">
+
+  <!-- Page header -->
+  <header class="mb-8">
+    <span class="eyebrow text-ink3 block">Global Talent Pool</span>
+    <h2 class="text-4xl font-black text-ink tracking-tight mt-2">Add Candidate</h2>
+    <p class="text-sm text-muted mt-2">새 후보자를 직접 등록합니다. 이메일 또는 전화번호를 입력하면 중복 여부를 확인합니다.</p>
+  </header>
+
+  <!-- Duplicate warning -->
+  {% if duplicate %}
+  <div class="rounded-xl border border-warning/40 bg-warning/5 p-5 mb-6">
+    <p class="text-sm font-semibold text-warning mb-1">동일 연락처의 후보자가 이미 존재합니다</p>
+    <p class="text-sm text-ink3 mb-3">
+      <a href="{% url 'candidates:candidate_detail' pk=duplicate.pk %}"
+         class="underline underline-offset-2 hover:text-ink font-medium">{{ duplicate.name }}</a>
+      {% if duplicate.current_company %}&nbsp;·&nbsp;{{ duplicate.current_company }}{% endif %}
+    </p>
+    <div class="flex gap-3">
+      <a href="{% url 'candidates:candidate_detail' pk=duplicate.pk %}"
+         class="inline-flex items-center gap-1.5 rounded-lg bg-ink3 hover:bg-ink2 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 transition-colors">
+        기존 후보자 보기
+      </a>
+      <form method="post" action="{% url 'candidates:candidate_create' %}">
+        {% csrf_token %}
+        {% for key, val in form_data.items %}
+          <input type="hidden" name="{{ key }}" value="{{ val }}">
+        {% endfor %}
+        <input type="hidden" name="confirm_duplicate" value="1">
+        <button type="submit"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-hair hover:border-ink3 text-ink3 text-xs font-bold uppercase tracking-widest px-4 py-2 transition-colors">
+          그래도 새로 등록
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Form -->
+  <form method="post" action="{% url 'candidates:candidate_create' %}"
+        class="rounded-card bg-surface border border-hair shadow-lift p-6 space-y-5">
+    {% csrf_token %}
+
+    <!-- Contact error banner -->
+    {% if errors.contact %}
+    <div class="rounded-lg bg-danger/5 border border-danger/30 px-4 py-3 text-sm text-danger font-medium">
+      {{ errors.contact }}
+    </div>
+    {% endif %}
+
+    <!-- Name -->
+    <div>
+      <label for="id_name" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+        이름 <span class="text-danger">*</span>
+      </label>
+      <input type="text" id="id_name" name="name"
+             value="{{ form_data.name|default:'' }}"
+             placeholder="홍길동"
+             autocomplete="name"
+             class="w-full rounded-lg border {% if errors.name %}border-danger{% else %}border-hair{% endif %} bg-canvas px-3.5 py-2.5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+      {% if errors.name %}
+      <p class="mt-1 text-xs text-danger">{{ errors.name }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Email + Phone -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label for="id_email" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+          이메일
+        </label>
+        <input type="email" id="id_email" name="email"
+               value="{{ form_data.email|default:'' }}"
+               placeholder="hong@example.com"
+               autocomplete="email"
+               class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+      </div>
+      <div>
+        <label for="id_phone" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+          전화번호
+        </label>
+        <input type="tel" id="id_phone" name="phone"
+               value="{{ form_data.phone|default:'' }}"
+               placeholder="010-0000-0000"
+               autocomplete="tel"
+               class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+      </div>
+    </div>
+    <p class="text-xs text-muted -mt-2">이메일 또는 전화번호 중 하나 이상 입력 필요</p>
+
+    <!-- Current company + Position -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label for="id_current_company" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+          현재 회사
+        </label>
+        <input type="text" id="id_current_company" name="current_company"
+               value="{{ form_data.current_company|default:'' }}"
+               placeholder="네이버"
+               class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+      </div>
+      <div>
+        <label for="id_current_position" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+          현재 직책
+        </label>
+        <input type="text" id="id_current_position" name="current_position"
+               value="{{ form_data.current_position|default:'' }}"
+               placeholder="시니어 엔지니어"
+               class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+      </div>
+    </div>
+
+    <!-- Birth year + Category -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label for="id_birth_year" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+          출생연도
+        </label>
+        <input type="number" id="id_birth_year" name="birth_year"
+               value="{{ form_data.birth_year|default:'' }}"
+               placeholder="1990"
+               min="1940" max="2010"
+               class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+      </div>
+      <div>
+        <label for="id_primary_category" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+          분야
+        </label>
+        <select id="id_primary_category" name="primary_category"
+                class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+          <option value="">— 선택 안 함 —</option>
+          {% for cat in categories %}
+          <option value="{{ cat.pk }}"
+            {% if form_data.primary_category|stringformat:"s" == cat.pk|stringformat:"s" %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Source -->
+    <div>
+      <label for="id_source" class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+        등록 경로
+      </label>
+      <select id="id_source" name="source"
+              class="w-full rounded-lg border border-hair bg-canvas px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-ink3 transition-colors">
+        <option value="manual" {% if form_data.source|default:'manual' == 'manual' %}selected{% endif %}>직접 입력</option>
+        <option value="referral" {% if form_data.source == 'referral' %}selected{% endif %}>추천</option>
+        <option value="drive_import" {% if form_data.source == 'drive_import' %}selected{% endif %}>드라이브 임포트</option>
+        <option value="chrome_ext" {% if form_data.source == 'chrome_ext' %}selected{% endif %}>크롬 확장</option>
+      </select>
+    </div>
+
+    <!-- Resume upload placeholder (Task 8) -->
+    <div>
+      <label class="block text-xs font-semibold text-ink3 uppercase tracking-widest mb-1.5">
+        이력서 파일 <span class="text-faint font-normal normal-case tracking-normal">(선택, Task 8에서 활성화)</span>
+      </label>
+      <div class="rounded-lg border border-dashed border-hair bg-canvas px-4 py-6 text-center text-sm text-muted cursor-not-allowed opacity-50">
+        <svg class="mx-auto mb-2 w-6 h-6 text-faint" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/>
+        </svg>
+        파일 업로드는 준비 중입니다
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between pt-2 border-t border-hair">
+      <a href="{% url 'candidates:candidate_list' %}"
+         hx-get="{% url 'candidates:candidate_list' %}"
+         hx-target="#main-content"
+         hx-push-url="true"
+         class="text-sm text-muted hover:text-ink3 transition-colors">
+        취소
+      </a>
+      <button type="submit"
+              class="inline-flex items-center gap-2 rounded-xl bg-ink3 hover:bg-ink2 text-white text-xs font-bold uppercase tracking-widest px-6 py-3 shadow-lift hover:scale-[1.01] active:scale-[0.99] transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        후보자 등록
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

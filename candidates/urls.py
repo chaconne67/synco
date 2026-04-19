@@ -14,6 +14,7 @@ app_name = "candidates"
 urlpatterns = [
     # Phase 2: Search UI
     path("", views.candidate_list, name="candidate_list"),
+    path("new/", views.candidate_create, name="candidate_create"),
     path("<uuid:pk>/", views.candidate_detail, name="candidate_detail"),
     path("search/", views.search_chat, name="search_chat"),
     path("voice/", views.voice_transcribe, name="voice_transcribe"),
