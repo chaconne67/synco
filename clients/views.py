@@ -14,6 +14,8 @@ from .models import Client, Contract, IndustryCategory
 from .services.client_queries import (
     available_regions,
     category_counts,
+    client_projects,
+    client_stats,
     list_clients_with_stats,
 )
 
@@ -135,22 +137,21 @@ def client_create(request):
 @login_required
 @membership_required
 def client_detail(request, pk):
-    """Client detail with contracts and active projects."""
     org = _get_org(request)
     client = get_object_or_404(Client, pk=pk, organization=org)
-    contracts = client.contracts.all()
-    active_projects = client.projects.exclude(status__in=CLOSED_STATUSES)
-
-    contract_form = ContractForm()
+    stats = client_stats(client)
+    projects = client_projects(client, status_filter="all")[:20]
 
     return render(
         request,
         "clients/client_detail.html",
         {
             "client": client,
-            "contracts": contracts,
-            "active_projects": active_projects,
-            "contract_form": contract_form,
+            "contracts": client.contracts.all(),
+            "projects": projects,
+            "stats": stats,
+            "contract_form": ContractForm(),
+            "project_status_filter": "all",
         },
     )
 
@@ -206,8 +207,10 @@ def client_delete(request, pk):
             {
                 "client": client,
                 "contracts": client.contracts.all(),
-                "active_projects": active_projects,
+                "projects": client_projects(client, status_filter="all")[:20],
+                "stats": client_stats(client),
                 "contract_form": ContractForm(),
+                "project_status_filter": "all",
                 "error_message": "진행중인 프로젝트가 있어 삭제할 수 없습니다.",
             },
         )

@@ -1,10 +1,10 @@
-<section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+<section class="bg-surface rounded-card shadow-card p-6">
   <div class="flex items-center justify-between mb-5">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">계약 이력 · Contracts</h3>
+    <div class="eyebrow">계약 이력</div>
     <button type="button"
             hx-get="{% url 'clients:contract_create' client.pk %}"
             hx-target="#contract-section"
-            class="text-xs font-bold uppercase tracking-widest text-ink3 hover:text-ink2 px-3 py-1.5 rounded-lg hover:bg-ink3/5 transition-colors">
+            class="px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
       + 계약 추가
     </button>
   </div>
@@ -12,7 +12,7 @@
   {% if show_form %}
   <form hx-post="{% url 'clients:contract_create' client.pk %}"
         hx-target="#contract-section"
-        class="rounded-xl border border-slate-100 bg-slate-50/50 p-5 space-y-4 mb-4">
+        class="rounded-xl border border-hair bg-surface p-5 space-y-4 mb-4">
     {% csrf_token %}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
@@ -34,14 +34,14 @@
     </div>
     <div class="flex gap-2">
       <button type="submit"
-              class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 transition-all">
+              class="px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
         저장
       </button>
       <button type="button"
               hx-get="{% url 'clients:client_detail' client.pk %}"
               hx-target="#main-content" hx-push-url="false"
               hx-select="#contract-section" hx-swap="outerHTML"
-              class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
+              class="px-4 h-10 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line">
         취소
       </button>
     </div>
@@ -74,14 +74,14 @@
     </div>
     <div class="flex gap-2">
       <button type="submit"
-              class="rounded-xl bg-ink3 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 shadow-sm hover:bg-ink2 transition-all">
+              class="px-4 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2 transition-colors">
         저장
       </button>
       <button type="button"
               hx-get="{% url 'clients:client_detail' client.pk %}"
               hx-target="#main-content"
               hx-select="#contract-section" hx-swap="outerHTML"
-              class="rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:bg-slate-50 transition-all">
+              class="px-4 h-10 rounded-lg border border-hair bg-surface text-sm font-semibold text-ink3 hover:bg-line">
         취소
       </button>
     </div>
@@ -89,7 +89,7 @@
   {% endif %}
 
   {% if contracts %}
-  <div class="divide-y divide-slate-100">
+  <div class="divide-y divide-line">
     {% for contract in contracts %}
     <div class="flex items-center justify-between py-4 first:pt-0 last:pb-0">
       <div class="min-w-0">

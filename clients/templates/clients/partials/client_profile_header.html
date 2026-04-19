@@ -1,0 +1,53 @@
+{% load clients_tags %}
+<section class="bg-surface rounded-card shadow-card p-8 relative">
+  {% if membership and membership.role == "owner" %}
+  <details class="absolute top-6 right-6">
+    <summary class="list-none cursor-pointer w-8 h-8 rounded-full hover:bg-line flex items-center justify-center text-muted">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </summary>
+    <div class="absolute right-0 mt-1 w-32 bg-surface rounded-lg shadow-lift border border-hair py-1 z-10">
+      <a href="{% url 'clients:client_update' client.pk %}"
+         hx-get="{% url 'clients:client_update' client.pk %}" hx-target="#main-content" hx-push-url="true"
+         class="block px-3 py-2 text-sm text-ink3 hover:bg-line">수정</a>
+      <button type="button"
+              hx-post="{% url 'clients:client_delete' client.pk %}"
+              hx-confirm="이 고객사를 삭제하시겠어요?"
+              hx-target="#main-content"
+              class="w-full text-left px-3 py-2 text-sm text-danger hover:bg-line">삭제</button>
+    </div>
+  </details>
+  {% endif %}
+
+  <div class="flex items-start gap-6">
+    <div class="client-logo-tile {% logo_class client %}" style="width:80px;height:80px;font-size:20px;border-radius:16px;">
+      {% if client.logo %}<img src="{{ client.logo.url }}" alt="" />{% endif %}
+      {{ client.name|client_initials }}
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h1 class="text-2xl font-bold tracking-tight">{{ client.name }}</h1>
+        {% if client.size %}<span class="{{ client.size|size_badge_class }}">{{ client.get_size_display }}</span>{% endif %}
+      </div>
+      <p class="text-sm text-muted mt-1">
+        <span class="font-semibold text-ink3">{{ client.get_industry_display }}</span>
+        {% if client.region %}<span class="mx-1 text-faint">·</span>{{ client.region }}{% endif %}
+      </p>
+      {% if client.website %}
+      <a href="{{ client.website }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-ink3 hover:underline mt-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle stroke-linecap="round" stroke-linejoin="round" cx="12" cy="12" r="10"/><line stroke-linecap="round" stroke-linejoin="round" x1="2" y1="12" x2="22" y2="12"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        {{ client.website|cut:"https://"|cut:"http://" }}
+      </a>
+      {% endif %}
+      {% if client.description %}
+      <p class="text-sm text-ink3 leading-relaxed mt-4 max-w-[720px]">{{ client.description }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-line">
+    <div class="stat"><div class="num">{{ stats.offers }}</div><div class="lbl">Offers</div></div>
+    <div class="stat"><div class="num">{{ stats.success }}</div><div class="lbl">Success</div></div>
+    <div class="stat"><div class="num">{{ stats.placed }}<span class="unit">명</span></div><div class="lbl">Placed</div></div>
+    <div class="stat"><div class="num">{{ stats.active }}</div><div class="lbl">Active</div></div>
+  </div>
+</section>
