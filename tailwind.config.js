@@ -61,6 +61,7 @@ module.exports = {
         'card': '0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06)',
         'lift': '0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.04)',
         'fab':  '0 10px 15px -3px rgba(15,23,42,0.15), 0 4px 6px -2px rgba(15,23,42,0.08)',
+        'searchbar': '0 10px 40px -10px rgba(15,23,42,0.18), 0 4px 12px -4px rgba(15,23,42,0.08)',
       },
       borderRadius: {
         'card': '16px',
