@@ -11,12 +11,14 @@ def normalize_contact_persons(raw):
         name = (row.get("name") or "").strip()
         if not name:
             continue
-        out.append({
-            "name": name,
-            "position": (row.get("position") or "").strip(),
-            "phone": (row.get("phone") or "").strip(),
-            "email": (row.get("email") or "").strip(),
-        })
+        out.append(
+            {
+                "name": name,
+                "position": (row.get("position") or "").strip(),
+                "phone": (row.get("phone") or "").strip(),
+                "email": (row.get("email") or "").strip(),
+            }
+        )
     return out
 
 

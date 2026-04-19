@@ -4,17 +4,17 @@ from common.mixins import BaseModel
 
 
 class IndustryCategory(models.TextChoices):
-    BIO_PHARMA     = "바이오/제약",       "바이오 / 제약"
-    HEALTHCARE     = "헬스케어/의료기기",  "헬스케어 / 의료기기"
-    IT_SW          = "IT/SW",           "IT / SW"
-    MATERIAL_PARTS = "소재/부품",        "소재 / 부품"
-    FINANCE        = "금융/캐피탈",       "금융 / 캐피탈"
-    CONSUMER       = "소비재/패션",       "소비재 / 패션"
-    ENV_UTILITY    = "환경/유틸리티",     "환경 / 유틸리티"
-    MOBILITY       = "모빌리티/제조",     "모빌리티 / 제조"
-    MEDIA_ENTER    = "미디어/엔터",       "미디어 / 엔터"
-    CONSTRUCTION   = "건설/부동산",       "건설 / 부동산"
-    ETC            = "기타",             "기타"
+    BIO_PHARMA = "바이오/제약", "바이오 / 제약"
+    HEALTHCARE = "헬스케어/의료기기", "헬스케어 / 의료기기"
+    IT_SW = "IT/SW", "IT / SW"
+    MATERIAL_PARTS = "소재/부품", "소재 / 부품"
+    FINANCE = "금융/캐피탈", "금융 / 캐피탈"
+    CONSUMER = "소비재/패션", "소비재 / 패션"
+    ENV_UTILITY = "환경/유틸리티", "환경 / 유틸리티"
+    MOBILITY = "모빌리티/제조", "모빌리티 / 제조"
+    MEDIA_ENTER = "미디어/엔터", "미디어 / 엔터"
+    CONSTRUCTION = "건설/부동산", "건설 / 부동산"
+    ETC = "기타", "기타"
 
 
 class Client(BaseModel):

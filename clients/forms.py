@@ -9,6 +9,7 @@ TEXTAREA_CLS = INPUT_CLS + " resize-none"
 class ClientForm(forms.ModelForm):
     def clean_logo(self):
         from clients.services.client_create import validate_logo_file
+
         f = self.cleaned_data.get("logo")
         if f:
             try:
@@ -19,16 +20,41 @@ class ClientForm(forms.ModelForm):
 
     class Meta:
         model = Client
-        fields = ["name", "industry", "size", "region", "website", "logo", "description", "notes"]
+        fields = [
+            "name",
+            "industry",
+            "size",
+            "region",
+            "website",
+            "logo",
+            "description",
+            "notes",
+        ]
         widgets = {
-            "name": forms.TextInput(attrs={"class": INPUT_CLS, "placeholder": "고객사명"}),
+            "name": forms.TextInput(
+                attrs={"class": INPUT_CLS, "placeholder": "고객사명"}
+            ),
             "industry": forms.Select(attrs={"class": INPUT_CLS}),
             "size": forms.Select(attrs={"class": INPUT_CLS}),
-            "region": forms.TextInput(attrs={"class": INPUT_CLS, "placeholder": "예: 서울, 경기"}),
-            "website": forms.URLInput(attrs={"class": INPUT_CLS, "placeholder": "https://"}),
-            "logo": forms.ClearableFileInput(attrs={"class": "text-sm", "accept": "image/*"}),
-            "description": forms.Textarea(attrs={"class": TEXTAREA_CLS, "rows": 2, "placeholder": "카드 리스트에 노출되는 2줄 요약"}),
-            "notes": forms.Textarea(attrs={"class": TEXTAREA_CLS, "rows": 6, "placeholder": "메모"}),
+            "region": forms.TextInput(
+                attrs={"class": INPUT_CLS, "placeholder": "예: 서울, 경기"}
+            ),
+            "website": forms.URLInput(
+                attrs={"class": INPUT_CLS, "placeholder": "https://"}
+            ),
+            "logo": forms.ClearableFileInput(
+                attrs={"class": "text-sm", "accept": "image/*"}
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "class": TEXTAREA_CLS,
+                    "rows": 2,
+                    "placeholder": "카드 리스트에 노출되는 2줄 요약",
+                }
+            ),
+            "notes": forms.Textarea(
+                attrs={"class": TEXTAREA_CLS, "rows": 6, "placeholder": "메모"}
+            ),
         }
         labels = {
             "name": "고객사명",

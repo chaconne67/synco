@@ -38,7 +38,6 @@ def backwards(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clients", "0003_client_description_client_logo_client_website"),
     ]

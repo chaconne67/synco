@@ -105,8 +105,9 @@ def available_regions(org):
     return sorted(
         set(
             v
-            for v in Client.objects.filter(organization=org)
-            .values_list("region", flat=True)
+            for v in Client.objects.filter(organization=org).values_list(
+                "region", flat=True
+            )
             if v
         )
     )

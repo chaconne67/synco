@@ -186,7 +186,11 @@ def client_update(request, pk):
 
     if request.method == "POST":
         form = ClientForm(request.POST, request.FILES, instance=client)
-        if request.POST.get("logo-clear") == "on" and client.logo and not request.FILES.get("logo"):
+        if (
+            request.POST.get("logo-clear") == "on"
+            and client.logo
+            and not request.FILES.get("logo")
+        ):
             apply_logo_upload(client, None, delete=True)
         if form.is_valid():
             client = form.save(commit=False)

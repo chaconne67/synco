@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clients', '0002_p12_reference_models'),
+        ("clients", "0002_p12_reference_models"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='client',
-            name='description',
+            model_name="client",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='client',
-            name='logo',
-            field=models.ImageField(blank=True, null=True, upload_to='clients/logos/'),
+            model_name="client",
+            name="logo",
+            field=models.ImageField(blank=True, null=True, upload_to="clients/logos/"),
         ),
         migrations.AddField(
-            model_name='client',
-            name='website',
+            model_name="client",
+            name="website",
             field=models.URLField(blank=True),
         ),
     ]

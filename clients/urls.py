@@ -9,7 +9,9 @@ urlpatterns = [
     path("page/", views.client_list_page, name="client_list_page"),
     path("new/", views.client_create, name="client_create"),
     path("<uuid:pk>/", views.client_detail, name="client_detail"),
-    path("<uuid:pk>/projects/", views.client_projects_panel, name="client_projects_panel"),
+    path(
+        "<uuid:pk>/projects/", views.client_projects_panel, name="client_projects_panel"
+    ),
     path("<uuid:pk>/edit/", views.client_update, name="client_update"),
     path("<uuid:pk>/delete/", views.client_delete, name="client_delete"),
     # Contract inline CRUD
