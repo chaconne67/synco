@@ -1487,3 +1487,30 @@ class CandidateComment(BaseModel):
     @property
     def reason_labels(self) -> list[str]:
         return [REASON_CODES.get(code, code) for code in self.reason_codes]
+
+
+# ---------------------------------------------------------------------------
+# Signals — keep Category.candidate_count in sync with M2M membership.
+# ---------------------------------------------------------------------------
+
+from django.db.models.signals import m2m_changed, post_delete  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
+
+
+@receiver(m2m_changed, sender=Candidate.categories.through)
+def _sync_category_candidate_count(sender, instance, action, pk_set, **kwargs):
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+    affected = list(pk_set) if pk_set else list(Category.objects.values_list("pk", flat=True))
+    for cat_id in affected:
+        cat = Category.objects.filter(pk=cat_id).first()
+        if cat:
+            cat.candidate_count = cat.candidates.count()
+            cat.save(update_fields=["candidate_count"])
+
+
+@receiver(post_delete, sender=Candidate)
+def _refresh_category_counts_on_candidate_delete(sender, instance, **kwargs):
+    for cat in Category.objects.filter(candidate_count__gt=0):
+        cat.candidate_count = cat.candidates.count()
+        cat.save(update_fields=["candidate_count"])
