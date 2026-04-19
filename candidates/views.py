@@ -749,24 +749,3 @@ def voice_transcribe(request):
         return JsonResponse({"error": str(e)}, status=500)
     except Exception:
         return JsonResponse({"error": "음성 인식 중 오류가 발생했습니다."}, status=500)
-
-
-@login_required
-def chat_history(request):
-    """Return chat messages for a session as HTML partial."""
-    session_id = request.GET.get("session_id")
-    turns = []
-    if session_id:
-        try:
-            uuid.UUID(session_id)
-        except (ValueError, AttributeError):
-            return render(
-                request,
-                "candidates/partials/chat_messages.html",
-                {"turns": turns},
-            )
-        session = SearchSession.objects.filter(pk=session_id, user=request.user).first()
-        if session:
-            turns = session.turns.order_by("turn_number")
-
-    return render(request, "candidates/partials/chat_messages.html", {"turns": turns})
