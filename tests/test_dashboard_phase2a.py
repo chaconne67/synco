@@ -250,3 +250,55 @@ def test_s3_weekly_shows_interview(
     assert "1차 면접" in body
     assert "박해준" in body
     assert "이번 주 일정이 없습니다" not in body
+
+
+# ===========================================================================
+# S3 Monthly Calendar
+# ===========================================================================
+
+
+@pytest.mark.django_db
+def test_s3_monthly_has_42_cells(owner_client):
+    """Monthly Calendar: 항상 42셀 렌더."""
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+    assert body.count('class="cal-day') == 42
+
+
+@pytest.mark.django_db
+def test_s3_monthly_today_class(owner_client):
+    """Monthly Calendar: 오늘 셀에 today 클래스."""
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+    assert 'class="cal-day today"' in body
+
+
+@pytest.mark.django_db
+def test_s3_monthly_interview_label(
+    owner_client, org, client_obj, interview_type, consultant_user
+):
+    """Monthly Calendar: 이번 달 Interview → '인터뷰' 레이블 표시."""
+    now = timezone.localtime()
+    # 이번 달 중순 날짜 사용 (이번 달에 확실히 속하도록)
+    mid_month = now.replace(day=15, hour=10, minute=0, second=0, microsecond=0)
+
+    cand = Candidate.objects.create(name="이월력")
+    proj = Project.objects.create(organization=org, client=client_obj, title="CalP")
+    app = Application.objects.create(project=proj, candidate=cand)
+    ai = ActionItem.objects.create(
+        application=app,
+        action_type=interview_type,
+        title="2차 면접",
+        scheduled_at=mid_month,
+    )
+    Interview.objects.create(
+        action_item=ai,
+        round=2,
+        scheduled_at=mid_month,
+        type="대면",
+        location="서울",
+    )
+
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+    assert "인터뷰" in body

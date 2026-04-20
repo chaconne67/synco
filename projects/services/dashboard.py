@@ -5,6 +5,7 @@ Phase 2b: Rewritten with Application/ActionItem-based queries.
 
 from __future__ import annotations
 
+import datetime
 from datetime import timedelta
 
 from django.db.models import Count, Q
@@ -349,6 +350,90 @@ def _weekly_schedule(org, user, scope_owner, limit: int = 5):
     return events[:limit]
 
 
+def _month_grid_start(year: int, month: int):
+    """이번 달 1일이 속한 주의 일요일(KST 자정)을 반환."""
+    first_day = timezone.make_aware(datetime.datetime(year, month, 1))
+    # weekday(): Monday=0 … Sunday=6. 일요일 시작 달력이므로:
+    # isoweekday(): Monday=1 … Sunday=7. Sunday offset = isoweekday() % 7
+    sunday_offset = first_day.isoweekday() % 7
+    return first_day - timedelta(days=sunday_offset)
+
+
+def _monthly_calendar(org, user, scope_owner) -> list[dict]:
+    """S3 Monthly Calendar: 6주×7일=42셀, 이번 달 기준.
+
+    각 셀: {"date": int, "is_today": bool, "is_outside": bool, "event_label": str|None}
+    """
+    now = timezone.localtime()
+    today = now.date()
+    year, month = today.year, today.month
+
+    # 다음 달 첫날
+    if month == 12:
+        next_year, next_month = year + 1, 1
+    else:
+        next_year, next_month = year, month + 1
+    month_end = datetime.date(next_year, next_month, 1)
+
+    grid_start = _month_grid_start(year, month)
+
+    # 이번 달 범위 (aware)
+    month_start_aware = timezone.make_aware(datetime.datetime(year, month, 1))
+    month_end_aware = timezone.make_aware(datetime.datetime(next_year, next_month, 1))
+
+    # Interview 쿼리 (organization 스코프)
+    interviews_qs = Interview.objects.filter(
+        action_item__application__project__organization=org,
+        scheduled_at__gte=month_start_aware,
+        scheduled_at__lt=month_end_aware,
+    )
+    if not scope_owner:
+        interviews_qs = interviews_qs.filter(
+            action_item__application__project__assigned_consultants=user
+        )
+
+    # date → interview 건수
+    interview_counts: dict[datetime.date, int] = {}
+    for iv in interviews_qs:
+        d = timezone.localtime(iv.scheduled_at).date()
+        interview_counts[d] = interview_counts.get(d, 0) + 1
+
+    # ActionItem 쿼리 (interview_round 제외)
+    actions_qs = ActionItem.objects.filter(
+        application__project__organization=org,
+        scheduled_at__gte=month_start_aware,
+        scheduled_at__lt=month_end_aware,
+    ).exclude(action_type__code="interview_round")
+    if not scope_owner:
+        actions_qs = actions_qs.filter(assigned_to=user)
+
+    # date → action 건수
+    action_counts: dict[datetime.date, int] = {}
+    for ai in actions_qs:
+        d = timezone.localtime(ai.scheduled_at).date()
+        action_counts[d] = action_counts.get(d, 0) + 1
+
+    cells = []
+    for i in range(42):
+        cell_date = (grid_start + timedelta(days=i)).date()
+        is_outside = cell_date < datetime.date(year, month, 1) or cell_date >= month_end
+        n_iv = interview_counts.get(cell_date, 0)
+        n_ai = action_counts.get(cell_date, 0)
+        if n_iv > 0:
+            event_label = "인터뷰" if n_iv == 1 else f"인터뷰 {n_iv}"
+        elif n_ai > 0:
+            event_label = "일정" if n_ai == 1 else f"일정 {n_ai}"
+        else:
+            event_label = None
+        cells.append({
+            "date": cell_date.day,
+            "is_today": cell_date == today,
+            "is_outside": is_outside,
+            "event_label": event_label,
+        })
+    return cells
+
+
 def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     """대시보드 카드 전체 컨텍스트.
 
@@ -362,7 +447,7 @@ def get_dashboard_context(org: Organization, user: User, membership) -> dict:
         "project_status": _project_status_counts(org, user, scope_owner),
         "team_performance": _team_performance(org),
         "weekly_schedule": _weekly_schedule(org, user, scope_owner),
-        "monthly_calendar": None,
+        "monthly_calendar": _monthly_calendar(org, user, scope_owner),
         "_scope_owner": scope_owner,
     }
 

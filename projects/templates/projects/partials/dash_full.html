@@ -202,71 +202,12 @@
           </div>
 
           <div class="grid grid-cols-7 [&>*]:-ml-0.5 [&>*]:-mt-0.5">
-            {# trailing days of previous month #}
-            <div class="cal-day muted"><span class="tnum">24</span></div>
-            <div class="cal-day muted"><span class="tnum">25</span></div>
-            <div class="cal-day muted"><span class="tnum">26</span></div>
-            <div class="cal-day muted"><span class="tnum">27</span></div>
-            <div class="cal-day muted"><span class="tnum">28</span></div>
-            <div class="cal-day muted"><span class="tnum">29</span></div>
-            <div class="cal-day muted"><span class="tnum">30</span></div>
-
-            {# Week 1 #}
-            <div class="cal-day"><span class="tnum">1</span></div>
-            <div class="cal-day"><span class="tnum">2</span></div>
-            <div class="cal-day"><span class="tnum">3</span></div>
-            <div class="cal-day">
-              <span class="tnum">4</span>
-              <div class="cal-event">이사회</div>
+            {% for cell in monthly_calendar %}
+            <div class="cal-day{% if cell.is_outside %} muted{% endif %}{% if cell.is_today %} today{% endif %}">
+              <span class="tnum">{{ cell.date }}</span>
+              {% if cell.event_label %}<div class="cal-event">{{ cell.event_label }}</div>{% endif %}
             </div>
-            <div class="cal-day"><span class="tnum">5</span></div>
-            <div class="cal-day"><span class="tnum">6</span></div>
-            <div class="cal-day"><span class="tnum">7</span></div>
-
-            {# Week 2 #}
-            <div class="cal-day"><span class="tnum">8</span></div>
-            <div class="cal-day"><span class="tnum">9</span></div>
-            <div class="cal-day"><span class="tnum">10</span></div>
-            <div class="cal-day"><span class="tnum">11</span></div>
-            <div class="cal-day"><span class="tnum">12</span></div>
-            <div class="cal-day"><span class="tnum">13</span></div>
-            <div class="cal-day"><span class="tnum">14</span></div>
-
-            {# Week 3 #}
-            <div class="cal-day"><span class="tnum">15</span></div>
-            <div class="cal-day"><span class="tnum">16</span></div>
-            <div class="cal-day"><span class="tnum">17</span></div>
-            <div class="cal-day"><span class="tnum">18</span></div>
-            <div class="cal-day"><span class="tnum">19</span></div>
-            <div class="cal-day"><span class="tnum">20</span></div>
-            <div class="cal-day"><span class="tnum">21</span></div>
-
-            {# Week 4 #}
-            <div class="cal-day"><span class="tnum">22</span></div>
-            <div class="cal-day">
-              <span class="tnum">23</span>
-              <div class="cal-event">주간 리뷰</div>
-            </div>
-            <div class="cal-day"><span class="tnum">24</span></div>
-            <div class="cal-day today">
-              <span class="tnum">25</span>
-              <div class="cal-event">인터뷰</div>
-            </div>
-            <div class="cal-day"><span class="tnum">26</span></div>
-            <div class="cal-day">
-              <span class="tnum">27</span>
-              <div class="cal-event">SK하이닉스</div>
-            </div>
-            <div class="cal-day"><span class="tnum">28</span></div>
-
-            {# Week 5 + leading next month #}
-            <div class="cal-day"><span class="tnum">29</span></div>
-            <div class="cal-day"><span class="tnum">30</span></div>
-            <div class="cal-day"><span class="tnum">31</span></div>
-            <div class="cal-day muted"><span class="tnum">1</span></div>
-            <div class="cal-day muted"><span class="tnum">2</span></div>
-            <div class="cal-day muted"><span class="tnum">3</span></div>
-            <div class="cal-day muted"><span class="tnum">4</span></div>
+            {% endfor %}
           </div>
         </article>
       </div>
