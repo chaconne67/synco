@@ -39,7 +39,9 @@ def test_pending_page_button_enabled_after_promotion(client, pending_user):
     resp = client.get(reverse("pending_approval"))
     body = resp.content.decode()
     assert 'data-testid="enter-dashboard-btn"' in body
-    assert "opacity-50" not in body or "disabled" not in body
+    # Promoted user sees an <a> link, not a disabled <button>
+    assert "cursor-not-allowed" not in body
+    assert "opacity-50" not in body
 
 
 @pytest.mark.django_db
