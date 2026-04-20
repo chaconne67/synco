@@ -79,7 +79,7 @@ def test_list_page_endpoint_returns_next_cards(org, owner_client):
     resp = owner_client.get(reverse("clients:client_list_page") + "?page=2")
     assert resp.status_code == 200
     body = resp.content.decode()
-    assert body.count("client-logo-tile") == 1
+    assert body.count("client-card") == 1
 
 
 @pytest.mark.django_db
