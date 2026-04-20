@@ -14,7 +14,6 @@ from candidates.models import (
     Resume,
     SearchSession,
     SearchTurn,
-    ValidationDiagnosis,
 )
 
 User = get_user_model()
@@ -84,62 +83,6 @@ def test_candidate_detail_page(auth_client, candidate):
     resp = auth_client.get(f"/candidates/{candidate.pk}/")
     assert resp.status_code == 200
     assert "강솔찬" in resp.content.decode()
-
-
-@pytest.mark.django_db
-@pytest.mark.skip(reason="T10 — template UI changed, 'AI 생성' label removed post-refactor")
-def test_candidate_detail_uses_current_resume_diagnosis(auth_client, category):
-    candidate = Candidate.objects.create(
-        name="진단기준",
-        birth_year=1990,
-        primary_category=category,
-    )
-    old_resume = Resume.objects.create(
-        candidate=candidate,
-        file_name="old.pdf",
-        drive_file_id="old_resume",
-        drive_folder="Accounting",
-        is_primary=True,
-        version=1,
-        processing_status=Resume.ProcessingStatus.STRUCTURED,
-    )
-    current_resume = Resume.objects.create(
-        candidate=candidate,
-        file_name="current.pdf",
-        drive_file_id="current_resume",
-        drive_folder="Accounting",
-        is_primary=False,
-        version=2,
-        processing_status=Resume.ProcessingStatus.STRUCTURED,
-    )
-    candidate.current_resume = current_resume
-    candidate.save(update_fields=["current_resume", "updated_at"])
-    ValidationDiagnosis.objects.create(
-        candidate=candidate,
-        resume=current_resume,
-        attempt_number=1,
-        verdict="fail",
-        overall_score=0.5,
-        issues=[{"type": "hallucinated", "field": "birth_year"}],
-        field_scores={},
-        retry_action="human_review",
-    )
-    ValidationDiagnosis.objects.create(
-        candidate=candidate,
-        resume=old_resume,
-        attempt_number=1,
-        verdict="pass",
-        overall_score=1.0,
-        issues=[],
-        field_scores={},
-        retry_action="none",
-    )
-
-    resp = auth_client.get(f"/candidates/{candidate.pk}/")
-    body = resp.content.decode()
-
-    assert resp.status_code == 200
-    assert "AI 생성" in body
 
 
 @pytest.mark.django_db
@@ -305,72 +248,6 @@ def test_review_reject_logs_current_resume(auth_client, category):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip(reason="T10 — template UI changed, discrepancy badge rendering changed post-refactor")
-def test_candidate_list_page_shows_discrepancy_badge(auth_client, candidate):
-    DiscrepancyReport.objects.create(
-        candidate=candidate,
-        report_type=DiscrepancyReport.ReportType.SELF_CONSISTENCY,
-        integrity_score=0.82,
-        summary="주의 1건. 총 경력 차이 확인 필요",
-        alerts=[
-            {
-                "type": "EXPERIENCE_MISMATCH",
-                "severity": "YELLOW",
-                "field": "total_experience_years",
-                "layer": "self_consistency",
-                "detail": "이력서 표기 12년과 경력 합산 10년 차이",
-            }
-        ],
-    )
-
-    resp = auth_client.get("/candidates/")
-    body = resp.content.decode()
-
-    assert resp.status_code == 200
-    assert "주의 1건" in body
-    assert "이력서 표기" in body
-    assert "12년" in body
-    assert "경력 합산" in body
-    assert "10년" in body
-    assert "차이" in body
-
-
-@pytest.mark.django_db
-@pytest.mark.skip(reason="T10 — template UI changed, experience review section rendering changed")
-def test_candidate_list_page_shows_experience_review_detail_without_report(
-    auth_client, category
-):
-    candidate = Candidate.objects.create(
-        name="김재환",
-        current_company="Dow Corning Korea",
-        total_experience_years=8,
-        primary_category=category,
-    )
-    candidate.categories.add(category)
-    Career.objects.create(
-        candidate=candidate,
-        company="Dow Corning Korea",
-        start_date="2018-01",
-        end_date="",
-        is_current=True,
-    )
-    Career.objects.create(
-        candidate=candidate,
-        company="Incomplete Corp",
-        start_date="2014-03",
-        end_date="",
-        is_current=False,
-    )
-
-    resp = auth_client.get("/candidates/")
-    body = resp.content.decode()
-
-    assert resp.status_code == 200
-    assert "참고 1건" in body
-    assert "불완전 경력 제외 1건" in body
-
-
-@pytest.mark.django_db
 def test_login_required(client):
     resp = client.get("/candidates/")
     assert resp.status_code == 302
@@ -478,33 +355,3 @@ def test_candidate_detail_shows_error_message_for_failed_resume(auth_client, cat
     assert "Download failed: 404 Not Found" in body
     assert "fail_ui_001" in body  # Drive link present
 
-
-@pytest.mark.django_db
-@pytest.mark.skip(reason="T10 — template UI changed, Drive link rendering changed post-refactor")
-def test_candidate_detail_shows_drive_link_for_placeholder(auth_client, category):
-    """Placeholder candidate detail page still shows the Drive link."""
-    candidate = Candidate.objects.create(
-        name="placeholder.pdf",
-        primary_category=category,
-        validation_status=Candidate.ValidationStatus.NEEDS_REVIEW,
-    )
-    candidate.categories.add(category)
-    resume = Resume.objects.create(
-        candidate=candidate,
-        file_name="placeholder.pdf",
-        drive_file_id="drive_link_test",
-        drive_folder="Accounting",
-        is_primary=True,
-        version=1,
-        processing_status=Resume.ProcessingStatus.FAILED,
-        error_message="Text quality: garbled",
-    )
-    candidate.current_resume = resume
-    candidate.save(update_fields=["current_resume"])
-
-    resp = auth_client.get(f"/candidates/{candidate.pk}/")
-    body = resp.content.decode()
-
-    assert resp.status_code == 200
-    assert "drive_link_test" in body
-    assert "이력서 원본 보기" in body
