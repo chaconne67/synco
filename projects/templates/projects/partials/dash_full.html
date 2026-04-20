@@ -196,5 +196,133 @@
       </article>
     </section>
 
+    {# ============ S3: BOTTOM ROW — schedule + calendar ============ #}
+    <section class="grid grid-cols-12 gap-6">
+
+      {# Weekly Schedule #}
+      <div class="col-span-4">
+        <div class="eyebrow mb-4">Weekly Schedule</div>
+        <div class="space-y-4">
+          <div class="bg-surface rounded-card shadow-card p-5">
+            <div class="flex items-start justify-between">
+              <div class="eyebrow eyebrow-ko !text-ink3">10월 23일 월요일 · 09:00</div>
+              <button class="text-faint hover:text-ink" type="button" aria-label="메뉴">
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+            <div class="mt-3 text-base font-semibold leading-snug">주간 파이프라인 리뷰</div>
+            <div class="text-xs text-muted mt-1">내부 팀 세션 · A 회의실</div>
+          </div>
+
+          <div class="bg-surface rounded-card shadow-card p-5">
+            <div class="flex items-start justify-between">
+              <div class="eyebrow eyebrow-ko !text-info">10월 25일 수요일 · 11:00</div>
+              <button class="text-faint hover:text-ink" type="button" aria-label="메뉴">
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+            <div class="mt-3 text-base font-semibold leading-snug">임원 인터뷰</div>
+            <div class="text-xs text-muted mt-1">후보자: 박해준 · Zoom</div>
+          </div>
+
+          <div class="bg-surface rounded-card shadow-card p-5">
+            <div class="flex items-start justify-between">
+              <div class="eyebrow eyebrow-ko !text-warning">10월 27일 금요일 · 14:00</div>
+              <button class="text-faint hover:text-ink" type="button" aria-label="메뉴">
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+            <div class="mt-3 text-base font-semibold leading-snug">고객사 브리핑: SK하이닉스</div>
+            <div class="text-xs text-muted mt-1">전략기획 · 본사</div>
+          </div>
+        </div>
+      </div>
+
+      {# Monthly Calendar #}
+      <div class="col-span-8">
+        <div class="eyebrow mb-4">Monthly Schedule</div>
+        <article class="bg-surface rounded-card shadow-card overflow-hidden">
+
+          <div class="grid grid-cols-7 border-b border-hair">
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-red-600">일</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">월</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">화</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">수</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">목</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-ink2">금</div>
+            <div class="eyebrow eyebrow-ko text-center py-3 !text-blue-600">토</div>
+          </div>
+
+          <div class="grid grid-cols-7 [&>*]:-ml-0.5 [&>*]:-mt-0.5">
+            {# trailing days of previous month #}
+            <div class="cal-day muted"><span class="tnum">24</span></div>
+            <div class="cal-day muted"><span class="tnum">25</span></div>
+            <div class="cal-day muted"><span class="tnum">26</span></div>
+            <div class="cal-day muted"><span class="tnum">27</span></div>
+            <div class="cal-day muted"><span class="tnum">28</span></div>
+            <div class="cal-day muted"><span class="tnum">29</span></div>
+            <div class="cal-day muted"><span class="tnum">30</span></div>
+
+            {# Week 1 #}
+            <div class="cal-day"><span class="tnum">1</span></div>
+            <div class="cal-day"><span class="tnum">2</span></div>
+            <div class="cal-day"><span class="tnum">3</span></div>
+            <div class="cal-day">
+              <span class="tnum">4</span>
+              <div class="cal-event">이사회</div>
+            </div>
+            <div class="cal-day"><span class="tnum">5</span></div>
+            <div class="cal-day"><span class="tnum">6</span></div>
+            <div class="cal-day"><span class="tnum">7</span></div>
+
+            {# Week 2 #}
+            <div class="cal-day"><span class="tnum">8</span></div>
+            <div class="cal-day"><span class="tnum">9</span></div>
+            <div class="cal-day"><span class="tnum">10</span></div>
+            <div class="cal-day"><span class="tnum">11</span></div>
+            <div class="cal-day"><span class="tnum">12</span></div>
+            <div class="cal-day"><span class="tnum">13</span></div>
+            <div class="cal-day"><span class="tnum">14</span></div>
+
+            {# Week 3 #}
+            <div class="cal-day"><span class="tnum">15</span></div>
+            <div class="cal-day"><span class="tnum">16</span></div>
+            <div class="cal-day"><span class="tnum">17</span></div>
+            <div class="cal-day"><span class="tnum">18</span></div>
+            <div class="cal-day"><span class="tnum">19</span></div>
+            <div class="cal-day"><span class="tnum">20</span></div>
+            <div class="cal-day"><span class="tnum">21</span></div>
+
+            {# Week 4 #}
+            <div class="cal-day"><span class="tnum">22</span></div>
+            <div class="cal-day">
+              <span class="tnum">23</span>
+              <div class="cal-event">주간 리뷰</div>
+            </div>
+            <div class="cal-day"><span class="tnum">24</span></div>
+            <div class="cal-day today">
+              <span class="tnum">25</span>
+              <div class="cal-event">인터뷰</div>
+            </div>
+            <div class="cal-day"><span class="tnum">26</span></div>
+            <div class="cal-day">
+              <span class="tnum">27</span>
+              <div class="cal-event">SK하이닉스</div>
+            </div>
+            <div class="cal-day"><span class="tnum">28</span></div>
+
+            {# Week 5 + leading next month #}
+            <div class="cal-day"><span class="tnum">29</span></div>
+            <div class="cal-day"><span class="tnum">30</span></div>
+            <div class="cal-day"><span class="tnum">31</span></div>
+            <div class="cal-day muted"><span class="tnum">1</span></div>
+            <div class="cal-day muted"><span class="tnum">2</span></div>
+            <div class="cal-day muted"><span class="tnum">3</span></div>
+            <div class="cal-day muted"><span class="tnum">4</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
   </div>
 </div>

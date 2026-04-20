@@ -121,6 +121,67 @@
     display: inline-block;
   }
 
+  .cal-day {
+    aspect-ratio: 1/1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 12px 14px;
+    color: #0F172A;
+    border: 2px solid #EEF2F7;
+    background: #FFFFFF;
+    transition: background .15s ease;
+    position: relative;
+  }
+  .cal-day:hover { background: #F8FAFC; }
+  .cal-day > .tnum {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0F172A;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .cal-day.muted > .tnum { color: #CBD5E1; font-weight: 500; }
+  .cal-day.today > .tnum {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: #0F172A;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    margin: -5px -6px;
+  }
+  .cal-event {
+    margin-top: 8px;
+    font-size: 10px;
+    line-height: 1.2;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #F1F5F9;
+    color: #334155;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    align-self: flex-start;
+  }
+  .cal-day.today .cal-event { background: #0F172A; color: #fff; }
+  /* Internal-only borders: remove all four outer edges */
+  .cal-day:nth-child(-n+7)     { border-top: 0; margin-top: 0 !important; }
+  .cal-day:nth-child(7n+1)     { border-left: 0; }
+  .cal-day:nth-child(7n)       { border-right: 0; }
+  .cal-day:nth-last-child(-n+7){ border-bottom: 0; }
+  /* Weekend colors — Sunday red, Saturday blue */
+  .cal-day:nth-child(7n+1):not(.today) > .tnum { color: #DC2626; }
+  .cal-day:nth-child(7n):not(.today)   > .tnum { color: #2563EB; }
+  .cal-day.muted:nth-child(7n+1) > .tnum { color: #FCA5A5; }
+  .cal-day.muted:nth-child(7n)   > .tnum { color: #93C5FD; }
+
   /* Chip (카테고리 토글) — text-xs = 12px */
   .chip {
     @apply inline-flex items-center text-xs font-medium;
