@@ -16,6 +16,7 @@ from projects.models import (
     ActionItemStatus,
     Project,
     ProjectPhase,
+    ProjectResult,
     ProjectStatus,
 )
 
@@ -179,6 +180,27 @@ def get_project_kanban_cards(
     return cards
 
 
+def _monthly_success(org, user, scope_owner):
+    """S1-1 Monthly Success: 이번 달 성공·진행중·성공률."""
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    qs = _scope_projects(org, user, scope_owner)
+
+    closed_this_month = qs.filter(
+        status=ProjectStatus.CLOSED,
+        closed_at__gte=month_start,
+    )
+    success = closed_this_month.filter(result=ProjectResult.SUCCESS).count()
+    fail = closed_this_month.filter(result=ProjectResult.FAIL).count()
+    active = qs.filter(status=ProjectStatus.OPEN).count()
+    total = success + fail
+    return {
+        "success_count": success,
+        "active_count": active,
+        "success_rate": round(success / total * 100) if total else None,
+    }
+
+
 def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     """대시보드 카드 전체 컨텍스트.
 
@@ -188,7 +210,7 @@ def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     """
     scope_owner = membership.role == "owner"
     return {
-        "monthly_success": None,
+        "monthly_success": _monthly_success(org, user, scope_owner),
         "project_status": None,
         "team_performance": None,
         "weekly_schedule": None,

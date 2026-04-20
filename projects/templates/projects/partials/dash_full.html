@@ -12,17 +12,17 @@
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
         </div>
         <div class="mt-6 flex items-baseline gap-3">
-          <span class="text-4xl leading-none font-bold tnum">24</span>
-          <span class="text-sm text-muted">종료된 프로젝트</span>
+          <span class="text-4xl leading-none font-bold tnum" data-testid="s1-success-count">{{ monthly_success.success_count }}</span>
+          <span class="text-sm text-muted">성공 프로젝트</span>
         </div>
         <div class="mt-6 pt-5 border-t border-line grid grid-cols-2 gap-4">
           <div>
             <div class="eyebrow eyebrow-ko">진행 중</div>
-            <div class="mt-1 text-xl font-bold tnum">12</div>
+            <div class="mt-1 text-xl font-bold tnum" data-testid="s1-active-count">{{ monthly_success.active_count }}</div>
           </div>
           <div>
             <div class="eyebrow eyebrow-ko">성공률</div>
-            <div class="mt-1 text-xl font-bold tnum">82<span class="text-sm text-muted font-medium">%</span></div>
+            <div class="mt-1 text-xl font-bold tnum"><span data-testid="s1-success-rate">{% if monthly_success.success_rate is None %}—{% else %}{{ monthly_success.success_rate }}{% endif %}</span>{% if monthly_success.success_rate is not None %}<span class="text-sm text-muted font-medium">%</span>{% endif %}</div>
           </div>
         </div>
       </article>
