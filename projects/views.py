@@ -1073,7 +1073,7 @@ def submission_batch_create(request, pk):
 def submission_update(request, pk, sub_pk):
     """추천 서류 수정."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
 
     if request.method == "POST":
         form = SubmissionForm(
@@ -1110,7 +1110,7 @@ def submission_update(request, pk, sub_pk):
 def submission_delete(request, pk, sub_pk):
     """추천 서류 삭제. 면접/오퍼 존재 시 차단."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
 
     # 삭제 보호: 면접 존재 시 차단
     if submission.interviews.exists():
@@ -1132,7 +1132,7 @@ def submission_delete(request, pk, sub_pk):
 def submission_submit(request, pk, sub_pk):
     """고객사에 제출 (작성중 → 제출)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
 
     from projects.services.submission import InvalidTransition, submit_to_client
 
@@ -1152,7 +1152,7 @@ def submission_submit(request, pk, sub_pk):
 def submission_feedback(request, pk, sub_pk):
     """고객사 피드백 입력 (제출 → 통과/탈락)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
 
     if request.method == "POST":
         form = SubmissionFeedbackForm(request.POST)
@@ -1194,7 +1194,7 @@ def submission_feedback(request, pk, sub_pk):
 def submission_download(request, pk, sub_pk):
     """첨부파일 다운로드. 파일 없으면 404."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
 
     if not submission.document_file:
         from django.http import Http404
@@ -1222,7 +1222,7 @@ MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25MB (Whisper API limit)
 def _get_draft_context(request, pk, sub_pk):
     """Draft 뷰 공통: org 검증 + project + submission + draft(get_or_create)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_object_or_404(Submission, pk=sub_pk, project=project)
+    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
     draft, _created = SubmissionDraft.objects.get_or_create(
         submission=submission,
         defaults={"masking_config": DEFAULT_MASKING_CONFIG.copy()},
@@ -3138,7 +3138,7 @@ def action_propose_next(request, pk):
 @require_http_methods(["POST"])
 def stage_contact_complete(request, pk):
     """접촉 단계 완료 — 응답 기록."""
-    app = get_object_or_404(Application, pk=pk)
+    app = get_scoped_object_or_404(Application, request.user, pk=pk)
 
     form = ContactCompleteForm(request.POST)
     if not form.is_valid():
@@ -3175,7 +3175,7 @@ def stage_pre_meeting_schedule(request, pk):
     from projects.forms import PreMeetingScheduleForm
     from projects.models import ActionItem, ActionItemStatus, ActionType
 
-    app = get_object_or_404(Application, pk=pk)
+    app = get_scoped_object_or_404(Application, request.user, pk=pk)
 
     form = PreMeetingScheduleForm(request.POST)
     if not form.is_valid():
@@ -3209,7 +3209,7 @@ def stage_pre_meeting_record(request, pk):
         MeetingRecord,
     )
 
-    app = get_object_or_404(Application, pk=pk)
+    app = get_scoped_object_or_404(Application, request.user, pk=pk)
 
     form = PreMeetingRecordForm(request.POST, request.FILES)
     if not form.is_valid():
@@ -3241,7 +3241,7 @@ def stage_pre_meeting_record(request, pk):
 @require_http_methods(["POST"])
 def stage_prep_submission_confirm(request, pk):
     """이력서 작성(제출용) 단계 — 컨설턴트 컨펌."""
-    app = get_object_or_404(Application, pk=pk)
+    app = get_scoped_object_or_404(Application, request.user, pk=pk)
 
     at = ActionType.objects.get(code="submit_to_pm")
     ActionItem.objects.create(
@@ -3261,7 +3261,7 @@ def stage_prep_submission_confirm(request, pk):
 @require_http_methods(["POST"])
 def stage_client_submit_single(request, pk):
     """이력서 제출 단계 — 이 후보자만 단독 제출."""
-    app = get_object_or_404(Application, pk=pk)
+    app = get_scoped_object_or_404(Application, request.user, pk=pk)
 
     at = ActionType.objects.get(code="submit_to_client")
     ai = ActionItem.objects.create(
@@ -3288,7 +3288,7 @@ def stage_interview_complete(request, pk):
     """면접 단계 완료 — 결과 + (선택) After Interview Review."""
     from projects.models import ActionItem, ActionItemStatus, ActionType, DropReason
 
-    app = get_object_or_404(Application, pk=pk)
+    app = get_scoped_object_or_404(Application, request.user, pk=pk)
 
     result = request.POST.get("result", "")
     review = request.POST.get("review", "").strip()
