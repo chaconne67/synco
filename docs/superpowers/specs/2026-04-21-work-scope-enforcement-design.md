@@ -47,7 +47,7 @@ def get_scoped_object_or_404(model, user, **lookup):
 | `Application` | `project__assigned_consultants` 에 `user` 포함 |
 | `ActionItem` | `assigned_to == user` **OR** `application__project__assigned_consultants` 에 `user` 포함 |
 | `Interview` | `action_item__application__project__assigned_consultants` 에 `user` 포함 |
-| `Submission` | `application__project__assigned_consultants` 에 `user` 포함 |
+| `Submission` | `action_item__application__project__assigned_consultants` 에 `user` 포함 |
 
 Action·Interview 는 "본인 담당 액션 + 본인 컨설턴트로 있는 프로젝트의 다른 액션" 둘 다 볼 수 있음 (팀 업무 가시성 유지).
 
@@ -59,7 +59,7 @@ _WORK_SCOPE_RULES = {
     Application: lambda user: Q(project__assigned_consultants=user),
     ActionItem:  lambda user: Q(assigned_to=user) | Q(application__project__assigned_consultants=user),
     Interview:   lambda user: Q(action_item__application__project__assigned_consultants=user),
-    Submission:  lambda user: Q(application__project__assigned_consultants=user),
+    Submission:  lambda user: Q(action_item__application__project__assigned_consultants=user),
 }
 ```
 
