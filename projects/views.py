@@ -2141,54 +2141,10 @@ def approval_cancel(request, pk):
 @login_required
 @membership_required
 def dashboard(request):
-    """대시보드 메인 화면."""
-    org = _get_org(request)
-    user = request.user
-
-    from projects.services.dashboard import (
-        get_overdue_actions,
-        get_pending_approvals,
-        get_today_actions,
-        get_upcoming_actions,
-    )
-
-    today_actions = get_today_actions(user, org)
-    overdue_actions = get_overdue_actions(user, org)
-    upcoming_actions = get_upcoming_actions(user, org)
-
-    is_owner = False
-    try:
-        is_owner = request.user.membership.role == "owner"
-    except Exception:
-        pass
-
-    # Empty state detection for dashboard CTAs
-    if is_owner:
-        from clients.models import Client
-
-        has_projects = Project.objects.filter(organization=org).exists()
-        has_clients = Client.objects.filter(organization=org).exists()
-    else:
-        has_projects = Project.objects.filter(
-            organization=org, assigned_consultants=user
-        ).exists()
-        has_clients = True  # not relevant for consultant
-
-    context = {
-        "today_actions": today_actions,
-        "overdue_actions": overdue_actions,
-        "upcoming_actions": upcoming_actions,
-        "is_owner": is_owner,
-        "has_projects": has_projects,
-        "has_clients": has_clients,
-    }
-
-    if is_owner:
-        context["pending_approvals"] = get_pending_approvals(org)
-
+    """대시보드 메인 화면 (Phase 1: 하드코딩 목업)."""
     if getattr(request, "htmx", None):
-        return render(request, "projects/partials/dash_full.html", context)
-    return render(request, "projects/dashboard.html", context)
+        return render(request, "projects/partials/dash_full.html")
+    return render(request, "projects/dashboard.html")
 
 
 @login_required

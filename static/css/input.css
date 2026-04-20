@@ -110,6 +110,8 @@
   .progress.success > span { background: #10B981; }
   .progress.info    > span { background: #6366F1; }
   .progress.muted   > span { background: #94A3B8; }
+  .progress.dark { background: #1E293B; }
+  .progress.dark > span { background: #FFFFFF; }
 
   /* Status dot */
   .status-dot {
