@@ -4,7 +4,7 @@ import json
 
 from django.test import TestCase, Client as DjangoClient
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate, Education, ExtractionLog
 
 
@@ -43,12 +43,12 @@ def _post_json(client, url, data):
 
 
 class _ExtensionTestMixin:
-    """Common setup: user + org + logged-in client."""
+    """Common setup: authenticated level-1 user + logged-in client (single-tenant, no org)."""
 
     def _setup(self):
-        self.org = Organization.objects.create(name="Test Org")
-        self.user = User.objects.create_user(username="ext_user", password="pass1234")
-        Membership.objects.create(user=self.user, organization=self.org)
+        self.user = User.objects.create_user(
+            username="ext_user", password="pass1234", level=1
+        )
         self.client = DjangoClient()
         self.client.login(username="ext_user", password="pass1234")
 
@@ -62,9 +62,9 @@ class TestExtensionAuth(TestCase):
     """인증 테스트."""
 
     def setUp(self):
-        self.org = Organization.objects.create(name="Auth Org")
         self.user = User.objects.create_user(
-            username="authuser", password="pass1234", first_name="길동", last_name="홍"
+            username="authuser", password="pass1234", first_name="길동", last_name="홍",
+            level=1,
         )
 
     def test_unauthenticated_returns_401_json(self):
@@ -264,7 +264,7 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
 
     def test_cross_org_isolation(self):
         """Single-tenant: second save of same URL is a duplicate (global dedup)."""
-        other_user = User.objects.create_user(username="other_ext", password="pass1234")
+        other_user = User.objects.create_user(username="other_ext", password="pass1234", level=1)
 
         # Save first
         resp1 = _post_json(self.client, SAVE_URL, _base_payload())
@@ -281,7 +281,7 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
     def test_rate_limit_101st_returns_429(self):
         # Pre-seed 100 extraction logs for today
         candidate = Candidate.objects.create(
-            name="Seed", owned_by=self.org, current_company="Test"
+            name="Seed", current_company="Test"
         )
         for _ in range(100):
             ExtractionLog.objects.create(
@@ -521,7 +521,7 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
     def test_update_any_user_can_update(self):
         # Single-tenant: no org isolation; any authenticated user can update.
         other_user = User.objects.create_user(
-            username="other_user", password="pass1234"
+            username="other_user", password="pass1234", level=1
         )
         other_client = DjangoClient()
         other_client.login(username="other_user", password="pass1234")
@@ -562,6 +562,8 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
             "source_url": "https://linkedin.com/in/other",
         }
         resp = _post_json(self.client, SAVE_URL, payload)
+        # TODO(T7): Invert or delete. After T7 adds a global unique URL constraint,
+        # duplicates across owned_by=NULL rows must return 409.
         self.assertEqual(resp.status_code, 200)
 
 
@@ -584,7 +586,6 @@ class TestExtensionCheckDuplicate(_ExtensionTestMixin, TestCase):
             phone="010-9876-5432",
             phone_normalized="01098765432",
             external_profile_url="https://linkedin.com/in/park",
-            owned_by=self.org,
         )
 
     def test_exact_match_by_url(self):
@@ -652,7 +653,7 @@ class TestExtensionCheckDuplicate(_ExtensionTestMixin, TestCase):
 
     def test_any_user_can_check_duplicate(self):
         """Single-tenant: all authenticated users share global candidate pool."""
-        other_user = User.objects.create_user(username="isolated", password="pass1234")
+        other_user = User.objects.create_user(username="isolated", password="pass1234", level=1)
         other_client = DjangoClient()
         other_client.login(username="isolated", password="pass1234")
 
@@ -688,13 +689,11 @@ class TestExtensionSearch(_ExtensionTestMixin, TestCase):
             name="이영수",
             current_company="삼성전자",
             current_position="부장",
-            owned_by=self.org,
         )
         self.c2 = Candidate.objects.create(
             name="김철호",
             current_company="LG전자",
             current_position="과장",
-            owned_by=self.org,
         )
 
     def test_search_by_name(self):
@@ -724,7 +723,6 @@ class TestExtensionSearch(_ExtensionTestMixin, TestCase):
             Candidate.objects.create(
                 name=f"테스트인원{i:02d}",
                 current_company="일괄회사",
-                owned_by=self.org,
             )
         resp = self.client.get(SEARCH_URL, {"q": "일괄회사", "page": "1"})
         self.assertEqual(resp.status_code, 200)
@@ -749,7 +747,7 @@ class TestExtensionSearch(_ExtensionTestMixin, TestCase):
     def test_any_user_can_search_global_pool(self):
         """Single-tenant: all authenticated users share global candidate pool."""
         other_user = User.objects.create_user(
-            username="search_iso", password="pass1234"
+            username="search_iso", password="pass1234", level=1
         )
         other_client = DjangoClient()
         other_client.login(username="search_iso", password="pass1234")
@@ -784,7 +782,7 @@ class TestExtensionStats(_ExtensionTestMixin, TestCase):
 
     def test_any_user_sees_global_count(self):
         """Single-tenant: all authenticated users see the same total."""
-        other_user = User.objects.create_user(username="stats_iso", password="pass1234")
+        other_user = User.objects.create_user(username="stats_iso", password="pass1234", level=1)
 
         Candidate.objects.create(name="A", current_company="X")
 
@@ -794,3 +792,23 @@ class TestExtensionStats(_ExtensionTestMixin, TestCase):
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
         self.assertEqual(body["data"]["total_candidates"], 1)
+
+
+# ===========================================================================
+# Level gate regression
+# ===========================================================================
+
+
+class TestExtensionLevelGate(TestCase):
+    """level=0 PENDING 사용자는 extension API 전체에서 JSON 403을 받아야 한다."""
+
+    def test_pending_user_blocked_from_extension(self):
+        """level=0 사용자 → extension_login_required가 JSON 403 반환."""
+        u = User.objects.create_user(username="pending_ext", password="x", level=0)
+        c = DjangoClient()
+        c.login(username="pending_ext", password="x")
+        resp = c.get(AUTH_URL)
+        self.assertEqual(resp.status_code, 403)
+        body = resp.json()
+        self.assertEqual(body["status"], "error")
+        self.assertIn("pending_approval", body["errors"])

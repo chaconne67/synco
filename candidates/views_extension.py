@@ -21,14 +21,20 @@ from .serializers_extension import (
 
 
 def extension_login_required(view_func):
-    """Extension API용 인증 데코레이터. 미인증 시 JSON 401 반환."""
+    """Extension API용 인증 데코레이터. 미인증 시 JSON 401, level=0 PENDING 시 JSON 403 반환."""
 
     @functools.wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
+        user = request.user
+        if not user.is_authenticated:
             return JsonResponse(
                 {"status": "error", "errors": ["Authentication required"]},
                 status=401,
+            )
+        if not user.is_superuser and user.level < 1:
+            return JsonResponse(
+                {"status": "error", "errors": ["pending_approval"]},
+                status=403,
             )
         return view_func(request, *args, **kwargs)
 
