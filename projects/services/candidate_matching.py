@@ -25,7 +25,7 @@ def match_candidates(
 
     Args:
         requirements: AI가 추출한 JD 요구조건
-        organization: Organization 필터 (전달 시 owned_by 격리 적용)
+        organization: Deprecated — ignored (single-tenant).
         limit: 최대 결과 수
 
     Returns:
@@ -53,10 +53,6 @@ def match_candidates(
         }
     )
     qs = build_search_queryset(loose_filters)
-
-    # 조직 격리: 슬라이스 전에 적용
-    if organization:
-        qs = qs.filter(owned_by=organization)
 
     qs = qs[: limit * 3]
 

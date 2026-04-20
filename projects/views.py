@@ -2133,8 +2133,7 @@ def approval_cancel(request, pk):
 @level_required(1)
 def dashboard(request):
     """대시보드 메인 화면 (Phase 2a: 실데이터 연결 진행 중)."""
-    membership = request.user.membership
-    ctx = get_dashboard_context(membership.organization, request.user, membership)
+    ctx = get_dashboard_context(request.user)
     if getattr(request, "htmx", None):
         return render(request, "projects/partials/dash_full.html", ctx)
     return render(request, "projects/dashboard.html", ctx)

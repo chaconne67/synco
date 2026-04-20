@@ -10,7 +10,6 @@ import dataclasses
 import uuid as uuid_mod
 from typing import Any
 
-from accounts.models import Organization
 from candidates.models import Candidate
 from projects.models import Project
 
@@ -25,12 +24,12 @@ class CandidateResolution:
 def resolve_candidate(
     *,
     name: str,
-    organization: Organization,
+    organization=None,
     project: Project | None = None,
 ) -> CandidateResolution:
+    """Resolve candidate by name. organization parameter is ignored (single-tenant)."""
     matches = Candidate.objects.filter(
         name__icontains=name,
-        owned_by=organization,
     )
 
     candidate_list = [
@@ -80,17 +79,17 @@ def resolve_candidate(
 def resolve_candidate_list(
     *,
     names: list[str],
-    organization: Organization,
+    organization=None,
     project: Project | None = None,
 ) -> dict[str, Any]:
-    """Resolve multiple candidate names to UUIDs."""
+    """Resolve multiple candidate names to UUIDs. organization parameter is ignored (single-tenant)."""
     resolved_ids: list[str] = []
     ambiguous: list[dict[str, Any]] = []
     not_found: list[str] = []
 
     for name in names:
         result = resolve_candidate(
-            name=name, organization=organization, project=project
+            name=name, project=project
         )
         if result.status == "resolved":
             resolved_ids.append(str(result.candidate_id))

@@ -11,7 +11,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from accounts.decorators import level_required
-from accounts.models import Membership
 from candidates.models import Candidate
 from projects.models import MeetingRecord, Project
 from projects.services.voice.action_executor import confirm_action, preview_action
@@ -30,13 +29,6 @@ from projects.services.voice.meeting_analyzer import (
 from projects.services.voice.transcriber import TranscribeMode, transcribe
 
 logger = logging.getLogger(__name__)
-
-
-def _get_org(user):
-    membership = (
-        Membership.objects.filter(user=user).select_related("organization").first()
-    )
-    return membership.organization if membership else None
 
 
 @login_required
@@ -69,10 +61,6 @@ def voice_transcribe(request):
 @require_POST
 def voice_intent(request):
     """POST /voice/intent/ — text -> intent + entities."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     body = (
         json.loads(request.body)
         if request.content_type == "application/json"
@@ -86,7 +74,7 @@ def voice_intent(request):
     )
 
     ctx = resolve_context(
-        user=request.user, organization=org, context_hint=context_hint
+        user=request.user, context_hint=context_hint
     )
 
     # Amendment A4: multi-turn continuation
@@ -133,7 +121,6 @@ def voice_intent(request):
     if result.entities.get("candidate_name"):
         resolution = resolve_candidate(
             name=result.entities["candidate_name"],
-            organization=org,
             project=project,
         )
         result.entities["_candidate_resolution"] = {
@@ -150,7 +137,6 @@ def voice_intent(request):
     if result.entities.get("candidate_names"):
         list_result = resolve_candidate_list(
             names=result.entities["candidate_names"],
-            organization=org,
             project=project,
         )
         result.entities["candidate_ids"] = list_result["resolved_ids"]
@@ -175,10 +161,6 @@ def voice_intent(request):
 @require_POST
 def voice_preview(request):
     """POST /voice/preview/ — intent + entities -> preview (no DB change)."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     body = (
         json.loads(request.body)
         if request.content_type == "application/json"
@@ -194,14 +176,13 @@ def voice_preview(request):
 
     project = None
     if project_id:
-        project = Project.objects.filter(pk=project_id, organization=org).first()
+        project = Project.objects.filter(pk=project_id).first()
 
     result = preview_action(
         intent=intent,
         entities=entities,
         project=project,
         user=request.user,
-        organization=org,
     )
 
     mgr = ConversationManager(request.session)
@@ -216,10 +197,6 @@ def voice_preview(request):
 @require_POST
 def voice_confirm(request):
     """POST /voice/confirm/ — confirm with idempotent token."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     body = (
         json.loads(request.body)
         if request.content_type == "application/json"
@@ -240,14 +217,13 @@ def voice_confirm(request):
 
     project = None
     if project_id:
-        project = Project.objects.filter(pk=project_id, organization=org).first()
+        project = Project.objects.filter(pk=project_id).first()
 
     result = confirm_action(
         intent=intent,
         entities=entities,
         project=project,
         user=request.user,
-        organization=org,
     )
 
     if result.get("ok"):
@@ -266,17 +242,13 @@ def voice_confirm(request):
 @require_GET
 def voice_context(request):
     """GET /voice/context/ — return verified context."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     context_hint = {
         "page": request.GET.get("page", "unknown"),
         "project_id": request.GET.get("project_id", ""),
         "tab": request.GET.get("tab", ""),
     }
     ctx = resolve_context(
-        user=request.user, organization=org, context_hint=context_hint
+        user=request.user, context_hint=context_hint
     )
     if ctx.get("project_id"):
         ctx["project_id"] = str(ctx["project_id"])
@@ -315,15 +287,11 @@ def voice_reset(request):
 def voice_meeting_upload(request):
     """POST /voice/meeting-upload/ — upload meeting recording.
     GET /voice/meeting-upload/ — return upload form HTML (Amendment A10)."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     if request.method == "GET":
         # Amendment A10: return meeting upload form as partial HTML
         from django.template.loader import render_to_string
 
-        projects = Project.objects.filter(organization=org).order_by("-created_at")[:20]
+        projects = Project.objects.all().order_by("-created_at")[:20]
         html = render_to_string(
             "projects/partials/meeting_upload.html",
             {
@@ -348,13 +316,13 @@ def voice_meeting_upload(request):
     if not project_id or not candidate_id:
         return JsonResponse({"error": "프로젝트와 후보자를 선택해주세요."}, status=400)
 
-    project = Project.objects.filter(pk=project_id, organization=org).first()
+    project = Project.objects.filter(pk=project_id).first()
     if not project:
         return JsonResponse({"error": "프로젝트를 찾을 수 없습니다."}, status=404)
 
-    # Amendment A8: Validate candidate ownership
+    # Amendment A8: Validate candidate exists
     try:
-        Candidate.objects.get(pk=candidate_id, owned_by=org)
+        Candidate.objects.get(pk=candidate_id)
     except Candidate.DoesNotExist:
         return JsonResponse({"error": "후보자를 찾을 수 없습니다."}, status=404)
 
@@ -390,12 +358,8 @@ def voice_meeting_upload(request):
 @require_GET
 def voice_meeting_status(request, pk):
     """GET /voice/meeting-status/<uuid>/ — poll status."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     try:
-        record = MeetingRecord.objects.get(pk=pk, project__organization=org)
+        record = MeetingRecord.objects.get(pk=pk)
     except MeetingRecord.DoesNotExist:
         return JsonResponse({"error": "미팅 녹음을 찾을 수 없습니다."}, status=404)
 
@@ -421,10 +385,6 @@ def voice_meeting_status(request, pk):
 @require_POST
 def voice_meeting_apply(request):
     """POST /voice/meeting-apply/ — apply selected fields."""
-    org = _get_org(request.user)
-    if not org:
-        return JsonResponse({"error": "조직 정보가 없습니다."}, status=403)
-
     body = (
         json.loads(request.body)
         if request.content_type == "application/json"
@@ -439,7 +399,7 @@ def voice_meeting_apply(request):
         edited = json.loads(edited)
 
     try:
-        record = MeetingRecord.objects.get(pk=meeting_id, project__organization=org)
+        record = MeetingRecord.objects.get(pk=meeting_id)
     except MeetingRecord.DoesNotExist:
         return JsonResponse({"error": "미팅 녹음을 찾을 수 없습니다."}, status=404)
 

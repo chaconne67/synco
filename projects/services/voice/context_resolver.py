@@ -6,7 +6,7 @@ import logging
 import uuid as uuid_mod
 from typing import Any
 
-from accounts.models import Organization, User
+from accounts.models import User
 from projects.models import Project
 
 logger = logging.getLogger(__name__)
@@ -23,16 +23,17 @@ PROJECT_PAGES = {
 def resolve_context(
     *,
     user: User,
-    organization: Organization,
+    organization=None,
     context_hint: dict[str, Any],
 ) -> dict[str, Any]:
     """Resolve client context hint to verified server context.
 
     The client sends page name and optional project_id via data-voice-context.
-    This function verifies the project belongs to the user's organization and
-    enriches the context with server-side data.
+    This function verifies the project exists and enriches the context.
 
     Returns dict with keys: page, project_id, project_title, scope, tab.
+
+    Note: organization parameter is ignored (single-tenant).
     """
     page = context_hint.get("page", "unknown")
     raw_project_id = context_hint.get("project_id")
@@ -48,7 +49,6 @@ def resolve_context(
             pid = uuid_mod.UUID(str(raw_project_id))
             proj = Project.objects.filter(
                 pk=pid,
-                organization=organization,
             ).first()
             if proj:
                 project_id = proj.pk

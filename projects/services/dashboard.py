@@ -11,7 +11,7 @@ from datetime import timedelta
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from projects.models import (
     ActionItem,
     ActionItemStatus,
@@ -23,7 +23,7 @@ from projects.models import (
 )
 
 
-def get_today_actions(user: User, org: Organization):
+def get_today_actions(user: User):
     """해당 사용자의 오늘 할 일 (scheduled_at 오늘 또는 due_at 오늘, overdue 제외)."""
     now = timezone.now()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -32,7 +32,6 @@ def get_today_actions(user: User, org: Organization):
     return (
         ActionItem.objects.filter(
             assigned_to=user,
-            application__project__organization=org,
             status=ActionItemStatus.PENDING,
         )
         .filter(
@@ -43,7 +42,7 @@ def get_today_actions(user: User, org: Organization):
     )
 
 
-def _sweep_overdue_projects(org: Organization):
+def _sweep_overdue_projects():
     """마감 경과 OPEN 프로젝트를 자동으로 실패 종료.
 
     정책: deadline < today + hired Application 없음 → status=CLOSED, result=fail.
@@ -54,7 +53,6 @@ def _sweep_overdue_projects(org: Organization):
 
     overdue = (
         Project.objects.filter(
-            organization=org,
             status=ProjectStatus.OPEN,
             deadline__lt=today,
         )
@@ -79,7 +77,7 @@ def _sweep_overdue_projects(org: Organization):
 
 
 def get_project_kanban_cards(
-    org: Organization,
+    org=None,
     *,
     consultant_id=None,
     client_id=None,
@@ -94,13 +92,15 @@ def get_project_kanban_cards(
     - consultant_id: 담당자 UUID (assigned_consultants 중)
     - client_id: 고객사 UUID
     - search: title 또는 client.name ilike
+
+    Note: org parameter is deprecated (single-tenant). Kept for call-site compatibility.
     """
     # 칸반 렌더 직전에 마감 경과 프로젝트 자동 종료 (Stale auto-close)
-    _sweep_overdue_projects(org)
+    _sweep_overdue_projects()
 
     now = timezone.now()
     qs = (
-        Project.objects.filter(organization=org)
+        Project.objects.all()
         .annotate(
             active_count=Count(
                 "applications",
@@ -182,11 +182,11 @@ def get_project_kanban_cards(
     return cards
 
 
-def _monthly_success(org, user, scope_owner):
+def _monthly_success(user, scope_owner):
     """S1-1 Monthly Success: 이번 달 성공·진행중·성공률."""
     now_local = timezone.localtime()
     month_start = now_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    qs = _scope_projects(org, user, scope_owner)
+    qs = _scope_projects(user, scope_owner)
 
     closed_this_month = qs.filter(
         status=ProjectStatus.CLOSED,
@@ -203,9 +203,9 @@ def _monthly_success(org, user, scope_owner):
     }
 
 
-def _project_status_counts(org, user, scope_owner):
+def _project_status_counts(user, scope_owner):
     """S1-3 Project Status: searching/screening/closed 누적 개수."""
-    qs = _scope_projects(org, user, scope_owner)
+    qs = _scope_projects(user, scope_owner)
     return {
         "searching": qs.filter(
             status=ProjectStatus.OPEN, phase=ProjectPhase.SEARCHING
@@ -245,30 +245,29 @@ def _progress_color(rate):
     return "info"
 
 
-def _team_performance(org):
-    """S2-1 Team Performance: owner+consultant 전체, 누적 성공률 desc.
+def _team_performance():
+    """S2-1 Team Performance: active staff/boss users, 누적 성공률 desc.
 
-    Viewer 제외. 표본 없는 멤버(rate=None)는 맨 아래.
+    level >= 1 (STAFF/BOSS) 전체. 표본 없는 멤버(rate=None)는 맨 아래.
     """
-    memberships = Membership.objects.filter(
-        organization=org,
-        role__in=["owner", "consultant"],
-        status="active",
-    ).select_related("user")
+    from accounts.models import User as _User
+
+    users = _User.objects.filter(level__gte=1, is_active=True)
     rows = []
-    for m in memberships:
-        user = m.user
-        assigned = user.assigned_projects.filter(organization=org)
+    for user in users:
+        assigned = user.assigned_projects.all()
         active_count = assigned.filter(status=ProjectStatus.OPEN).count()
         closed = assigned.filter(status=ProjectStatus.CLOSED)
         closed_total = closed.count()
         success_count = closed.filter(result=ProjectResult.SUCCESS).count()
         rate = round(success_count / closed_total * 100) if closed_total else None
 
+        role_label = "대표" if (user.is_superuser or user.level >= 2) else "컨설턴트"
+
         rows.append({
             "username": user.username,
             "display_name": _display_name(user),
-            "role_label": _ROLE_LABEL_KO.get(m.role, m.role),
+            "role_label": role_label,
             "active_count": active_count,
             "success_rate": rate,
             "progress_color": _progress_color(rate),
@@ -292,12 +291,11 @@ def _week_range():
     return monday, next_monday
 
 
-def _weekly_schedule(org, user, scope_owner, limit: int = 5):
+def _weekly_schedule(user, scope_owner, limit: int = 5):
     """S3 Weekly Schedule: 이번 주 Interview + ActionItem 합집합, 시간 asc."""
     monday, next_monday = _week_range()
 
     interviews = Interview.objects.filter(
-        action_item__application__project__organization=org,
         scheduled_at__gte=monday,
         scheduled_at__lt=next_monday,
     ).select_related(
@@ -306,7 +304,6 @@ def _weekly_schedule(org, user, scope_owner, limit: int = 5):
     )
     actions = (
         ActionItem.objects.filter(
-            application__project__organization=org,
             scheduled_at__gte=monday,
             scheduled_at__lt=next_monday,
         )
@@ -359,7 +356,7 @@ def _month_grid_start(year: int, month: int):
     return first_day - timedelta(days=sunday_offset)
 
 
-def _monthly_calendar(org, user, scope_owner) -> list[dict]:
+def _monthly_calendar(user, scope_owner) -> list[dict]:
     """S3 Monthly Calendar: 6주×7일=42셀, 이번 달 기준.
 
     각 셀: {"date": int, "is_today": bool, "is_outside": bool, "event_label": str|None}
@@ -380,9 +377,8 @@ def _monthly_calendar(org, user, scope_owner) -> list[dict]:
     # 42-day grid 범위 (aware) — outside-month 셀도 이벤트 표시
     grid_end = grid_start + timedelta(days=42)
 
-    # Interview 쿼리 (organization 스코프)
+    # Interview 쿼리
     interviews_qs = Interview.objects.filter(
-        action_item__application__project__organization=org,
         scheduled_at__gte=grid_start,
         scheduled_at__lt=grid_end,
     )
@@ -399,7 +395,6 @@ def _monthly_calendar(org, user, scope_owner) -> list[dict]:
 
     # ActionItem 쿼리 (interview_round 제외)
     actions_qs = ActionItem.objects.filter(
-        application__project__organization=org,
         scheduled_at__gte=grid_start,
         scheduled_at__lt=grid_end,
     ).exclude(action_type__code="interview_round")
@@ -433,27 +428,30 @@ def _monthly_calendar(org, user, scope_owner) -> list[dict]:
     return cells
 
 
-def get_dashboard_context(org: Organization, user: User, membership) -> dict:
+def get_dashboard_context(user: User) -> dict:
     """대시보드 카드 전체 컨텍스트.
 
     Phase 2a: S1-1 Monthly Success, S1-3 Project Status,
               S2-1 Team Performance, S3 Weekly/Monthly Calendar.
     Phase 2b 카드(S1-2 Revenue, S2-2 Recent Activity)는 하드코딩 유지.
+
+    Single-tenant: org filter removed. scope_owner based on user.level/superuser.
+    T10 will rewire internal queries via scope_work_qs.
     """
-    scope_owner = membership.role == "owner"
+    scope_owner = user.is_superuser or user.level >= 2
     return {
-        "monthly_success": _monthly_success(org, user, scope_owner),
-        "project_status": _project_status_counts(org, user, scope_owner),
-        "team_performance": _team_performance(org),
-        "weekly_schedule": _weekly_schedule(org, user, scope_owner),
-        "monthly_calendar": _monthly_calendar(org, user, scope_owner),
+        "monthly_success": _monthly_success(user, scope_owner),
+        "project_status": _project_status_counts(user, scope_owner),
+        "team_performance": _team_performance(),
+        "weekly_schedule": _weekly_schedule(user, scope_owner),
+        "monthly_calendar": _monthly_calendar(user, scope_owner),
         "_scope_owner": scope_owner,
     }
 
 
-def _scope_projects(org: Organization, user: User, scope_owner: bool):
-    """권한 스코프 공통 쿼리셋. owner=조직 전체, 아니면 본인 담당만."""
-    qs = Project.objects.filter(organization=org)
+def _scope_projects(user: User, scope_owner: bool):
+    """권한 스코프 공통 쿼리셋. boss/superuser=전체, 아니면 본인 담당만."""
+    qs = Project.objects.all()
     if not scope_owner:
         qs = qs.filter(assigned_consultants=user)
     return qs

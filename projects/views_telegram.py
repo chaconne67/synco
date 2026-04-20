@@ -82,7 +82,7 @@ def _process_update(data: dict) -> None:
                 approval = ProjectApproval.objects.select_related("project").get(
                     pk=notification.callback_data["approval_id"]
                 )
-                user, _ = verify_telegram_user_access(chat_id, approval.project)
+                user = verify_telegram_user_access(chat_id, approval.project)
                 handle_approval_callback(
                     notification=notification,
                     action=action,
@@ -92,7 +92,7 @@ def _process_update(data: dict) -> None:
                 from projects.models import Project
 
                 project = Project.objects.get(pk=cb["project_id"])
-                user, _ = verify_telegram_user_access(chat_id, project)
+                user = verify_telegram_user_access(chat_id, project)
                 handle_contact_callback(
                     notification=notification,
                     action=action,

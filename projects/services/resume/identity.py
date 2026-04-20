@@ -1,6 +1,5 @@
-"""Org-scoped candidate identity matching for resume uploads."""
+"""Candidate identity matching for resume uploads (single-tenant)."""
 
-from accounts.models import Organization
 from candidates.models import Candidate
 from candidates.services.candidate_identity import (
     CandidateComparisonContext,
@@ -11,16 +10,18 @@ from candidates.services.candidate_identity import (
 
 def identify_candidate_for_org(
     extracted: dict,
-    organization: Organization,
+    organization=None,
 ) -> CandidateComparisonContext | None:
-    """Find existing candidate within organization scope only."""
-    # 1. Email match (org-scoped)
+    """Find existing candidate by email/phone.
+
+    Single-tenant: organization parameter is ignored (kept for call-site compatibility).
+    """
+    # 1. Email match
     email = (extracted.get("email") or "").strip().lower()
     if email:
         candidate = (
             Candidate.objects.filter(
                 email__iexact=email,
-                owned_by=organization,
             )
             .order_by("-created_at")
             .first()
@@ -35,14 +36,13 @@ def identify_candidate_for_org(
                 previous_data=previous_data,
             )
 
-    # 2. Phone match (org-scoped)
+    # 2. Phone match
     phone = extracted.get("phone") or ""
     normalized = normalize_phone_for_matching(phone)
     if len(normalized) >= 10:
         candidate = (
             Candidate.objects.filter(
                 phone_normalized=normalized,
-                owned_by=organization,
             )
             .order_by("-created_at")
             .first()

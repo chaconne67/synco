@@ -19,7 +19,6 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from accounts.models import Organization
 from candidates.models import Candidate, Career, Education
 from clients.models import Client
 from projects.models import (
@@ -199,7 +198,6 @@ class Command(BaseCommand):
     help = "디자인 테스트용 더미 데이터 시딩 (clients/projects/candidates/applications/action_items)"
 
     def add_arguments(self, parser):
-        parser.add_argument("--org", type=str, default=None, help="대상 조직 이름")
         parser.add_argument(
             "--wipe",
             action="store_true",
@@ -228,10 +226,14 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         random.seed(opts["seed"])
 
-        org = self._resolve_org(opts["org"])
-        self.stdout.write(f"target org: {org.name} ({org.id})")
+        # Single-tenant: use the single org for FK fields (still required until T6)
+        org = self._resolve_org()
+        if org:
+            self.stdout.write(f"target org: {org.name} ({org.id})")
+        else:
+            self.stdout.write("no org found — FK fields will be null (T6 pending)")
 
-        creator = self._resolve_creator(org)
+        creator = self._resolve_creator()
 
         if opts["wipe"]:
             self._wipe(org)
@@ -242,57 +244,52 @@ class Command(BaseCommand):
         self._seed_applications(projects, candidates, creator)
 
         self.stdout.write(self.style.SUCCESS("seed_dummy_data done"))
-        self.stdout.write(
-            f"  clients: {Client.objects.filter(organization=org).count()}"
-        )
-        self.stdout.write(
-            f"  projects: {Project.objects.filter(organization=org).count()}"
-        )
+        self.stdout.write(f"  clients: {Client.objects.count()}")
+        self.stdout.write(f"  projects: {Project.objects.count()}")
         self.stdout.write(f"  candidates: {Candidate.objects.count()}")
         self.stdout.write(
             "  applications: "
-            f"{Application.objects.filter(project__organization=org).count()}"
+            f"{Application.objects.count()}"
         )
         self.stdout.write(
             "  action_items: "
-            f"{ActionItem.objects.filter(application__project__organization=org).count()}"
+            f"{ActionItem.objects.count()}"
         )
 
     # ------------------------------------------------------------------
-    def _resolve_org(self, name: str | None) -> Organization:
-        if name:
-            try:
-                return Organization.objects.get(name=name)
-            except Organization.DoesNotExist as e:
-                raise CommandError(f"Organization '{name}' not found") from e
-        org = Organization.objects.filter(name="테스트조직").first()
-        if org:
-            return org
-        org = Organization.objects.first()
-        if org:
-            return org
-        raise CommandError("No Organization exists. Create one first.")
+    def _resolve_org(self):
+        """Return the single Organization (single-tenant). None if none exist yet."""
+        from accounts.models import Organization
 
-    def _resolve_creator(self, org: Organization):
+        return Organization.objects.first()
+
+    def _resolve_creator(self):
+        """Return a level>=2 (boss) user for dummy data attribution."""
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
-        m = org.memberships.filter(status="active").select_related("user").first()
-        if m:
-            return m.user
-        return User.objects.filter(is_superuser=True).first()
+        # Prefer boss-level user
+        creator = User.objects.filter(level__gte=2, is_active=True).first()
+        if creator:
+            return creator
+        # Fall back to superuser
+        creator = User.objects.filter(is_superuser=True).first()
+        if creator:
+            return creator
+        # Last resort: any active user
+        return User.objects.filter(is_active=True).first()
 
     # ------------------------------------------------------------------
-    def _wipe(self, org: Organization):
+    def _wipe(self, org=None):
         self.stdout.write("wiping existing [DUMMY] records...")
         # ActionItems/Applications cascade via Project/Candidate deletion
         candidates = Candidate.objects.filter(summary__startswith=DUMMY_TAG)
         c_cnt = candidates.count()
         candidates.delete()
-        projects = Project.objects.filter(organization=org, note__startswith=DUMMY_TAG)
+        projects = Project.objects.filter(note__startswith=DUMMY_TAG)
         p_cnt = projects.count()
         projects.delete()
-        clients = Client.objects.filter(organization=org, notes__startswith=DUMMY_TAG)
+        clients = Client.objects.filter(notes__startswith=DUMMY_TAG)
         cl_cnt = clients.count()
         clients.delete()
         self.stdout.write(
@@ -300,12 +297,14 @@ class Command(BaseCommand):
         )
 
     # ------------------------------------------------------------------
-    def _seed_clients(self, org: Organization) -> list[Client]:
+    def _seed_clients(self, org=None) -> list[Client]:
         created: list[Client] = []
         for name, industry, size, region in CLIENT_SEEDS:
+            lookup = {"name": name}
+            if org is not None:
+                lookup["organization"] = org
             client, was_created = Client.objects.get_or_create(
-                organization=org,
-                name=name,
+                **lookup,
                 defaults={
                     "industry": industry,
                     "size": size,
@@ -430,7 +429,7 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     def _seed_projects(
         self,
-        org: Organization,
+        org,
         clients: list[Client],
         creator,
         count: int,
@@ -462,10 +461,14 @@ class Command(BaseCommand):
 
             # 모두 기본 상태(phase=searching, status=open)로 생성.
             # 승격은 _seed_applications 에서 submit_to_client DONE / hire 로 유도 → 시그널이 반영
-            project = Project.objects.create(
+            project_kwargs = dict(
                 client=client,
-                organization=org,
                 title=title,
+            )
+            if org is not None:
+                project_kwargs["organization"] = org
+            project = Project.objects.create(
+                **project_kwargs,
                 jd_text=(
                     f"{client.name} {title} 포지션.\n\n"
                     "- 요구 경력: 8년 이상\n"

@@ -18,10 +18,18 @@ logger = logging.getLogger(__name__)
 REF_PATTERN = re.compile(r"\[REF-([0-9a-f-]{36})\]", re.IGNORECASE)
 
 
+def _get_single_org():
+    """Return the single Organization instance (single-tenant). Returns None if none exist."""
+    from accounts.models import Organization
+
+    return Organization.objects.first()
+
+
 def process_email_config(config: EmailMonitorConfig) -> int:
     """Process one email config. Returns number of new uploads created."""
     client = GmailClient(config)
-    org = config.user.membership.organization
+    # Single-tenant: use the single org for ResumeUpload FK (required until T6 removes it).
+    org = _get_single_org()
     count = 0
 
     messages = client.get_new_messages()
@@ -34,7 +42,7 @@ def process_email_config(config: EmailMonitorConfig) -> int:
 
         subject = msg.get("subject", "")
         sender = msg.get("from", "")
-        project = _match_project(subject, org)
+        project = _match_project(subject)
 
         for att in attachments:
             try:
@@ -69,13 +77,13 @@ def process_email_config(config: EmailMonitorConfig) -> int:
     return count
 
 
-def _match_project(subject: str, org) -> Project | None:
-    """Match email subject to project via [REF-{uuid}] pattern. Org-scoped."""
+def _match_project(subject: str) -> Project | None:
+    """Match email subject to project via [REF-{uuid}] pattern."""
     match = REF_PATTERN.search(subject)
     if not match:
         return None
     try:
-        return Project.objects.get(pk=match.group(1), organization=org)
+        return Project.objects.get(pk=match.group(1))
     except Project.DoesNotExist:
         return None
 
