@@ -2,146 +2,33 @@ import json
 
 import httpx
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from django.db import transaction
-
-from .models import InviteCode, Membership, User
+from .models import User
 
 
 @login_required
 def home(request):
-    """Root redirect -- route by membership status."""
-    if request.user.is_superuser:
+    """Root redirect -- route by user.level."""
+    user = request.user
+    if user.is_superuser or user.level >= 1:
         return redirect("dashboard")
-    try:
-        membership = request.user.membership
-        if membership.status == "pending":
-            return redirect("pending_approval")
-        if membership.status == "rejected":
-            return redirect("rejected")
-        return redirect("dashboard")
-    except Membership.DoesNotExist:
-        return redirect("invite_code")
-
-
-@login_required
-def invite_code_page(request):
-    """초대코드 입력 화면."""
-    if request.user.is_superuser:
-        return redirect("dashboard")
-
-    # Already has membership -- redirect to appropriate page
-    try:
-        m = request.user.membership
-        if m.status == "active":
-            return redirect("dashboard")
-        if m.status == "pending":
-            return redirect("pending_approval")
-        if m.status == "rejected":
-            return redirect("rejected")
-    except Membership.DoesNotExist:
-        pass
-
-    error = None
-    if request.method == "POST":
-        code_str = request.POST.get("code", "").strip().upper()
-        try:
-            invite = InviteCode.objects.get(code=code_str)
-        except InviteCode.DoesNotExist:
-            invite = None
-
-        if invite and invite.is_valid:
-            # Owner gets immediate activation
-            status = "active" if invite.role == "owner" else "pending"
-            with transaction.atomic():
-                Membership.objects.create(
-                    user=request.user,
-                    organization=invite.organization,
-                    role=invite.role,
-                    status=status,
-                )
-                invite.use()
-
-            if status == "active":
-                return redirect("dashboard")
-            else:
-                # Notify organization owners about new pending member
-                _notify_owners_new_pending(request.user, invite.organization)
-                return redirect("pending_approval")
-        else:
-            error = "유효하지 않은 초대코드입니다."
-
-    return render(request, "accounts/invite_code.html", {"error": error})
-
-
-def _notify_owners_new_pending(user, organization):
-    """Notify org owners when a new consultant requests membership."""
-    try:
-        from projects.models import Notification
-        from projects.services.notification import send_notification
-
-        owner_memberships = Membership.objects.filter(
-            organization=organization,
-            role=Membership.Role.OWNER,
-            status=Membership.Status.ACTIVE,
-        ).select_related("user")
-
-        display_name = user.get_full_name() or user.username
-
-        for om in owner_memberships:
-            notif = Notification.objects.create(
-                recipient=om.user,
-                type=Notification.Type.APPROVAL_REQUEST,
-                title="새 멤버 가입 요청",
-                body=f"{display_name}님이 조직 가입을 요청했습니다.",
-            )
-            send_notification(
-                notif,
-                text=f"새 멤버 가입 요청: {display_name}님이 조직 가입을 요청했습니다. 승인이 필요합니다.",
-            )
-    except Exception:
-        pass  # Best-effort notification -- don't block onboarding flow
+    return redirect("pending_approval")
 
 
 @login_required
 def pending_approval_page(request):
-    """승인 대기 화면."""
-    if request.user.is_superuser:
-        return redirect("dashboard")
-
-    try:
-        membership = request.user.membership
-        if membership.status == "active":
-            return redirect("dashboard")
-        if membership.status == "rejected":
-            return redirect("rejected")
-    except Membership.DoesNotExist:
-        return redirect("invite_code")
-
-    return render(request, "accounts/pending_approval.html")
-
-
-@login_required
-def rejected_page(request):
-    """거절 안내 화면."""
-    if request.user.is_superuser:
-        return redirect("dashboard")
-
-    try:
-        membership = request.user.membership
-        if membership.status == "active":
-            return redirect("dashboard")
-        if membership.status == "pending":
-            return redirect("pending_approval")
-    except Membership.DoesNotExist:
-        return redirect("invite_code")
-
-    return render(request, "accounts/rejected.html")
+    """Level 0 대기 페이지. Level 1 이상이면 버튼 활성화 상태로 렌더."""
+    user = request.user
+    activated = user.is_superuser or user.level >= 1
+    return render(
+        request,
+        "accounts/pending_approval.html",
+        {"activated": activated},
+    )
 
 
 def landing_page(request):
@@ -349,78 +236,6 @@ def privacy(request):
         else "accounts/privacy.html"
     )
     return render(request, template)
-
-
-def staff_login_page(request):
-    """Hidden ID/PW login for superusers only."""
-    if request.user.is_authenticated and request.user.is_superuser:
-        return redirect("home")
-
-    error = None
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            error = "아이디 또는 비밀번호가 올바르지 않습니다."
-        elif not user.is_superuser:
-            error = "슈퍼유저 계정만 로그인할 수 있습니다."
-        else:
-            login(request, user)
-            return redirect("home")
-
-    return render(
-        request,
-        "accounts/staff_login.html",
-        {
-            "error": error,
-            "title": "SuperAdmin 로그인",
-            "submit_label": "로그인",
-            "form_action": request.path,
-        },
-    )
-
-
-def ceo_login_page(request):
-    """Hidden ID/PW login for OWNER role testing. Gated by ALLOW_CEO_TEST_LOGIN."""
-    if not getattr(settings, "ALLOW_CEO_TEST_LOGIN", False):
-        raise Http404()
-
-    if request.user.is_authenticated:
-        return redirect("home")
-
-    error = None
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            error = "아이디 또는 비밀번호가 올바르지 않습니다."
-        else:
-            try:
-                m = user.membership
-                if (
-                    m.role != Membership.Role.OWNER
-                    or m.status != Membership.Status.ACTIVE
-                ):
-                    error = "활성 OWNER 계정만 로그인할 수 있습니다."
-            except Membership.DoesNotExist:
-                error = "활성 OWNER 계정만 로그인할 수 있습니다."
-
-            if error is None:
-                login(request, user)
-                return redirect("home")
-
-    return render(
-        request,
-        "accounts/staff_login.html",
-        {
-            "error": error,
-            "title": "CEO 테스트 로그인",
-            "submit_label": "로그인",
-            "form_action": request.path,
-        },
-    )
 
 
 # --- P18: Gmail integration ---

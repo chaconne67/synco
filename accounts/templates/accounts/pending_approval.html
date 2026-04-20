@@ -1,38 +1,26 @@
-{# accounts/templates/accounts/pending_approval.html #}
-{% load static %}
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>synco — 승인 대기</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
-  <link rel="stylesheet" href="{% static 'css/output.css' %}">
-</head>
-<body class="bg-canvas font-sans text-ink min-h-screen flex items-center justify-center px-6 py-10">
-  <div class="w-full max-w-md">
-    <div class="flex flex-col items-center mb-8">
-      <div class="w-12 h-12 bg-ink3 rounded flex items-center justify-center text-white font-black text-2xl tracking-tighter mb-4">S</div>
-      <h1 class="text-lg font-black uppercase tracking-tight text-slate-900">Synco</h1>
-      <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mt-1">Pending Approval</p>
-    </div>
+{% extends "common/base.html" %}
 
-    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-10 text-center">
-      <div class="w-14 h-14 mx-auto mb-6 bg-amber-50 rounded-full flex items-center justify-center">
-        <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-      </div>
-      <h2 class="text-xl font-black text-slate-900 tracking-tight mb-2">가입 승인 대기 중</h2>
-      <p class="text-sm text-slate-500 leading-relaxed">조직 관리자가 승인하면<br>서비스를 이용할 수 있습니다.</p>
-    </div>
+{% block content %}
+<div class="max-w-md mx-auto py-16 text-center space-y-6">
+  <h1 class="text-2xl font-bold">승인 대기</h1>
+  <p class="text-ink3">
+    승인 요청이 관리자에게 전달되었습니다.<br>
+    확인 후 이용하실 수 있습니다.
+  </p>
 
-    <div class="mt-6 text-center">
-      <a href="{% url 'logout' %}" class="inline-block text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition">Logout</a>
-    </div>
-  </div>
-</body>
-</html>
+  {% if activated %}
+    <a href="{% url 'dashboard' %}"
+       data-testid="enter-dashboard-btn"
+       class="inline-block px-6 py-3 bg-accent text-white rounded-lg font-medium">
+      메인화면으로 가기
+    </a>
+  {% else %}
+    <button type="button"
+            data-testid="enter-dashboard-btn"
+            class="inline-block px-6 py-3 bg-line text-ink3 rounded-lg font-medium opacity-50 cursor-not-allowed"
+            disabled>
+      메인화면으로 가기
+    </button>
+  {% endif %}
+</div>
+{% endblock %}
