@@ -130,7 +130,6 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 
 AUTHENTICATION_BACKENDS = [
-    "accounts.backends.KakaoBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -144,11 +143,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 ALLOW_CEO_TEST_LOGIN = os.environ.get("ALLOW_CEO_TEST_LOGIN", "0") == "1"
 
 SYNCO_SUPERUSER_EMAIL = os.environ.get("SYNCO_SUPERUSER_EMAIL", "chaconne67@gmail.com")
-
-# Kakao OAuth
-KAKAO_CLIENT_ID = os.environ.get("KAKAO_CLIENT_ID", "")
-KAKAO_CLIENT_SECRET = os.environ.get("KAKAO_CLIENT_SECRET", "")
-KAKAO_REDIRECT_URI = os.environ.get("KAKAO_REDIRECT_URI", "")
+SYNCO_SUPERUSER_PASSWORD = os.environ.get("SYNCO_SUPERUSER_PASSWORD", "")
 
 # Gemini Embedding
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")

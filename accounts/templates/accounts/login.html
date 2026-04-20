@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>synco — 로그인</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+</head>
+<body class="bg-canvas font-sans text-ink min-h-screen flex items-center justify-center px-6 py-10">
+  <div class="w-full max-w-md">
+    <div class="flex flex-col items-center mb-8">
+      <div class="w-12 h-12 bg-ink3 rounded-card flex items-center justify-center text-white font-black text-2xl tracking-tighter mb-4">S</div>
+      <h1 class="text-lg font-black uppercase tracking-tight text-ink">synco</h1>
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-faint mt-1">로그인</p>
+    </div>
+
+    <div class="bg-surface rounded-card border border-hair shadow-card p-8">
+      {% if error %}
+      <div class="mb-5 rounded-card bg-danger/10 border border-danger/20 px-4 py-3 text-xs font-semibold text-danger">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'login' %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">이메일</label>
+          <input type="email" name="email" autocomplete="email" required
+                 class="w-full rounded-card bg-line border border-transparent focus:border-ink3 focus:bg-surface px-4 py-3 text-sm font-medium text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/10 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">비밀번호</label>
+          <input type="password" name="password" autocomplete="current-password" required
+                 class="w-full rounded-card bg-line border border-transparent focus:border-ink3 focus:bg-surface px-4 py-3 text-sm font-medium text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/10 transition" />
+        </div>
+        <button type="submit"
+                class="w-full rounded-card bg-ink3 text-white font-bold text-xs uppercase tracking-widest py-3.5 hover:bg-ink2 transition-colors mt-2">
+          로그인
+        </button>
+      </form>
+
+      <div class="mt-6 pt-6 border-t border-hair text-center">
+        <p class="text-xs text-muted">
+          계정이 없으신가요?
+          <a href="{% url 'signup' %}" class="font-semibold text-ink3 hover:text-ink2 ml-1">회원가입</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

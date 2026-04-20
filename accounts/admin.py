@@ -14,7 +14,7 @@ class UserAdmin(DefaultUserAdmin):
     list_display = ("username", "email", "level", "is_superuser", "date_joined")
     list_filter = ("level", "is_superuser")
     fieldsets = DefaultUserAdmin.fieldsets + (
-        ("synco", {"fields": ("level", "kakao_id", "phone")}),
+        ("synco", {"fields": ("level", "phone")}),
     )
 
 

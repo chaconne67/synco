@@ -27,7 +27,7 @@ def level_required(min_level):
             user = request.user
 
             if not user.is_authenticated:
-                return _redirect_named("landing", "/accounts/login/")
+                return _redirect_named("login", "/accounts/login/")
 
             if user.is_superuser:
                 return view_func(request, *args, **kwargs)

@@ -2,7 +2,7 @@ import json
 
 import httpx
 from django.conf import settings
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -31,68 +31,54 @@ def pending_approval_page(request):
     )
 
 
-def landing_page(request):
+def login_view(request):
+    """Email + password login."""
     if request.user.is_authenticated:
         return redirect("home")
-    return render(request, "accounts/landing.html")
+
+    error = None
+    if request.method == "POST":
+        email = (request.POST.get("email") or "").strip().lower()
+        password = request.POST.get("password") or ""
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            error = "이메일 또는 비밀번호가 올바르지 않습니다."
+        else:
+            login(request, user)
+            return redirect("home")
+
+    return render(request, "accounts/login.html", {"error": error})
 
 
-def kakao_login(request):
-    kakao_auth_url = (
-        "https://kauth.kakao.com/oauth/authorize"
-        f"?client_id={settings.KAKAO_CLIENT_ID}"
-        f"&redirect_uri={settings.KAKAO_REDIRECT_URI}"
-        "&response_type=code"
-    )
-    return redirect(kakao_auth_url)
+def signup_view(request):
+    """Email + password signup. New users start at level=0 (pending)."""
+    if request.user.is_authenticated:
+        return redirect("home")
 
+    error = None
+    if request.method == "POST":
+        email = (request.POST.get("email") or "").strip().lower()
+        password = request.POST.get("password") or ""
+        password_confirm = request.POST.get("password_confirm") or ""
 
-def kakao_callback(request):
-    code = request.GET.get("code")
-    if not code:
-        return redirect("landing")
+        if not email or "@" not in email:
+            error = "유효한 이메일을 입력해주세요."
+        elif len(password) < 8:
+            error = "비밀번호는 8자 이상이어야 합니다."
+        elif password != password_confirm:
+            error = "비밀번호가 일치하지 않습니다."
+        elif User.objects.filter(email=email).exists():
+            error = "이미 가입된 이메일입니다."
+        else:
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+            )
+            login(request, user)
+            return redirect("home")
 
-    # Exchange code for token
-    token_resp = httpx.post(
-        "https://kauth.kakao.com/oauth/token",
-        data={
-            "grant_type": "authorization_code",
-            "client_id": settings.KAKAO_CLIENT_ID,
-            "client_secret": settings.KAKAO_CLIENT_SECRET,
-            "redirect_uri": settings.KAKAO_REDIRECT_URI,
-            "code": code,
-        },
-    )
-    if token_resp.status_code != 200:
-        return redirect("landing")
-
-    access_token = token_resp.json().get("access_token")
-
-    # Get user info
-    user_resp = httpx.get(
-        "https://kapi.kakao.com/v2/user/me",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-    if user_resp.status_code != 200:
-        return redirect("landing")
-
-    kakao_data = user_resp.json()
-    kakao_id = kakao_data["id"]
-    kakao_account = kakao_data.get("kakao_account", {})
-    profile = kakao_account.get("profile", {})
-
-    # Create or get user
-    user, created = User.objects.get_or_create(
-        kakao_id=kakao_id,
-        defaults={
-            "username": f"kakao_{kakao_id}",
-            "first_name": profile.get("nickname", ""),
-        },
-    )
-
-    login(request, user, backend="accounts.backends.KakaoBackend")
-
-    return redirect("home")
+    return render(request, "accounts/signup.html", {"error": error})
 
 
 @login_required
@@ -215,7 +201,7 @@ def settings_notify(request):
 
 def logout_view(request):
     logout(request)
-    return redirect("landing")
+    return redirect("login")
 
 
 def terms(request):

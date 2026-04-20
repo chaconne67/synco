@@ -3,9 +3,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("accounts/login/", views.landing_page, name="landing"),
-    path("accounts/kakao/login/", views.kakao_login, name="kakao_login"),
-    path("accounts/kakao/callback/", views.kakao_callback, name="kakao_callback"),
+    path("accounts/login/", views.login_view, name="login"),
+    path("accounts/signup/", views.signup_view, name="signup"),
     path("accounts/pending/", views.pending_approval_page, name="pending_approval"),
 
     path("accounts/settings/", views.settings_page, name="settings"),
