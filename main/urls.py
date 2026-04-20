@@ -9,6 +9,7 @@ from projects.views import dashboard
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("hijack/", include("hijack.urls")),
     # Root: onboarding router (routes by membership status)
     path("", home, name="home"),
     # Dashboard: explicit path only (protected by membership_required in t04)
