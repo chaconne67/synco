@@ -10,7 +10,7 @@ from datetime import timedelta
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from accounts.models import Organization, User
+from accounts.models import Membership, Organization, User
 from projects.models import (
     ActionItem,
     ActionItemStatus,
@@ -215,6 +215,68 @@ def _project_status_counts(org, user, scope_owner):
     }
 
 
+_ROLE_LABEL_KO = {
+    "owner": "대표",
+    "consultant": "컨설턴트",
+}
+
+
+def _display_name(user) -> str:
+    """한글 이름 표시. last+first → get_full_name → username."""
+    parts = (user.last_name or "").strip() + (user.first_name or "").strip()
+    if parts:
+        return parts
+    full = (user.get_full_name() or "").strip()
+    if full:
+        return full
+    return user.username
+
+
+def _progress_color(rate):
+    """S2-1 progress bar 색상 클래스. rate=None → default."""
+    if rate is None:
+        return ""
+    if rate >= 80:
+        return "success"
+    if rate >= 60:
+        return ""
+    return "info"
+
+
+def _team_performance(org):
+    """S2-1 Team Performance: owner+consultant 전체, 누적 성공률 desc.
+
+    Viewer 제외. 표본 없는 멤버(rate=None)는 맨 아래.
+    """
+    memberships = Membership.objects.filter(
+        organization=org,
+        role__in=["owner", "consultant"],
+        status="active",
+    ).select_related("user")
+    rows = []
+    for m in memberships:
+        user = m.user
+        assigned = user.assigned_projects.filter(organization=org)
+        active_count = assigned.filter(status=ProjectStatus.OPEN).count()
+        closed = assigned.filter(status=ProjectStatus.CLOSED)
+        closed_total = closed.count()
+        success_count = closed.filter(result=ProjectResult.SUCCESS).count()
+        rate = round(success_count / closed_total * 100) if closed_total else None
+
+        rows.append({
+            "username": user.username,
+            "display_name": _display_name(user),
+            "role_label": _ROLE_LABEL_KO.get(m.role, m.role),
+            "active_count": active_count,
+            "success_rate": rate,
+            "progress_color": _progress_color(rate),
+        })
+
+    # sort: rate desc NULLS LAST
+    rows.sort(key=lambda r: (r["success_rate"] is None, -(r["success_rate"] or 0)))
+    return rows
+
+
 def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     """대시보드 카드 전체 컨텍스트.
 
@@ -226,7 +288,7 @@ def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     return {
         "monthly_success": _monthly_success(org, user, scope_owner),
         "project_status": _project_status_counts(org, user, scope_owner),
-        "team_performance": None,
+        "team_performance": _team_performance(org),
         "weekly_schedule": None,
         "monthly_calendar": None,
         "_scope_owner": scope_owner,

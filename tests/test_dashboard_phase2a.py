@@ -117,3 +117,67 @@ def test_s1_project_status_counts(owner_client, org, client_obj):
     assert 'data-testid="s3-searching">4<' in body
     assert 'data-testid="s3-screening">2<' in body
     assert 'data-testid="s3-closed">3<' in body
+
+
+@pytest.fixture
+def consultant_user(org):
+    u = User.objects.create_user(
+        username="c1", password="x", first_name="민호", last_name="김"
+    )
+    Membership.objects.create(user=u, organization=org, role="consultant")
+    return u
+
+
+@pytest.mark.django_db
+def test_s2_team_performance_lists_members(owner_client, org, client_obj, consultant_user):
+    """S2-1: owner + consultant 목록, viewer 제외."""
+    viewer = User.objects.create_user(username="v1", password="x", first_name="뷰어")
+    Membership.objects.create(user=viewer, organization=org, role="viewer")
+
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+
+    # consultant 한글명 표시 (last_name="김" + first_name="민호" → "김민호")
+    assert "김민호" in body
+    # owner 본인도 표시 (username="owner" fallback)
+    assert "owner" in body
+    # viewer 제외
+    assert "뷰어" not in body
+    # 역할 한글
+    assert "컨설턴트" in body
+    assert "대표" in body
+
+
+@pytest.mark.django_db
+def test_s2_team_performance_success_rate(owner_client, org, client_obj, consultant_user):
+    """S2-1: 성공률 = 본인 담당 success / 본인 담당 closed."""
+    # consultant가 담당한 프로젝트 4건 closed (3성공 1실패) + 2 open
+    for i in range(3):
+        p = Project.objects.create(organization=org, client=client_obj, title=f"S{i}")
+        p.assigned_consultants.add(consultant_user)
+        _close_project(p, "success", timezone.now())
+    p = Project.objects.create(organization=org, client=client_obj, title="F")
+    p.assigned_consultants.add(consultant_user)
+    _close_project(p, "fail", timezone.now())
+    for i in range(2):
+        p = Project.objects.create(
+            organization=org, client=client_obj, title=f"O{i}", status="open"
+        )
+        p.assigned_consultants.add(consultant_user)
+
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+
+    # 성공률 75% (3/4)
+    assert 'data-testid="s2-rate-c1">75%<' in body
+    # 현재 프로젝트 2건
+    assert 'data-testid="s2-active-c1">2건 진행 중<' in body
+
+
+@pytest.mark.django_db
+def test_s2_team_performance_empty_rate(owner_client, org, consultant_user):
+    """S2-1: 표본 없는 멤버는 '—'."""
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+
+    assert 'data-testid="s2-rate-c1">—<' in body

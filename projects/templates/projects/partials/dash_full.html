@@ -88,62 +88,26 @@
         </div>
 
         <ul class="mt-6 space-y-5">
+          {% for m in team_performance %}
           <li class="flex items-center gap-4">
-            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-semibold text-sm">MK</div>
+            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-line"></div>
             <div class="w-[180px] shrink-0">
-              <div class="text-sm font-semibold">Min-ho Kim</div>
-              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">수석 컨설턴트</div>
+              <div class="text-sm font-semibold">{{ m.display_name }}</div>
+              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">{{ m.role_label }}</div>
             </div>
             <div class="w-[140px] shrink-0">
               <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
-              <div class="text-sm font-semibold mt-0.5">8건 진행 중</div>
+              <div class="text-sm font-semibold mt-0.5" data-testid="s2-active-{{ m.username }}">{{ m.active_count }}건 진행 중</div>
             </div>
             <div class="flex-1">
               <div class="flex items-center justify-between mb-1.5">
-                <div class="eyebrow eyebrow-ko">달성률</div>
-                <div class="text-xs font-semibold tnum text-ink3">92%</div>
+                <div class="eyebrow eyebrow-ko">성공률</div>
+                <div class="text-xs font-semibold tnum text-ink3"><span data-testid="s2-rate-{{ m.username }}">{% if m.success_rate is None %}—{% else %}{{ m.success_rate }}%{% endif %}</span></div>
               </div>
-              <div class="progress success"><span style="width:92%"></span></div>
+              <div class="progress {{ m.progress_color }}"><span style="width:{% if m.success_rate %}{{ m.success_rate }}{% else %}0{% endif %}%"></span></div>
             </div>
           </li>
-
-          <li class="flex items-center gap-4">
-            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex items-center justify-center text-white font-semibold text-sm">SP</div>
-            <div class="w-[180px] shrink-0">
-              <div class="text-sm font-semibold">Sarah Park</div>
-              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">시니어 컨설턴트</div>
-            </div>
-            <div class="w-[140px] shrink-0">
-              <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
-              <div class="text-sm font-semibold mt-0.5">5건 진행 중</div>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1.5">
-                <div class="eyebrow eyebrow-ko">달성률</div>
-                <div class="text-xs font-semibold tnum text-ink3">75%</div>
-              </div>
-              <div class="progress"><span style="width:75%"></span></div>
-            </div>
-          </li>
-
-          <li class="flex items-center gap-4">
-            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">JL</div>
-            <div class="w-[180px] shrink-0">
-              <div class="text-sm font-semibold">Ji-won Lee</div>
-              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">리서치 어소시에이트</div>
-            </div>
-            <div class="w-[140px] shrink-0">
-              <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
-              <div class="text-sm font-semibold mt-0.5">12건 진행 중</div>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1.5">
-                <div class="eyebrow eyebrow-ko">달성률</div>
-                <div class="text-xs font-semibold tnum text-ink3">48%</div>
-              </div>
-              <div class="progress info"><span style="width:48%"></span></div>
-            </div>
-          </li>
+          {% endfor %}
         </ul>
       </article>
 
