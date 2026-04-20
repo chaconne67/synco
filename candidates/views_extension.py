@@ -71,7 +71,6 @@ def extension_auth_status(request):
             "data": {
                 "authenticated": True,
                 "user": request.user.get_full_name() or request.user.username,
-                "organization": None,
             },
         }
     )

@@ -18,14 +18,12 @@ WEIGHTS = {
 
 def match_candidates(
     requirements: dict,
-    organization=None,
     limit: int = 100,
 ) -> list[dict]:
     """requirements 기반으로 후보자를 검색하고 적합도 점수를 산출.
 
     Args:
         requirements: AI가 추출한 JD 요구조건
-        organization: Deprecated — ignored (single-tenant).
         limit: 최대 결과 수
 
     Returns:

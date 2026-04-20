@@ -24,10 +24,9 @@ class CandidateResolution:
 def resolve_candidate(
     *,
     name: str,
-    organization=None,
     project: Project | None = None,
 ) -> CandidateResolution:
-    """Resolve candidate by name. organization parameter is ignored (single-tenant)."""
+    """Resolve candidate by name."""
     matches = Candidate.objects.filter(
         name__icontains=name,
     )
@@ -79,10 +78,9 @@ def resolve_candidate(
 def resolve_candidate_list(
     *,
     names: list[str],
-    organization=None,
     project: Project | None = None,
 ) -> dict[str, Any]:
-    """Resolve multiple candidate names to UUIDs. organization parameter is ignored (single-tenant)."""
+    """Resolve multiple candidate names to UUIDs."""
     resolved_ids: list[str] = []
     ambiguous: list[dict[str, Any]] = []
     not_found: list[str] = []

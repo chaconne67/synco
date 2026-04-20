@@ -50,8 +50,8 @@ NAVIGATE_MAP: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 
-def _get_candidate(candidate_id: str, organization=None) -> Candidate:
-    """Resolve candidate by UUID. organization parameter is ignored (single-tenant)."""
+def _get_candidate(candidate_id: str) -> Candidate:
+    """Resolve candidate by UUID."""
     return Candidate.objects.get(pk=uuid_mod.UUID(candidate_id))
 
 
@@ -65,7 +65,7 @@ def _error(intent: str, message: str) -> dict[str, Any]:
 
 
 def _preview_project_create(
-    *, entities: dict, project: Project | None, user: User, organization=None
+    *, entities: dict, project: Project | None, user: User
 ) -> dict[str, Any]:
     client_name = entities.get("client", "")
     title = entities.get("title", "")
@@ -79,7 +79,7 @@ def _preview_project_create(
 
 
 def _confirm_project_create(
-    *, entities: dict, project: Project | None, user: User, organization=None
+    *, entities: dict, project: Project | None, user: User
 ) -> dict[str, Any]:
     client_name = entities.get("client", "")
     title = entities.get("title", "")
@@ -110,9 +110,9 @@ def _confirm_project_create(
 
 
 def _preview_submission_create(
-    *, entities: dict, project: Project, user: User, organization=None
+    *, entities: dict, project: Project, user: User
 ) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
+    candidate = _get_candidate(entities["candidate_id"])
 
     # Check for duplicate submission
     existing = Submission.objects.filter(
@@ -134,9 +134,9 @@ def _preview_submission_create(
 
 
 def _confirm_submission_create(
-    *, entities: dict, project: Project, user: User, organization=None
+    *, entities: dict, project: Project, user: User
 ) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
+    candidate = _get_candidate(entities["candidate_id"])
 
     existing = Submission.objects.filter(
         project=project,
@@ -169,9 +169,9 @@ def _confirm_submission_create(
 
 
 def _preview_interview_schedule(
-    *, entities: dict, project: Project, user: User, organization=None
+    *, entities: dict, project: Project, user: User
 ) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
+    candidate = _get_candidate(entities["candidate_id"])
 
     resolution = resolve_submission_for_interview(
         candidate_id=candidate.pk,
@@ -193,9 +193,9 @@ def _preview_interview_schedule(
 
 
 def _confirm_interview_schedule(
-    *, entities: dict, project: Project, user: User, organization=None
+    *, entities: dict, project: Project, user: User
 ) -> dict[str, Any]:
-    candidate = _get_candidate(entities["candidate_id"], organization)
+    candidate = _get_candidate(entities["candidate_id"])
 
     resolution = resolve_submission_for_interview(
         candidate_id=candidate.pk,
@@ -245,7 +245,7 @@ def _confirm_interview_schedule(
 
 
 def _preview_status_query(
-    *, entities: dict, project: Project, user: User, organization=None
+    *, entities: dict, project: Project, user: User
 ) -> dict[str, Any]:
     from projects.models import Application
 
@@ -285,7 +285,7 @@ _confirm_status_query = _preview_status_query
 
 
 def _preview_todo_query(
-    *, entities: dict, project: Project | None, user: User, organization=None
+    *, entities: dict, project: Project | None, user: User
 ) -> dict[str, Any]:
     actions = get_today_actions(user)
     summary_items = [a.get("description", a.get("title", "")) for a in actions[:5]]
@@ -309,7 +309,7 @@ _confirm_todo_query = _preview_todo_query
 
 
 def _preview_search(
-    *, entities: dict, project: Project | None, user: User, organization=None
+    *, entities: dict, project: Project | None, user: User
 ) -> dict[str, Any]:
     keywords = entities.get("keywords", "")
     results = Candidate.objects.filter(
@@ -333,7 +333,7 @@ _confirm_search = _preview_search
 
 
 def _preview_navigate(
-    *, entities: dict, project: Project | None, user: User, organization=None
+    *, entities: dict, project: Project | None, user: User
 ) -> dict[str, Any]:
     target = entities.get("target_page", "")
     url_name = NAVIGATE_MAP.get(target)
@@ -362,7 +362,7 @@ _confirm_navigate = _preview_navigate
 
 
 def _preview_meeting_navigate(
-    *, entities: dict, project: Project | None, user: User, organization=None
+    *, entities: dict, project: Project | None, user: User
 ) -> dict[str, Any]:
     return {
         "ok": True,
@@ -413,12 +413,8 @@ def preview_action(
     entities: dict[str, Any],
     project: Project | None,
     user: User,
-    organization=None,
 ) -> dict[str, Any]:
-    """Dry-run preview — no DB changes.
-
-    Note: organization parameter is ignored (single-tenant).
-    """
+    """Dry-run preview — no DB changes."""
     handler = _PREVIEW_HANDLERS.get(intent)
     if not handler:
         return _error(intent, f"알 수 없는 인텐트입니다: {intent}")
@@ -427,7 +423,6 @@ def preview_action(
             entities=entities,
             project=project,
             user=user,
-            organization=None,
         )
     except Candidate.DoesNotExist:
         return _error(intent, "후보자를 찾을 수 없습니다.")
@@ -441,12 +436,8 @@ def confirm_action(
     entities: dict[str, Any],
     project: Project | None,
     user: User,
-    organization=None,
 ) -> dict[str, Any]:
-    """Execute and commit — mutates DB.
-
-    Note: organization parameter is ignored (single-tenant).
-    """
+    """Execute and commit — mutates DB."""
     handler = _CONFIRM_HANDLERS.get(intent)
     if not handler:
         return _error(intent, f"알 수 없는 인텐트입니다: {intent}")
@@ -455,7 +446,6 @@ def confirm_action(
             entities=entities,
             project=project,
             user=user,
-            organization=None,
         )
     except Candidate.DoesNotExist:
         return _error(intent, "후보자를 찾을 수 없습니다.")

@@ -62,7 +62,7 @@ def dev_client(client, dev_user):
     return client
 
 
-# --- Domain fixtures (no organization) ---
+# --- Domain fixtures ---
 
 
 @pytest.fixture

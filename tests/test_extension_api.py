@@ -75,23 +75,14 @@ class TestExtensionAuth(TestCase):
         self.assertEqual(body["status"], "error")
 
     def test_authenticated_returns_user_and_org(self):
-        # Single-tenant: organization is always None; membership not required.
         self.client.login(username="authuser", password="pass1234")
         resp = self.client.get(AUTH_URL)
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
         self.assertEqual(body["status"], "success")
         self.assertTrue(body["data"]["authenticated"])
-        self.assertIsNone(body["data"]["organization"])
         # user should be full_name or username
         self.assertIn("홍", body["data"]["user"])
-
-    def test_no_membership_returns_null_org(self):
-        self.client.login(username="authuser", password="pass1234")
-        resp = self.client.get(AUTH_URL)
-        self.assertEqual(resp.status_code, 200)
-        body = resp.json()
-        self.assertIsNone(body["data"]["organization"])
 
 
 # ===========================================================================

@@ -23,7 +23,6 @@ PROJECT_PAGES = {
 def resolve_context(
     *,
     user: User,
-    organization=None,
     context_hint: dict[str, Any],
 ) -> dict[str, Any]:
     """Resolve client context hint to verified server context.
@@ -32,8 +31,6 @@ def resolve_context(
     This function verifies the project exists and enriches the context.
 
     Returns dict with keys: page, project_id, project_title, scope, tab.
-
-    Note: organization parameter is ignored (single-tenant).
     """
     page = context_hint.get("page", "unknown")
     raw_project_id = context_hint.get("project_id")

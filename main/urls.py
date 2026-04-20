@@ -10,9 +10,9 @@ from projects.views import dashboard
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("hijack/", include("hijack.urls")),
-    # Root: onboarding router (routes by membership status)
+    # Root: onboarding router
     path("", home, name="home"),
-    # Dashboard: explicit path only (protected by membership_required in t04)
+    # Dashboard: level_required gated
     path("dashboard/", dashboard, name="dashboard"),
     path("team/", team_list, name="team"),
     # Accounts (includes login, settings, etc. at root prefix)
