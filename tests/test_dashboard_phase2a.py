@@ -16,22 +16,10 @@ from projects.models import (
 
 
 
-@pytest.fixture
-def owner(db):
-    u = User.objects.create_user(username="owner", password="x", level=2)
-    return u
-
-
-@pytest.fixture
-def owner_client(client, owner):
-    client.force_login(owner)
-    return client
-
-
 @pytest.mark.django_db
-def test_dashboard_renders_with_empty_org(owner_client):
+def test_dashboard_renders_with_empty_org(boss_client):
     """Skeleton: dashboard renders 200 with empty org, no crash."""
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     assert resp.status_code == 200
     assert b"Monthly Success" in resp.content
 
@@ -49,7 +37,7 @@ def client_obj(db):
 
 
 @pytest.mark.django_db
-def test_s1_monthly_success_counts(owner_client, client_obj):
+def test_s1_monthly_success_counts(boss_client, client_obj):
     """S1-1: 이번 달 성공/진행중/성공률 렌더."""
     now = timezone.localtime()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -69,7 +57,7 @@ def test_s1_monthly_success_counts(owner_client, client_obj):
     for i in range(3):
         Project.objects.create( client=client_obj, title=f"O{i}")
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
 
     # 큰 숫자 = 이번 달 성공 2건
@@ -81,9 +69,9 @@ def test_s1_monthly_success_counts(owner_client, client_obj):
 
 
 @pytest.mark.django_db
-def test_s1_monthly_success_empty(owner_client):
+def test_s1_monthly_success_empty(boss_client):
     """S1-1 빈 조직: 0/0/— 렌더."""
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert 'data-testid="s1-success-count">0<' in body
     assert 'data-testid="s1-active-count">0<' in body
@@ -91,7 +79,7 @@ def test_s1_monthly_success_empty(owner_client):
 
 
 @pytest.mark.django_db
-def test_s1_project_status_counts(owner_client, client_obj):
+def test_s1_project_status_counts(boss_client, client_obj):
     """S1-3: 서칭/스크리닝/완료 개수 렌더."""
     # 서칭 4건
     for i in range(4):
@@ -106,7 +94,7 @@ def test_s1_project_status_counts(owner_client, client_obj):
         p = Project.objects.create( client=client_obj, title=f"CL{i}")
         _close_project(p, res, timezone.now())
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
 
     assert 'data-testid="s3-searching">4<' in body
@@ -123,17 +111,17 @@ def consultant_user(db):
 
 
 @pytest.mark.django_db
-def test_s2_team_performance_lists_members(owner_client, client_obj, consultant_user):
-    """S2-1: owner + consultant 목록, viewer 제외."""
+def test_s2_team_performance_lists_members(boss_client, client_obj, consultant_user):
+    """S2-1: boss + consultant 목록, viewer 제외."""
     viewer = User.objects.create_user(username="v1", password="x", first_name="뷰어")
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
 
     # consultant 한글명 표시 (last_name="김" + first_name="민호" → "김민호")
     assert "김민호" in body
-    # owner 본인도 표시 (username="owner" fallback)
-    assert "owner" in body
+    # boss 본인도 표시 (username="boss_u" fallback)
+    assert "boss_u" in body
     # viewer 제외
     assert "뷰어" not in body
     # 역할 한글
@@ -142,7 +130,7 @@ def test_s2_team_performance_lists_members(owner_client, client_obj, consultant_
 
 
 @pytest.mark.django_db
-def test_s2_team_performance_success_rate(owner_client, client_obj, consultant_user):
+def test_s2_team_performance_success_rate(boss_client, client_obj, consultant_user):
     """S2-1: 성공률 = 본인 담당 success / 본인 담당 closed."""
     # consultant가 담당한 프로젝트 4건 closed (3성공 1실패) + 2 open
     for i in range(3):
@@ -157,7 +145,7 @@ def test_s2_team_performance_success_rate(owner_client, client_obj, consultant_u
         )
         p.assigned_consultants.add(consultant_user)
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
 
     # 성공률 75% (3/4)
@@ -167,9 +155,9 @@ def test_s2_team_performance_success_rate(owner_client, client_obj, consultant_u
 
 
 @pytest.mark.django_db
-def test_s2_team_performance_empty_rate(owner_client, consultant_user):
+def test_s2_team_performance_empty_rate(boss_client, consultant_user):
     """S2-1: 표본 없는 멤버는 '—'."""
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
 
     assert 'data-testid="s2-rate-c1">—<' in body
@@ -203,16 +191,16 @@ def submit_type(db):
 
 
 @pytest.mark.django_db
-def test_s3_weekly_empty(owner_client):
+def test_s3_weekly_empty(boss_client):
     """S3 Weekly: 빈 상태 렌더."""
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert "이번 주 일정이 없습니다" in body
 
 
 @pytest.mark.django_db
 def test_s3_weekly_shows_interview(
-    owner_client, client_obj, interview_type, consultant_user
+    boss_client, client_obj, interview_type, consultant_user
 ):
     """S3 Weekly: Interview 표시, '인터뷰' 키워드·후보자명 포함."""
     monday = _this_monday_midnight()
@@ -228,7 +216,7 @@ def test_s3_weekly_shows_interview(
         action_item=ai, round=1, scheduled_at=monday + timedelta(days=2, hours=11),
         type="화상", location="Zoom")
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert "1차 면접" in body
     assert "박해준" in body
@@ -241,24 +229,24 @@ def test_s3_weekly_shows_interview(
 
 
 @pytest.mark.django_db
-def test_s3_monthly_has_42_cells(owner_client):
+def test_s3_monthly_has_42_cells(boss_client):
     """Monthly Calendar: 항상 42셀 렌더."""
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert body.count('class="cal-day') == 42
 
 
 @pytest.mark.django_db
-def test_s3_monthly_today_class(owner_client):
+def test_s3_monthly_today_class(boss_client):
     """Monthly Calendar: 오늘 셀에 today 클래스."""
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert 'class="cal-day today"' in body
 
 
 @pytest.mark.django_db
 def test_s3_monthly_interview_label(
-    owner_client, client_obj, interview_type, consultant_user
+    boss_client, client_obj, interview_type, consultant_user
 ):
     """Monthly Calendar: 이번 달 Interview → '인터뷰' 레이블 표시."""
     now = timezone.localtime()
@@ -280,14 +268,14 @@ def test_s3_monthly_interview_label(
         type="대면",
         location="서울")
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert "인터뷰" in body
 
 
 @pytest.mark.django_db
 def test_s3_monthly_outside_day_shows_event(
-    owner_client, client_obj, submit_type
+    boss_client, client_obj, submit_type
 ):
     """S3 Monthly: 전/다음달 outside 셀에도 ActionItem 라벨이 뜬다."""
     # grid 시작일 (이번 달 첫 주의 일요일)
@@ -306,7 +294,7 @@ def test_s3_monthly_outside_day_shows_event(
         application=app, action_type=submit_type,
         title="서류 제출", scheduled_at=outside_day)
 
-    resp = owner_client.get(reverse("dashboard"))
+    resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
     # outside 셀은 muted 이지만 라벨은 나와야 한다
     assert "일정" in body or "서류 제출" in body  # event_label "일정"이 나온다
