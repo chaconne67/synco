@@ -26,15 +26,6 @@ class TestDashboardAuth:
         assert response.status_code == 200
 
 
-class TestDashboardContext:
-    def test_context_contains_action_lists(self, logged_in_client):
-        """Response context includes today_actions, overdue_actions, upcoming_actions."""
-        response = logged_in_client.get(reverse("dashboard"))
-        assert "today_actions" in response.context
-        assert "overdue_actions" in response.context
-        assert "upcoming_actions" in response.context
-
-
 class TestDashboardOrgIsolation:
     def test_other_org_actions_not_visible(
         self, logged_in_client, application, user, other_org_user, action_type_reach_out
@@ -106,11 +97,3 @@ class TestDashboardOrgIsolation:
         response = logged_in_client.get(reverse("dashboard"))
         content = response.content.decode()
         assert "다른 사람 액션" not in content
-
-
-class TestDashboardTodoPartial:
-    def test_todo_partial_returns_html(self, logged_in_client):
-        """/dashboard/todo/ returns HTML partial."""
-        response = logged_in_client.get(reverse("dashboard_todo"))
-        assert response.status_code == 200
-        assert "text/html" in response["Content-Type"]

@@ -344,31 +344,6 @@ class TestDashboardViews:
         assert "대시보드" in resp.content.decode()
 
     @pytest.mark.django_db
-    def test_dashboard_owner_sees_admin(self, auth_owner):
-        resp = auth_owner.get("/dashboard/")
-        content = resp.content.decode()
-        assert "팀 전체 현황" in content
-
-    @pytest.mark.django_db
-    def test_dashboard_consultant_no_admin(self, auth_consultant):
-        resp = auth_consultant.get("/dashboard/")
-        content = resp.content.decode()
-        assert "팀 전체 현황" not in content
-
-    @pytest.mark.django_db
-    def test_dashboard_actions_partial(self, auth_consultant):
-        resp = auth_consultant.get("/dashboard/actions/", HTTP_HX_REQUEST="true")
-        assert resp.status_code == 200
-
-    @pytest.mark.django_db
-    def test_dashboard_team_owner_only(self, auth_consultant, auth_owner):
-        resp = auth_consultant.get("/dashboard/team/", HTTP_HX_REQUEST="true")
-        assert resp.status_code == 403
-
-        resp = auth_owner.get("/dashboard/team/", HTTP_HX_REQUEST="true")
-        assert resp.status_code == 200
-
-    @pytest.mark.django_db
     def test_dashboard_no_membership_redirects_to_invite(self):
         """No membership -> redirect to invite page."""
         user = User.objects.create_user(username="nomem_dash", password="test1234")

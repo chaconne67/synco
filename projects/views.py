@@ -2147,68 +2147,6 @@ def dashboard(request):
     return render(request, "projects/dashboard.html")
 
 
-@login_required
-@membership_required
-def dashboard_actions(request):
-    """오늘의 액션 HTMX partial (새로고침용)."""
-    org = _get_org(request)
-
-    from projects.services.dashboard import get_today_actions
-
-    today_actions = get_today_actions(request.user, org)
-    is_owner = False
-    try:
-        is_owner = request.user.membership.role == "owner"
-    except Exception:
-        pass
-    return render(
-        request,
-        "projects/partials/dash_actions.html",
-        {"today_actions": today_actions, "is_owner": is_owner},
-    )
-
-
-@login_required
-@membership_required
-def dashboard_todo_partial(request):
-    """HTMX partial: 할 일 리스트만 반환."""
-    org = _get_org(request)
-    user = request.user
-
-    from projects.services.dashboard import (
-        get_overdue_actions,
-        get_today_actions,
-        get_upcoming_actions,
-    )
-
-    scope = request.GET.get("scope", "today")
-    if scope == "overdue":
-        actions = get_overdue_actions(user, org)
-    elif scope == "upcoming":
-        actions = get_upcoming_actions(user, org)
-    else:
-        actions = get_today_actions(user, org)
-    return render(
-        request,
-        "projects/partials/dashboard_todo_list.html",
-        {"actions": actions, "scope": scope},
-    )
-
-
-@login_required
-@role_required("owner")
-def dashboard_team(request):
-    """팀 현황 HTMX partial (OWNER 전용)."""
-    org = _get_org(request)
-
-    from projects.services.dashboard import get_pending_approvals
-
-    context = {
-        "pending_approvals": get_pending_approvals(org),
-    }
-    return render(request, "projects/partials/dash_admin.html", context)
-
-
 # --- P16: Work Continuity ---
 
 from projects.services.context import (

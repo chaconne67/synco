@@ -191,30 +191,6 @@ class TestViewPermissions:
         assert response.status_code == 302
         assert "/accounts/invite/" in response.url
 
-    def test_consultant_cannot_access_dashboard_team(self):
-        org = Organization.objects.create(name="Org")
-        user = User.objects.create_user(username="con6", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, role="consultant", status="active"
-        )
-        client = TestClient()
-        client.force_login(user)
-
-        response = client.get("/dashboard/team/")
-        assert response.status_code == 403
-
-    def test_consultant_can_access_dashboard_actions(self):
-        org = Organization.objects.create(name="Org")
-        user = User.objects.create_user(username="con7", password="pass")
-        Membership.objects.create(
-            user=user, organization=org, role="consultant", status="active"
-        )
-        client = TestClient()
-        client.force_login(user)
-
-        response = client.get("/dashboard/actions/")
-        assert response.status_code == 200
-
 
 from clients.models import Client
 from projects.models import Project, ProjectStatus
