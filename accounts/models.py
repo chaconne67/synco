@@ -19,6 +19,17 @@ class User(AbstractUser):
     employee_count = models.IntegerField(null=True, blank=True)
     ga_id = models.CharField(max_length=100, blank=True)
     push_subscription = models.JSONField(null=True, blank=True)
+
+    class Level(models.IntegerChoices):
+        PENDING = 0, "대기"
+        STAFF = 1, "직원"
+        BOSS = 2, "사장"
+
+    level = models.IntegerField(
+        choices=Level.choices,
+        default=Level.PENDING,
+    )
+
     last_news_seen_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

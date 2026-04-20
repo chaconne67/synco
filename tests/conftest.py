@@ -186,3 +186,62 @@ def _disable_manifest_storage(settings):
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+
+
+# --- Level-based fixtures (single-tenant refactor) ---
+
+
+@pytest.fixture
+def pending_user(db):
+    return User.objects.create_user(
+        username="pending_u", password="x", level=0
+    )
+
+
+@pytest.fixture
+def staff_user(db):
+    return User.objects.create_user(
+        username="staff_u", password="x", level=1
+    )
+
+
+@pytest.fixture
+def boss_user(db):
+    return User.objects.create_user(
+        username="boss_u", password="x", level=2
+    )
+
+
+@pytest.fixture
+def dev_user(db):
+    return User.objects.create_user(
+        username="dev_u",
+        password="x",
+        level=2,
+        is_superuser=True,
+        is_staff=True,
+    )
+
+
+@pytest.fixture
+def staff_client(client, staff_user):
+    client.force_login(staff_user)
+    return client
+
+
+@pytest.fixture
+def boss_client(client, boss_user):
+    client.force_login(boss_user)
+    return client
+
+
+@pytest.fixture
+def pending_client(client, pending_user):
+    client.force_login(pending_user)
+    return client
+
+
+@pytest.fixture
+def dev_client(client, dev_user):
+    client.force_login(dev_user)
+    return client
