@@ -1,6 +1,6 @@
 import pytest
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
-from django.test import RequestFactory
 
 from accounts.decorators import level_required, superuser_required
 
@@ -18,11 +18,6 @@ def boss_view(request):
 @superuser_required
 def dev_view(request):
     return HttpResponse("ok")
-
-
-@pytest.fixture
-def rf():
-    return RequestFactory()
 
 
 @pytest.mark.django_db
@@ -73,3 +68,12 @@ def test_boss_blocked_from_superuser_view(rf, boss_user):
     req.user = boss_user
     resp = dev_view(req)
     assert resp.status_code == 403
+
+
+@pytest.mark.django_db
+def test_anonymous_redirected_to_login(rf):
+    req = rf.get("/")
+    req.user = AnonymousUser()
+    resp = staff_view(req)
+    assert resp.status_code == 302
+    assert "/accounts/login" in resp["Location"]

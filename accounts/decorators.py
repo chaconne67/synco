@@ -26,6 +26,9 @@ def level_required(min_level):
         def wrapper(request, *args, **kwargs):
             user = request.user
 
+            if not user.is_authenticated:
+                return _redirect_named("landing", "/accounts/login/")
+
             if user.is_superuser:
                 return view_func(request, *args, **kwargs)
 

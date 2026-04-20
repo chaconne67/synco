@@ -7,6 +7,9 @@ def scope_work_qs(qs, user, assigned_field="assigned_consultants"):
     - Level 0 (pending): empty queryset.
     - Level 1 (staff): only rows where the user is in `assigned_field`.
     - Level 2+ or is_superuser: full queryset.
+
+    Note: the staff branch calls ``.distinct()`` because the M2M filter
+    may return duplicate rows.
     """
     if user.is_superuser or user.level >= 2:
         return qs
