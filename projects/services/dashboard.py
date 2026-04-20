@@ -377,15 +377,14 @@ def _monthly_calendar(org, user, scope_owner) -> list[dict]:
 
     grid_start = _month_grid_start(year, month)
 
-    # 이번 달 범위 (aware)
-    month_start_aware = timezone.make_aware(datetime.datetime(year, month, 1))
-    month_end_aware = timezone.make_aware(datetime.datetime(next_year, next_month, 1))
+    # 42-day grid 범위 (aware) — outside-month 셀도 이벤트 표시
+    grid_end = grid_start + timedelta(days=42)
 
     # Interview 쿼리 (organization 스코프)
     interviews_qs = Interview.objects.filter(
         action_item__application__project__organization=org,
-        scheduled_at__gte=month_start_aware,
-        scheduled_at__lt=month_end_aware,
+        scheduled_at__gte=grid_start,
+        scheduled_at__lt=grid_end,
     )
     if not scope_owner:
         interviews_qs = interviews_qs.filter(
@@ -401,8 +400,8 @@ def _monthly_calendar(org, user, scope_owner) -> list[dict]:
     # ActionItem 쿼리 (interview_round 제외)
     actions_qs = ActionItem.objects.filter(
         application__project__organization=org,
-        scheduled_at__gte=month_start_aware,
-        scheduled_at__lt=month_end_aware,
+        scheduled_at__gte=grid_start,
+        scheduled_at__lt=grid_end,
     ).exclude(action_type__code="interview_round")
     if not scope_owner:
         actions_qs = actions_qs.filter(assigned_to=user)

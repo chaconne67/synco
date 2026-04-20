@@ -302,3 +302,31 @@ def test_s3_monthly_interview_label(
     resp = owner_client.get(reverse("dashboard"))
     body = resp.content.decode()
     assert "인터뷰" in body
+
+
+@pytest.mark.django_db
+def test_s3_monthly_outside_day_shows_event(
+    owner_client, org, client_obj, submit_type
+):
+    """S3 Monthly: 전/다음달 outside 셀에도 ActionItem 라벨이 뜬다."""
+    # grid 시작일 (이번 달 첫 주의 일요일)
+    now = timezone.localtime()
+    first = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    sunday_offset = first.isoweekday() % 7
+    grid_start = first - timedelta(days=sunday_offset)
+    if sunday_offset == 0:
+        pytest.skip("1일이 일요일이면 outside 셀 leading 없음")
+
+    outside_day = grid_start + timedelta(hours=10)  # 이전 달의 일요일
+    cand = Candidate.objects.create(name="이전달")
+    proj = Project.objects.create(organization=org, client=client_obj, title="Outside")
+    app = Application.objects.create(project=proj, candidate=cand)
+    ActionItem.objects.create(
+        application=app, action_type=submit_type,
+        title="서류 제출", scheduled_at=outside_day,
+    )
+
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+    # outside 셀은 muted 이지만 라벨은 나와야 한다
+    assert "일정" in body or "서류 제출" in body  # event_label "일정"이 나온다
