@@ -374,9 +374,9 @@ class Candidate(BaseModel):
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=["owned_by", "external_profile_url"],
+                fields=["external_profile_url"],
                 condition=models.Q(external_profile_url__gt=""),
-                name="unique_candidate_external_url_per_org",
+                name="unique_candidate_external_url",
             ),
         ]
 
