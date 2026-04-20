@@ -1595,10 +1595,11 @@ def interview_create(request, pk):
 def interview_update(request, pk, interview_pk):
     """면접 수정."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    interview = get_object_or_404(
+    interview = get_scoped_object_or_404(
         Interview,
+        request.user,
         pk=interview_pk,
-        submission__project=project,
+        action_item__application__project=project,
     )
 
     if request.method == "POST":
@@ -1630,10 +1631,11 @@ def interview_update(request, pk, interview_pk):
 def interview_delete(request, pk, interview_pk):
     """면접 삭제."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    interview = get_object_or_404(
+    interview = get_scoped_object_or_404(
         Interview,
+        request.user,
         pk=interview_pk,
-        submission__project=project,
+        action_item__application__project=project,
     )
 
     interview.delete()
@@ -1648,10 +1650,11 @@ def interview_delete(request, pk, interview_pk):
 def interview_result(request, pk, interview_pk):
     """면접 결과 입력 (대기 → 합격/보류/탈락)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    interview = get_object_or_404(
+    interview = get_scoped_object_or_404(
         Interview,
+        request.user,
         pk=interview_pk,
-        submission__project=project,
+        action_item__application__project=project,
     )
 
     if request.method == "POST":
@@ -2545,8 +2548,9 @@ def project_add_candidate(request, pk):
 @level_required(1)
 def application_drop(request, pk):
     """GET: 드롭 사유 모달 렌더링. POST: Application 드롭."""
-    application = get_object_or_404(
+    application = get_scoped_object_or_404(
         Application,
+        request.user,
         pk=pk,
     )
 
@@ -2594,8 +2598,9 @@ def application_drop(request, pk):
 @require_POST
 def application_restore(request, pk):
     """POST: Application 드롭 복구."""
-    application = get_object_or_404(
+    application = get_scoped_object_or_404(
         Application,
+        request.user,
         pk=pk,
     )
     try:
@@ -2620,8 +2625,9 @@ def application_restore(request, pk):
 @require_POST
 def application_hire(request, pk):
     """POST: 입사 확정. Signal이 프로젝트 자동 종료 + 나머지 드롭."""
-    application = get_object_or_404(
+    application = get_scoped_object_or_404(
         Application,
+        request.user,
         pk=pk,
     )
     try:
@@ -2652,8 +2658,9 @@ def application_skip_stage(request, pk):
     )
     from django.utils import timezone
 
-    application = get_object_or_404(
-        Application.objects.select_related("candidate", "project"),
+    application = get_scoped_object_or_404(
+        Application,
+        request.user,
         pk=pk,
     )
     current_id = application.current_stage
@@ -2742,8 +2749,9 @@ def _create_receive_resume_action(application, actor, *, done, note, due_days=0)
 @require_POST
 def application_resume_use_db(request, pk):
     """Phase B — DB에 있는 기존 이력서 사용. receive_resume 즉시 완료."""
-    application = get_object_or_404(
-        Application.objects.select_related("candidate", "project"),
+    application = get_scoped_object_or_404(
+        Application,
+        request.user,
         pk=pk,
     )
     current = application.candidate.current_resume
@@ -2767,8 +2775,9 @@ def application_resume_use_db(request, pk):
 @level_required(1)
 def application_resume_request_email(request, pk):
     """Phase B — 이메일로 이력서 요청. GET=폼 모달, POST=pending 액션 생성."""
-    application = get_object_or_404(
-        Application.objects.select_related("candidate", "project"),
+    application = get_scoped_object_or_404(
+        Application,
+        request.user,
         pk=pk,
     )
     if request.method == "POST":
@@ -2793,8 +2802,9 @@ def application_resume_request_email(request, pk):
 @level_required(1)
 def application_resume_upload(request, pk):
     """Phase B — 직접 받은 이력서 파일 업로드. GET=업로드 모달, POST=Resume+ActionItem 생성."""
-    application = get_object_or_404(
-        Application.objects.select_related("candidate", "project"),
+    application = get_scoped_object_or_404(
+        Application,
+        request.user,
         pk=pk,
     )
     if request.method == "POST":
@@ -2830,8 +2840,9 @@ def application_resume_upload(request, pk):
 @level_required(1)
 def application_actions_partial(request, pk):
     """GET: Application의 ActionItem 목록. R1-11/R1-12: prefetch + ordering."""
-    application = get_object_or_404(
-        Application.objects.select_related("candidate", "project"),
+    application = get_scoped_object_or_404(
+        Application,
+        request.user,
         pk=pk,
     )
     actions = application.action_items.select_related(
@@ -2854,8 +2865,9 @@ def application_actions_partial(request, pk):
 @level_required(1)
 def action_create(request, pk):
     """GET: 액션 생성 모달. POST: ActionItem 생성."""
-    application = get_object_or_404(
+    application = get_scoped_object_or_404(
         Application,
+        request.user,
         pk=pk,
     )
     active_types = ActionType.objects.filter(is_active=True).order_by("sort_order")
@@ -2926,8 +2938,9 @@ def action_create(request, pk):
 @level_required(1)
 def action_complete(request, pk):
     """GET: 완료 모달 렌더링. POST: ActionItem 완료 + 후속 제안."""
-    action = get_object_or_404(
+    action = get_scoped_object_or_404(
         ActionItem,
+        request.user,
         pk=pk,
     )
 
@@ -2986,8 +2999,9 @@ def action_complete(request, pk):
 @level_required(1)
 def action_skip(request, pk):
     """GET: 건너뛰기 사유 모달. POST: ActionItem 건너뛰기."""
-    action = get_object_or_404(
+    action = get_scoped_object_or_404(
         ActionItem,
+        request.user,
         pk=pk,
     )
 
@@ -3032,8 +3046,9 @@ def action_skip(request, pk):
 @level_required(1)
 def action_reschedule(request, pk):
     """GET: 일정 변경 모달. POST: ActionItem 일정 변경."""
-    action = get_object_or_404(
+    action = get_scoped_object_or_404(
         ActionItem,
+        request.user,
         pk=pk,
     )
 
@@ -3084,8 +3099,9 @@ def action_propose_next(request, pk):
     """POST: 완료된 액션 다음에 컨설턴트가 선택한 후속 액션들을 생성.
     선택된 type IDs를 propose_next() 결과와 교차검증.
     """
-    action = get_object_or_404(
+    action = get_scoped_object_or_404(
         ActionItem,
+        request.user,
         pk=pk,
     )
 
