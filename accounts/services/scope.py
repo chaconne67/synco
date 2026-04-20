@@ -30,7 +30,7 @@ def _interview_rule(user):
 
 
 def _submission_rule(user):
-    return Q(application__project__assigned_consultants=user)
+    return Q(action_item__application__project__assigned_consultants=user)
 
 
 def _build_rules():

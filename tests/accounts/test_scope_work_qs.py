@@ -92,6 +92,49 @@ def test_action_item_scope_or_rule(staff_user, staff_user_2, project, candidate)
 
 
 @pytest.mark.django_db
+def test_submission_scope_follows_action_item_chain(
+    staff_user, staff_user_2, client_company, candidate
+):
+    """Submission scope는 action_item→application→project 체인을 타야 한다."""
+    from projects.models import (
+        ActionItem,
+        ActionItemStatus,
+        ActionType,
+        Application,
+        Project,
+        ProjectStatus,
+        Submission,
+    )
+    from accounts.services.scope import scope_work_qs
+
+    project = Project.objects.create(
+        client=client_company,
+        title="Submission scope",
+        status=ProjectStatus.OPEN,
+        created_by=staff_user_2,
+    )
+    project.assigned_consultants.add(staff_user_2)
+    app = Application.objects.create(
+        project=project, candidate=candidate, created_by=staff_user_2
+    )
+    atype = ActionType.objects.get(code="submit_to_client")
+    ai = ActionItem.objects.create(
+        application=app,
+        action_type=atype,
+        title="제출",
+        status=ActionItemStatus.DONE,
+    )
+    sub = Submission.objects.create(action_item=ai)
+
+    qs = scope_work_qs(Submission.objects.all(), staff_user)
+    assert sub.id not in set(qs.values_list("id", flat=True))
+
+    project.assigned_consultants.add(staff_user)
+    qs = scope_work_qs(Submission.objects.all(), staff_user)
+    assert sub.id in set(qs.values_list("id", flat=True))
+
+
+@pytest.mark.django_db
 def test_unknown_model_raises(staff_user):
     from clients.models import Client
     from accounts.services.scope import scope_work_qs
