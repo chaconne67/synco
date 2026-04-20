@@ -182,11 +182,11 @@ def get_project_kanban_cards(
     return cards
 
 
-def _monthly_success(user, scope_owner):
+def _monthly_success(user):
     """S1-1 Monthly Success: 이번 달 성공·진행중·성공률."""
     now_local = timezone.localtime()
     month_start = now_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    qs = _scope_projects(user, scope_owner)
+    qs = _scope_projects(user)
 
     closed_this_month = qs.filter(
         status=ProjectStatus.CLOSED,
@@ -203,9 +203,9 @@ def _monthly_success(user, scope_owner):
     }
 
 
-def _project_status_counts(user, scope_owner):
+def _project_status_counts(user):
     """S1-3 Project Status: searching/screening/closed 누적 개수."""
-    qs = _scope_projects(user, scope_owner)
+    qs = _scope_projects(user)
     return {
         "searching": qs.filter(
             status=ProjectStatus.OPEN, phase=ProjectPhase.SEARCHING
@@ -285,34 +285,32 @@ def _week_range():
     return monday, next_monday
 
 
-def _weekly_schedule(user, scope_owner, limit: int = 5):
+def _weekly_schedule(user, limit: int = 5):
     """S3 Weekly Schedule: 이번 주 Interview + ActionItem 합집합, 시간 asc."""
+    from accounts.services.scope import scope_work_qs
+
     monday, next_monday = _week_range()
 
-    interviews = Interview.objects.filter(
-        scheduled_at__gte=monday,
-        scheduled_at__lt=next_monday,
+    interviews = scope_work_qs(
+        Interview.objects.filter(
+            scheduled_at__gte=monday,
+            scheduled_at__lt=next_monday,
+        ),
+        user,
     ).select_related(
         "action_item__application__candidate",
         "action_item__application__project__client",
     )
-    actions = (
+    actions = scope_work_qs(
         ActionItem.objects.filter(
             scheduled_at__gte=monday,
             scheduled_at__lt=next_monday,
-        )
-        .exclude(action_type__code="interview_round")
-        .select_related(
-            "action_type",
-            "application__project__client",
-        )
+        ).exclude(action_type__code="interview_round"),
+        user,
+    ).select_related(
+        "action_type",
+        "application__project__client",
     )
-
-    if not scope_owner:
-        interviews = interviews.filter(
-            action_item__application__project__assigned_consultants=user
-        )
-        actions = actions.filter(assigned_to=user)
 
     events = []
 
@@ -350,11 +348,13 @@ def _month_grid_start(year: int, month: int):
     return first_day - timedelta(days=sunday_offset)
 
 
-def _monthly_calendar(user, scope_owner) -> list[dict]:
+def _monthly_calendar(user) -> list[dict]:
     """S3 Monthly Calendar: 6주×7일=42셀, 이번 달 기준.
 
     각 셀: {"date": int, "is_today": bool, "is_outside": bool, "event_label": str|None}
     """
+    from accounts.services.scope import scope_work_qs
+
     now = timezone.localtime()
     today = now.date()
     year, month = today.year, today.month
@@ -372,14 +372,13 @@ def _monthly_calendar(user, scope_owner) -> list[dict]:
     grid_end = grid_start + timedelta(days=42)
 
     # Interview 쿼리
-    interviews_qs = Interview.objects.filter(
-        scheduled_at__gte=grid_start,
-        scheduled_at__lt=grid_end,
+    interviews_qs = scope_work_qs(
+        Interview.objects.filter(
+            scheduled_at__gte=grid_start,
+            scheduled_at__lt=grid_end,
+        ),
+        user,
     )
-    if not scope_owner:
-        interviews_qs = interviews_qs.filter(
-            action_item__application__project__assigned_consultants=user
-        )
 
     # date → interview 건수
     interview_counts: dict[datetime.date, int] = {}
@@ -388,12 +387,13 @@ def _monthly_calendar(user, scope_owner) -> list[dict]:
         interview_counts[d] = interview_counts.get(d, 0) + 1
 
     # ActionItem 쿼리 (interview_round 제외)
-    actions_qs = ActionItem.objects.filter(
-        scheduled_at__gte=grid_start,
-        scheduled_at__lt=grid_end,
-    ).exclude(action_type__code="interview_round")
-    if not scope_owner:
-        actions_qs = actions_qs.filter(assigned_to=user)
+    actions_qs = scope_work_qs(
+        ActionItem.objects.filter(
+            scheduled_at__gte=grid_start,
+            scheduled_at__lt=grid_end,
+        ).exclude(action_type__code="interview_round"),
+        user,
+    )
 
     # date → action 건수
     action_counts: dict[datetime.date, int] = {}
@@ -428,25 +428,19 @@ def get_dashboard_context(user: User) -> dict:
     Phase 2a: S1-1 Monthly Success, S1-3 Project Status,
               S2-1 Team Performance, S3 Weekly/Monthly Calendar.
     Phase 2b 카드(S1-2 Revenue, S2-2 Recent Activity)는 하드코딩 유지.
-
-    Single-tenant: org filter removed. scope_owner based on user.level/superuser.
-    T10 will rewire internal queries via scope_work_qs.
     """
-    scope_owner = user.is_superuser or user.level >= 2
     return {
-        "monthly_success": _monthly_success(user, scope_owner),
-        "project_status": _project_status_counts(user, scope_owner),
+        "monthly_success": _monthly_success(user),
+        "project_status": _project_status_counts(user),
         "team_performance": _team_performance(),
-        "weekly_schedule": _weekly_schedule(user, scope_owner),
-        "monthly_calendar": _monthly_calendar(user, scope_owner),
-        "_scope_owner": scope_owner,
+        "weekly_schedule": _weekly_schedule(user),
+        "monthly_calendar": _monthly_calendar(user),
+        "_scope_owner": user.is_superuser or user.level >= 2,
     }
 
 
-def _scope_projects(user: User, scope_owner: bool):
-    """권한 스코프 공통 쿼리셋. boss/superuser=전체, 아니면 본인 담당만."""
-    qs = Project.objects.all()
-    if not scope_owner:
-        qs = qs.filter(assigned_consultants=user)
-    return qs
+def _scope_projects(user):
+    """업무 스코프 쿼리셋. scope_work_qs 를 그대로 사용."""
+    from accounts.services.scope import scope_work_qs
+    return scope_work_qs(Project.objects.all(), user)
 
