@@ -226,21 +226,14 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         random.seed(opts["seed"])
 
-        # Single-tenant: use the single org for FK fields (still required until T6)
-        org = self._resolve_org()
-        if org:
-            self.stdout.write(f"target org: {org.name} ({org.id})")
-        else:
-            self.stdout.write("no org found — FK fields will be null (T6 pending)")
-
         creator = self._resolve_creator()
 
         if opts["wipe"]:
-            self._wipe(org)
+            self._wipe()
 
-        clients = self._seed_clients(org)
+        clients = self._seed_clients()
         candidates = self._resolve_candidates(opts["candidates"])
-        projects = self._seed_projects(org, clients, creator, opts["projects"])
+        projects = self._seed_projects(clients, creator, opts["projects"])
         self._seed_applications(projects, candidates, creator)
 
         self.stdout.write(self.style.SUCCESS("seed_dummy_data done"))
@@ -255,13 +248,6 @@ class Command(BaseCommand):
             "  action_items: "
             f"{ActionItem.objects.count()}"
         )
-
-    # ------------------------------------------------------------------
-    def _resolve_org(self):
-        """Return the single Organization (single-tenant). None if none exist yet."""
-        from accounts.models import Organization
-
-        return Organization.objects.first()
 
     def _resolve_creator(self):
         """Return a level>=2 (boss) user for dummy data attribution."""
@@ -280,7 +266,7 @@ class Command(BaseCommand):
         return User.objects.filter(is_active=True).first()
 
     # ------------------------------------------------------------------
-    def _wipe(self, org=None):
+    def _wipe(self):
         self.stdout.write("wiping existing [DUMMY] records...")
         # ActionItems/Applications cascade via Project/Candidate deletion
         candidates = Candidate.objects.filter(summary__startswith=DUMMY_TAG)
@@ -297,14 +283,11 @@ class Command(BaseCommand):
         )
 
     # ------------------------------------------------------------------
-    def _seed_clients(self, org=None) -> list[Client]:
+    def _seed_clients(self) -> list[Client]:
         created: list[Client] = []
         for name, industry, size, region in CLIENT_SEEDS:
-            lookup = {"name": name}
-            if org is not None:
-                lookup["organization"] = org
             client, was_created = Client.objects.get_or_create(
-                **lookup,
+                name=name,
                 defaults={
                     "industry": industry,
                     "size": size,
@@ -429,7 +412,6 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     def _seed_projects(
         self,
-        org,
         clients: list[Client],
         creator,
         count: int,
@@ -461,14 +443,9 @@ class Command(BaseCommand):
 
             # 모두 기본 상태(phase=searching, status=open)로 생성.
             # 승격은 _seed_applications 에서 submit_to_client DONE / hire 로 유도 → 시그널이 반영
-            project_kwargs = dict(
+            project = Project.objects.create(
                 client=client,
                 title=title,
-            )
-            if org is not None:
-                project_kwargs["organization"] = org
-            project = Project.objects.create(
-                **project_kwargs,
                 jd_text=(
                     f"{client.name} {title} 포지션.\n\n"
                     "- 요구 경력: 8년 이상\n"

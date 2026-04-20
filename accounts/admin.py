@@ -1,50 +1,21 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 
 from .models import (
     EmailMonitorConfig,
-    InviteCode,
-    Membership,
     NotificationPreference,
-    Organization,
     TelegramBinding,
     User,
 )
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
-    pass
-
-
-@admin.register(Organization)
-class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name", "plan", "db_share_enabled")
-    list_filter = ("plan", "db_share_enabled")
-    search_fields = ("name",)
-
-
-@admin.register(Membership)
-class MembershipAdmin(admin.ModelAdmin):
-    list_display = ("user", "organization", "role", "status")
-    list_filter = ("role", "status")
-    search_fields = ("user__username", "organization__name")
-
-
-@admin.register(InviteCode)
-class InviteCodeAdmin(admin.ModelAdmin):
-    list_display = (
-        "code",
-        "organization",
-        "role",
-        "used_count",
-        "max_uses",
-        "is_active",
-        "expires_at",
+class UserAdmin(DefaultUserAdmin):
+    list_display = ("username", "email", "level", "is_superuser", "date_joined")
+    list_filter = ("level", "is_superuser")
+    fieldsets = DefaultUserAdmin.fieldsets + (
+        ("synco", {"fields": ("level", "kakao_id", "phone")}),
     )
-    list_filter = ("role", "is_active", "organization")
-    search_fields = ("code", "organization__name")
-    readonly_fields = ("code", "used_count")
 
 
 @admin.register(TelegramBinding)

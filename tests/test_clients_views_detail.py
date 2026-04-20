@@ -8,9 +8,8 @@ from projects.models import Project, ProjectStatus
 
 
 @pytest.fixture
-def detail_client(legacy_org):
+def detail_client():
     return Client.objects.create(
-        organization=legacy_org,
         name="DetailCorp",
         website="https://detail.example.com",
         description="헤드헌팅 고객사 설명입니다",
@@ -30,16 +29,14 @@ def test_detail_renders_profile(boss_client, detail_client):
 
 
 @pytest.mark.django_db
-def test_detail_projects_panel_all(legacy_org, boss_client, detail_client):
+def test_detail_projects_panel_all(boss_client, detail_client):
     """status=all 필터 시 진행중·종료 프로젝트 모두 표시된다."""
     Project.objects.create(
-        organization=legacy_org,
         client=detail_client,
         title="ActiveProject",
         status=ProjectStatus.OPEN,
     )
     Project.objects.create(
-        organization=legacy_org,
         client=detail_client,
         title="ClosedProject",
         status=ProjectStatus.CLOSED,
@@ -55,16 +52,14 @@ def test_detail_projects_panel_all(legacy_org, boss_client, detail_client):
 
 
 @pytest.mark.django_db
-def test_detail_projects_panel_active_only(legacy_org, boss_client, detail_client):
+def test_detail_projects_panel_active_only(boss_client, detail_client):
     """status=active 필터 시 진행중 프로젝트만 표시된다."""
     Project.objects.create(
-        organization=legacy_org,
         client=detail_client,
         title="ActiveProject",
         status=ProjectStatus.OPEN,
     )
     Project.objects.create(
-        organization=legacy_org,
         client=detail_client,
         title="ClosedProject",
         status=ProjectStatus.CLOSED,

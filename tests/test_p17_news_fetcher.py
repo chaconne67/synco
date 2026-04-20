@@ -4,31 +4,23 @@ import pytest
 from datetime import datetime, timezone as dt_tz
 from unittest.mock import patch, MagicMock
 
-from accounts.models import Organization
 from projects.models import (
     NewsArticle,
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus,
-)
+    SummaryStatus)
 from projects.services.news.fetcher import fetch_articles
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def source(org):
+def source(db):
     return NewsSource.objects.create(
-        organization=org,
         name="Test Feed",
         url="https://example.com/feed.xml",
         type=NewsSourceType.RSS,
-        category=NewsCategory.HIRING,
-    )
+        category=NewsCategory.HIRING)
 
 
 def _make_feed_entry(title, link, published=None):
@@ -125,15 +117,14 @@ class TestFetchArticles:
         created, skipped = fetch_articles(source)
         assert created == 1
 
+    @pytest.mark.django_db
     @patch("projects.services.news.fetcher.httpx.get")
-    def test_skips_non_rss_source(self, mock_httpx_get, org):
+    def test_skips_non_rss_source(self, mock_httpx_get):
         yt_source = NewsSource.objects.create(
-            organization=org,
             name="YouTube",
             url="https://youtube.com/@channel",
             type=NewsSourceType.YOUTUBE,
-            category=NewsCategory.INDUSTRY,
-        )
+            category=NewsCategory.INDUSTRY)
         created, skipped = fetch_articles(yt_source)
         assert created == 0
         assert skipped == 0

@@ -17,9 +17,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.decorators import level_required
-from accounts.helpers import _get_org
-from accounts.models import Membership
 from accounts.services.scope import scope_work_qs
+from clients.models import Client
 
 from projects.services import posting as posting_service
 from projects.services.dashboard import get_dashboard_context
@@ -112,8 +111,6 @@ def _filter_params_string(request, exclude=None):
 @level_required(1)
 def project_list(request):
     """List projects as 2-phase kanban (searching / screening / closed)."""
-    org = _get_org(request)
-
     from projects.services.dashboard import get_project_kanban_cards
 
     # Role-based filtering (existing pattern preserved)
@@ -133,7 +130,6 @@ def project_list(request):
     sort_closed = request.GET.get("sort_closed", "desc")
 
     cards = get_project_kanban_cards(
-        org,
         consultant_id=consultant_filter or None,
         client_id=client_filter,
         search=search_filter,
@@ -163,22 +159,16 @@ def project_list(request):
         cards[ProjectPhase.SCREENING]
     )
     this_month_deadline_count = Project.objects.filter(
-        organization=org,
         status=ProjectStatus.OPEN,
         deadline__year=now.year,
         deadline__month=now.month,
     ).count()
 
-    # Owner 는 필터 바에서 컨설턴트 선택 가능. 조직 멤버 리스트 필요.
-    from accounts.models import Membership
+    # Owner 는 필터 바에서 컨설턴트 선택 가능.
+    from accounts.models import User as _User
 
     if is_owner:
-        org_consultants = [
-            m.user
-            for m in Membership.objects.filter(
-                organization=org, status="active"
-            ).select_related("user")
-        ]
+        org_consultants = list(_User.objects.filter(level__gte=1).order_by("username"))
     else:
         org_consultants = []
 
@@ -191,7 +181,7 @@ def project_list(request):
         "sort_directions": sort_directions,
         "sort_toggle_urls": sort_toggle_urls,
         "is_owner": is_owner,
-        "clients": org.clients.all(),
+        "clients": Client.objects.all(),
         "org_consultants": org_consultants,
         "scope": request.GET.get("scope", "mine"),
         "view_type": "board",
@@ -214,7 +204,6 @@ def project_list(request):
 @require_http_methods(["POST"])
 def project_check_collision(request):
     """HTMX endpoint: check for collision when client + title are provided."""
-    org = _get_org(request)
     client_id = request.POST.get("client_id")
     title = request.POST.get("title", "").strip()
 
@@ -223,7 +212,7 @@ def project_check_collision(request):
 
     from projects.services.collision import detect_collisions
 
-    collisions = detect_collisions(client_id, title, org)
+    collisions = detect_collisions(client_id, title)
 
     high_collisions = [c for c in collisions if c["conflict_type"] == "높은중복"]
     medium_collisions = [c for c in collisions if c["conflict_type"] == "참고정보"]
@@ -243,19 +232,18 @@ def project_check_collision(request):
 @level_required(1)
 def project_create(request):
     """Create a new project. GET=form, POST=save with collision detection."""
-    org = _get_org(request)
-
     if request.method == "POST":
-        form = ProjectForm(request.POST, request.FILES, organization=org)
+        form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             from django.contrib import messages as django_messages
             from django.db import transaction
 
+            from accounts.models import User as _User
             from projects.services.collision import detect_collisions
 
             client_id = form.cleaned_data["client"].pk
             title = form.cleaned_data["title"]
-            collisions = detect_collisions(client_id, title, org)
+            collisions = detect_collisions(client_id, title)
 
             high_collisions = [
                 c for c in collisions if c["conflict_type"] == "높은중복"
@@ -263,7 +251,6 @@ def project_create(request):
 
             with transaction.atomic():
                 project = form.save(commit=False)
-                project.organization = org
                 project.created_by = request.user
 
                 if high_collisions:
@@ -283,20 +270,17 @@ def project_create(request):
                         message=request.POST.get("approval_message", ""),
                     )
 
-                    # A1: Send Telegram approval notification to org owners
+                    # A1: Send Telegram approval notification to level-2 users
                     from projects.models import Notification
                     from projects.services.notification import send_notification
                     from projects.telegram.formatters import format_approval_request
                     from projects.telegram.keyboards import build_approval_keyboard
 
-                    owner_memberships = Membership.objects.filter(
-                        organization=org,
-                        role=Membership.Role.OWNER,
-                    ).select_related("user")
+                    owners = _User.objects.filter(level__gte=2)
 
-                    for m in owner_memberships:
+                    for owner in owners:
                         notif = Notification.objects.create(
-                            recipient=m.user,
+                            recipient=owner,
                             type=Notification.Type.APPROVAL_REQUEST,
                             title=f"프로젝트 승인 요청: {project.title}",
                             body=(
@@ -340,7 +324,7 @@ def project_create(request):
                         project.assigned_consultants.add(request.user)
                     return redirect("projects:project_detail", pk=project.pk)
     else:
-        form = ProjectForm(organization=org)
+        form = ProjectForm()
 
     return render(
         request,
@@ -376,8 +360,7 @@ def _build_tab_context(project):
 @level_required(1)
 def project_detail(request, pk):
     """Project detail — Application-based view."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     applications = (
         Application.objects.filter(project=project)
@@ -413,8 +396,7 @@ def project_detail(request, pk):
 @level_required(1)
 def project_applications_partial(request, pk):
     """HTMX partial: application list for a project. R1-11: explicit prefetch."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     applications = (
         Application.objects.filter(project=project)
         .select_related("candidate")
@@ -443,8 +425,7 @@ def project_applications_partial(request, pk):
 @level_required(1)
 def project_timeline_partial(request, pk):
     """HTMX partial: action timeline for a project."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     actions = (
         ActionItem.objects.filter(application__project=project)
         .select_related("application__candidate", "action_type", "assigned_to")
@@ -461,8 +442,7 @@ def project_timeline_partial(request, pk):
 @level_required(1)
 def project_update(request, pk):
     """Update an existing project."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     # Block edit if pending approval exists
     has_pending_approval = ProjectApproval.objects.filter(
@@ -473,13 +453,13 @@ def project_update(request, pk):
 
     if request.method == "POST":
         form = ProjectForm(
-            request.POST, request.FILES, instance=project, organization=org
+            request.POST, request.FILES, instance=project
         )
         if form.is_valid():
             form.save()
             return redirect("projects:project_detail", pk=project.pk)
     else:
-        form = ProjectForm(instance=project, organization=org)
+        form = ProjectForm(instance=project)
 
     return render(
         request,
@@ -495,8 +475,7 @@ def project_delete(request, pk):
     if request.method != "POST":
         return HttpResponse(status=405)
 
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     # Block delete if pending approval exists
     has_pending_approval = ProjectApproval.objects.filter(
@@ -536,8 +515,7 @@ def project_delete(request, pk):
 @level_required(1)
 def project_close(request, pk):
     """GET: render close modal form. POST: close the project."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     # Permission: owner or assigned consultant
     is_owner = request.user.is_superuser or request.user.level >= 2
@@ -595,8 +573,7 @@ def project_close(request, pk):
 @require_http_methods(["POST"])
 def project_reopen(request, pk):
     """Reopen a closed project."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     # Permission: owner or assigned consultant
     is_owner = request.user.is_superuser or request.user.level >= 2
@@ -666,8 +643,7 @@ def _build_overview_context(project):
 @level_required(1)
 def project_tab_overview(request, pk):
     """개요: JD 요약, 퍼널, 담당자, 최근 진행 현황."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     context = _build_overview_context(project)
     context["project"] = project
 
@@ -687,8 +663,7 @@ def project_tab_overview(request, pk):
 @level_required(1)
 def project_tab_search(request, pk):
     """서칭: 매칭 결과 + Application 상태 표시."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     results = []
     if project.requirements:
@@ -733,8 +708,7 @@ def project_tab_search(request, pk):
 @level_required(1)
 def project_tab_submissions(request, pk):
     """추천 탭: 상태별 그룹핑 목록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submissions = project.submissions.select_related(
         "candidate", "consultant"
     ).order_by("-created_at")
@@ -763,8 +737,7 @@ def project_tab_submissions(request, pk):
 @level_required(1)
 def project_tab_interviews(request, pk):
     """면접 탭: 후보자별 그룹핑, 차수 순 정렬."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     interviews = (
         Interview.objects.filter(submission__project=project)
@@ -805,8 +778,7 @@ def project_tab_interviews(request, pk):
 @require_http_methods(["POST"])
 def analyze_jd(request, pk):
     """JD 분석 트리거. 파일 업로드 시 텍스트 추출 후 AI 분석."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     from projects.services.jd_analysis import (
         analyze_jd as run_analysis,
@@ -854,8 +826,7 @@ def analyze_jd(request, pk):
 @level_required(1)
 def jd_results(request, pk):
     """JD 분석 결과 표시 (HTMX partial)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     return render(
         request,
@@ -874,8 +845,7 @@ def jd_results(request, pk):
 @level_required(1)
 def drive_picker(request, pk):
     """Drive 파일 선택 UI. GET=파일 목록, POST=파일 선택+텍스트 추출."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if request.method == "POST":
         file_id = request.POST.get("file_id")
@@ -948,8 +918,7 @@ def drive_picker(request, pk):
 @require_http_methods(["POST"])
 def start_search_session(request, pk):
     """프로젝트 requirements → SearchSession 생성 → 후보자 검색으로 redirect."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if not project.requirements:
         return render(
@@ -976,8 +945,7 @@ def start_search_session(request, pk):
 @level_required(1)
 def jd_matching_results(request, pk):
     """프로젝트 상세 내 후보자 매칭 결과 목록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if not project.requirements:
         return render(
@@ -1006,15 +974,14 @@ def jd_matching_results(request, pk):
 @level_required(1)
 def submission_create(request, pk):
     """추천 서류 등록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if _has_pending_approval(project):
         return HttpResponse(status=403)
 
     if request.method == "POST":
         form = SubmissionForm(
-            request.POST, request.FILES, organization=org, project=project
+            request.POST, request.FILES
         )
         if form.is_valid():
             submission = form.save(commit=False)
@@ -1039,7 +1006,7 @@ def submission_create(request, pk):
             )
             return response
     else:
-        form = SubmissionForm(organization=org, project=project)
+        form = SubmissionForm()
 
     # 프리필: query param으로 candidate 전달 시
     candidate_id = request.GET.get("candidate")
@@ -1062,8 +1029,7 @@ def submission_create(request, pk):
 @require_http_methods(["POST"])
 def submission_batch_create(request, pk):
     """선택한 여러 Application 을 한 batch_id 로 묶어 Submission 생성."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     app_ids = request.POST.getlist("application_ids")
     if not app_ids:
         return HttpResponseBadRequest("application_ids required")
@@ -1110,8 +1076,7 @@ def submission_batch_create(request, pk):
 @level_required(1)
 def submission_update(request, pk, sub_pk):
     """추천 서류 수정."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     if request.method == "POST":
@@ -1119,8 +1084,6 @@ def submission_update(request, pk, sub_pk):
             request.POST,
             request.FILES,
             instance=submission,
-            organization=org,
-            project=project,
         )
         if form.is_valid():
             form.save()
@@ -1131,8 +1094,6 @@ def submission_update(request, pk, sub_pk):
     else:
         form = SubmissionForm(
             instance=submission,
-            organization=org,
-            project=project,
         )
 
     return render(
@@ -1152,8 +1113,7 @@ def submission_update(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def submission_delete(request, pk, sub_pk):
     """추천 서류 삭제. 면접/오퍼 존재 시 차단."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     # 삭제 보호: 면접 존재 시 차단
@@ -1175,8 +1135,7 @@ def submission_delete(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def submission_submit(request, pk, sub_pk):
     """고객사에 제출 (작성중 → 제출)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     from projects.services.submission import InvalidTransition, submit_to_client
@@ -1196,8 +1155,7 @@ def submission_submit(request, pk, sub_pk):
 @level_required(1)
 def submission_feedback(request, pk, sub_pk):
     """고객사 피드백 입력 (제출 → 통과/탈락)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     if request.method == "POST":
@@ -1239,8 +1197,7 @@ def submission_feedback(request, pk, sub_pk):
 @level_required(1)
 def submission_download(request, pk, sub_pk):
     """첨부파일 다운로드. 파일 없으면 404."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     if not submission.document_file:
@@ -1268,8 +1225,7 @@ MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25MB (Whisper API limit)
 
 def _get_draft_context(request, pk, sub_pk):
     """Draft 뷰 공통: org 검증 + project + submission + draft(get_or_create)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
     draft, _created = SubmissionDraft.objects.get_or_create(
         submission=submission,
@@ -1570,8 +1526,7 @@ def draft_preview(request, pk, sub_pk):
 @level_required(1)
 def interview_create(request, pk):
     """면접 등록."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if _has_pending_approval(project):
         return HttpResponse(status=403)
@@ -1643,8 +1598,7 @@ def interview_create(request, pk):
 @level_required(1)
 def interview_update(request, pk, interview_pk):
     """면접 수정."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     interview = get_object_or_404(
         Interview,
         pk=interview_pk,
@@ -1679,8 +1633,7 @@ def interview_update(request, pk, interview_pk):
 @require_http_methods(["POST"])
 def interview_delete(request, pk, interview_pk):
     """면접 삭제."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     interview = get_object_or_404(
         Interview,
         pk=interview_pk,
@@ -1698,8 +1651,7 @@ def interview_delete(request, pk, interview_pk):
 @level_required(1)
 def interview_result(request, pk, interview_pk):
     """면접 결과 입력 (대기 → 합격/보류/탈락)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     interview = get_object_or_404(
         Interview,
         pk=interview_pk,
@@ -1751,8 +1703,7 @@ def interview_result(request, pk, interview_pk):
 @require_http_methods(["POST"])
 def posting_generate(request, pk):
     """AI 공지 초안 생성. overwrite=true 필요 시 기존 내용 보호."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     # I-07: 덮어쓰기 보호 — 기존 내용 있으면 overwrite 파라미터 필요
     if project.posting_text and request.POST.get("overwrite") != "true":
@@ -1808,8 +1759,7 @@ def posting_generate(request, pk):
 @level_required(1)
 def posting_edit(request, pk):
     """공지 내용 편집. GET=폼, POST=저장."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if request.method == "POST":
         form = PostingEditForm(request.POST)
@@ -1843,8 +1793,7 @@ def posting_edit(request, pk):
 @level_required(1)
 def posting_download(request, pk):
     """공지 파일 다운로드 (.txt)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if not project.posting_text:
         return HttpResponse(status=404)
@@ -1866,8 +1815,7 @@ def posting_download(request, pk):
 @level_required(1)
 def posting_sites(request, pk):
     """포스팅 사이트 목록 (HTMX partial)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     sites = project.posting_sites.filter(is_active=True)
     total_applicants = sum(s.applicant_count for s in sites)
@@ -1888,8 +1836,7 @@ def posting_sites(request, pk):
 @require_http_methods(["GET", "POST"])
 def posting_site_add(request, pk):
     """포스팅 사이트 추가."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if request.method == "POST":
         form = PostingSiteForm(request.POST)
@@ -1947,8 +1894,7 @@ def posting_site_add(request, pk):
 @require_http_methods(["GET", "POST"])
 def posting_site_update(request, pk, site_pk):
     """포스팅 사이트 수정."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     site = get_object_or_404(PostingSite, pk=site_pk, project=project)
 
     if request.method == "POST":
@@ -1988,8 +1934,7 @@ def posting_site_update(request, pk, site_pk):
 @require_http_methods(["POST"])
 def posting_site_delete(request, pk, site_pk):
     """포스팅 사이트 비활성화 (소프트 삭제)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     site = get_object_or_404(PostingSite, pk=site_pk, project=project)
 
     site.is_active = False
@@ -2010,11 +1955,9 @@ def posting_site_delete(request, pk, site_pk):
 @level_required(2)
 def approval_queue(request):
     """OWNER-only: list pending approval requests."""
-    org = _get_org(request)
 
     approvals = (
         ProjectApproval.objects.filter(
-            project__organization=org,
             status=ProjectApproval.Status.PENDING,
         )
         .select_related(
@@ -2033,7 +1976,6 @@ def approval_queue(request):
             appr.merge_candidates = (
                 Project.objects.filter(
                     client=appr.project.client,
-                    organization=org,
                 )
                 .exclude(
                     status=ProjectStatus.CLOSED,
@@ -2057,7 +1999,6 @@ def approval_queue(request):
 @require_http_methods(["POST"])
 def approval_decide(request, appr_pk):
     """OWNER-only: decide on an approval request."""
-    org = _get_org(request)
 
     from .forms import ApprovalDecisionForm
     from .services.approval import (
@@ -2071,7 +2012,6 @@ def approval_decide(request, appr_pk):
     approval = get_object_or_404(
         ProjectApproval,
         pk=appr_pk,
-        project__organization=org,
     )
 
     form = ApprovalDecisionForm(request.POST)
@@ -2089,7 +2029,7 @@ def approval_decide(request, appr_pk):
             merge_target = None
             if merge_target_id:
                 merge_target = get_object_or_404(
-                    Project, pk=merge_target_id, organization=org
+                    Project, pk=merge_target_id
                 )
             merge_project(approval, request.user, merge_target=merge_target)
         elif decision == "메시지":
@@ -2107,8 +2047,7 @@ def approval_decide(request, appr_pk):
 @require_http_methods(["POST"])
 def approval_cancel(request, pk):
     """Requester cancels their approval request."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     approval = get_object_or_404(
         ProjectApproval,
@@ -2162,8 +2101,7 @@ from .models import AutoAction
 @require_http_methods(["GET"])
 def project_context(request, pk):
     """GET: Return active context banner partial."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     ctx = get_active_context(project, request.user)
     return render(
         request,
@@ -2181,8 +2119,7 @@ def project_context(request, pk):
 @require_http_methods(["POST"])
 def project_context_save(request, pk):
     """POST: Save/update context (autosave endpoint)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     content_type = request.content_type or ""
     if "application/json" in content_type:
@@ -2219,8 +2156,7 @@ def project_context_save(request, pk):
 @require_http_methods(["POST"])
 def project_context_resume(request, pk):
     """POST: Resume from context → redirect to target form."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     ctx = get_active_context(project, request.user)
     if not ctx:
         return HttpResponse(status=404)
@@ -2237,8 +2173,7 @@ def project_context_resume(request, pk):
 @require_http_methods(["POST"])
 def project_context_discard(request, pk):
     """POST: Discard the active context."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     discard_context(project, request.user)
     return render(
         request,
@@ -2256,8 +2191,7 @@ def project_context_discard(request, pk):
 @require_http_methods(["GET"])
 def project_auto_actions(request, pk):
     """GET: List pending auto-actions."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     actions = get_pending_actions(project)
     return render(
         request,
@@ -2274,8 +2208,7 @@ def project_auto_actions(request, pk):
 @require_http_methods(["POST"])
 def auto_action_apply(request, pk, action_pk):
     """POST: Apply an auto-action."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     action = get_object_or_404(AutoAction, pk=action_pk, project=project)
     try:
         apply_action(action.pk, request.user)
@@ -2297,8 +2230,7 @@ def auto_action_apply(request, pk, action_pk):
 @require_http_methods(["POST"])
 def auto_action_dismiss(request, pk, action_pk):
     """POST: Dismiss an auto-action."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     action = get_object_or_404(AutoAction, pk=action_pk, project=project)
     try:
         dismiss_action(action.pk, request.user)
@@ -2322,8 +2254,7 @@ def auto_action_dismiss(request, pk, action_pk):
 @level_required(1)
 def resume_upload(request, pk):
     """POST: Upload resume files → create ResumeUpload(pending) per file."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if request.method != "POST":
         return HttpResponseBadRequest()
@@ -2337,7 +2268,6 @@ def resume_upload(request, pk):
             upload = create_upload(
                 file=f,
                 project=project,
-                organization=org,
                 user=request.user,
                 upload_batch=batch_id,
             )
@@ -2361,8 +2291,7 @@ def resume_upload(request, pk):
 @level_required(1)
 def resume_process_pending(request, pk):
     """POST: Process all pending uploads for batch. Runs extraction synchronously."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     batch_id = request.POST.get("batch_id")
     if not batch_id:
@@ -2394,8 +2323,7 @@ def resume_process_pending(request, pk):
 @level_required(1)
 def resume_upload_status(request, pk):
     """GET: HTMX polling endpoint for upload status."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     batch_id = request.GET.get("batch")
     uploads = ResumeUpload.objects.filter(
@@ -2419,8 +2347,7 @@ def resume_upload_status(request, pk):
 @level_required(1)
 def resume_link_candidate(request, pk, resume_pk):
     """POST: Link extracted resume to candidate."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     upload = get_object_or_404(
         ResumeUpload.objects.filter(project=project),
         pk=resume_pk,
@@ -2446,8 +2373,7 @@ def resume_link_candidate(request, pk, resume_pk):
 @level_required(1)
 def resume_discard(request, pk, resume_pk):
     """POST: Discard resume upload + delete physical file."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     upload = get_object_or_404(
         ResumeUpload.objects.filter(project=project),
         pk=resume_pk,
@@ -2471,8 +2397,7 @@ def resume_discard(request, pk, resume_pk):
 @level_required(1)
 def resume_retry(request, pk, resume_pk):
     """POST: Retry failed extraction (max 3 retries)."""
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
     upload = get_object_or_404(
         ResumeUpload.objects.filter(project=project),
         pk=resume_pk,
@@ -2499,10 +2424,8 @@ def resume_retry(request, pk, resume_pk):
 @login_required
 @level_required(1)
 def resume_unassigned(request):
-    """GET: Org-scoped list of unassigned resume uploads (project=null)."""
-    org = _get_org(request)
+    """GET: list of unassigned resume uploads (project=null)."""
     uploads = ResumeUpload.objects.filter(
-        organization=org,
         project__isnull=True,
     ).exclude(status=ResumeUpload.Status.DISCARDED)
     projects = scope_work_qs(Project.objects.all(), request.user).exclude(
@@ -2523,18 +2446,16 @@ def resume_unassigned(request):
 @level_required(1)
 def resume_assign_project(request, resume_pk, project_pk):
     """POST: Assign an unassigned resume upload to a project."""
-    org = _get_org(request)
     upload = get_object_or_404(
-        ResumeUpload.objects.filter(organization=org, project__isnull=True),
+        ResumeUpload.objects.filter(project__isnull=True),
         pk=resume_pk,
     )
-    project = get_object_or_404(Project, pk=project_pk, organization=org)
+    project = get_object_or_404(Project, pk=project_pk)
 
     upload.project = project
     upload.save(update_fields=["project", "updated_at"])
 
     uploads = ResumeUpload.objects.filter(
-        organization=org,
         project__isnull=True,
     ).exclude(status=ResumeUpload.Status.DISCARDED)
 
@@ -2559,11 +2480,10 @@ def project_add_candidate(request, pk):
     POST (candidate_id): 서칭 페이지의 "프로젝트에 추가" 버튼 — 단건 직접 추가.
     POST (form): 모달 폼을 통한 추가 (기존 방식).
     """
-    org = _get_org(request)
-    project = get_object_or_404(Project, pk=pk, organization=org)
+    project = get_object_or_404(Project, pk=pk)
 
     if request.method == "GET":
-        form = ApplicationCreateForm(organization=org)
+        form = ApplicationCreateForm()
         return render(
             request,
             "projects/partials/add_candidate_modal.html",
@@ -2594,7 +2514,7 @@ def project_add_candidate(request, pk):
         return redirect("projects:project_detail", pk=project.pk)
 
     # POST — 모달 폼 (기존 방식)
-    form = ApplicationCreateForm(request.POST, organization=org)
+    form = ApplicationCreateForm(request.POST)
     if not form.is_valid():
         return render(
             request,
@@ -2629,11 +2549,9 @@ def project_add_candidate(request, pk):
 @level_required(1)
 def application_drop(request, pk):
     """GET: 드롭 사유 모달 렌더링. POST: Application 드롭."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application,
         pk=pk,
-        project__organization=org,
     )
 
     if request.method == "GET":
@@ -2680,11 +2598,9 @@ def application_drop(request, pk):
 @require_POST
 def application_restore(request, pk):
     """POST: Application 드롭 복구."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application,
         pk=pk,
-        project__organization=org,
     )
     try:
         restore_application(application, actor=request.user)
@@ -2708,11 +2624,9 @@ def application_restore(request, pk):
 @require_POST
 def application_hire(request, pk):
     """POST: 입사 확정. Signal이 프로젝트 자동 종료 + 나머지 드롭."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application,
         pk=pk,
-        project__organization=org,
     )
     try:
         hire_application(application, actor=request.user)
@@ -2742,11 +2656,9 @@ def application_skip_stage(request, pk):
     )
     from django.utils import timezone
 
-    org = _get_org(request)
     application = get_object_or_404(
         Application.objects.select_related("candidate", "project"),
         pk=pk,
-        project__organization=org,
     )
     current_id = application.current_stage
     if current_id in (None, "hired"):
@@ -2834,11 +2746,9 @@ def _create_receive_resume_action(application, actor, *, done, note, due_days=0)
 @require_POST
 def application_resume_use_db(request, pk):
     """Phase B — DB에 있는 기존 이력서 사용. receive_resume 즉시 완료."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application.objects.select_related("candidate", "project"),
         pk=pk,
-        project__organization=org,
     )
     current = application.candidate.current_resume
     if not current:
@@ -2861,11 +2771,9 @@ def application_resume_use_db(request, pk):
 @level_required(1)
 def application_resume_request_email(request, pk):
     """Phase B — 이메일로 이력서 요청. GET=폼 모달, POST=pending 액션 생성."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application.objects.select_related("candidate", "project"),
         pk=pk,
-        project__organization=org,
     )
     if request.method == "POST":
         body = (request.POST.get("body") or "").strip() or "(본문 미입력)"
@@ -2889,11 +2797,9 @@ def application_resume_request_email(request, pk):
 @level_required(1)
 def application_resume_upload(request, pk):
     """Phase B — 직접 받은 이력서 파일 업로드. GET=업로드 모달, POST=Resume+ActionItem 생성."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application.objects.select_related("candidate", "project"),
         pk=pk,
-        project__organization=org,
     )
     if request.method == "POST":
         file = request.FILES.get("resume_file")
@@ -2928,11 +2834,9 @@ def application_resume_upload(request, pk):
 @level_required(1)
 def application_actions_partial(request, pk):
     """GET: Application의 ActionItem 목록. R1-11/R1-12: prefetch + ordering."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application.objects.select_related("candidate", "project"),
         pk=pk,
-        project__organization=org,
     )
     actions = application.action_items.select_related(
         "action_type", "assigned_to"
@@ -2954,11 +2858,9 @@ def application_actions_partial(request, pk):
 @level_required(1)
 def action_create(request, pk):
     """GET: 액션 생성 모달. POST: ActionItem 생성."""
-    org = _get_org(request)
     application = get_object_or_404(
         Application,
         pk=pk,
-        project__organization=org,
     )
     active_types = ActionType.objects.filter(is_active=True).order_by("sort_order")
 
@@ -3028,11 +2930,9 @@ def action_create(request, pk):
 @level_required(1)
 def action_complete(request, pk):
     """GET: 완료 모달 렌더링. POST: ActionItem 완료 + 후속 제안."""
-    org = _get_org(request)
     action = get_object_or_404(
         ActionItem,
         pk=pk,
-        application__project__organization=org,
     )
 
     if request.method == "GET":
@@ -3090,11 +2990,9 @@ def action_complete(request, pk):
 @level_required(1)
 def action_skip(request, pk):
     """GET: 건너뛰기 사유 모달. POST: ActionItem 건너뛰기."""
-    org = _get_org(request)
     action = get_object_or_404(
         ActionItem,
         pk=pk,
-        application__project__organization=org,
     )
 
     if request.method == "GET":
@@ -3138,11 +3036,9 @@ def action_skip(request, pk):
 @level_required(1)
 def action_reschedule(request, pk):
     """GET: 일정 변경 모달. POST: ActionItem 일정 변경."""
-    org = _get_org(request)
     action = get_object_or_404(
         ActionItem,
         pk=pk,
-        application__project__organization=org,
     )
 
     if request.method == "GET":
@@ -3192,11 +3088,9 @@ def action_propose_next(request, pk):
     """POST: 완료된 액션 다음에 컨설턴트가 선택한 후속 액션들을 생성.
     선택된 type IDs를 propose_next() 결과와 교차검증.
     """
-    org = _get_org(request)
     action = get_object_or_404(
         ActionItem,
         pk=pk,
-        application__project__organization=org,
     )
 
     # Guard: parent action must be completed
@@ -3249,9 +3143,6 @@ def action_propose_next(request, pk):
 def stage_contact_complete(request, pk):
     """접촉 단계 완료 — 응답 기록."""
     app = get_object_or_404(Application, pk=pk)
-    org = _get_org(request)
-    if app.project.organization != org:
-        return HttpResponseForbidden("cross-org access denied")
 
     form = ContactCompleteForm(request.POST)
     if not form.is_valid():
@@ -3289,9 +3180,6 @@ def stage_pre_meeting_schedule(request, pk):
     from projects.models import ActionItem, ActionItemStatus, ActionType
 
     app = get_object_or_404(Application, pk=pk)
-    org = _get_org(request)
-    if app.project.organization != org:
-        return HttpResponseForbidden("cross-org access denied")
 
     form = PreMeetingScheduleForm(request.POST)
     if not form.is_valid():
@@ -3326,9 +3214,6 @@ def stage_pre_meeting_record(request, pk):
     )
 
     app = get_object_or_404(Application, pk=pk)
-    org = _get_org(request)
-    if app.project.organization != org:
-        return HttpResponseForbidden("cross-org access denied")
 
     form = PreMeetingRecordForm(request.POST, request.FILES)
     if not form.is_valid():
@@ -3361,9 +3246,6 @@ def stage_pre_meeting_record(request, pk):
 def stage_prep_submission_confirm(request, pk):
     """이력서 작성(제출용) 단계 — 컨설턴트 컨펌."""
     app = get_object_or_404(Application, pk=pk)
-    org = _get_org(request)
-    if app.project.organization != org:
-        return HttpResponseForbidden("cross-org access denied")
 
     at = ActionType.objects.get(code="submit_to_pm")
     ActionItem.objects.create(
@@ -3383,10 +3265,7 @@ def stage_prep_submission_confirm(request, pk):
 @require_http_methods(["POST"])
 def stage_client_submit_single(request, pk):
     """이력서 제출 단계 — 이 후보자만 단독 제출."""
-    org = _get_org(request)
     app = get_object_or_404(Application, pk=pk)
-    if app.project.organization != org:
-        return HttpResponseForbidden("cross-org access denied")
 
     at = ActionType.objects.get(code="submit_to_client")
     ai = ActionItem.objects.create(
@@ -3414,9 +3293,6 @@ def stage_interview_complete(request, pk):
     from projects.models import ActionItem, ActionItemStatus, ActionType, DropReason
 
     app = get_object_or_404(Application, pk=pk)
-    org = _get_org(request)
-    if app.project.organization != org:
-        return HttpResponseForbidden("cross-org access denied")
 
     result = request.POST.get("result", "")
     review = request.POST.get("review", "").strip()

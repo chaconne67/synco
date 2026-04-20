@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from clients.models import Client
 from projects.models import Contact, Project
 
@@ -13,39 +13,31 @@ from projects.models import Contact, Project
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def user_owner(db, org):
+def user_owner(db):
     user = User.objects.create_user(username="owner13", password="test1234")
-    Membership.objects.create(user=user, organization=org, role="owner")
     return user
 
 
 @pytest.fixture
-def user_consultant(db, org):
+def user_consultant(db):
     user = User.objects.create_user(username="consultant13", password="test1234")
-    Membership.objects.create(user=user, organization=org, role="consultant")
     return user
 
 
 @pytest.fixture
 def client_obj(org):
-    return Client.objects.create(name="Acme Corp", industry="IT", organization=org)
+    return Client.objects.create(name="Acme Corp", industry="IT")
 
 
 @pytest.fixture
 def project(org, client_obj, user_consultant):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="품질기획팀장",
         status="searching",
-        created_by=user_consultant,
-    )
+        created_by=user_consultant)
     p.assigned_consultants.add(user_consultant)
     return p
 
@@ -74,16 +66,14 @@ class TestContactNextContactDate:
 
         candidate = Candidate.objects.create(
             name="홍길동",
-            owned_by=project.organization,
-        )
+            owned_by=project.organization)
         contact = Contact.objects.create(
             project=project,
             candidate=candidate,
             consultant=user_consultant,
             result="응답",
             contacted_at=timezone.now(),
-            next_contact_date=date.today() + timedelta(days=3),
-        )
+            next_contact_date=date.today() + timedelta(days=3))
         contact.refresh_from_db()
         assert contact.next_contact_date == date.today() + timedelta(days=3)
 
@@ -93,15 +83,13 @@ class TestContactNextContactDate:
 
         candidate = Candidate.objects.create(
             name="이순신",
-            owned_by=project.organization,
-        )
+            owned_by=project.organization)
         contact = Contact.objects.create(
             project=project,
             candidate=candidate,
             consultant=user_consultant,
             result="응답",
-            contacted_at=timezone.now(),
-        )
+            contacted_at=timezone.now())
         contact.refresh_from_db()
         assert contact.next_contact_date is None
 
@@ -124,8 +112,7 @@ class TestUrgencyScoring:
             consultant=user_consultant,
             result="응답",
             contacted_at=timezone.now() - timedelta(days=7),
-            next_contact_date=date.today(),
-        )
+            next_contact_date=date.today())
         action = compute_project_urgency(project)
         assert action is not None
         assert action["priority"] == 1
@@ -144,14 +131,12 @@ class TestUrgencyScoring:
             project=project,
             candidate=candidate,
             consultant=user_consultant,
-            status="통과",
-        )
+            status="통과")
         Interview.objects.create(
             submission=sub,
             round=1,
             scheduled_at=timezone.now() + timedelta(hours=30),
-            type="대면",
-        )
+            type="대면")
         action = compute_project_urgency(project)
         assert action is not None
         assert action["priority"] == 2
@@ -175,8 +160,7 @@ class TestUrgencyScoring:
             consultant=user_consultant,
             result="응답",
             contacted_at=timezone.now() - timedelta(days=7),
-            next_contact_date=today,
-        )
+            next_contact_date=today)
         # Yellow action: use offer stale >7 days (priority 7) — not day-of-week sensitive
         candidate2 = Candidate.objects.create(
             name="김영희", owned_by=project.organization
@@ -185,15 +169,13 @@ class TestUrgencyScoring:
             project=project,
             candidate=candidate2,
             consultant=user_consultant,
-            status="통과",
-        )
+            status="통과")
         from projects.models import Offer
 
         offer = Offer.objects.create(
             submission=sub,
             status="협상중",
-            salary="5000만원",
-        )
+            salary="5000만원")
         # Backdate created_at to >7 days ago (auto_now_add prevents setting at create)
         Offer.objects.filter(pk=offer.pk).update(
             created_at=timezone.now() - timedelta(days=10)
@@ -206,33 +188,29 @@ class TestUrgencyScoring:
 
     @pytest.mark.django_db
     def test_new_project_within_3days_is_priority_8(
-        self, org, client_obj, user_consultant
+        self, client_obj, user_consultant
     ):
         from projects.services.urgency import compute_project_urgency
 
         new_proj = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="신규 프로젝트",
             status="new",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
         action = compute_project_urgency(new_proj)
         assert action is not None
         assert action["priority"] == 8
         assert action["level"] == "green"
 
     @pytest.mark.django_db
-    def test_closed_project_returns_none(self, org, client_obj, user_consultant):
+    def test_closed_project_returns_none(self, client_obj, user_consultant):
         from projects.services.urgency import compute_project_urgency
 
         closed = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="종료 프로젝트",
             status="closed_success",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
         action = compute_project_urgency(closed)
         assert action is None
 
@@ -243,7 +221,7 @@ class TestUrgencyScoring:
 class TestDashboardService:
     @pytest.mark.django_db
     def test_get_today_actions_returns_sorted_red_items(
-        self, user_consultant, org, project
+        self, user_consultant, project
     ):
         from projects.services.dashboard import get_today_actions
 
@@ -256,7 +234,7 @@ class TestDashboardService:
 
     @pytest.mark.django_db
     def test_get_weekly_schedule_returns_yellow_items(
-        self, user_consultant, org, project
+        self, user_consultant, project
     ):
         from projects.services.dashboard import get_weekly_schedule
 
@@ -266,7 +244,7 @@ class TestDashboardService:
             assert action["level"] == "yellow"
 
     @pytest.mark.django_db
-    def test_get_pipeline_summary_counts(self, user_consultant, org, project):
+    def test_get_pipeline_summary_counts(self, user_consultant, project):
         from projects.services.dashboard import get_pipeline_summary
 
         summary = get_pipeline_summary(user_consultant, org)
@@ -276,44 +254,41 @@ class TestDashboardService:
         assert summary["total_active"] >= 1
 
     @pytest.mark.django_db
-    def test_get_pipeline_summary_org_isolation(self, user_consultant, org, project):
+    def test_get_pipeline_summary_org_isolation(self, user_consultant, project):
         from projects.services.dashboard import get_pipeline_summary
 
-        other_org = Organization.objects.create(name="Other Org")
+         = Organization.objects.create(name="Other Org")
         other_client = Client.objects.create(
-            name="Other", industry="IT", organization=other_org
+            name="Other", industry="IT"
         )
         Project.objects.create(
             client=other_client,
-            organization=other_org,
             title="외부 프로젝트",
             status="searching",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
         summary = get_pipeline_summary(user_consultant, org)
         assert summary["total_active"] == 1
 
     @pytest.mark.django_db
-    def test_get_recent_activities(self, user_consultant, org, project):
+    def test_get_recent_activities(self, user_consultant, project):
         from projects.services.dashboard import get_recent_activities
 
         activities = get_recent_activities(user_consultant, org, limit=10)
         assert isinstance(activities, list)
 
     @pytest.mark.django_db
-    def test_get_team_summary_excludes_viewer(self, user_owner, org, project):
+    def test_get_team_summary_excludes_viewer(self, user_owner, project):
         """Fix I-R1-02: viewer role should not appear in team summary."""
         from projects.services.dashboard import get_team_summary
 
         viewer = User.objects.create_user(username="viewer13", password="test1234")
-        Membership.objects.create(user=viewer, organization=org, role="viewer")
-
+    
         summary = get_team_summary(user_owner, org)
         usernames = [c["user"].username for c in summary["consultants"]]
         assert "viewer13" not in usernames
 
     @pytest.mark.django_db
-    def test_get_pending_approvals_empty(self, org):
+    def test_get_pending_approvals_empty(self):
         from projects.services.dashboard import get_pending_approvals
 
         qs = get_pending_approvals(org)
@@ -356,10 +331,8 @@ class TestDashboardViews:
     @pytest.mark.django_db
     def test_dashboard_pending_redirects_to_pending(self):
         """Pending membership -> redirect to pending page."""
-        org = Organization.objects.create(name="Pending Org")
-        user = User.objects.create_user(username="pend_dash", password="test1234")
-        Membership.objects.create(user=user, organization=org, status="pending")
-        c = TestClient()
+            user = User.objects.create_user(username="pend_dash", password="test1234")
+            c = TestClient()
         c.force_login(user)
         resp = c.get("/dashboard/")
         assert resp.status_code == 302
@@ -368,10 +341,8 @@ class TestDashboardViews:
     @pytest.mark.django_db
     def test_dashboard_rejected_redirects_to_rejected(self):
         """Rejected membership -> redirect to rejected page."""
-        org = Organization.objects.create(name="Rejected Org")
-        user = User.objects.create_user(username="rej_dash", password="test1234")
-        Membership.objects.create(user=user, organization=org, status="rejected")
-        c = TestClient()
+            user = User.objects.create_user(username="rej_dash", password="test1234")
+            c = TestClient()
         c.force_login(user)
         resp = c.get("/dashboard/")
         assert resp.status_code == 302

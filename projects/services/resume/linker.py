@@ -40,7 +40,6 @@ def link_resume_to_candidate(
         if not force_new:
             comparison_context = identify_candidate_for_org(
                 pipeline_result["extracted"],
-                upload.organization,
             )
 
         candidate = save_pipeline_result(
@@ -58,10 +57,6 @@ def link_resume_to_candidate(
 
         if candidate is None:
             raise ValueError("Failed to create candidate from extraction")
-
-        if not candidate.owned_by_id:
-            candidate.owned_by = upload.organization
-            candidate.save(update_fields=["owned_by", "updated_at"])
 
         upload.candidate = candidate
         upload.save(update_fields=["candidate", "updated_at"])

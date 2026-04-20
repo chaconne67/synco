@@ -4,24 +4,18 @@ import pytest
 from unittest.mock import patch
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, TelegramBinding, User
+from accounts.models import TelegramBinding, User
 from projects.models import Notification
 from projects.services.notification import (
     send_notification,
     send_bulk_notifications,
-    update_telegram_message,
-)
+    update_telegram_message)
 
-
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=u, organization=org, role="consultant")
     return u
 
 
@@ -38,8 +32,7 @@ def notification(user):
         recipient=user,
         type=Notification.Type.REMINDER,
         title="Test Reminder",
-        body="Test body",
-    )
+        body="Test body")
 
 
 class TestSendNotification:
@@ -84,14 +77,12 @@ class TestSendBulk:
             recipient=user,
             type=Notification.Type.NEWS,
             title="News 1",
-            body="Body 1",
-        )
+            body="Body 1")
         n2 = Notification.objects.create(
             recipient=user,
             type=Notification.Type.NEWS,
             title="News 2",
-            body="Body 2",
-        )
+            body="Body 2")
         count = send_bulk_notifications([n1, n2])
         assert count == 2
 

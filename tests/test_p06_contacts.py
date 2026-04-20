@@ -10,7 +10,7 @@ import pytest
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import Contact, Project
@@ -25,35 +25,19 @@ from projects.services.contact import (
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
+def user_with_org(db):
+    return User.objects.create_user(username="tester", password="test1234", level=1)
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
+def user_with_org2(db):
+    return User.objects.create_user(username="tester2", password="test1234", level=1)
 
 
 @pytest.fixture
-def user_with_org(db, org):
-    user = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
-    return user
-
-
-@pytest.fixture
-def user_with_org2(db, org2):
-    user = User.objects.create_user(username="tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
-    return user
-
-
-@pytest.fixture
-def user2_with_org(db, org):
-    """Same org, second user (non-assigned consultant)."""
-    user = User.objects.create_user(username="tester3", password="test1234")
-    Membership.objects.create(user=user, organization=org)
-    return user
+def user2_with_org(db):
+    """Second user."""
+    return User.objects.create_user(username="tester3", password="test1234", level=1)
 
 
 @pytest.fixture
@@ -72,29 +56,26 @@ def auth_client2(user_with_org2):
 
 @pytest.fixture
 def auth_client3(user2_with_org):
-    """Same org, non-assigned consultant client."""
+    """Second user client."""
     c = TestClient()
     c.login(username="tester3", password="test1234")
     return c
 
 
 @pytest.fixture
-def client_obj(org):
-    return Client.objects.create(name="Acme Corp", industry="IT", organization=org)
+def client_obj(db):
+    return Client.objects.create(name="Acme Corp", industry="IT")
 
 
 @pytest.fixture
-def client_obj2(org2):
-    return Client.objects.create(
-        name="Other Corp", industry="Finance", organization=org2
-    )
+def client_obj2(db):
+    return Client.objects.create(name="Other Corp", industry="Finance")
 
 
 @pytest.fixture
-def project(client_obj, org, user_with_org):
+def project(client_obj, user_with_org):
     p = Project.objects.create(
         client=client_obj,
-        organization=org,
         title="Test Project",
         created_by=user_with_org,
     )
@@ -103,39 +84,37 @@ def project(client_obj, org, user_with_org):
 
 
 @pytest.fixture
-def project2(client_obj, org, user_with_org):
-    """Same org, different project."""
+def project2(client_obj, user_with_org):
+    """Different project."""
     return Project.objects.create(
         client=client_obj,
-        organization=org,
         title="Other Project",
         created_by=user_with_org,
     )
 
 
 @pytest.fixture
-def project_other_org(client_obj2, org2, user_with_org2):
+def project_other_org(client_obj2, user_with_org2):
     return Project.objects.create(
         client=client_obj2,
-        organization=org2,
         title="Other Org Project",
         created_by=user_with_org2,
     )
 
 
 @pytest.fixture
-def candidate(org):
-    return Candidate.objects.create(name="홍길동", owned_by=org)
+def candidate(db):
+    return Candidate.objects.create(name="홍길동")
 
 
 @pytest.fixture
-def candidate2(org):
-    return Candidate.objects.create(name="김철수", owned_by=org)
+def candidate2(db):
+    return Candidate.objects.create(name="김철수")
 
 
 @pytest.fixture
-def candidate_other_org(org2):
-    return Candidate.objects.create(name="이영희", owned_by=org2)
+def candidate_other_org(db):
+    return Candidate.objects.create(name="이영희")
 
 
 # --- Service: check_duplicate ---
@@ -491,34 +470,6 @@ class TestContactReleaseLockView:
             HTTP_HX_REQUEST="true",
         )
         assert resp.status_code == 403
-
-
-# --- Organization Isolation ---
-
-
-class TestContactOrgIsolation:
-    def test_create_other_org_404(self, auth_client, project_other_org):
-        resp = auth_client.get(f"/projects/{project_other_org.pk}/contacts/new/")
-        assert resp.status_code == 404
-
-    def test_reserve_other_org_404(self, auth_client, project_other_org, candidate):
-        resp = auth_client.post(
-            f"/projects/{project_other_org.pk}/contacts/reserve/",
-            {"candidate_ids": [str(candidate.pk)]},
-        )
-        assert resp.status_code == 404
-
-    def test_tab_contacts_other_org_404(self, auth_client, project_other_org):
-        resp = auth_client.get(
-            f"/projects/{project_other_org.pk}/tab/contacts/",
-        )
-        assert resp.status_code == 404
-
-    def test_check_duplicate_other_org_404(self, auth_client, project_other_org):
-        resp = auth_client.get(
-            f"/projects/{project_other_org.pk}/contacts/check-duplicate/",
-        )
-        assert resp.status_code == 404
 
 
 # --- Tab Content ---

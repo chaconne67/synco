@@ -18,21 +18,9 @@ logger = logging.getLogger(__name__)
 REF_PATTERN = re.compile(r"\[REF-([0-9a-f-]{36})\]", re.IGNORECASE)
 
 
-def _get_single_org():
-    """Return the single Organization instance (single-tenant). Returns None if none exist."""
-    from accounts.models import Organization
-
-    return Organization.objects.first()
-
-
 def process_email_config(config: EmailMonitorConfig) -> int:
     """Process one email config. Returns number of new uploads created."""
     client = GmailClient(config)
-    # Single-tenant: use the single org for ResumeUpload FK (required until T6 removes it).
-    org = _get_single_org()
-    if org is None:
-        logger.warning("No organization configured; skipping resume upload creation")
-        return 0
     count = 0
 
     messages = client.get_new_messages()
@@ -52,7 +40,6 @@ def process_email_config(config: EmailMonitorConfig) -> int:
                 _create_email_upload(
                     config=config,
                     client=client,
-                    org=org,
                     msg=msg,
                     att=att,
                     subject=subject,
@@ -95,7 +82,6 @@ def _create_email_upload(
     *,
     config,
     client,
-    org,
     msg,
     att,
     subject,
@@ -118,7 +104,6 @@ def _create_email_upload(
     try:
         with open(tmp_path, "rb") as f:
             upload = ResumeUpload(
-                organization=org,
                 project=project,
                 file_name=att["filename"],
                 file_type=_get_file_type(att["filename"]),

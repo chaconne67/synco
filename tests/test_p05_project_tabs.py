@@ -8,7 +8,7 @@ import pytest
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import (
@@ -24,27 +24,13 @@ from projects.models import (
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
+def user_with_org(db):
+    return User.objects.create_user(username="tester", password="test1234", level=1)
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
-    user = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
-    return user
-
-
-@pytest.fixture
-def user_with_org2(db, org2):
-    user = User.objects.create_user(username="tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
-    return user
+def user_with_org2(db):
+    return User.objects.create_user(username="tester2", password="test1234", level=1)
 
 
 @pytest.fixture
@@ -62,28 +48,25 @@ def auth_client2(user_with_org2):
 
 
 @pytest.fixture
-def client_obj(org):
+def client_obj(db):
     return Client.objects.create(
         name="Acme Corp",
         industry="IT",
-        organization=org,
     )
 
 
 @pytest.fixture
-def client_obj2(org2):
+def client_obj2(db):
     return Client.objects.create(
         name="Other Corp",
         industry="Finance",
-        organization=org2,
     )
 
 
 @pytest.fixture
-def project_obj(org, client_obj, user_with_org):
+def project_obj(client_obj, user_with_org):
     p = Project.objects.create(
         client=client_obj,
-        organization=org,
         title="Dev Hire",
         status="searching",
         created_by=user_with_org,
@@ -93,10 +76,9 @@ def project_obj(org, client_obj, user_with_org):
 
 
 @pytest.fixture
-def project_obj2(org2, client_obj2, user_with_org2):
+def project_obj2(client_obj2, user_with_org2):
     return Project.objects.create(
         client=client_obj2,
-        organization=org2,
         title="Other Project",
         status="new",
         created_by=user_with_org2,
@@ -137,17 +119,6 @@ class TestTabLoginRequired:
         resp = c.get(f"/projects/{project_obj.pk}/{suffix}")
         assert resp.status_code == 302
         assert "/accounts/login/" in resp.url
-
-
-# --- Organization Isolation ---
-
-
-class TestTabOrgIsolation:
-    @pytest.mark.django_db
-    @pytest.mark.parametrize("name,suffix", TAB_URLS)
-    def test_other_org_404(self, auth_client, project_obj2, name, suffix):
-        resp = auth_client.get(f"/projects/{project_obj2.pk}/{suffix}")
-        assert resp.status_code == 404
 
 
 # --- Detail Page (Tab Wrapper) ---

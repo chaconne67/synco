@@ -52,7 +52,6 @@ def create_upload(
     *,
     file,
     project,
-    organization,
     user,
     upload_batch: uuid.UUID,
     source: str = ResumeUpload.Source.MANUAL,
@@ -60,7 +59,6 @@ def create_upload(
     """Create a ResumeUpload record (status=pending). No extraction here."""
     _ext, file_type = validate_file(file)
     return ResumeUpload.objects.create(
-        organization=organization,
         project=project,
         file=file,
         file_name=file.name,
@@ -114,7 +112,6 @@ def process_pending_upload(upload: ResumeUpload) -> ResumeUpload:
             transition_status(upload, ResumeUpload.Status.EXTRACTED)
             context = identify_candidate_for_org(
                 result["extracted"],
-                upload.organization,
             )
             if context and context.candidate:
                 transition_status(upload, ResumeUpload.Status.DUPLICATE)

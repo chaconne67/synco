@@ -10,7 +10,7 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from clients.models import Client
 from projects.models import Contact, Project, Submission
 
@@ -18,35 +18,24 @@ from projects.models import Contact, Project, Submission
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=user, organization=org, role="owner")
     return user
 
 
 @pytest.fixture
-def user2_with_org(db, org):
+def user2_with_org(db):
     """Second user in same org."""
     user = User.objects.create_user(username="tester_same_org", password="test1234")
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
+def user_with_org2(db):
     user = User.objects.create_user(username="tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
     return user
 
 
@@ -68,29 +57,23 @@ def auth_client2(user_with_org2):
 def client_obj(org):
     return Client.objects.create(
         name="Acme Corp",
-        industry="IT",
-        organization=org,
-    )
+        industry="IT")
 
 
 @pytest.fixture
 def client_obj2(org2):
     return Client.objects.create(
         name="Other Corp",
-        industry="Finance",
-        organization=org2,
-    )
+        industry="Finance")
 
 
 @pytest.fixture
 def project_obj(org, client_obj, user_with_org):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="Dev Hire",
         status="searching",
-        created_by=user_with_org,
-    )
+        created_by=user_with_org)
     p.assigned_consultants.add(user_with_org)
     return p
 
@@ -98,12 +81,10 @@ def project_obj(org, client_obj, user_with_org):
 @pytest.fixture
 def project_obj2(org2, client_obj2, user_with_org2):
     return Project.objects.create(
-        client=client_obj2,
-        organization=org2,
+        client=client_obj2
         title="Other Project",
         status="new",
-        created_by=user_with_org2,
-    )
+        created_by=user_with_org2)
 
 
 # --- Login Required ---
@@ -159,15 +140,14 @@ class TestProjectCRUD:
         assert "Dev Hire" in resp.content.decode()
 
     @pytest.mark.django_db
-    def test_create_project(self, auth_client, org, client_obj, user_with_org):
+    def test_create_project(self, auth_client, client_obj, user_with_org):
         resp = auth_client.post(
             "/projects/new/",
             {
                 "client": str(client_obj.pk),
                 "title": "New Project",
                 "jd_text": "Looking for engineers",
-            },
-        )
+            })
         assert resp.status_code == 302  # redirect to detail
         project = Project.objects.get(title="New Project")
         assert project.organization == org
@@ -182,8 +162,7 @@ class TestProjectCRUD:
             {
                 "client": str(client_obj.pk),
                 "title": "Auto Assign Test",
-            },
-        )
+            })
         project = Project.objects.get(title="Auto Assign Test")
         assert user_with_org in project.assigned_consultants.all()
 
@@ -200,8 +179,7 @@ class TestProjectCRUD:
             {
                 "client": str(client_obj.pk),
                 "title": "Updated Title",
-            },
-        )
+            })
         assert resp.status_code == 302
         project_obj.refresh_from_db()
         assert project_obj.title == "Updated Title"
@@ -234,27 +212,30 @@ class TestProjectCRUD:
 
 class TestOrganizationIsolation:
     @pytest.mark.django_db
-    def test_cannot_see_other_org_projects(self, auth_client, project_obj2):
+    def test_all_projects_visible_single_tenant(self, auth_client, project_obj2):
+        """Single-tenant: all projects are visible regardless of creator."""
         resp = auth_client.get("/projects/?scope=all")
-        assert "Other Project" not in resp.content.decode()
+        assert resp.status_code == 200
 
     @pytest.mark.django_db
-    def test_cannot_access_other_org_project_detail(self, auth_client, project_obj2):
+    def test_can_access_any_project_detail(self, auth_client, project_obj2):
+        """Single-tenant: any user can access any project detail."""
         resp = auth_client.get(f"/projects/{project_obj2.pk}/")
-        assert resp.status_code == 404
+        assert resp.status_code == 200
 
     @pytest.mark.django_db
-    def test_cannot_update_other_org_project(self, auth_client, project_obj2):
+    def test_can_update_any_project(self, auth_client, project_obj2):
+        """Single-tenant: any user can attempt to update any project."""
         resp = auth_client.post(
             f"/projects/{project_obj2.pk}/edit/",
-            {"title": "Hacked"},
-        )
-        assert resp.status_code == 404
+            {"title": "Updated"})
+        assert resp.status_code in (200, 302)
 
     @pytest.mark.django_db
-    def test_cannot_delete_other_org_project(self, auth_client, project_obj2):
+    def test_can_delete_any_project(self, auth_client, project_obj2):
+        """Single-tenant: any user can attempt to delete any project."""
         resp = auth_client.post(f"/projects/{project_obj2.pk}/delete/")
-        assert resp.status_code == 404
+        assert resp.status_code in (200, 302)
 
 
 # --- Scope Filter ---
@@ -268,16 +249,14 @@ class TestScopeFilter:
 
     @pytest.mark.django_db
     def test_scope_mine_hides_unassigned_projects(
-        self, auth_client, org, client_obj, user2_with_org
+        self, auth_client, client_obj, user2_with_org
     ):
         """Project created by another user, not assigned to current user."""
         other_project = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Not My Project",
             status="new",
-            created_by=user2_with_org,
-        )
+            created_by=user2_with_org)
         other_project.assigned_consultants.add(user2_with_org)
 
         resp = auth_client.get("/projects/?scope=mine")
@@ -285,15 +264,13 @@ class TestScopeFilter:
 
     @pytest.mark.django_db
     def test_scope_all_shows_all_org_projects(
-        self, auth_client, project_obj, org, client_obj, user2_with_org
+        self, auth_client, project_obj, client_obj, user2_with_org
     ):
         other_project = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Other User Project",
             status="new",
-            created_by=user2_with_org,
-        )
+            created_by=user2_with_org)
         other_project.assigned_consultants.add(user2_with_org)
 
         resp = auth_client.get("/projects/?scope=all")
@@ -303,16 +280,14 @@ class TestScopeFilter:
 
     @pytest.mark.django_db
     def test_scope_mine_includes_created_by_user(
-        self, auth_client, org, client_obj, user_with_org
+        self, auth_client, client_obj, user_with_org
     ):
         """scope=mine should include projects created by user even if not assigned."""
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Created Not Assigned",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         # Not adding to assigned_consultants
 
         resp = auth_client.get("/projects/?scope=mine")
@@ -324,15 +299,13 @@ class TestScopeFilter:
 
 class TestFilters:
     @pytest.mark.django_db
-    def test_filter_by_client(self, auth_client, project_obj, org, user_with_org):
-        other_client = Client.objects.create(name="Other Client", organization=org)
+    def test_filter_by_client(self, auth_client, project_obj, user_with_org):
+        other_client = Client.objects.create(name="Other Client")
         other_project = Project.objects.create(
-            client=other_client,
-            organization=org,
+            client=other_client
             title="Other Client Project",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         other_project.assigned_consultants.add(user_with_org)
 
         resp = auth_client.get(f"/projects/?scope=mine&client={project_obj.client.pk}")
@@ -342,15 +315,13 @@ class TestFilters:
 
     @pytest.mark.django_db
     def test_filter_by_status(
-        self, auth_client, project_obj, org, client_obj, user_with_org
+        self, auth_client, project_obj, client_obj, user_with_org
     ):
         new_project = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="New Project",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         new_project.assigned_consultants.add(user_with_org)
 
         resp = auth_client.get("/projects/?scope=mine&status=new")
@@ -364,23 +335,19 @@ class TestFilters:
 
 class TestSorting:
     @pytest.mark.django_db
-    def test_sort_days_desc(self, auth_client, org, client_obj, user_with_org):
+    def test_sort_days_desc(self, auth_client, client_obj, user_with_org):
         """days_desc = most elapsed days first = oldest created_at first."""
         p1 = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Project A",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         p1.assigned_consultants.add(user_with_org)
         p2 = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Project B",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         p2.assigned_consultants.add(user_with_org)
 
         resp = auth_client.get("/projects/?scope=mine&sort=days_desc")
@@ -391,23 +358,19 @@ class TestSorting:
         assert pos_a < pos_b
 
     @pytest.mark.django_db
-    def test_sort_days_asc(self, auth_client, org, client_obj, user_with_org):
+    def test_sort_days_asc(self, auth_client, client_obj, user_with_org):
         """days_asc = least elapsed days first = newest created_at first."""
         p1 = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Project A",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         p1.assigned_consultants.add(user_with_org)
         p2 = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Project B",
             status="new",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         p2.assigned_consultants.add(user_with_org)
 
         resp = auth_client.get("/projects/?scope=mine&sort=days_asc")
@@ -434,16 +397,14 @@ class TestJDFileUpload:
         jd_file = SimpleUploadedFile(
             "job_description.pdf",
             b"fake pdf content",
-            content_type="application/pdf",
-        )
+            content_type="application/pdf")
         resp = auth_client.post(
             "/projects/new/",
             {
                 "client": str(client_obj.pk),
                 "title": "JD Upload Test",
                 "jd_file": jd_file,
-            },
-        )
+            })
         assert resp.status_code == 302
         project = Project.objects.get(title="JD Upload Test")
         assert project.jd_file
@@ -461,16 +422,14 @@ class TestDeleteProtection:
         from candidates.models import Candidate
 
         candidate = Candidate.objects.create(
-            name="Test Candidate",
-        )
+            name="Test Candidate")
         Contact.objects.create(
             project=project_obj,
             candidate=candidate,
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
 
         resp = auth_client.post(f"/projects/{project_obj.pk}/delete/")
         assert resp.status_code == 200
@@ -484,13 +443,11 @@ class TestDeleteProtection:
         from candidates.models import Candidate
 
         candidate = Candidate.objects.create(
-            name="Test Candidate",
-        )
+            name="Test Candidate")
         Submission.objects.create(
             project=project_obj,
             candidate=candidate,
-            consultant=user_with_org,
-        )
+            consultant=user_with_org)
 
         resp = auth_client.post(f"/projects/{project_obj.pk}/delete/")
         assert resp.status_code == 200
@@ -537,8 +494,7 @@ class TestHTMXNavigation:
     def test_list_htmx_renders_partial(self, auth_client):
         resp = auth_client.get(
             "/projects/",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
         content = resp.content.decode()
         assert "<!DOCTYPE" not in content

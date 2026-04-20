@@ -3,7 +3,7 @@
 import pytest
 from django.test import Client as TestClient
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from clients.models import Client
 from projects.models import Project, ProjectApproval
 from projects.services.approval import (
@@ -12,47 +12,38 @@ from projects.services.approval import (
     cancel_approval,
     merge_project,
     reject_project,
-    send_admin_message,
-)
+    send_admin_message)
 from projects.services.collision import compute_title_similarity, detect_collisions
 
 
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def user_owner(db, org):
+def user_owner(db):
     user = User.objects.create_user(username="owner", password="test1234")
-    Membership.objects.create(user=user, organization=org, role="owner")
     return user
 
 
 @pytest.fixture
-def user_consultant(db, org):
+def user_consultant(db):
     user = User.objects.create_user(username="consultant", password="test1234")
-    Membership.objects.create(user=user, organization=org, role="consultant")
     return user
 
 
 @pytest.fixture
 def client_obj(org):
-    return Client.objects.create(name="Acme Corp", industry="IT", organization=org)
+    return Client.objects.create(name="Acme Corp", industry="IT")
 
 
 @pytest.fixture
 def existing_project(org, client_obj, user_consultant):
     return Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="품질기획팀장",
         status="searching",
-        created_by=user_consultant,
-    )
+        created_by=user_consultant)
 
 
 @pytest.fixture
@@ -75,39 +66,36 @@ def auth_consultant(user_consultant):
 class TestProjectApprovalModel:
     @pytest.mark.django_db
     def test_conflict_score_field_exists(
-        self, org, client_obj, user_consultant, existing_project
+        self, client_obj, user_consultant, existing_project
     ):
         approval = ProjectApproval.objects.create(
             project=existing_project,
             requested_by=user_consultant,
             conflict_score=0.85,
-            conflict_type="높은중복",
-        )
+            conflict_type="높은중복")
         approval.refresh_from_db()
         assert approval.conflict_score == 0.85
         assert approval.conflict_type == "높은중복"
 
     @pytest.mark.django_db
     def test_conflict_score_default(
-        self, org, client_obj, user_consultant, existing_project
+        self, client_obj, user_consultant, existing_project
     ):
         approval = ProjectApproval.objects.create(
             project=existing_project,
-            requested_by=user_consultant,
-        )
+            requested_by=user_consultant)
         approval.refresh_from_db()
         assert approval.conflict_score == 0.0
         assert approval.conflict_type == ""
 
     @pytest.mark.django_db
     def test_project_fk_set_null_on_delete(
-        self, org, client_obj, user_consultant, existing_project
+        self, client_obj, user_consultant, existing_project
     ):
         """Verify that deleting the project sets FK to NULL instead of cascading."""
         approval = ProjectApproval.objects.create(
             project=existing_project,
-            requested_by=user_consultant,
-        )
+            requested_by=user_consultant)
         existing_project.delete()
         approval.refresh_from_db()
         assert approval.project is None
@@ -139,7 +127,7 @@ class TestTitleSimilarity:
 
 class TestDetectCollisions:
     @pytest.mark.django_db
-    def test_detects_similar_project(self, org, client_obj, existing_project):
+    def test_detects_similar_project(self, client_obj, existing_project):
         results = detect_collisions(client_obj.pk, "품질기획파트장", org)
         assert len(results) >= 1
         assert results[0]["project"].pk == existing_project.pk
@@ -147,27 +135,25 @@ class TestDetectCollisions:
         assert results[0]["conflict_type"] == "높은중복"
 
     @pytest.mark.django_db
-    def test_no_collision_different_client(self, org, client_obj, existing_project):
+    def test_no_collision_different_client(self, client_obj, existing_project):
         other_client = Client.objects.create(
-            name="Other Corp", industry="Finance", organization=org
+            name="Other Corp", industry="Finance"
         )
         results = detect_collisions(other_client.pk, "품질기획팀장", org)
         assert len(results) == 0
 
     @pytest.mark.django_db
-    def test_excludes_closed_projects(self, org, client_obj, user_consultant):
+    def test_excludes_closed_projects(self, client_obj, user_consultant):
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="품질기획팀장",
             status="closed_success",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
         results = detect_collisions(client_obj.pk, "품질기획팀장", org)
         assert len(results) == 0
 
     @pytest.mark.django_db
-    def test_medium_conflict_type(self, org, client_obj, existing_project):
+    def test_medium_conflict_type(self, client_obj, existing_project):
         results = detect_collisions(client_obj.pk, "마케팅매니저", org)
         # Same client but low similarity -> medium or no result
         for r in results:
@@ -175,15 +161,13 @@ class TestDetectCollisions:
                 assert r["conflict_type"] == "참고정보"
 
     @pytest.mark.django_db
-    def test_max_five_results(self, org, client_obj, user_consultant):
+    def test_max_five_results(self, client_obj, user_consultant):
         for i in range(8):
             Project.objects.create(
-                client=client_obj,
-                organization=org,
+                client=client_obj
                 title=f"품질기획팀장{i}",
                 status="searching",
-                created_by=user_consultant,
-            )
+                created_by=user_consultant)
         results = detect_collisions(client_obj.pk, "품질기획팀장", org)
         assert len(results) <= 5
 
@@ -193,14 +177,12 @@ class TestDetectCollisions:
 
 class TestApprovalService:
     @pytest.fixture
-    def pending_project(self, org, client_obj, user_consultant):
+    def pending_project(self, client_obj, user_consultant):
         return Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="품질기획파트장",
             status="pending_approval",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
 
     @pytest.fixture
     def approval(self, pending_project, user_consultant, existing_project):
@@ -209,8 +191,7 @@ class TestApprovalService:
             requested_by=user_consultant,
             conflict_project=existing_project,
             conflict_score=0.85,
-            conflict_type="높은중복",
-        )
+            conflict_type="높은중복")
 
     @pytest.mark.django_db
     def test_approve_project(self, approval, user_owner, pending_project):
@@ -239,8 +220,7 @@ class TestApprovalService:
         user_owner,
         pending_project,
         existing_project,
-        user_consultant,
-    ):
+        user_consultant):
         merge_project(approval, user_owner, merge_target=existing_project)
         approval.refresh_from_db()
         assert approval.status == "합류"
@@ -295,8 +275,8 @@ from projects.forms import ApprovalDecisionForm, ProjectForm
 
 class TestProjectFormNoStatus:
     @pytest.mark.django_db
-    def test_status_not_in_form_fields(self, org):
-        form = ProjectForm(organization=org)
+    def test_status_not_in_form_fields(self):
+        form = ProjectForm()
         assert "status" not in form.fields
 
 
@@ -331,8 +311,7 @@ class TestCollisionCheckView:
         resp = auth_consultant.post(
             "/projects/new/check-collision/",
             {"client_id": str(client_obj.pk), "title": "품질기획파트장"},
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
         content = resp.content.decode()
         assert "유사 프로젝트" in content or "충돌" in content
@@ -342,8 +321,7 @@ class TestCollisionCheckView:
         resp = auth_consultant.post(
             "/projects/new/check-collision/",
             {"client_id": str(client_obj.pk), "title": "완전다른포지션"},
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
 
 
@@ -357,8 +335,7 @@ class TestProjectCreateWithCollision:
                 "client": str(client_obj.pk),
                 "title": "완전새로운포지션",
                 "jd_source": "",
-            },
-        )
+            })
         assert resp.status_code == 302
         project = Project.objects.get(title="완전새로운포지션")
         assert project.status == "new"
@@ -375,8 +352,7 @@ class TestProjectCreateWithCollision:
                 "client": str(client_obj.pk),
                 "title": "품질기획파트장",
                 "jd_source": "",
-            },
-        )
+            })
         assert resp.status_code == 302  # PRG redirect
         project = Project.objects.get(title="품질기획파트장")
         assert project.status == "pending_approval"
@@ -396,8 +372,7 @@ class TestProjectCreateWithCollision:
                 "client": str(client_obj.pk),
                 "title": "마케팅매니저",  # Low similarity with "품질기획팀장"
                 "jd_source": "",
-            },
-        )
+            })
         assert resp.status_code == 302
         project = Project.objects.get(title="마케팅매니저")
         assert project.status == "new"  # Not blocked
@@ -409,14 +384,12 @@ class TestProjectCreateWithCollision:
 
 class TestApprovalQueueView:
     @pytest.fixture
-    def pending_project(self, org, client_obj, user_consultant):
+    def pending_project(self, client_obj, user_consultant):
         return Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="품질기획파트장",
             status="pending_approval",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
 
     @pytest.fixture
     def approval(self, pending_project, user_consultant, existing_project):
@@ -426,8 +399,7 @@ class TestApprovalQueueView:
             conflict_project=existing_project,
             conflict_score=0.85,
             conflict_type="높은중복",
-            message="인사팀으로부터 직접 의뢰",
-        )
+            message="인사팀으로부터 직접 의뢰")
 
     @pytest.mark.django_db
     def test_owner_can_access_queue(self, auth_owner, approval):
@@ -444,8 +416,7 @@ class TestApprovalQueueView:
     def test_approve_decision(self, auth_owner, approval, pending_project):
         resp = auth_owner.post(
             f"/projects/approvals/{approval.pk}/decide/",
-            {"decision": "승인"},
-        )
+            {"decision": "승인"})
         assert resp.status_code == 302
         pending_project.refresh_from_db()
         assert pending_project.status == "new"
@@ -454,8 +425,7 @@ class TestApprovalQueueView:
     def test_reject_decision(self, auth_owner, approval, pending_project):
         resp = auth_owner.post(
             f"/projects/approvals/{approval.pk}/decide/",
-            {"decision": "반려", "response_text": "중복입니다."},
-        )
+            {"decision": "반려", "response_text": "중복입니다."})
         assert resp.status_code == 302
         assert not Project.objects.filter(pk=pending_project.pk).exists()
 
@@ -466,12 +436,10 @@ class TestApprovalQueueView:
         approval,
         pending_project,
         existing_project,
-        user_consultant,
-    ):
+        user_consultant):
         resp = auth_owner.post(
             f"/projects/approvals/{approval.pk}/decide/",
-            {"decision": "합류"},
-        )
+            {"decision": "합류"})
         assert resp.status_code == 302
         assert existing_project.assigned_consultants.filter(
             pk=user_consultant.pk
@@ -482,8 +450,7 @@ class TestApprovalQueueView:
     def test_message_decision(self, auth_owner, approval, pending_project):
         resp = auth_owner.post(
             f"/projects/approvals/{approval.pk}/decide/",
-            {"decision": "메시지", "response_text": "추가 정보 필요합니다."},
-        )
+            {"decision": "메시지", "response_text": "추가 정보 필요합니다."})
         assert resp.status_code == 302
         approval.refresh_from_db()
         assert approval.status == "대기"  # Unchanged
@@ -495,42 +462,34 @@ class TestApprovalQueueView:
         auth_owner,
         approval,
         pending_project,
-        org,
         client_obj,
-        user_consultant,
-    ):
+        user_consultant):
         alt_project = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="대체합류대상",
             status="searching",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
         resp = auth_owner.post(
             f"/projects/approvals/{approval.pk}/decide/",
-            {"decision": "합류", "merge_target": str(alt_project.pk)},
-        )
+            {"decision": "합류", "merge_target": str(alt_project.pk)})
         assert resp.status_code == 302
         assert alt_project.assigned_consultants.filter(pk=user_consultant.pk).exists()
 
 
 class TestApprovalCancelView:
     @pytest.fixture
-    def pending_project(self, org, client_obj, user_consultant):
+    def pending_project(self, client_obj, user_consultant):
         return Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="품질기획파트장",
             status="pending_approval",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
 
     @pytest.fixture
     def approval(self, pending_project, user_consultant):
         return ProjectApproval.objects.create(
             project=pending_project,
-            requested_by=user_consultant,
-        )
+            requested_by=user_consultant)
 
     @pytest.mark.django_db
     def test_requester_can_cancel(self, auth_consultant, approval, pending_project):
@@ -542,14 +501,12 @@ class TestApprovalCancelView:
 
 class TestPendingApprovalGuards:
     @pytest.fixture
-    def pending_project(self, org, client_obj, user_consultant):
+    def pending_project(self, client_obj, user_consultant):
         p = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="승인대기프로젝트",
             status="pending_approval",
-            created_by=user_consultant,
-        )
+            created_by=user_consultant)
         p.assigned_consultants.add(user_consultant)
         return p
 
@@ -570,8 +527,7 @@ class TestPendingApprovalGuards:
         resp = auth_consultant.patch(
             f"/projects/{pending_project.pk}/status/",
             json.dumps({"status": "new"}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 403
 
     @pytest.mark.django_db
@@ -581,8 +537,7 @@ class TestPendingApprovalGuards:
             {
                 "client": str(pending_project.client_id),
                 "title": "수정된 제목",
-            },
-        )
+            })
         assert resp.status_code == 403
 
     @pytest.mark.django_db

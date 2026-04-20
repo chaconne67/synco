@@ -25,36 +25,34 @@ def test_industry_category_enum_names_for_url_params():
 
 
 @pytest.mark.django_db
-def test_client_has_website_field(legacy_org):
-    c = Client.objects.create(organization=legacy_org, name="X", website="https://example.com")
+def test_client_has_website_field():
+    c = Client.objects.create(name="X", website="https://example.com")
     c.refresh_from_db()
     assert c.website == "https://example.com"
 
 
 @pytest.mark.django_db
-def test_client_has_description_field(legacy_org):
-    c = Client.objects.create(organization=legacy_org, name="X", description="desc")
+def test_client_has_description_field():
+    c = Client.objects.create(name="X", description="desc")
     c.refresh_from_db()
     assert c.description == "desc"
 
 
 @pytest.mark.django_db
-def test_client_logo_upload_to_path(legacy_org):
-    c = Client.objects.create(organization=legacy_org, name="X")
+def test_client_logo_upload_to_path():
+    c = Client.objects.create(name="X")
     field = c._meta.get_field("logo")
     assert field.upload_to == "clients/logos/"
 
 
 @pytest.mark.django_db
-def test_industry_default_is_etc(legacy_org):
-    c = Client.objects.create(organization=legacy_org, name="X")
+def test_industry_default_is_etc():
+    c = Client.objects.create(name="X")
     assert c.industry == IndustryCategory.ETC.value
 
 
 @pytest.mark.django_db
-def test_industry_accepts_valid_category(legacy_org):
-    c = Client.objects.create(
-        organization=legacy_org, name="X", industry=IndustryCategory.BIO_PHARMA.value
-    )
+def test_industry_accepts_valid_category():
+    c = Client.objects.create(name="X", industry=IndustryCategory.BIO_PHARMA.value)
     c.refresh_from_db()
     assert c.industry == "바이오/제약"

@@ -5,20 +5,13 @@ from unittest.mock import MagicMock
 
 from django.test import RequestFactory, override_settings
 
-from accounts.models import Membership, Organization, TelegramBinding, User
+from accounts.models import TelegramBinding, User
 from projects.telegram.auth import validate_webhook_secret, verify_telegram_user_access
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
-
-@pytest.fixture
-def user(db, org):
-    u = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=u, organization=org, role="consultant")
-    return u
+def user(db):
+    return User.objects.create_user(username="tester", password="test1234", level=1)
 
 
 @pytest.fixture
@@ -67,25 +60,23 @@ class TestWebhookSecret:
 
 
 class TestVerifyUserAccess:
-    def test_valid_access(self, binding, org):
+    def test_valid_access(self, binding):
         from clients.models import Client
-
-        client = Client.objects.create(name="Acme", organization=org)
         from projects.models import Project
 
+        client = Client.objects.create(name="Acme")
         project = Project.objects.create(
-            client=client, organization=org, title="Test", created_by=binding.user
+            client=client, title="Test", created_by=binding.user
         )
         user = verify_telegram_user_access("12345", project)
         assert user == binding.user
 
     def test_unknown_chat_id(self):
         with pytest.raises(Exception):
-            verify_telegram_user_access("unknown", MagicMock(organization=MagicMock()))
+            verify_telegram_user_access("unknown", MagicMock())
 
     def test_inactive_binding(self, binding):
         binding.is_active = False
         binding.save()
         with pytest.raises(Exception):
-            verify_telegram_user_access("12345", MagicMock(organization=MagicMock()))
-
+            verify_telegram_user_access("12345", MagicMock())

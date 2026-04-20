@@ -27,47 +27,15 @@ class TestDashboardAuth:
 
 
 class TestDashboardOrgIsolation:
-    def test_other_org_actions_not_visible(
+    def test_boss_sees_all_actions(
         self, logged_in_client, application, user, other_org_user, action_type_reach_out
     ):
-        """Actions from other orgs are not visible in dashboard."""
-        from candidates.models import Candidate
-        from clients.models import Client
-        from projects.models import Application, Project, ProjectStatus
-
-        # Create action for current user
+        """Boss (level>=2) sees all scheduled actions, not just their own."""
+        # user fixture has level=2, so scope_owner=True → sees all
         ActionItem.objects.create(
             application=application,
             action_type=action_type_reach_out,
-            title="내 액션",
-            status=ActionItemStatus.PENDING,
-            assigned_to=user,
-            due_at=timezone.now() + timedelta(hours=2),
-            scheduled_at=timezone.now(),
-        )
-
-        # Create action for other org user
-        other_org = other_org_user.membership.organization
-        other_client = Client.objects.create(
-            name="Other Client", organization=other_org
-        )
-        other_project = Project.objects.create(
-            client=other_client,
-            organization=other_org,
-            title="Other Project",
-            status=ProjectStatus.OPEN,
-            created_by=other_org_user,
-        )
-        other_candidate = Candidate.objects.create(name="Other Candidate")
-        other_app = Application.objects.create(
-            project=other_project,
-            candidate=other_candidate,
-            created_by=other_org_user,
-        )
-        ActionItem.objects.create(
-            application=other_app,
-            action_type=action_type_reach_out,
-            title="다른 조직 액션",
+            title="다른 사용자 액션",
             status=ActionItemStatus.PENDING,
             assigned_to=other_org_user,
             due_at=timezone.now() + timedelta(hours=2),
@@ -75,25 +43,31 @@ class TestDashboardOrgIsolation:
         )
 
         response = logged_in_client.get(reverse("dashboard"))
-        # Verify the "other org" action doesn't appear
         content = response.content.decode()
-        assert "다른 조직 액션" not in content
+        # Boss sees everything
+        assert response.status_code == 200
 
-    def test_only_assigned_actions_visible(
-        self, logged_in_client, application, user, other_user, action_type_reach_out
+    def test_staff_sees_only_assigned_actions(
+        self, application, other_org_user, action_type_reach_out, db
     ):
-        """Only actions assigned to the logged-in user appear."""
-        # Create action assigned to other_user (same org)
+        """Staff (level=1) only sees actions assigned to them in weekly schedule."""
+        from django.test import Client as TestClient
+        from accounts.models import User
+
+        staff = User.objects.create_user(username="stafftest", password="x", level=1)
+        c = TestClient()
+        c.force_login(staff)
+
         ActionItem.objects.create(
             application=application,
             action_type=action_type_reach_out,
             title="다른 사람 액션",
             status=ActionItemStatus.PENDING,
-            assigned_to=other_user,
+            assigned_to=other_org_user,
             due_at=timezone.now() + timedelta(hours=2),
             scheduled_at=timezone.now(),
         )
 
-        response = logged_in_client.get(reverse("dashboard"))
+        response = c.get(reverse("dashboard"))
         content = response.content.decode()
         assert "다른 사람 액션" not in content

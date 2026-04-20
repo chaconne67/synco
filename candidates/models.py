@@ -356,15 +356,6 @@ class Candidate(BaseModel):
     confidence_score = models.FloatField(null=True, blank=True)
     field_confidences = models.JSONField(default=dict, blank=True)
 
-    # Organization ownership (DB sharing network)
-    owned_by = models.ForeignKey(
-        "accounts.Organization",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="owned_candidates",
-    )
-
     class Meta:
         db_table = "candidates"
         ordering = ["-updated_at"]

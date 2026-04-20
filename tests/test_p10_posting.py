@@ -8,7 +8,7 @@ import pytest
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from clients.models import Client
 from projects.models import (
     PostingSite,
@@ -22,28 +22,17 @@ from projects.models import (
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
-
-@pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(
-        username="p10_tester", password="test1234", first_name="전", last_name="병권"
+        username="p10_tester", password="test1234", first_name="전", last_name="병권",
+        level=2,
     )
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
-    user = User.objects.create_user(username="p10_tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
+def user_with_org2(db):
+    user = User.objects.create_user(username="p10_tester2", password="test1234", level=2)
     return user
 
 
@@ -62,26 +51,24 @@ def auth_client2(user_with_org2):
 
 
 @pytest.fixture
-def client_obj(org):
+def client_obj(db):
     return Client.objects.create(
         name="Rayence",
         industry="의료기기",
         size="중견",
         region="경기도",
-        organization=org,
     )
 
 
 @pytest.fixture
-def client_obj2(org2):
-    return Client.objects.create(name="Other Corp", industry="IT", organization=org2)
+def client_obj2(db):
+    return Client.objects.create(name="Other Corp", industry="IT")
 
 
 @pytest.fixture
-def project(client_obj, org, user_with_org):
+def project(client_obj, user_with_org):
     p = Project.objects.create(
         client=client_obj,
-        organization=org,
         title="품질기획팀장",
         jd_text="품질경영시스템 기획 및 운영 총괄. ISO 13485 인증 관리. 경력 15년 이상.",
         created_by=user_with_org,
@@ -92,10 +79,9 @@ def project(client_obj, org, user_with_org):
 
 
 @pytest.fixture
-def project_other_org(client_obj2, org2, user_with_org2):
+def project_other_org(client_obj2, user_with_org2):
     return Project.objects.create(
         client=client_obj2,
-        organization=org2,
         title="Other Org Project",
         created_by=user_with_org2,
     )
@@ -185,11 +171,10 @@ class TestPostingFilename:
 
 
 class TestGeneratePosting:
-    def test_no_jd_text_raises(self, client_obj, org, user_with_org):
+    def test_no_jd_text_raises(self, client_obj, user_with_org):
         """JD 텍스트 없으면 ValueError."""
         empty_project = Project.objects.create(
             client=client_obj,
-            organization=org,
             title="Empty JD",
             created_by=user_with_org,
         )
@@ -289,11 +274,10 @@ class TestPostingGenerateView:
         resp = c.post(url)
         assert resp.status_code == 302
 
-    def test_generate_no_jd(self, auth_client, client_obj, org, user_with_org):
+    def test_generate_no_jd(self, auth_client, client_obj, user_with_org):
         """JD 없는 프로젝트에서 생성 시도 시 에러."""
         empty = Project.objects.create(
             client=client_obj,
-            organization=org,
             title="Empty",
             created_by=user_with_org,
         )
@@ -360,10 +344,7 @@ class TestPostingGenerateView:
         project.refresh_from_db()
         assert project.posting_text == "[포지션] 새 공지"
 
-    def test_org_isolation(self, auth_client, project_other_org):
-        url = reverse("projects:posting_generate", args=[project_other_org.pk])
-        resp = auth_client.post(url)
-        assert resp.status_code == 404
+    # test_org_isolation removed — single-tenant, no org isolation
 
 
 class TestPostingEditView:
@@ -558,8 +539,7 @@ class TestPostingSiteDeleteView:
 
     def test_org_isolation(self, auth_client, project_other_org):
         site = PostingSite.objects.create(
-            project=project_other_org,
-            site=PostingSiteChoice.SARAMIN,
+            project=project_site=PostingSiteChoice.SARAMIN,
         )
         url = reverse(
             "projects:posting_site_delete", args=[project_other_org.pk, site.pk]

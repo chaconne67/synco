@@ -32,8 +32,8 @@ def test_client_initials_long():
 
 
 @pytest.mark.django_db
-def test_logo_class_deterministic(legacy_org):
-    c1 = Client.objects.create(organization=legacy_org, name="A")
-    c2 = Client.objects.create(organization=legacy_org, name="B")
+def test_logo_class_deterministic():
+    c1 = Client.objects.create(name="A")
+    c2 = Client.objects.create(name="B")
     assert logo_class(c1) == logo_class(c1)
     assert logo_class(c1) in {f"client-logo-{i}" for i in range(1, 9)}

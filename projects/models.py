@@ -164,11 +164,6 @@ class Project(BaseModel):
         on_delete=models.CASCADE,
         related_name="projects",
     )
-    organization = models.ForeignKey(
-        "accounts.Organization",
-        on_delete=models.CASCADE,
-        related_name="projects",
-    )
     title = models.CharField(max_length=300)
     jd_text = models.TextField(blank=True)
     jd_file = models.FileField(upload_to="projects/jd/", blank=True)
@@ -239,7 +234,6 @@ class Project(BaseModel):
         indexes = [
             models.Index(fields=["phase", "status"]),
             models.Index(fields=["deadline"]),
-            models.Index(fields=["organization", "status"]),
         ]
         constraints = [
             models.CheckConstraint(
@@ -1178,11 +1172,6 @@ class SummaryStatus(models.TextChoices):
 class NewsSource(BaseModel):
     """뉴스 소스 (RSS 피드)."""
 
-    organization = models.ForeignKey(
-        "accounts.Organization",
-        on_delete=models.CASCADE,
-        related_name="news_sources",
-    )
     name = models.CharField(max_length=200)
     url = models.URLField()
     type = models.CharField(
@@ -1293,11 +1282,6 @@ class ResumeUpload(BaseModel):
         FAILED = "failed", "실패"
         DISCARDED = "discarded", "폐기"
 
-    organization = models.ForeignKey(
-        "accounts.Organization",
-        on_delete=models.CASCADE,
-        related_name="resume_uploads",
-    )
     project = models.ForeignKey(
         "projects.Project",
         on_delete=models.SET_NULL,
@@ -1347,9 +1331,9 @@ class ResumeUpload(BaseModel):
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(
-                fields=["organization", "email_message_id", "email_attachment_id"],
+                fields=["email_message_id", "email_attachment_id"],
                 condition=models.Q(source="email"),
-                name="unique_email_attachment_per_org",
+                name="unique_email_attachment",
             ),
         ]
 

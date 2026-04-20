@@ -8,9 +8,8 @@ from projects.models import Project, ProjectStatus
 
 
 @pytest.fixture
-def delete_client(legacy_org):
+def delete_client(db):
     return Client.objects.create(
-        organization=legacy_org,
         name="DeleteCorp",
         website="https://delete.example.com",
         description="삭제 테스트 고객사",
@@ -18,10 +17,9 @@ def delete_client(legacy_org):
 
 
 @pytest.mark.django_db
-def test_delete_blocks_when_any_projects_exist(legacy_org, boss_client, delete_client):
+def test_delete_blocks_when_any_projects_exist(boss_client, delete_client):
     """client_delete 시 ANY 프로젝트(open/closed)가 있으면 삭제를 막는다."""
     Project.objects.create(
-        organization=legacy_org,
         client=delete_client,
         title="ClosedSuccessProject",
         status=ProjectStatus.CLOSED,

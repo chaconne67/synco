@@ -2,16 +2,13 @@ import pytest
 from django.test import Client as TestClient
 from django.contrib.auth import get_user_model
 
-from accounts.models import Membership, Organization
 
 User = get_user_model()
 
 
 @pytest.fixture
 def active_user(db):
-    org = Organization.objects.create(name="Test Org")
     user = User.objects.create_user(username="tabuser", password="pass")
-    Membership.objects.create(user=user, organization=org, status="active")
     return user
 
 
@@ -53,8 +50,7 @@ class TestSettingsProfileTab:
         response = client.get(
             "/accounts/settings/profile/",
             HTTP_HX_REQUEST="true",
-            HTTP_HX_TARGET="main-content",
-        )
+            HTTP_HX_TARGET="main-content")
         assert response.status_code == 200
         content = response.content.decode()
         assert "프로필" in content
@@ -69,8 +65,7 @@ class TestSettingsProfileTab:
         response = client.get(
             "/accounts/settings/profile/",
             HTTP_HX_REQUEST="true",
-            HTTP_HX_TARGET="settings-content",
-        )
+            HTTP_HX_TARGET="settings-content")
         assert response.status_code == 200
         assert "accounts/partials/settings_content.html" in [
             t.name for t in response.templates
@@ -131,12 +126,11 @@ class TestSettingsNotifyTab:
                 "project_approval_telegram": "",
                 "newsfeed_update_web": "",
                 "newsfeed_update_telegram": "",
-            },
-        )
+            })
         assert response.status_code == 200
         from accounts.models import NotificationPreference
 
-        pref = NotificationPreference.objects.get(user=active_user)
+        pref= NotificationPreference.objects.get(user=active_user)
         assert pref.preferences["contact_result"]["telegram"] is False
 
     def test_notify_htmx_post_returns_partial(self, active_user):
@@ -149,8 +143,7 @@ class TestSettingsNotifyTab:
                 "contact_result_web": "on",
             },
             HTTP_HX_REQUEST="true",
-            HTTP_HX_TARGET="settings-content",
-        )
+            HTTP_HX_TARGET="settings-content")
         assert response.status_code == 200
         assert "accounts/partials/settings_notify.html" in [
             t.name for t in response.templates

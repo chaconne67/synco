@@ -4,25 +4,19 @@ import pytest
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from projects.models import (
     NewsArticle,
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus,
-)
+    SummaryStatus)
 
-
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=u, organization=org, role="owner")
     return u
 
 
@@ -36,12 +30,10 @@ def auth_client(user):
 @pytest.fixture
 def source(org):
     return NewsSource.objects.create(
-        organization=org,
         name="Test Feed",
         url="https://example.com/feed",
         type=NewsSourceType.RSS,
-        category=NewsCategory.HIRING,
-    )
+        category=NewsCategory.HIRING)
 
 
 @pytest.fixture
@@ -53,8 +45,7 @@ def article(source):
         summary="Summary text",
         category=NewsCategory.HIRING,
         summary_status=SummaryStatus.COMPLETED,
-        published_at=timezone.now(),
-    )
+        published_at=timezone.now())
 
 
 class TestNewsFeed:
@@ -84,16 +75,14 @@ class TestNewsFilter:
             url="https://example.com/h",
             category=NewsCategory.HIRING,
             summary_status=SummaryStatus.COMPLETED,
-            published_at=timezone.now(),
-        )
+            published_at=timezone.now())
         NewsArticle.objects.create(
             source=source,
             title="HR News",
             url="https://example.com/hr",
             category=NewsCategory.HR,
             summary_status=SummaryStatus.COMPLETED,
-            published_at=timezone.now(),
-        )
+            published_at=timezone.now())
         resp = auth_client.get("/news/filter/?category=hiring")
         content = resp.content.decode()
         assert "Hiring News" in content
@@ -106,7 +95,7 @@ class TestNewsSourceCRUD:
         assert resp.status_code == 200
         assert "Test Feed" in resp.content.decode()
 
-    def test_source_create(self, auth_client, org):
+    def test_source_create(self, auth_client):
         resp = auth_client.post(
             "/news/sources/new/",
             {
@@ -114,8 +103,7 @@ class TestNewsSourceCRUD:
                 "url": "https://newssite.com/feed",
                 "type": NewsSourceType.RSS,
                 "category": NewsCategory.INDUSTRY,
-            },
-        )
+            })
         assert resp.status_code == 302
         assert NewsSource.objects.filter(name="New Source").exists()
 
@@ -131,10 +119,9 @@ class TestNewsSourceCRUD:
         assert resp.status_code == 302
         assert not NewsSource.objects.filter(pk=source.pk).exists()
 
-    def test_non_staff_blocked_from_source_crud(self, db, org):
+    def test_non_staff_blocked_from_source_crud(self, db):
         viewer = User.objects.create_user(username="viewer", password="test1234")
-        Membership.objects.create(user=viewer, organization=org, role="viewer")
-        c = TestClient()
+            c = TestClient()
         c.login(username="viewer", password="test1234")
         resp = c.get("/news/sources/")
         assert resp.status_code == 403

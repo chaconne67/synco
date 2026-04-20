@@ -41,11 +41,6 @@ class Client(BaseModel):
     logo = models.ImageField(upload_to="clients/logos/", blank=True, null=True)
     description = models.TextField(blank=True)
     notes = models.TextField(blank=True)
-    organization = models.ForeignKey(
-        "accounts.Organization",
-        on_delete=models.CASCADE,
-        related_name="clients",
-    )
 
     class Meta:
         ordering = ["-created_at"]

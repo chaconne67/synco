@@ -10,12 +10,8 @@ from candidates.services.candidate_identity import (
 
 def identify_candidate_for_org(
     extracted: dict,
-    organization=None,
 ) -> CandidateComparisonContext | None:
-    """Find existing candidate by email/phone.
-
-    Single-tenant: organization parameter is ignored (kept for call-site compatibility).
-    """
+    """Find existing candidate by email/phone."""
     # 1. Email match
     email = (extracted.get("email") or "").strip().lower()
     if email:

@@ -10,7 +10,7 @@ import pytest
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import Contact, Project, Submission
@@ -19,15 +19,10 @@ from projects.models import Contact, Project, Submission
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
@@ -42,20 +37,16 @@ def auth_client(user_with_org):
 def client_obj(org):
     return Client.objects.create(
         name="Acme Corp",
-        industry="IT",
-        organization=org,
-    )
+        industry="IT")
 
 
 @pytest.fixture
-def project(client_obj, org, user_with_org):
+def project(client_obj, user_with_org):
     p = Project.objects.create(
         title="Backend Dev",
-        client=client_obj,
-        organization=org,
+        client=client_obj
         status="searching",
-        created_by=user_with_org,
-    )
+        created_by=user_with_org)
     p.assigned_consultants.add(user_with_org)
     return p
 
@@ -63,9 +54,7 @@ def project(client_obj, org, user_with_org):
 @pytest.fixture
 def candidate(org):
     return Candidate.objects.create(
-        name="홍길동",
-        owned_by=org,
-    )
+        name="홍길동")
 
 
 @pytest.fixture
@@ -77,8 +66,7 @@ def interested_contact(project, candidate, user_with_org):
         consultant=user_with_org,
         channel=Contact.Channel.PHONE,
         contacted_at=timezone.now(),
-        result=Contact.Result.INTERESTED,
-    )
+        result=Contact.Result.INTERESTED)
 
 
 # --- submission_create auto-transition tests ---
@@ -95,8 +83,7 @@ class TestSubmissionCreateAutoTransition:
         """POST 성공 시 204 대신 200 + 추천 탭 HTML 반환."""
         resp = auth_client.post(
             f"/projects/{project.pk}/submissions/new/",
-            {"candidate": str(candidate.pk), "notes": "추천합니다"},
-        )
+            {"candidate": str(candidate.pk), "notes": "추천합니다"})
         assert resp.status_code == 200
         assert "추천 이력" in resp.content.decode()
 
@@ -107,8 +94,7 @@ class TestSubmissionCreateAutoTransition:
         """HX-Retarget 헤더가 #tab-content를 가리켜야 한다."""
         resp = auth_client.post(
             f"/projects/{project.pk}/submissions/new/",
-            {"candidate": str(candidate.pk), "notes": "추천합니다"},
-        )
+            {"candidate": str(candidate.pk), "notes": "추천합니다"})
         assert resp.headers.get("HX-Retarget") == "#tab-content"
         assert resp.headers.get("HX-Reswap") == "innerHTML"
 
@@ -119,8 +105,7 @@ class TestSubmissionCreateAutoTransition:
         """HX-Trigger에 구조화된 tabChanged + submissionChanged가 포함되어야 한다."""
         resp = auth_client.post(
             f"/projects/{project.pk}/submissions/new/",
-            {"candidate": str(candidate.pk), "notes": "추천합니다"},
-        )
+            {"candidate": str(candidate.pk), "notes": "추천합니다"})
         hx_trigger = resp.headers.get("HX-Trigger", "{}")
         payload = json.loads(hx_trigger)
         assert payload["tabChanged"] == {"activeTab": "submissions"}
@@ -133,8 +118,7 @@ class TestSubmissionCreateAutoTransition:
         """Submission 레코드가 실제로 생성되어야 한다."""
         auth_client.post(
             f"/projects/{project.pk}/submissions/new/",
-            {"candidate": str(candidate.pk), "notes": "추천합니다"},
-        )
+            {"candidate": str(candidate.pk), "notes": "추천합니다"})
         assert Submission.objects.filter(project=project, candidate=candidate).exists()
 
     @pytest.mark.django_db
@@ -168,8 +152,7 @@ class TestContactInterestBanner:
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
         resp = auth_client.post(
             f"/projects/{project.pk}/contacts/{contact.pk}/edit/",
             {
@@ -178,8 +161,7 @@ class TestContactInterestBanner:
                 "contacted_at": timezone.now().strftime("%Y-%m-%dT%H:%M"),
                 "result": "관심",
                 "notes": "",
-            },
-        )
+            })
         assert resp.status_code == 200
         content = resp.content.decode()
         assert "추천 서류 작성하기" in content
@@ -195,8 +177,7 @@ class TestContactInterestBanner:
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
         resp = auth_client.post(
             f"/projects/{project.pk}/contacts/{contact.pk}/edit/",
             {
@@ -205,8 +186,7 @@ class TestContactInterestBanner:
                 "contacted_at": timezone.now().strftime("%Y-%m-%dT%H:%M"),
                 "result": "관심",
                 "notes": "",
-            },
-        )
+            })
         assert resp.headers.get("HX-Retarget") == "#tab-content"
         assert resp.headers.get("HX-Reswap") == "innerHTML"
         assert "contactChanged" in resp.headers.get("HX-Trigger", "")
@@ -222,8 +202,7 @@ class TestContactInterestBanner:
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
         resp = auth_client.post(
             f"/projects/{project.pk}/contacts/{contact.pk}/edit/",
             {
@@ -232,8 +211,7 @@ class TestContactInterestBanner:
                 "contacted_at": timezone.now().strftime("%Y-%m-%dT%H:%M"),
                 "result": "미응답",
                 "notes": "",
-            },
-        )
+            })
         # 204 반환 (기존 동작) — 배너 없음
         assert resp.status_code == 204
 
@@ -245,16 +223,14 @@ class TestContactInterestBanner:
         Submission.objects.create(
             project=project,
             candidate=candidate,
-            consultant=user_with_org,
-        )
+            consultant=user_with_org)
         contact = Contact.objects.create(
             project=project,
             candidate=candidate,
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
         resp = auth_client.post(
             f"/projects/{project.pk}/contacts/{contact.pk}/edit/",
             {
@@ -263,8 +239,7 @@ class TestContactInterestBanner:
                 "contacted_at": timezone.now().strftime("%Y-%m-%dT%H:%M"),
                 "result": "관심",
                 "notes": "",
-            },
-        )
+            })
         # 이미 제출 완료이므로 배너 없이 204 반환
         assert resp.status_code == 204
 
@@ -289,8 +264,7 @@ class TestContactInterestBanner:
                 "contacted_at": timezone.now().strftime("%Y-%m-%dT%H:%M"),
                 "result": "관심",  # 변경 없음
                 "notes": "메모 추가",
-            },
-        )
+            })
         # 관심→관심 (변경 없음)이므로 배너 없이 204 반환
         assert resp.status_code == 204
 
@@ -306,8 +280,7 @@ class TestFunnelNavigation:
         """퍼널 항목에 hx-get 링크가 포함되어야 한다."""
         resp = auth_client.get(
             f"/projects/{project.pk}/tab/overview/",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         content = resp.content.decode()
         # 4개 탭 URL이 있어야 함
         assert f"/projects/{project.pk}/tab/contacts/" in content
@@ -333,25 +306,21 @@ class TestFunnelNavigation:
             consultant=user_with_org,
             channel=Contact.Channel.PHONE,
             contacted_at=timezone.now(),
-            result=Contact.Result.INTERESTED,
-        )
+            result=Contact.Result.INTERESTED)
         # 미응답 컨택 1건 (관심 아님)
         other_candidate = Candidate.objects.create(
             name="김철수",
-            owned_by=project.organization,
-        )
+            owned_by=project.organization)
         Contact.objects.create(
             project=project,
             candidate=other_candidate,
             consultant=user_with_org,
             channel=Contact.Channel.PHONE,
             contacted_at=timezone.now(),
-            result=Contact.Result.NO_RESPONSE,
-        )
+            result=Contact.Result.NO_RESPONSE)
         resp = auth_client.get(
             f"/projects/{project.pk}/tab/overview/",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         content = resp.content.decode()
         normalized = content.replace("\n", "").replace("  ", "")
         # 관심 카운트는 1이어야 함 (미응답 제외)
@@ -371,12 +340,10 @@ class TestFunnelNavigation:
             channel=Contact.Channel.PHONE,
             contacted_at=timezone.now(),
             result=Contact.Result.RESERVED,
-            locked_until=timezone.now() + timezone.timedelta(hours=1),
-        )
+            locked_until=timezone.now() + timezone.timedelta(hours=1))
         resp = auth_client.get(
             f"/projects/{project.pk}/tab/overview/",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         content = resp.content.decode()
         # RESERVED만 있으므로 퍼널 컨택 카운트는 0이어야 함
         assert (
@@ -395,24 +362,20 @@ class TestFunnelNavigation:
             consultant=user_with_org,
             channel=Contact.Channel.PHONE,
             contacted_at=timezone.now(),
-            result=Contact.Result.INTERESTED,
-        )
+            result=Contact.Result.INTERESTED)
         other_candidate = Candidate.objects.create(
             name="김철수",
-            owned_by=project.organization,
-        )
+            owned_by=project.organization)
         Contact.objects.create(
             project=project,
             candidate=other_candidate,
             consultant=user_with_org,
             channel=Contact.Channel.PHONE,
             contacted_at=timezone.now(),
-            result=Contact.Result.NO_RESPONSE,
-        )
+            result=Contact.Result.NO_RESPONSE)
         resp = auth_client.get(
             f"/projects/{project.pk}/tab/contacts/?result=관심",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         content = resp.content.decode()
         assert "홍길동" in content  # 관심 결과 후보자
         assert "김철수" not in content  # 미응답 결과 후보자는 필터됨
@@ -452,8 +415,7 @@ class TestTabBadgeNewIndicator:
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
         resp = auth_client.get(f"/projects/{project.pk}/")
         content = resp.content.decode()
 
@@ -503,12 +465,10 @@ class TestWorkflowEdgeCases:
         Submission.objects.create(
             project=project,
             candidate=candidate,
-            consultant=user_with_org,
-        )
+            consultant=user_with_org)
         resp = auth_client.post(
             f"/projects/{project.pk}/submissions/new/",
-            {"candidate": str(candidate.pk), "notes": "중복"},
-        )
+            {"candidate": str(candidate.pk), "notes": "중복"})
         # 유효성 검사 실패로 폼 재렌더링
         assert resp.status_code == 200
         assert "HX-Retarget" not in resp.headers
@@ -528,12 +488,10 @@ class TestWorkflowEdgeCases:
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="관심",
-        )
+            result="관심")
         resp = auth_client.get(
             f"/projects/{project.pk}/tab/contacts/",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         content = resp.content.decode()
         # 컨택 탭 자체에는 배너가 없음 (배너는 contact_update 응답에만 포함)
         assert "interest-banner" not in content

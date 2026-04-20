@@ -9,7 +9,7 @@ import json
 import pytest
 from django.test import Client as TestClient
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from clients.models import Client, Contract
 from projects.models import Project
 
@@ -17,27 +17,17 @@ from projects.models import Project
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=user, organization=org, role="owner")
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
+def user_with_org2(db):
     user = User.objects.create_user(username="tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
     return user
 
 
@@ -61,18 +51,14 @@ def client_obj(org):
         name="Acme Corp",
         industry="IT",
         size="대기업",
-        region="Seoul",
-        organization=org,
-    )
+        region="Seoul")
 
 
 @pytest.fixture
 def client_obj2(org2):
     return Client.objects.create(
         name="Other Corp",
-        industry="Finance",
-        organization=org2,
-    )
+        industry="Finance")
 
 
 # --- Login Required ---
@@ -128,7 +114,7 @@ class TestClientCRUD:
         assert "Acme Corp" in resp.content.decode()
 
     @pytest.mark.django_db
-    def test_create_client(self, auth_client, org):
+    def test_create_client(self, auth_client):
         resp = auth_client.post(
             "/clients/new/",
             {
@@ -138,13 +124,12 @@ class TestClientCRUD:
                 "region": "Busan",
                 "notes": "Test notes",
                 "contact_persons_json": "[]",
-            },
-        )
+            })
         assert resp.status_code == 302  # redirect to detail
-        assert Client.objects.filter(name="New Client", organization=org).exists()
+        assert Client.objects.filter(name="New Client").exists()
 
     @pytest.mark.django_db
-    def test_create_client_with_contact_persons(self, auth_client, org):
+    def test_create_client_with_contact_persons(self, auth_client):
         persons = [
             {"name": "Kim", "position": "CTO", "phone": "010-1234", "email": "k@e.com"}
         ]
@@ -153,8 +138,7 @@ class TestClientCRUD:
             {
                 "name": "Contact Test",
                 "contact_persons_json": json.dumps(persons),
-            },
-        )
+            })
         assert resp.status_code == 302
         client = Client.objects.get(name="Contact Test")
         assert len(client.contact_persons) == 1
@@ -177,8 +161,7 @@ class TestClientCRUD:
                 "region": "Seoul",
                 "notes": "",
                 "contact_persons_json": "[]",
-            },
-        )
+            })
         assert resp.status_code == 302
         client_obj.refresh_from_db()
         assert client_obj.name == "Acme Updated"
@@ -201,27 +184,30 @@ class TestClientCRUD:
 
 class TestOrganizationIsolation:
     @pytest.mark.django_db
-    def test_cannot_see_other_org_clients(self, auth_client, client_obj2):
+    def test_all_clients_visible_single_tenant(self, auth_client, client_obj2):
+        """Single-tenant: all clients visible regardless of creator."""
         resp = auth_client.get("/clients/")
-        assert "Other Corp" not in resp.content.decode()
+        assert resp.status_code == 200
 
     @pytest.mark.django_db
-    def test_cannot_access_other_org_client_detail(self, auth_client, client_obj2):
+    def test_can_access_any_client_detail(self, auth_client, client_obj2):
+        """Single-tenant: any user can access any client detail."""
         resp = auth_client.get(f"/clients/{client_obj2.pk}/")
-        assert resp.status_code == 404
+        assert resp.status_code == 200
 
     @pytest.mark.django_db
-    def test_cannot_update_other_org_client(self, auth_client, client_obj2):
+    def test_can_update_any_client(self, auth_client, client_obj2):
+        """Single-tenant: any user can update any client."""
         resp = auth_client.post(
             f"/clients/{client_obj2.pk}/edit/",
-            {"name": "Hacked", "contact_persons_json": "[]"},
-        )
-        assert resp.status_code == 404
+            {"name": "Updated", "contact_persons_json": "[]"})
+        assert resp.status_code in (200, 302)
 
     @pytest.mark.django_db
-    def test_cannot_delete_other_org_client(self, auth_client, client_obj2):
+    def test_can_delete_any_client(self, auth_client, client_obj2):
+        """Single-tenant: any user can delete any client."""
         resp = auth_client.post(f"/clients/{client_obj2.pk}/delete/")
-        assert resp.status_code == 404
+        assert resp.status_code in (200, 302)
 
 
 # --- Search ---
@@ -252,7 +238,7 @@ class TestSearch:
 
 class TestContactPersons:
     @pytest.mark.django_db
-    def test_contact_persons_saved_and_displayed(self, auth_client, org):
+    def test_contact_persons_saved_and_displayed(self, auth_client):
         persons = [
             {"name": "Park", "position": "HR", "phone": "010-9999", "email": "p@e.com"},
             {"name": "Lee", "position": "CEO", "phone": "010-8888", "email": "l@e.com"},
@@ -262,8 +248,7 @@ class TestContactPersons:
             {
                 "name": "CP Test",
                 "contact_persons_json": json.dumps(persons),
-            },
-        )
+            })
         client = Client.objects.get(name="CP Test")
         assert len(client.contact_persons) == 2
         assert client.contact_persons[0]["name"] == "Park"
@@ -282,15 +267,13 @@ class TestContactPersons:
 class TestDeleteProtection:
     @pytest.mark.django_db
     def test_cannot_delete_with_active_project(
-        self, auth_client, client_obj, user_with_org, org
+        self, auth_client, client_obj, user_with_org
     ):
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Active Project",
             status="searching",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         resp = auth_client.post(f"/clients/{client_obj.pk}/delete/")
         # Should NOT redirect (client not deleted), render detail with error
         assert resp.status_code == 200
@@ -299,30 +282,26 @@ class TestDeleteProtection:
 
     @pytest.mark.django_db
     def test_can_delete_with_closed_project(
-        self, auth_client, client_obj, user_with_org, org
+        self, auth_client, client_obj, user_with_org
     ):
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Closed Project",
             status="closed_success",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         resp = auth_client.post(f"/clients/{client_obj.pk}/delete/")
         assert resp.status_code == 302
         assert not Client.objects.filter(pk=client_obj.pk).exists()
 
     @pytest.mark.django_db
     def test_can_delete_with_on_hold_project(
-        self, auth_client, client_obj, user_with_org, org
+        self, auth_client, client_obj, user_with_org
     ):
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="On Hold Project",
             status="on_hold",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         resp = auth_client.post(f"/clients/{client_obj.pk}/delete/")
         assert resp.status_code == 302
         assert not Client.objects.filter(pk=client_obj.pk).exists()
@@ -336,8 +315,7 @@ class TestHTMXNavigation:
     def test_list_htmx_renders_partial(self, auth_client):
         resp = auth_client.get(
             "/clients/",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
         content = resp.content.decode()
         # Should not contain full HTML page (no <!DOCTYPE)
@@ -364,8 +342,7 @@ class TestContractCRUD:
                 "end_date": "2026-12-31",
                 "status": "체결",
                 "terms": "Standard terms",
-            },
-        )
+            })
         assert resp.status_code == 200  # returns partial
         assert Contract.objects.filter(client=client_obj).exists()
         contract = Contract.objects.get(client=client_obj)
@@ -376,16 +353,14 @@ class TestContractCRUD:
         contract = Contract.objects.create(
             client=client_obj,
             start_date="2026-01-01",
-            status="협의중",
-        )
+            status="협의중")
         resp = auth_client.post(
             f"/clients/{client_obj.pk}/contracts/{contract.pk}/edit/",
             {
                 "start_date": "2026-02-01",
                 "status": "체결",
                 "terms": "Updated terms",
-            },
-        )
+            })
         assert resp.status_code == 200
         contract.refresh_from_db()
         assert contract.status == "체결"
@@ -396,12 +371,10 @@ class TestContractCRUD:
         contract = Contract.objects.create(
             client=client_obj,
             start_date="2026-01-01",
-            status="만료",
-        )
+            status="만료")
         pk = contract.pk
         resp = auth_client.post(
-            f"/clients/{client_obj.pk}/contracts/{pk}/delete/",
-        )
+            f"/clients/{client_obj.pk}/contracts/{pk}/delete/")
         assert resp.status_code == 200
         assert not Contract.objects.filter(pk=pk).exists()
 
@@ -409,11 +382,9 @@ class TestContractCRUD:
     def test_contract_delete_only_post(self, auth_client, client_obj):
         contract = Contract.objects.create(
             client=client_obj,
-            start_date="2026-01-01",
-        )
+            start_date="2026-01-01")
         resp = auth_client.get(
-            f"/clients/{client_obj.pk}/contracts/{contract.pk}/delete/",
-        )
+            f"/clients/{client_obj.pk}/contracts/{contract.pk}/delete/")
         assert resp.status_code == 405
 
     @pytest.mark.django_db
@@ -421,8 +392,7 @@ class TestContractCRUD:
         """Cannot create contracts on other org's clients."""
         resp = auth_client.post(
             f"/clients/{client_obj2.pk}/contracts/new/",
-            {"start_date": "2026-01-01", "status": "체결"},
-        )
+            {"start_date": "2026-01-01", "status": "체결"})
         assert resp.status_code == 404
 
     @pytest.mark.django_db
@@ -432,8 +402,7 @@ class TestContractCRUD:
             start_date="2026-01-01",
             end_date="2026-12-31",
             status="체결",
-            terms="Annual contract",
-        )
+            terms="Annual contract")
         resp = auth_client.get(f"/clients/{client_obj.pk}/")
         content = resp.content.decode()
         assert "계약 이력" in content
@@ -441,30 +410,26 @@ class TestContractCRUD:
 
     @pytest.mark.django_db
     def test_detail_shows_active_projects(
-        self, auth_client, client_obj, user_with_org, org
+        self, auth_client, client_obj, user_with_org
     ):
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Dev Hire",
             status="searching",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         resp = auth_client.get(f"/clients/{client_obj.pk}/")
         content = resp.content.decode()
         assert "Dev Hire" in content
 
     @pytest.mark.django_db
     def test_detail_hides_closed_projects(
-        self, auth_client, client_obj, user_with_org, org
+        self, auth_client, client_obj, user_with_org
     ):
         Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Closed Hire",
             status="closed_success",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         resp = auth_client.get(f"/clients/{client_obj.pk}/")
         content = resp.content.decode()
         assert "Closed Hire" not in content

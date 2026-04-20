@@ -10,11 +10,11 @@ pytestmark = pytest.mark.django_db
 
 
 class TestAddCandidate:
-    def test_add_candidate_post(self, logged_in_client, project, org):
+    def test_add_candidate_post(self, logged_in_client, project):
         """POST /projects/<id>/add_candidate/ -> Application created + HX-Trigger."""
         from candidates.models import Candidate
 
-        c = Candidate.objects.create(name="신규후보", owned_by=org)
+        c = Candidate.objects.create(name="신규후보")
         response = logged_in_client.post(
             reverse("projects:project_add_candidate", args=[project.pk]),
             data={"candidate": str(c.pk), "notes": "test"},
@@ -33,14 +33,10 @@ class TestAddCandidate:
         assert response.status_code == 200
 
     def test_duplicate_candidate_returns_error(
-        self, logged_in_client, application, org
+        self, logged_in_client, application
     ):
         """Duplicate project+candidate -> error response (not 500)."""
-        # application fixture already matched candidate to project
         candidate = application.candidate
-        candidate.owned_by = org
-        candidate.save(update_fields=["owned_by"])
-
         response = logged_in_client.post(
             reverse("projects:project_add_candidate", args=[application.project.pk]),
             data={"candidate": str(candidate.pk)},
@@ -79,13 +75,13 @@ class TestApplicationDrop:
         )
         assert response.status_code == 200
 
-    def test_other_org_drop_404(self, other_org_client, application):
-        """Drop from other org -> 404."""
+    def test_other_user_can_drop(self, other_org_client, application):
+        """Single-tenant: any authenticated user can drop an application."""
         response = other_org_client.post(
             reverse("projects:application_drop", args=[application.pk]),
             data={"drop_reason": "unfit"},
         )
-        assert response.status_code == 404
+        assert response.status_code in (200, 302)
 
 
 class TestApplicationRestore:
@@ -117,12 +113,12 @@ class TestApplicationHire:
         application.project.refresh_from_db()
         assert application.project.status == ProjectStatus.CLOSED
 
-    def test_other_org_hire_404(self, other_org_client, application):
-        """Hire from other org -> 404."""
+    def test_other_user_can_hire(self, other_org_client, application):
+        """Single-tenant: any authenticated user can hire."""
         response = other_org_client.post(
             reverse("projects:application_hire", args=[application.pk]),
         )
-        assert response.status_code == 404
+        assert response.status_code in (200, 204, 302)
 
 
 class TestApplicationAuthEdge:

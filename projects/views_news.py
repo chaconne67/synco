@@ -1,13 +1,11 @@
 """P17: News feed views."""
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import level_required
-from accounts.helpers import _get_org
 
 from .forms import NewsSourceForm
 from .models import (
@@ -22,10 +20,8 @@ from .models import (
 @level_required(1)
 def news_feed(request):
     """News feed main page."""
-    org = _get_org(request)
-
     # My project-related news (via relevance join)
-    my_projects = request.user.assigned_projects.filter(organization=org)
+    my_projects = request.user.assigned_projects.all()
     related_articles = (
         NewsArticle.objects.filter(
             relevances__project__in=my_projects,
@@ -35,9 +31,8 @@ def news_feed(request):
         .order_by("-published_at")[:10]
     )
 
-    # All org news
+    # All news
     all_articles = NewsArticle.objects.filter(
-        source__organization=org,
         summary_status=SummaryStatus.COMPLETED,
     ).order_by("-published_at")[:50]
 
@@ -65,11 +60,9 @@ def news_feed(request):
 @level_required(1)
 def news_filter(request):
     """HTMX partial: filter articles by category."""
-    org = _get_org(request)
     category = request.GET.get("category", "")
 
     articles = NewsArticle.objects.filter(
-        source__organization=org,
         summary_status=SummaryStatus.COMPLETED,
     )
 
@@ -89,8 +82,7 @@ def news_filter(request):
 @level_required(2)
 def news_sources(request):
     """Source management list page."""
-    org = _get_org(request)
-    sources = NewsSource.objects.filter(organization=org)
+    sources = NewsSource.objects.all()
 
     return render(
         request,
@@ -103,14 +95,10 @@ def news_sources(request):
 @level_required(2)
 def news_source_create(request):
     """Create a new news source."""
-    org = _get_org(request)
-
     if request.method == "POST":
         form = NewsSourceForm(request.POST)
         if form.is_valid():
-            source = form.save(commit=False)
-            source.organization = org
-            source.save()
+            form.save()
             return redirect("news:news_sources")
     else:
         form = NewsSourceForm()
@@ -126,8 +114,7 @@ def news_source_create(request):
 @level_required(2)
 def news_source_update(request, pk):
     """Edit an existing news source."""
-    org = _get_org(request)
-    source = get_object_or_404(NewsSource, pk=pk, organization=org)
+    source = get_object_or_404(NewsSource, pk=pk)
 
     if request.method == "POST":
         form = NewsSourceForm(request.POST, instance=source)
@@ -148,8 +135,7 @@ def news_source_update(request, pk):
 @require_POST
 def news_source_delete(request, pk):
     """Delete a news source."""
-    org = _get_org(request)
-    source = get_object_or_404(NewsSource, pk=pk, organization=org)
+    source = get_object_or_404(NewsSource, pk=pk)
     source.delete()
     return redirect("news:news_sources")
 
@@ -158,8 +144,7 @@ def news_source_delete(request, pk):
 @require_POST
 def news_source_toggle(request, pk):
     """Toggle source active/inactive."""
-    org = _get_org(request)
-    source = get_object_or_404(NewsSource, pk=pk, organization=org)
+    source = get_object_or_404(NewsSource, pk=pk)
     source.is_active = not source.is_active
     source.save(update_fields=["is_active", "updated_at"])
     return redirect("news:news_sources")

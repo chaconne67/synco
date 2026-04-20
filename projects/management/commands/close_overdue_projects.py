@@ -53,7 +53,7 @@ class Command(BaseCommand):
         self.stdout.write(f"대상: {count}건")
         for p in candidates:
             self.stdout.write(
-                f"  - [{p.organization.name}] {p.client.name} · {p.title} "
+                f"  - [{p.client.name}] · {p.title} "
                 f"(deadline={p.deadline}, pk={p.pk})"
             )
 

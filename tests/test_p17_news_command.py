@@ -6,38 +6,30 @@ from io import StringIO
 
 from django.core.management import call_command
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from projects.models import (
     NewsArticle,
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus,
-)
+    SummaryStatus)
 
-
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=u, organization=org, role="consultant")
     return u
 
 
 @pytest.fixture
 def source(org):
     return NewsSource.objects.create(
-        organization=org,
         name="Test Feed",
         url="https://example.com/feed.xml",
         type=NewsSourceType.RSS,
         category=NewsCategory.HIRING,
-        is_active=True,
-    )
+        is_active=True)
 
 
 class TestFetchNewsCommand:
@@ -107,8 +99,7 @@ class TestFetchNewsCommand:
             source=source,
             title="Failed Article",
             url="https://example.com/failed",
-            summary_status=SummaryStatus.FAILED,
-        )
+            summary_status=SummaryStatus.FAILED)
 
         # Setup httpx mock
         mock_resp = MagicMock()

@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import Client as TestClient
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from clients.models import CompanyProfile, PreferredCert, UniversityTier
 from clients.services.csv_handler import export_csv, import_csv
 
@@ -16,26 +16,17 @@ from clients.services.csv_handler import export_csv, import_csv
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
+def staff_user(db):
+    return User.objects.create_user(
+        username="staff", password="test1234", is_staff=True, level=2
+    )
 
 
 @pytest.fixture
-def staff_user(db, org):
-    user = User.objects.create_user(
-        username="staff", password="test1234", is_staff=True
+def normal_user(db):
+    return User.objects.create_user(
+        username="normal", password="test1234", is_staff=False, level=1
     )
-    Membership.objects.create(user=user, organization=org)
-    return user
-
-
-@pytest.fixture
-def normal_user(db, org):
-    user = User.objects.create_user(
-        username="normal", password="test1234", is_staff=False
-    )
-    Membership.objects.create(user=user, organization=org)
-    return user
 
 
 @pytest.fixture

@@ -99,19 +99,12 @@ def client_list_page(request):
 @level_required(2)
 def client_create(request):
     """Create a new client. GET=form, POST=save."""
-    from accounts.models import Organization
-
     cp_json_str = "[]"
     if request.method == "POST":
         form = ClientForm(request.POST, request.FILES)
         cp_json_str = request.POST.get("contact_persons_json", "[]")
         if form.is_valid():
             client = form.save(commit=False)
-            org = Organization.objects.first()
-            if org is None:
-                # T7 will drop this FK; until then we require a seeded org.
-                return redirect("clients:client_list")
-            client.organization = org
             try:
                 raw = json.loads(cp_json_str)
             except (json.JSONDecodeError, TypeError):

@@ -13,40 +13,32 @@ from accounts.models import (
     Membership,
     Organization,
     TelegramBinding,
-    User,
-)
+    User)
 from clients.models import Client
 from projects.models import Project, ProjectStatus, ResumeUpload
 from projects.services.email.gmail_client import GmailClient
 from projects.services.email.monitor import _match_project, process_email_config
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Org")
-
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="consultant1", password="testpass123")
-    Membership.objects.create(user=u, organization=org)
     return u
 
 
 @pytest.fixture
-def client_company(db, org):
-    return Client.objects.create(name="Rayence", organization=org)
+def client_company(db):
+    return Client.objects.create(name="Rayence")
 
 
 @pytest.fixture
-def project(db, org, client_company, user):
+def project(db, client_company, user):
     return Project.objects.create(
-        client=client_company,
-        organization=org,
+        client=client_company
         title="Test Project",
         status=ProjectStatus.SEARCHING,
-        created_by=user,
-    )
+        created_by=user)
 
 
 @pytest.fixture
@@ -110,10 +102,8 @@ class TestEmailDedup:
     def test_integrity_error_caught_and_skipped(self, mock_gmail_cls, media_root):
         """Duplicate email attachment -> IntegrityError -> skipped."""
         # Create objects within the transactional test
-        org = Organization.objects.create(name="Dedup Org")
-        user = User.objects.create_user(username="dedup_user", password="testpass123")
-        Membership.objects.create(user=user, organization=org)
-
+            user = User.objects.create_user(username="dedup_user", password="testpass123")
+    
         config = EmailMonitorConfig(user=user)
         config.set_credentials(
             {
@@ -137,15 +127,13 @@ class TestEmailDedup:
 
         # Create first upload to cause IntegrityError on second
         ResumeUpload.objects.create(
-            organization=org,
             file_name="resume.pdf",
             file_type=ResumeUpload.FileType.PDF,
             source=ResumeUpload.Source.EMAIL,
             status=ResumeUpload.Status.PENDING,
             email_message_id="msg1",
             email_attachment_id="att1",
-            created_by=user,
-        )
+            created_by=user)
 
         # process_email_config should handle the IntegrityError gracefully
         count = process_email_config(config)
@@ -153,17 +141,17 @@ class TestEmailDedup:
 
 
 class TestProjectMatching:
-    def test_ref_uuid_matches_project(self, project, org):
+    def test_ref_uuid_matches_project(self, project):
         subject = f"New resume [REF-{project.pk}] attached"
         result = _match_project(subject, org)
         assert result == project
 
-    def test_no_match_returns_none(self, org):
+    def test_no_match_returns_none(self):
         subject = "New resume attached"
         result = _match_project(subject, org)
         assert result is None
 
-    def test_wrong_uuid_returns_none(self, org):
+    def test_wrong_uuid_returns_none(self):
         fake_uuid = uuid.uuid4()
         subject = f"Resume [REF-{fake_uuid}]"
         result = _match_project(subject, org)
@@ -171,16 +159,14 @@ class TestProjectMatching:
 
 
 class TestTelegramNotification:
-    def test_no_binding_skipped(self, org, user):
+    def test_no_binding_skipped(self, user):
         """No telegram binding -> notification silently skipped."""
         upload = ResumeUpload.objects.create(
-            organization=org,
             file_name="resume.pdf",
             file_type=ResumeUpload.FileType.PDF,
             source=ResumeUpload.Source.EMAIL,
             status=ResumeUpload.Status.EXTRACTED,
-            created_by=user,
-        )
+            created_by=user)
 
         from projects.management.commands.check_email_resumes import _notify_if_needed
 
@@ -188,22 +174,19 @@ class TestTelegramNotification:
         _notify_if_needed(upload)
 
     @patch("projects.services.notification._send_telegram_message")
-    def test_binding_exists_message_sent(self, mock_send, org, user):
+    def test_binding_exists_message_sent(self, mock_send, user):
         """Telegram binding exists -> notification sent with correct text."""
         TelegramBinding.objects.create(
             user=user,
             chat_id="123456",
-            is_active=True,
-        )
+            is_active=True)
         upload = ResumeUpload.objects.create(
-            organization=org,
             file_name="홍길동_이력서.pdf",
             file_type=ResumeUpload.FileType.PDF,
             source=ResumeUpload.Source.EMAIL,
             status=ResumeUpload.Status.EXTRACTED,
             email_from="sender@test.com",
-            created_by=user,
-        )
+            created_by=user)
 
         from projects.management.commands.check_email_resumes import _notify_if_needed
 
@@ -217,23 +200,19 @@ class TestTelegramNotification:
 
     @patch(
         "projects.services.notification._send_telegram_message",
-        side_effect=Exception("Telegram API error"),
-    )
-    def test_notification_error_logged_not_raised(self, mock_send, org, user):
+        side_effect=Exception("Telegram API error"))
+    def test_notification_error_logged_not_raised(self, mock_send, user):
         """Telegram send error -> logged, not raised (best-effort)."""
         TelegramBinding.objects.create(
             user=user,
             chat_id="123456",
-            is_active=True,
-        )
+            is_active=True)
         upload = ResumeUpload.objects.create(
-            organization=org,
             file_name="resume.pdf",
             file_type=ResumeUpload.FileType.PDF,
             source=ResumeUpload.Source.EMAIL,
             status=ResumeUpload.Status.EXTRACTED,
-            created_by=user,
-        )
+            created_by=user)
 
         from projects.management.commands.check_email_resumes import _notify_if_needed
 
@@ -403,12 +382,10 @@ class TestSelectForUpdateConcurrency:
         self, mock_process_upload, mock_process_config
     ):
         """Second concurrent cron run skips locked configs."""
-        org = Organization.objects.create(name="Concurrency Org")
-        user = User.objects.create_user(
+            user = User.objects.create_user(
             username="concurrent_user", password="testpass123"
         )
-        Membership.objects.create(user=user, organization=org)
-        config = EmailMonitorConfig(user=user)
+            config = EmailMonitorConfig(user=user)
         config.set_credentials({"access_token": "test", "refresh_token": "test"})
         config.save()
 

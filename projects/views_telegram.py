@@ -131,14 +131,6 @@ def _handle_text_message(chat_id: str, text: str) -> None:
         return
 
     user = binding.user
-    from accounts.models import Membership
-
-    try:
-        membership = Membership.objects.select_related("organization").get(user=user)
-        org = membership.organization
-    except Membership.DoesNotExist:
-        _safe_send(chat_id, "조직 소속이 없습니다.")
-        return
 
     # A3: Check for awaiting_text_input state
     from projects.models import Notification
@@ -159,8 +151,8 @@ def _handle_text_message(chat_id: str, text: str) -> None:
     try:
         from projects.services.voice.intent_parser import parse_intent
 
-        result = parse_intent(text, context={"user": user, "organization": org})
-        _handle_parsed_intent(chat_id, result, user, org)
+        result = parse_intent(text, context={"user": user})
+        _handle_parsed_intent(chat_id, result, user)
     except ImportError:
         _safe_send(chat_id, "텍스트 명령은 아직 준비 중입니다. 웹 앱을 이용해주세요.")
     except Exception:
@@ -188,7 +180,7 @@ def _handle_awaiting_text(notification, text: str, chat_id: str) -> None:
             _safe_send(chat_id, "메시지 전송에 실패했습니다.")
 
 
-def _handle_parsed_intent(chat_id: str, result, user, org) -> None:
+def _handle_parsed_intent(chat_id: str, result, user) -> None:
     """Handle parsed intent from P14 intent parser."""
     # Basic implementation — expand based on P14 intent types
     intent = None

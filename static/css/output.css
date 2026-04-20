@@ -3377,6 +3377,11 @@ a.bg-ink.rounded-card:hover,
   background-color: rgb(255 255 255 / 0.8);
 }
 
+.bg-slate-700 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(51 65 85 / var(--tw-bg-opacity, 1));
+}
+
 .bg-gradient-to-br {
   background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
 }
@@ -4915,6 +4920,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 .hover\:bg-white\/70:hover {
   background-color: rgb(255 255 255 / 0.7);
+}
+
+.hover\:bg-slate-900:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(15 23 42 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:text-\[color\:var\(--ink\)\]:hover {

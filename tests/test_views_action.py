@@ -159,15 +159,15 @@ class TestActionProposeNext:
 
 
 class TestActionOrgIsolation:
-    def test_other_org_action_404(
+    def test_any_user_can_access_action(
         self, other_org_client, application, action_type_reach_out
     ):
-        """Accessing action from other org -> 404."""
+        """Single-tenant: any authenticated user can access any action."""
         action = create_action(application, action_type_reach_out, None)
         response = other_org_client.get(
             reverse("projects:action_complete", args=[action.pk])
         )
-        assert response.status_code == 404
+        assert response.status_code == 200
 
 
 class TestActionAuthEdge:

@@ -16,18 +16,18 @@ def test_list_renders_header_and_empty_state(boss_client):
 
 
 @pytest.mark.django_db
-def test_list_renders_cards(db, boss_client, legacy_org):
+def test_list_renders_cards(db, boss_client):
     Client.objects.create(
-        organization=legacy_org, name="SKBP", industry=IndustryCategory.BIO_PHARMA.value
+        name="SKBP", industry=IndustryCategory.BIO_PHARMA.value
     )
     resp = boss_client.get(reverse("clients:client_list"))
     assert "SKBP" in resp.content.decode()
 
 
 @pytest.mark.django_db
-def test_list_category_filter(db, boss_client, legacy_org):
-    Client.objects.create(organization=legacy_org, name="BioFirm", industry=IndustryCategory.BIO_PHARMA.value)
-    Client.objects.create(organization=legacy_org, name="TechCorp", industry=IndustryCategory.IT_SW.value)
+def test_list_category_filter(db, boss_client):
+    Client.objects.create(name="BioFirm", industry=IndustryCategory.BIO_PHARMA.value)
+    Client.objects.create(name="TechCorp", industry=IndustryCategory.IT_SW.value)
     resp = boss_client.get(reverse("clients:client_list") + "?cat=BIO_PHARMA")
     body = resp.content.decode()
     assert "BioFirm" in body
@@ -35,9 +35,9 @@ def test_list_category_filter(db, boss_client, legacy_org):
 
 
 @pytest.mark.django_db
-def test_list_size_filter(db, boss_client, legacy_org):
-    Client.objects.create(organization=legacy_org, name="Big", size="대기업")
-    Client.objects.create(organization=legacy_org, name="Small", size="중소")
+def test_list_size_filter(db, boss_client):
+    Client.objects.create(name="Big", size="대기업")
+    Client.objects.create(name="Small", size="중소")
     resp = boss_client.get(reverse("clients:client_list") + "?size=대기업")
     body = resp.content.decode()
     assert "Big" in body
@@ -45,9 +45,9 @@ def test_list_size_filter(db, boss_client, legacy_org):
 
 
 @pytest.mark.django_db
-def test_list_page_endpoint_returns_next_cards(db, boss_client, legacy_org):
+def test_list_page_endpoint_returns_next_cards(db, boss_client):
     for i in range(10):
-        Client.objects.create(organization=legacy_org, name=f"C{i:02d}")
+        Client.objects.create(name=f"C{i:02d}")
     resp = boss_client.get(reverse("clients:client_list_page") + "?page=2")
     assert resp.status_code == 200
     body = resp.content.decode()
@@ -55,11 +55,11 @@ def test_list_page_endpoint_returns_next_cards(db, boss_client, legacy_org):
 
 
 @pytest.mark.django_db
-def test_list_active_count_shown(db, boss_client, boss_user, legacy_org):
+def test_list_active_count_shown(db, boss_client, boss_user):
     from projects.models import ProjectStatus
 
-    c = Client.objects.create(organization=legacy_org, name="A")
-    Project.objects.create(client=c, organization=legacy_org, title="P", status=ProjectStatus.OPEN, created_by=boss_user)
+    c = Client.objects.create(name="A")
+    Project.objects.create(client=c, title="P", status=ProjectStatus.OPEN, created_by=boss_user)
     resp = boss_client.get(reverse("clients:client_list"))
     body = resp.content.decode()
     assert "1" in body

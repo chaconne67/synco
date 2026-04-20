@@ -91,16 +91,12 @@ class ProjectForm(forms.ModelForm):
         label="담당 컨설턴트",
     )
 
-    def __init__(self, *args, organization=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if organization:
-            self.fields["client"].queryset = Client.objects.filter(
-                organization=organization
-            )
-            self.fields["assigned_consultants"].queryset = User.objects.filter(
-                membership__organization=organization,
-                membership__status="active",
-            )
+        self.fields["client"].queryset = Client.objects.all()
+        self.fields["assigned_consultants"].queryset = User.objects.filter(
+            level__gte=1
+        )
         self.fields["jd_text"].required = False
         self.fields["jd_file"].required = False
         self.fields["jd_source"].required = False
@@ -387,14 +383,11 @@ class ApplicationCreateForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, organization=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if organization:
-            from candidates.models import Candidate
+        from candidates.models import Candidate
 
-            self.fields["candidate"].queryset = Candidate.objects.filter(
-                owned_by=organization
-            )
+        self.fields["candidate"].queryset = Candidate.objects.all()
 
 
 class ApplicationDropForm(forms.Form):

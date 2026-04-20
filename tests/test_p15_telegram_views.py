@@ -13,19 +13,13 @@ from accounts.models import (
     Organization,
     TelegramBinding,
     TelegramVerification,
-    User,
-)
+    User)
 
-
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=u, organization=org, role="consultant")
     return u
 
 
@@ -50,8 +44,7 @@ class TestWebhookView:
         resp = c.post(
             "/telegram/webhook/",
             data=json.dumps({"update_id": 1}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 403
 
     @override_settings(TELEGRAM_WEBHOOK_SECRET="testsecret")
@@ -61,8 +54,7 @@ class TestWebhookView:
             "/telegram/webhook/",
             data=json.dumps({"update_id": 1}),
             content_type="application/json",
-            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="wrong",
-        )
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="wrong")
         assert resp.status_code == 403
 
     @override_settings(TELEGRAM_WEBHOOK_SECRET="testsecret")
@@ -72,8 +64,7 @@ class TestWebhookView:
             "/telegram/webhook/",
             data="not json",
             content_type="application/json",
-            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret",
-        )
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret")
         assert resp.status_code == 400
 
     @override_settings(TELEGRAM_WEBHOOK_SECRET="testsecret")
@@ -84,8 +75,7 @@ class TestWebhookView:
             "/telegram/webhook/",
             data=json.dumps({"update_id": 123}),
             content_type="application/json",
-            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret",
-        )
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret")
         assert resp.status_code == 200
         mock_process.assert_called_once()
 
@@ -98,14 +88,12 @@ class TestWebhookView:
             "/telegram/webhook/",
             data=payload,
             content_type="application/json",
-            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret",
-        )
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret")
         c.post(
             "/telegram/webhook/",
             data=payload,
             content_type="application/json",
-            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret",
-        )
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="testsecret")
         assert mock_process.call_count == 1
 
 
@@ -125,8 +113,7 @@ class TestBindView:
         TelegramVerification.objects.create(
             user=user,
             code="111111",
-            expires_at=timezone.now() + timedelta(minutes=5),
-        )
+            expires_at=timezone.now() + timedelta(minutes=5))
         auth_client.post("/telegram/bind/")
         old = TelegramVerification.objects.get(code="111111")
         assert old.consumed is True

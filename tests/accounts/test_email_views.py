@@ -2,16 +2,13 @@ import pytest
 from django.test import Client as TestClient
 from django.contrib.auth import get_user_model
 
-from accounts.models import Membership, Organization
 
 User = get_user_model()
 
 
 @pytest.fixture
 def active_user(db):
-    org = Organization.objects.create(name="Test Org")
     user = User.objects.create_user(username="emailuser", password="pass")
-    Membership.objects.create(user=user, organization=org, status="active")
     return user
 
 
@@ -46,8 +43,7 @@ class TestLegacyEmailSettings:
         client.force_login(active_user)
         response = client.post(
             "/accounts/email/settings/",
-            {"filter_from": "test@example.com", "is_active": "on"},
-        )
+            {"filter_from": "test@example.com", "is_active": "on"})
         assert response.status_code == 200
         assert "accounts/email_settings.html" in [t.name for t in response.templates]
 
@@ -63,16 +59,14 @@ class TestSettingsEmailHTMX:
         EmailMonitorConfig.objects.create(
             user=active_user,
             gmail_credentials=b"",
-            is_active=True,
-        )
+            is_active=True)
         client = TestClient()
         client.force_login(active_user)
         response = client.post(
             "/accounts/settings/email/",
             {"filter_from": "test@example.com", "is_active": "on"},
             HTTP_HX_REQUEST="true",
-            HTTP_HX_TARGET="settings-content",
-        )
+            HTTP_HX_TARGET="settings-content")
         assert response.status_code == 200
         assert "accounts/partials/settings_email.html" in [
             t.name for t in response.templates

@@ -4,7 +4,7 @@ import pytest
 from django.db import IntegrityError
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from projects.models import (
     NewsArticle,
     NewsArticleRelevance,
@@ -12,44 +12,34 @@ from projects.models import (
     NewsSource,
     NewsSourceType,
     Project,
-    SummaryStatus,
-)
+    SummaryStatus)
 from clients.models import Client
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="tester", password="test1234")
-    Membership.objects.create(user=u, organization=org, role="consultant")
     return u
 
 
 @pytest.fixture
-def client_co(org):
-    return Client.objects.create(name="Acme Corp", organization=org)
+def client_co(db):
+    return Client.objects.create(name="Acme Corp")
 
 
 @pytest.fixture
-def project(org, client_co, user):
-    return Project.objects.create(
-        organization=org, client=client_co, title="Backend Dev", created_by=user
-    )
+def project(client_co, user):
+    return Project.objects.create(client=client_co, title="Backend Dev", created_by=user)
 
 
 @pytest.fixture
-def news_source(org):
+def news_source(db):
     return NewsSource.objects.create(
-        organization=org,
         name="TechCrunch Korea",
         url="https://techcrunch.com/feed/",
         type=NewsSourceType.RSS,
-        category=NewsCategory.INDUSTRY,
-    )
+        category=NewsCategory.INDUSTRY)
 
 
 @pytest.fixture
@@ -62,8 +52,7 @@ def news_article(news_source):
         summary_status=SummaryStatus.COMPLETED,
         summary="AI is transforming hiring.",
         category=NewsCategory.HIRING,
-        tags=["AI", "채용"],
-    )
+        tags=["AI", "채용"])
 
 
 class TestNewsSource:
@@ -76,19 +65,16 @@ class TestNewsSource:
     def test_source_str(self, news_source):
         assert str(news_source) == "TechCrunch Korea"
 
-    def test_source_ordering(self, org):
+    @pytest.mark.django_db
+    def test_source_ordering(self):
         NewsSource.objects.create(
-            organization=org,
             name="A",
             url="https://a.com/feed",
-            category=NewsCategory.HR,
-        )
+            category=NewsCategory.HR)
         s2 = NewsSource.objects.create(
-            organization=org,
             name="B",
             url="https://b.com/feed",
-            category=NewsCategory.HR,
-        )
+            category=NewsCategory.HR)
         sources = list(NewsSource.objects.all())
         # ordering = ["-created_at"], so s2 (newer) comes first
         assert sources[0] == s2

@@ -9,16 +9,15 @@ from clients.models import Client, IndustryCategory
 
 
 @pytest.fixture
-def existing_client(legacy_org):
+def existing_client():
     return Client.objects.create(
-        organization=legacy_org,
         name="ExistingCo",
         industry=IndustryCategory.IT_SW.value,
     )
 
 
 @pytest.mark.django_db
-def test_create_client_minimal(boss_client, legacy_org):
+def test_create_client_minimal(boss_client):
     """POST to client_create with minimal data → 302 + Client created."""
     url = reverse("clients:client_create")
     resp = boss_client.post(url, data={
@@ -46,7 +45,7 @@ def test_update_client_website(boss_client, existing_client):
 
 
 @pytest.mark.django_db
-def test_create_rejects_invalid_logo_ext(boss_client, legacy_org):
+def test_create_rejects_invalid_logo_ext(boss_client):
     """POST with .exe logo → form re-renders (200) with validation error, no Client created."""
     import io
     from PIL import Image as PILImage

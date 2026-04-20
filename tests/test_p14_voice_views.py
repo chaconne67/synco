@@ -7,21 +7,16 @@ from unittest.mock import patch
 import pytest
 from django.test import Client as TestClient
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import Project
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def user(db, org):
+def user(db):
     u = User.objects.create_user(username="view_tester", password="test1234")
-    Membership.objects.create(user=u, organization=org)
     return u
 
 
@@ -33,23 +28,21 @@ def auth_client(user):
 
 
 @pytest.fixture
-def client_obj(db, org):
-    return Client.objects.create(name="View Client", organization=org)
+def client_obj(db):
+    return Client.objects.create(name="View Client")
 
 
 @pytest.fixture
-def project(db, org, client_obj, user):
+def project(db, client_obj, user):
     return Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="View Test",
-        created_by=user,
-    )
+        created_by=user)
 
 
 @pytest.fixture
-def candidate(db, org):
-    return Candidate.objects.create(name="홍길동", owned_by=org)
+def candidate(db):
+    return Candidate.objects.create(name="홍길동")
 
 
 def test_transcribe_endpoint_requires_auth(db):
@@ -66,8 +59,7 @@ def test_transcribe_endpoint(mock_transcribe, auth_client):
     resp = auth_client.post(
         "/voice/transcribe/",
         {"audio": audio, "mode": "command"},
-        format="multipart",
-    )
+        format="multipart")
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["text"] == "홍길동 전화했어"
@@ -76,8 +68,7 @@ def test_transcribe_endpoint(mock_transcribe, auth_client):
 def test_context_endpoint(auth_client, project):
     resp = auth_client.get(
         "/voice/context/",
-        {"page": "project_detail", "project_id": str(project.pk)},
-    )
+        {"page": "project_detail", "project_id": str(project.pk)})
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["project_id"] == str(project.pk)
@@ -119,8 +110,7 @@ def test_intent_endpoint(mock_parse, auth_client, project, candidate):
         intent="status_query",
         entities={},
         confidence=0.9,
-        missing_fields=[],
-    )
+        missing_fields=[])
     resp = auth_client.post(
         "/voice/intent/",
         json.dumps(
@@ -131,8 +121,7 @@ def test_intent_endpoint(mock_parse, auth_client, project, candidate):
                 ),
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["intent"] == "status_query"
@@ -149,8 +138,7 @@ def test_preview_endpoint(auth_client, project):
                 "project_id": str(project.pk),
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["ok"] is True
@@ -169,8 +157,7 @@ def test_confirm_valid_and_reused_token(auth_client, project):
                 "project_id": str(project.pk),
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     data1 = json.loads(resp1.content)
     token = data1["preview_token"]
 
@@ -185,8 +172,7 @@ def test_confirm_valid_and_reused_token(auth_client, project):
                 "preview_token": token,
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     assert resp2.status_code == 200
     data2 = json.loads(resp2.content)
     assert data2["ok"] is True
@@ -202,8 +188,7 @@ def test_confirm_valid_and_reused_token(auth_client, project):
                 "preview_token": token,
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     assert resp3.status_code == 409
 
 
@@ -217,8 +202,7 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
         intent="contact_record",
         entities={"candidate_name": "홍길동", "channel": "전화"},
         confidence=0.9,
-        missing_fields=["contacted_at", "result"],
-    )
+        missing_fields=["contacted_at", "result"])
     resp1 = auth_client.post(
         "/voice/intent/",
         json.dumps(
@@ -229,8 +213,7 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
                 ),
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     assert resp1.status_code == 200
     data1 = json.loads(resp1.content)
     assert data1["intent"] == "contact_record"
@@ -241,8 +224,7 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
         intent="contact_record",
         entities={"result": "관심"},
         confidence=0.9,
-        missing_fields=[],
-    )
+        missing_fields=[])
     resp2 = auth_client.post(
         "/voice/intent/",
         json.dumps(
@@ -253,8 +235,7 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
                 ),
             }
         ),
-        content_type="application/json",
-    )
+        content_type="application/json")
     assert resp2.status_code == 200
     data2 = json.loads(resp2.content)
     assert data2["intent"] == "contact_record"

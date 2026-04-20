@@ -29,8 +29,8 @@ def test_normalize_contact_persons_preserves_schema():
 
 
 @pytest.mark.django_db
-def test_apply_logo_upload_saves_file(legacy_org):
-    c = Client.objects.create(organization=legacy_org, name="A")
+def test_apply_logo_upload_saves_file():
+    c = Client.objects.create(name="A")
     f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png")
     apply_logo_upload(c, f)
     c.refresh_from_db()
@@ -38,8 +38,8 @@ def test_apply_logo_upload_saves_file(legacy_org):
 
 
 @pytest.mark.django_db
-def test_apply_logo_upload_delete_flag(legacy_org):
-    c = Client.objects.create(organization=legacy_org, name="A")
+def test_apply_logo_upload_delete_flag():
+    c = Client.objects.create(name="A")
     f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png")
     apply_logo_upload(c, f)
     apply_logo_upload(c, None, delete=True)

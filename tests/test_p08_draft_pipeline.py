@@ -15,7 +15,7 @@ from django.test import Client as TestClient
 from django.urls import reverse
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import (
@@ -27,38 +27,26 @@ from projects.models import (
     Project,
     Submission,
     SubmissionDraft,
-    SubmissionTemplate,
-)
+    SubmissionTemplate)
 from projects.services.draft_pipeline import (
     InvalidDraftTransition,
-    transition_draft,
-)
+    transition_draft)
 
 
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Draft Test Firm")
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Draft Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="draft_tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
+def user_with_org2(db):
     user = User.objects.create_user(username="draft_tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
     return user
 
 
@@ -78,17 +66,15 @@ def auth_client2(user_with_org2):
 
 @pytest.fixture
 def client_obj(org):
-    return Client.objects.create(name="Draft Acme", industry="IT", organization=org)
+    return Client.objects.create(name="Draft Acme", industry="IT")
 
 
 @pytest.fixture
-def project(client_obj, org, user_with_org):
+def project(client_obj, user_with_org):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="Draft Test Project",
-        created_by=user_with_org,
-    )
+        created_by=user_with_org)
     p.assigned_consultants.add(user_with_org)
     return p
 
@@ -97,12 +83,10 @@ def project(client_obj, org, user_with_org):
 def candidate(org):
     return Candidate.objects.create(
         name="홍길동",
-        name_en="Hong Gildong",
-        owned_by=org,
+        name_en="Hong Gildong"
         current_company="테스트 주식회사",
         current_position="과장",
-        total_experience_years=10,
-    )
+        total_experience_years=10)
 
 
 @pytest.fixture
@@ -113,8 +97,7 @@ def interested_contact(project, candidate, user_with_org):
         consultant=user_with_org,
         channel=Contact.Channel.PHONE,
         contacted_at=timezone.now(),
-        result=Contact.Result.INTERESTED,
-    )
+        result=Contact.Result.INTERESTED)
 
 
 @pytest.fixture
@@ -136,8 +119,7 @@ def submission(project, candidate, user_with_org, interested_contact):
         project=project,
         candidate=candidate,
         consultant=user_with_org,
-        template=SubmissionTemplate.XD_KO,
-    )
+        template=SubmissionTemplate.XD_KO)
 
 
 @pytest.fixture
@@ -352,8 +334,7 @@ class TestDraftViews:
         draft = SubmissionDraft.objects.create(
             submission=submission,
             status=DraftStatus.FINALIZED,
-            final_content_json={"summary": "원본"},
-        )
+            final_content_json={"summary": "원본"})
 
         url = reverse("projects:draft_review", args=[project.pk, submission.pk])
         new_content = json.dumps({"summary": "수정됨"})
@@ -369,8 +350,7 @@ class TestDraftViews:
         SubmissionDraft.objects.create(
             submission=submission,
             status=DraftStatus.FINALIZED,
-            final_content_json={"summary": "원본"},
-        )
+            final_content_json={"summary": "원본"})
 
         url = reverse("projects:draft_review", args=[project.pk, submission.pk])
         response = auth_client.post(url, {"final_content": "not valid json{"})
@@ -409,8 +389,7 @@ class TestAudioValidation:
         audio = SimpleUploadedFile("test.txt", b"not audio", content_type="text/plain")
         url = reverse(
             "projects:draft_consultation_audio",
-            args=[project.pk, submission.pk],
-        )
+            args=[project.pk, submission.pk])
         response = auth_client.post(url, {"audio_file": audio})
         assert response.status_code == 400
         assert "지원하지 않는" in response.content.decode()
@@ -423,8 +402,7 @@ class TestAudioValidation:
         audio = SimpleUploadedFile("test.webm", b"", content_type="audio/webm")
         url = reverse(
             "projects:draft_consultation_audio",
-            args=[project.pk, submission.pk],
-        )
+            args=[project.pk, submission.pk])
         response = auth_client.post(url, {"audio_file": audio})
         assert response.status_code == 400
         assert "빈 오디오" in response.content.decode()
@@ -436,8 +414,7 @@ class TestAudioValidation:
         )
         url = reverse(
             "projects:draft_consultation_audio",
-            args=[project.pk, submission.pk],
-        )
+            args=[project.pk, submission.pk])
         response = auth_client.post(url)
         assert response.status_code == 400
 
@@ -509,8 +486,7 @@ class TestDraftConverter:
                         "period": "2020.01 ~ 2024.12",
                     }
                 ],
-            },
-        )
+            })
         convert_to_word(draft)
         draft.refresh_from_db()
         assert draft.output_file
@@ -523,8 +499,7 @@ class TestDraftConverter:
         draft = SubmissionDraft.objects.create(
             submission=submission,
             status=DraftStatus.REVIEWED,
-            final_content_json={},
-        )
+            final_content_json={})
         with pytest.raises(RuntimeError, match="최종 정리 데이터"):
             convert_to_word(draft)
 
@@ -538,8 +513,7 @@ class TestDraftConverter:
             final_content_json={
                 "personal_info": {"name": "홍길동"},
                 "summary": "테스트",
-            },
-        )
+            })
 
         url = reverse("projects:draft_convert", args=[project.pk, submission.pk])
         response = auth_client.post(url)
@@ -557,8 +531,7 @@ class TestSubmitValidation:
         """document_file 없이 제출 시 차단."""
         from projects.services.submission import (
             InvalidTransition,
-            submit_to_client,
-        )
+            submit_to_client)
 
         submission.document_file = ""
         submission.save()
@@ -584,8 +557,7 @@ class TestDraftPreview:
         SubmissionDraft.objects.create(
             submission=submission,
             auto_draft_json={"summary": "초안"},
-            final_content_json={"summary": "최종"},
-        )
+            final_content_json={"summary": "최종"})
         url = reverse("projects:draft_preview", args=[project.pk, submission.pk])
         response = auth_client.get(url)
         assert response.status_code == 200
@@ -597,8 +569,7 @@ class TestDraftPreview:
         SubmissionDraft.objects.create(
             submission=submission,
             auto_draft_json={"summary": "초안 내용"},
-            final_content_json={},
-        )
+            final_content_json={})
         url = reverse("projects:draft_preview", args=[project.pk, submission.pk])
         response = auth_client.get(url)
         assert response.status_code == 200

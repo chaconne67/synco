@@ -63,7 +63,6 @@ class NotificationAdmin(admin.ModelAdmin):
 class ResumeUploadAdmin(admin.ModelAdmin):
     list_display = (
         "file_name",
-        "organization",
         "project",
         "source",
         "status",
@@ -73,7 +72,7 @@ class ResumeUploadAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "source", "file_type")
     search_fields = ("file_name", "email_from", "email_subject")
-    raw_id_fields = ("candidate", "project", "organization", "created_by")
+    raw_id_fields = ("candidate", "project", "created_by")
 
 
 # T1.14 — ActionType admin registration

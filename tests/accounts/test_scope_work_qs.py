@@ -6,18 +6,16 @@ from projects.models import Project, ProjectStatus
 
 @pytest.fixture
 def projects_fixture(db, staff_user, boss_user):
-    from accounts.models import Organization
     from clients.models import Client
 
-    org = Organization.objects.create(name="Test Org")
-    cli = Client.objects.create(name="Acme", organization=org)
+    cli = Client.objects.create(name="Acme")
     p_assigned = Project.objects.create(
-        client=cli, organization=org, title="Own", status=ProjectStatus.OPEN, created_by=staff_user
+        client=cli, title="Own", status=ProjectStatus.OPEN, created_by=staff_user
     )
     p_assigned.assigned_consultants.add(staff_user)
 
     p_other = Project.objects.create(
-        client=cli, organization=org, title="Other", status=ProjectStatus.OPEN, created_by=boss_user
+        client=cli, title="Other", status=ProjectStatus.OPEN, created_by=boss_user
     )
     p_other.assigned_consultants.add(boss_user)
     return p_assigned, p_other

@@ -25,12 +25,12 @@ class TestProjectList:
 
 
 class TestProjectDetail:
-    def test_other_org_project_404(self, other_org_client, project):
-        """Accessing a project from another org -> 404."""
+    def test_any_user_can_access_project(self, other_org_client, project):
+        """Single-tenant: any authenticated user can access any project."""
         response = other_org_client.get(
             reverse("projects:project_detail", args=[project.pk])
         )
-        assert response.status_code == 404
+        assert response.status_code == 200
 
 
 class TestProjectClose:

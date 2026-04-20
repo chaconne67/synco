@@ -12,7 +12,7 @@ import pytest
 from django.test import Client as TestClient
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import Contact, Interview, Project, Submission
@@ -21,27 +21,17 @@ from projects.models import Contact, Interview, Project, Submission
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="mv_tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
+def user_with_org2(db):
     user = User.objects.create_user(username="mv_tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
     return user
 
 
@@ -63,29 +53,23 @@ def auth_client2(user_with_org2):
 def client_obj(org):
     return Client.objects.create(
         name="Acme Corp",
-        industry="IT",
-        organization=org,
-    )
+        industry="IT")
 
 
 @pytest.fixture
 def client_obj2(org2):
     return Client.objects.create(
         name="Other Corp",
-        industry="Finance",
-        organization=org2,
-    )
+        industry="Finance")
 
 
 @pytest.fixture
 def project_new(org, client_obj, user_with_org):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="New Project",
         status="new",
-        created_by=user_with_org,
-    )
+        created_by=user_with_org)
     p.assigned_consultants.add(user_with_org)
     return p
 
@@ -93,12 +77,10 @@ def project_new(org, client_obj, user_with_org):
 @pytest.fixture
 def project_searching(org, client_obj, user_with_org):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="Searching Project",
         status="searching",
-        created_by=user_with_org,
-    )
+        created_by=user_with_org)
     p.assigned_consultants.add(user_with_org)
     return p
 
@@ -106,12 +88,10 @@ def project_searching(org, client_obj, user_with_org):
 @pytest.fixture
 def project_other_org(org2, client_obj2, user_with_org2):
     return Project.objects.create(
-        client=client_obj2,
-        organization=org2,
+        client=client_obj2
         title="Other Org Project",
         status="new",
-        created_by=user_with_org2,
-    )
+        created_by=user_with_org2)
 
 
 # --- View Switching ---
@@ -168,8 +148,7 @@ class TestTabSwitchPartial:
     def test_tab_switch_returns_partial_only(self, auth_client, project_new):
         resp = auth_client.get(
             "/projects/?view=board&tab_switch=1",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
         content = resp.content.decode()
         # Partial should not have full page wrapper
@@ -181,8 +160,7 @@ class TestTabSwitchPartial:
     def test_tab_switch_list_returns_partial(self, auth_client, project_new):
         resp = auth_client.get(
             "/projects/?view=list&tab_switch=1",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
         content = resp.content.decode()
         assert "<!DOCTYPE" not in content
@@ -191,8 +169,7 @@ class TestTabSwitchPartial:
     def test_tab_switch_table_returns_partial(self, auth_client, project_new):
         resp = auth_client.get(
             "/projects/?view=table&tab_switch=1",
-            HTTP_HX_REQUEST="true",
-        )
+            HTTP_HX_REQUEST="true")
         assert resp.status_code == 200
         content = resp.content.decode()
         assert "<!DOCTYPE" not in content
@@ -237,8 +214,7 @@ class TestStatusUpdate:
         resp = auth_client.patch(
             f"/projects/{project_new.pk}/status/",
             data=json.dumps({"status": "searching"}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 204
         project_new.refresh_from_db()
         assert project_new.status == "searching"
@@ -248,8 +224,7 @@ class TestStatusUpdate:
         resp = auth_client.patch(
             f"/projects/{project_new.pk}/status/",
             data=json.dumps({"status": "nonexistent"}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 400
 
     @pytest.mark.django_db
@@ -258,8 +233,7 @@ class TestStatusUpdate:
         resp = c.patch(
             f"/projects/{project_new.pk}/status/",
             data=json.dumps({"status": "searching"}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 302
         assert "/accounts/login/" in resp.url
 
@@ -268,8 +242,7 @@ class TestStatusUpdate:
         resp = auth_client.patch(
             f"/projects/{project_other_org.pk}/status/",
             data=json.dumps({"status": "searching"}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 404
 
     @pytest.mark.django_db
@@ -282,8 +255,7 @@ class TestStatusUpdate:
         resp = auth_client.post(
             f"/projects/{project_new.pk}/status/",
             data=json.dumps({"status": "searching"}),
-            content_type="application/json",
-        )
+            content_type="application/json")
         assert resp.status_code == 405
 
 
@@ -314,19 +286,16 @@ class TestTableAnnotations:
             consultant=user_with_org,
             channel="전화",
             contacted_at=timezone.now(),
-            result="응답",
-        )
+            result="응답")
         sub = Submission.objects.create(
             project=project_new,
             candidate=candidate,
-            consultant=user_with_org,
-        )
+            consultant=user_with_org)
         Interview.objects.create(
             submission=sub,
             round=1,
             scheduled_at=timezone.now(),
-            type="대면",
-        )
+            type="대면")
 
         resp = auth_client.get("/projects/?view=table&scope=all")
         assert resp.status_code == 200
@@ -348,15 +317,13 @@ class TestListUrgency:
 
     @pytest.mark.django_db
     def test_old_project_in_red_group(
-        self, auth_client, org, client_obj, user_with_org
+        self, auth_client, client_obj, user_with_org
     ):
         p = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Old Project",
             status="searching",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         p.assigned_consultants.add(user_with_org)
         # Manually backdate created_at
         Project.objects.filter(pk=p.pk).update(
@@ -370,15 +337,13 @@ class TestListUrgency:
 
     @pytest.mark.django_db
     def test_medium_project_in_yellow_group(
-        self, auth_client, org, client_obj, user_with_org
+        self, auth_client, client_obj, user_with_org
     ):
         p = Project.objects.create(
-            client=client_obj,
-            organization=org,
+            client=client_obj
             title="Medium Project",
             status="searching",
-            created_by=user_with_org,
-        )
+            created_by=user_with_org)
         p.assigned_consultants.add(user_with_org)
         # Backdate to 15 days ago (between 10 and 20)
         Project.objects.filter(pk=p.pk).update(
@@ -403,16 +368,14 @@ class TestPagination:
         assert "page_obj" not in content or "이전" not in content
 
     @pytest.mark.django_db
-    def test_table_has_pagination(self, auth_client, org, client_obj, user_with_org):
+    def test_table_has_pagination(self, auth_client, client_obj, user_with_org):
         # Create 25 projects to exceed PAGE_SIZE=20
         for i in range(25):
             p = Project.objects.create(
-                client=client_obj,
-                organization=org,
+                client=client_obj
                 title=f"Bulk Project {i}",
                 status="new",
-                created_by=user_with_org,
-            )
+                created_by=user_with_org)
             p.assigned_consultants.add(user_with_org)
 
         resp = auth_client.get("/projects/?view=table&scope=all")

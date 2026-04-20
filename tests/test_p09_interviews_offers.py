@@ -9,7 +9,7 @@ from django.test import Client as TestClient
 from django.urls import reverse
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import (
@@ -18,8 +18,7 @@ from projects.models import (
     Offer,
     Project,
     ProjectStatus,
-    Submission,
-)
+    Submission)
 from projects.services.lifecycle import (
     InvalidTransition,
     accept_offer,
@@ -28,34 +27,23 @@ from projects.services.lifecycle import (
     maybe_advance_to_closed_success,
     maybe_advance_to_interviewing,
     maybe_advance_to_negotiating,
-    reject_offer,
-)
+    reject_offer)
 
 
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="p09_tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
+def user_with_org2(db):
     user = User.objects.create_user(username="p09_tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
     return user
 
 
@@ -75,47 +63,43 @@ def auth_client2(user_with_org2):
 
 @pytest.fixture
 def client_obj(org):
-    return Client.objects.create(name="Acme Corp", industry="IT", organization=org)
+    return Client.objects.create(name="Acme Corp", industry="IT")
 
 
 @pytest.fixture
 def client_obj2(org2):
     return Client.objects.create(
-        name="Other Corp", industry="Finance", organization=org2
+        name="Other Corp", industry="Finance"
     )
 
 
 @pytest.fixture
-def project(client_obj, org, user_with_org):
+def project(client_obj, user_with_org):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="Interview Test Project",
         created_by=user_with_org,
-        status=ProjectStatus.RECOMMENDING,
-    )
+        status=ProjectStatus.RECOMMENDING)
     p.assigned_consultants.add(user_with_org)
     return p
 
 
 @pytest.fixture
-def project_other_org(client_obj2, org2, user_with_org2):
+def project_other_org(client_obj2, user_with_org2):
     return Project.objects.create(
-        client=client_obj2,
-        organization=org2,
+        client=client_obj2
         title="Other Org Project",
-        created_by=user_with_org2,
-    )
+        created_by=user_with_org2)
 
 
 @pytest.fixture
 def candidate(org):
-    return Candidate.objects.create(name="홍길동", owned_by=org)
+    return Candidate.objects.create(name="홍길동")
 
 
 @pytest.fixture
 def candidate2(org):
-    return Candidate.objects.create(name="김영희", owned_by=org)
+    return Candidate.objects.create(name="김영희")
 
 
 @pytest.fixture
@@ -126,8 +110,7 @@ def interested_contact(project, candidate, user_with_org):
         consultant=user_with_org,
         channel=Contact.Channel.PHONE,
         contacted_at=timezone.now(),
-        result=Contact.Result.INTERESTED,
-    )
+        result=Contact.Result.INTERESTED)
 
 
 @pytest.fixture
@@ -138,8 +121,7 @@ def interested_contact2(project, candidate2, user_with_org):
         consultant=user_with_org,
         channel=Contact.Channel.EMAIL,
         contacted_at=timezone.now(),
-        result=Contact.Result.INTERESTED,
-    )
+        result=Contact.Result.INTERESTED)
 
 
 @pytest.fixture
@@ -150,8 +132,7 @@ def passed_submission(project, candidate, user_with_org, interested_contact):
         candidate=candidate,
         consultant=user_with_org,
         status=Submission.Status.PASSED,
-        submitted_at=timezone.now(),
-    )
+        submitted_at=timezone.now())
 
 
 @pytest.fixture
@@ -162,8 +143,7 @@ def passed_submission2(project, candidate2, user_with_org, interested_contact2):
         candidate=candidate2,
         consultant=user_with_org,
         status=Submission.Status.PASSED,
-        submitted_at=timezone.now(),
-    )
+        submitted_at=timezone.now())
 
 
 @pytest.fixture
@@ -173,8 +153,7 @@ def drafting_submission(project, candidate, user_with_org, interested_contact):
         project=project,
         candidate=candidate,
         consultant=user_with_org,
-        status=Submission.Status.DRAFTING,
-    )
+        status=Submission.Status.DRAFTING)
 
 
 @pytest.fixture
@@ -184,8 +163,7 @@ def interview(passed_submission):
         submission=passed_submission,
         round=1,
         scheduled_at=timezone.now(),
-        type=Interview.Type.IN_PERSON,
-    )
+        type=Interview.Type.IN_PERSON)
 
 
 @pytest.fixture
@@ -196,16 +174,14 @@ def passed_interview(passed_submission):
         round=1,
         scheduled_at=timezone.now(),
         type=Interview.Type.IN_PERSON,
-        result=Interview.Result.PASSED,
-    )
+        result=Interview.Result.PASSED)
 
 
 @pytest.fixture
 def offer(passed_submission, passed_interview):
     """오퍼 (협상중 상태)."""
     return Offer.objects.create(
-        submission=passed_submission,
-    )
+        submission=passed_submission)
 
 
 # --- Login Required ---
@@ -301,27 +277,24 @@ class TestInterviewOrgIsolation:
         resp = auth_client.get(url)
         assert resp.status_code == 404
 
-    def test_update_other_org_404(self, auth_client, project_other_org, interview):
+    def test_update_other_org_404(self, auth_client, project_interview):
         url = reverse(
             "projects:interview_update",
-            args=[project_other_org.pk, interview.pk],
-        )
+            args=[project_other_org.pk, interview.pk])
         resp = auth_client.get(url)
         assert resp.status_code == 404
 
-    def test_delete_other_org_404(self, auth_client, project_other_org, interview):
+    def test_delete_other_org_404(self, auth_client, project_interview):
         url = reverse(
             "projects:interview_delete",
-            args=[project_other_org.pk, interview.pk],
-        )
+            args=[project_other_org.pk, interview.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 404
 
-    def test_result_other_org_404(self, auth_client, project_other_org, interview):
+    def test_result_other_org_404(self, auth_client, project_interview):
         url = reverse(
             "projects:interview_result",
-            args=[project_other_org.pk, interview.pk],
-        )
+            args=[project_other_org.pk, interview.pk])
         resp = auth_client.get(url)
         assert resp.status_code == 404
 
@@ -339,35 +312,31 @@ class TestOfferOrgIsolation:
         resp = auth_client.get(url)
         assert resp.status_code == 404
 
-    def test_update_other_org_404(self, auth_client, project_other_org, offer):
+    def test_update_other_org_404(self, auth_client, project_offer):
         url = reverse(
             "projects:offer_update",
-            args=[project_other_org.pk, offer.pk],
-        )
+            args=[project_other_org.pk, offer.pk])
         resp = auth_client.get(url)
         assert resp.status_code == 404
 
-    def test_delete_other_org_404(self, auth_client, project_other_org, offer):
+    def test_delete_other_org_404(self, auth_client, project_offer):
         url = reverse(
             "projects:offer_delete",
-            args=[project_other_org.pk, offer.pk],
-        )
+            args=[project_other_org.pk, offer.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 404
 
-    def test_accept_other_org_404(self, auth_client, project_other_org, offer):
+    def test_accept_other_org_404(self, auth_client, project_offer):
         url = reverse(
             "projects:offer_accept",
-            args=[project_other_org.pk, offer.pk],
-        )
+            args=[project_other_org.pk, offer.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 404
 
-    def test_reject_other_org_404(self, auth_client, project_other_org, offer):
+    def test_reject_other_org_404(self, auth_client, project_offer):
         url = reverse(
             "projects:offer_reject",
-            args=[project_other_org.pk, offer.pk],
-        )
+            args=[project_other_org.pk, offer.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 404
 
@@ -389,8 +358,7 @@ class TestInterviewCRUD:
                 "type": Interview.Type.IN_PERSON,
                 "location": "서울 강남구 테헤란로",
                 "notes": "1차 면접",
-            },
-        )
+            })
         assert resp.status_code == 204
         assert Interview.objects.filter(submission=passed_submission, round=1).exists()
 
@@ -437,8 +405,7 @@ class TestInterviewCRUD:
                 "round": 1,  # 이미 존재
                 "scheduled_at": scheduled,
                 "type": Interview.Type.VIDEO,
-            },
-        )
+            })
         # 200 = form re-render with error
         assert resp.status_code == 200
         assert Interview.objects.filter(submission=passed_submission).count() == 1
@@ -456,8 +423,7 @@ class TestInterviewCRUD:
                 "type": Interview.Type.VIDEO,
                 "location": "Zoom",
                 "notes": "화상으로 변경",
-            },
-        )
+            })
         assert resp.status_code == 204
         interview.refresh_from_db()
         assert interview.type == Interview.Type.VIDEO
@@ -476,8 +442,7 @@ class TestInterviewCRUD:
         """오퍼 존재 시 면접 삭제 차단."""
         url = reverse(
             "projects:interview_delete",
-            args=[project.pk, passed_interview.pk],
-        )
+            args=[project.pk, passed_interview.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 400
         assert Interview.objects.filter(pk=passed_interview.pk).exists()
@@ -503,8 +468,7 @@ class TestInterviewResult:
             {
                 "result": Interview.Result.PASSED,
                 "feedback": "우수",
-            },
-        )
+            })
         assert resp.status_code == 204
         interview.refresh_from_db()
         assert interview.result == Interview.Result.PASSED
@@ -518,8 +482,7 @@ class TestInterviewResult:
             {
                 "result": Interview.Result.FAILED,
                 "feedback": "경험 부족",
-            },
-        )
+            })
         assert resp.status_code == 204
         interview.refresh_from_db()
         assert interview.result == Interview.Result.FAILED
@@ -531,8 +494,7 @@ class TestInterviewResult:
             url,
             {
                 "result": Interview.Result.ON_HOLD,
-            },
-        )
+            })
         assert resp.status_code == 204
         interview.refresh_from_db()
         assert interview.result == Interview.Result.ON_HOLD
@@ -541,14 +503,12 @@ class TestInterviewResult:
         """합격 상태에서 재변경 불가."""
         url = reverse(
             "projects:interview_result",
-            args=[project.pk, passed_interview.pk],
-        )
+            args=[project.pk, passed_interview.pk])
         resp = auth_client.post(
             url,
             {
                 "result": Interview.Result.FAILED,
-            },
-        )
+            })
         assert resp.status_code == 400
         passed_interview.refresh_from_db()
         assert passed_interview.result == Interview.Result.PASSED
@@ -560,15 +520,13 @@ class TestInterviewResult:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.PHONE,
-            result=Interview.Result.FAILED,
-        )
+            result=Interview.Result.FAILED)
         url = reverse("projects:interview_result", args=[project.pk, failed.pk])
         resp = auth_client.post(
             url,
             {
                 "result": Interview.Result.PASSED,
-            },
-        )
+            })
         assert resp.status_code == 400
 
 
@@ -581,8 +539,7 @@ class TestInterviewResultService:
             submission=passed_submission,
             round=1,
             scheduled_at=timezone.now(),
-            type=Interview.Type.IN_PERSON,
-        )
+            type=Interview.Type.IN_PERSON)
         result = apply_interview_result(interview, Interview.Result.PASSED, "좋음")
         assert result.result == Interview.Result.PASSED
         assert result.feedback == "좋음"
@@ -593,8 +550,7 @@ class TestInterviewResultService:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.IN_PERSON,
-            result=Interview.Result.PASSED,
-        )
+            result=Interview.Result.PASSED)
         with pytest.raises(InvalidTransition):
             apply_interview_result(interview, Interview.Result.FAILED, "")
 
@@ -604,8 +560,7 @@ class TestInterviewResultService:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.IN_PERSON,
-            result=Interview.Result.FAILED,
-        )
+            result=Interview.Result.FAILED)
         with pytest.raises(InvalidTransition):
             apply_interview_result(interview, Interview.Result.PASSED, "")
 
@@ -627,8 +582,7 @@ class TestOfferCRUD:
                 "position_title": "시니어 개발자",
                 "start_date": "2026-05-01",
                 "notes": "연봉 협의 가능",
-            },
-        )
+            })
         assert resp.status_code == 204
         assert Offer.objects.filter(submission=passed_submission).exists()
 
@@ -642,16 +596,14 @@ class TestOfferCRUD:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.IN_PERSON,
-            result=Interview.Result.PASSED,
-        )
+            result=Interview.Result.PASSED)
         # 2차 탈락 (최신)
         Interview.objects.create(
             submission=passed_submission,
             round=2,
             scheduled_at=timezone.now(),
             type=Interview.Type.VIDEO,
-            result=Interview.Result.FAILED,
-        )
+            result=Interview.Result.FAILED)
         url = reverse("projects:offer_create", args=[project.pk])
         resp = auth_client.get(url)
         content = resp.content.decode()
@@ -678,8 +630,7 @@ class TestOfferCRUD:
                 "position_title": "리드 개발자",
                 "start_date": "2026-06-01",
                 "notes": "상향 조정",
-            },
-        )
+            })
         assert resp.status_code == 204
         offer.refresh_from_db()
         assert offer.salary == "9000만원"
@@ -877,8 +828,7 @@ class TestOfferEligibility:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.IN_PERSON,
-            result=Interview.Result.PASSED,
-        )
+            result=Interview.Result.PASSED)
         assert is_submission_offer_eligible(passed_submission) is True
 
     def test_not_eligible_with_failed_interview(self, passed_submission):
@@ -888,8 +838,7 @@ class TestOfferEligibility:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.IN_PERSON,
-            result=Interview.Result.FAILED,
-        )
+            result=Interview.Result.FAILED)
         assert is_submission_offer_eligible(passed_submission) is False
 
     def test_not_eligible_without_interview(self, passed_submission):
@@ -903,15 +852,13 @@ class TestOfferEligibility:
             round=1,
             scheduled_at=timezone.now(),
             type=Interview.Type.IN_PERSON,
-            result=Interview.Result.PASSED,
-        )
+            result=Interview.Result.PASSED)
         Interview.objects.create(
             submission=passed_submission,
             round=2,
             scheduled_at=timezone.now(),
             type=Interview.Type.VIDEO,
-            result=Interview.Result.FAILED,
-        )
+            result=Interview.Result.FAILED)
         assert is_submission_offer_eligible(passed_submission) is False
 
 
@@ -932,8 +879,7 @@ class TestHTMXBehavior:
                 "round": 1,
                 "scheduled_at": scheduled,
                 "type": Interview.Type.IN_PERSON,
-            },
-        )
+            })
         assert resp.status_code == 204
         assert resp.headers.get("HX-Trigger") == "interviewChanged"
 
@@ -948,8 +894,7 @@ class TestHTMXBehavior:
                 "submission": str(passed_submission.pk),
                 "salary": "7000만원",
                 "position_title": "매니저",
-            },
-        )
+            })
         assert resp.status_code == 204
         assert resp.headers.get("HX-Trigger") == "offerChanged"
 
@@ -994,8 +939,7 @@ class TestModelFields:
             submission=passed_submission,
             round=1,
             scheduled_at=timezone.now(),
-            type=Interview.Type.IN_PERSON,
-        )
+            type=Interview.Type.IN_PERSON)
         assert interview.location == ""
         assert interview.notes == ""
 
@@ -1011,8 +955,7 @@ class TestModelFields:
             submission=passed_submission,
             round=1,
             scheduled_at=timezone.now(),
-            type=Interview.Type.IN_PERSON,
-        )
+            type=Interview.Type.IN_PERSON)
         from django.db import IntegrityError
 
         with pytest.raises(IntegrityError):
@@ -1020,5 +963,4 @@ class TestModelFields:
                 submission=passed_submission,
                 round=1,
                 scheduled_at=timezone.now(),
-                type=Interview.Type.VIDEO,
-            )
+                type=Interview.Type.VIDEO)

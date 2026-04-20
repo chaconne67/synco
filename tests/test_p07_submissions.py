@@ -12,7 +12,7 @@ from django.test import Client as TestClient
 from django.urls import reverse
 from django.utils import timezone
 
-from accounts.models import Membership, Organization, User
+from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
 from projects.models import (
@@ -21,40 +21,28 @@ from projects.models import (
     Offer,
     Project,
     ProjectStatus,
-    Submission,
-)
+    Submission)
 from projects.services.submission import (
     InvalidTransition,
     apply_client_feedback,
     maybe_advance_project_status,
-    submit_to_client,
-)
+    submit_to_client)
 
 
 # --- Fixtures ---
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
 
 
 @pytest.fixture
-def org2(db):
-    return Organization.objects.create(name="Other Firm")
-
-
-@pytest.fixture
-def user_with_org(db, org):
+def user_with_org(db):
     user = User.objects.create_user(username="sub_tester", password="test1234")
-    Membership.objects.create(user=user, organization=org)
     return user
 
 
 @pytest.fixture
-def user_with_org2(db, org2):
+def user_with_org2(db):
     user = User.objects.create_user(username="sub_tester2", password="test1234")
-    Membership.objects.create(user=user, organization=org2)
     return user
 
 
@@ -74,46 +62,42 @@ def auth_client2(user_with_org2):
 
 @pytest.fixture
 def client_obj(org):
-    return Client.objects.create(name="Acme Corp", industry="IT", organization=org)
+    return Client.objects.create(name="Acme Corp", industry="IT")
 
 
 @pytest.fixture
 def client_obj2(org2):
     return Client.objects.create(
-        name="Other Corp", industry="Finance", organization=org2
+        name="Other Corp", industry="Finance"
     )
 
 
 @pytest.fixture
-def project(client_obj, org, user_with_org):
+def project(client_obj, user_with_org):
     p = Project.objects.create(
-        client=client_obj,
-        organization=org,
+        client=client_obj
         title="Test Project",
-        created_by=user_with_org,
-    )
+        created_by=user_with_org)
     p.assigned_consultants.add(user_with_org)
     return p
 
 
 @pytest.fixture
-def project_other_org(client_obj2, org2, user_with_org2):
+def project_other_org(client_obj2, user_with_org2):
     return Project.objects.create(
-        client=client_obj2,
-        organization=org2,
+        client=client_obj2
         title="Other Org Project",
-        created_by=user_with_org2,
-    )
+        created_by=user_with_org2)
 
 
 @pytest.fixture
 def candidate(org):
-    return Candidate.objects.create(name="홍길동", owned_by=org)
+    return Candidate.objects.create(name="홍길동")
 
 
 @pytest.fixture
 def candidate2(org):
-    return Candidate.objects.create(name="김영희", owned_by=org)
+    return Candidate.objects.create(name="김영희")
 
 
 @pytest.fixture
@@ -125,8 +109,7 @@ def interested_contact(project, candidate, user_with_org):
         consultant=user_with_org,
         channel=Contact.Channel.PHONE,
         contacted_at=timezone.now(),
-        result=Contact.Result.INTERESTED,
-    )
+        result=Contact.Result.INTERESTED)
 
 
 @pytest.fixture
@@ -138,8 +121,7 @@ def interested_contact2(project, candidate2, user_with_org):
         consultant=user_with_org,
         channel=Contact.Channel.EMAIL,
         contacted_at=timezone.now(),
-        result=Contact.Result.INTERESTED,
-    )
+        result=Contact.Result.INTERESTED)
 
 
 @pytest.fixture
@@ -147,8 +129,7 @@ def submission(project, candidate, user_with_org, interested_contact):
     return Submission.objects.create(
         project=project,
         candidate=candidate,
-        consultant=user_with_org,
-    )
+        consultant=user_with_org)
 
 
 @pytest.fixture
@@ -158,8 +139,7 @@ def submitted_submission(project, candidate, user_with_org, interested_contact):
         candidate=candidate,
         consultant=user_with_org,
         status=Submission.Status.SUBMITTED,
-        submitted_at=timezone.now(),
-    )
+        submitted_at=timezone.now())
 
 
 # --- Login Required ---
@@ -259,8 +239,7 @@ class TestSubmissionCRUD:
         url = reverse("projects:submission_create", args=[project.pk])
         resp = auth_client.post(
             url,
-            {"candidate": str(candidate.pk), "template": "xd_ko", "notes": "test"},
-        )
+            {"candidate": str(candidate.pk), "template": "xd_ko", "notes": "test"})
         assert resp.status_code == 200
         assert Submission.objects.filter(project=project, candidate=candidate).exists()
 
@@ -275,7 +254,7 @@ class TestSubmissionCRUD:
         assert str(candidate.pk) in content
 
     def test_create_non_interested_candidate_not_in_dropdown(
-        self, auth_client, project, candidate, org
+        self, auth_client, project, candidate
     ):
         """미응답 후보자는 드롭다운에 미표시 (관심 Contact 없음)."""
         # candidate has no Contact with INTERESTED result
@@ -292,8 +271,7 @@ class TestSubmissionCRUD:
         url = reverse("projects:submission_create", args=[project.pk])
         resp = auth_client.post(
             url,
-            {"candidate": str(candidate.pk), "template": "xd_ko"},
-        )
+            {"candidate": str(candidate.pk), "template": "xd_ko"})
         # Form should re-render (not 204) since candidate is already excluded from dropdown
         # The candidate won't appear in the queryset due to exclusion logic
         assert resp.status_code == 200  # Form re-rendered with errors
@@ -307,8 +285,7 @@ class TestSubmissionCRUD:
                 "candidate": str(submission.candidate.pk),
                 "template": "xd_en",
                 "notes": "updated notes",
-            },
-        )
+            })
         assert resp.status_code == 204
         submission.refresh_from_db()
         assert submission.template == "xd_en"
@@ -329,12 +306,10 @@ class TestSubmissionCRUD:
             submission=submitted_submission,
             round=1,
             scheduled_at=timezone.now(),
-            type=Interview.Type.IN_PERSON,
-        )
+            type=Interview.Type.IN_PERSON)
         url = reverse(
             "projects:submission_delete",
-            args=[project.pk, submitted_submission.pk],
-        )
+            args=[project.pk, submitted_submission.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 400
         assert Submission.objects.filter(pk=submitted_submission.pk).exists()
@@ -346,8 +321,7 @@ class TestSubmissionCRUD:
         Offer.objects.create(submission=submitted_submission)
         url = reverse(
             "projects:submission_delete",
-            args=[project.pk, submitted_submission.pk],
-        )
+            args=[project.pk, submitted_submission.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 400
         assert Submission.objects.filter(pk=submitted_submission.pk).exists()
@@ -367,8 +341,7 @@ class TestTemplateSelection:
             url = reverse("projects:submission_create", args=[project.pk])
             resp = auth_client.post(
                 url,
-                {"candidate": str(candidate.pk), "template": template_value},
-            )
+                {"candidate": str(candidate.pk), "template": template_value})
             assert resp.status_code == 200, f"Failed for template: {template_value}"
             sub = Submission.objects.get(project=project, candidate=candidate)
             assert sub.template == template_value
@@ -405,8 +378,7 @@ class TestFileUploadDownload:
                 "candidate": str(candidate.pk),
                 "template": "xd_ko",
                 "document_file": pdf_file,
-            },
-        )
+            })
         assert resp.status_code == 200
         sub = Submission.objects.get(project=project, candidate=candidate)
         assert sub.document_file
@@ -424,16 +396,14 @@ class TestFileUploadDownload:
         docx_file = SimpleUploadedFile(
             "test.docx",
             b"PK\x03\x04 docx content",
-            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         resp = auth_client.post(
             url,
             {
                 "candidate": str(candidate.pk),
                 "template": "xd_ko",
                 "document_file": docx_file,
-            },
-        )
+            })
         assert resp.status_code == 200
 
     def test_upload_invalid_extension_rejected(
@@ -450,8 +420,7 @@ class TestFileUploadDownload:
                 "candidate": str(candidate.pk),
                 "template": "xd_ko",
                 "document_file": exe_file,
-            },
-        )
+            })
         assert resp.status_code == 200  # Form re-rendered with errors
         assert not Submission.objects.filter(
             project=project, candidate=candidate
@@ -473,8 +442,7 @@ class TestFileUploadDownload:
                 "candidate": str(candidate.pk),
                 "template": "xd_ko",
                 "document_file": big_file,
-            },
-        )
+            })
         assert resp.status_code == 200  # Form re-rendered with errors
         assert not Submission.objects.filter(
             project=project, candidate=candidate
@@ -511,8 +479,7 @@ class TestStateTransitions:
         """이미 제출된 건 재제출 불가."""
         url = reverse(
             "projects:submission_submit",
-            args=[project.pk, submitted_submission.pk],
-        )
+            args=[project.pk, submitted_submission.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 400
 
@@ -524,8 +491,7 @@ class TestStateTransitions:
             project=project,
             candidate=candidate,
             consultant=user_with_org,
-            status=Submission.Status.PASSED,
-        )
+            status=Submission.Status.PASSED)
         url = reverse("projects:submission_submit", args=[project.pk, sub.pk])
         resp = auth_client.post(url)
         assert resp.status_code == 400
@@ -536,12 +502,10 @@ class TestStateTransitions:
         """제출 → 통과 (피드백 입력)."""
         url = reverse(
             "projects:submission_feedback",
-            args=[project.pk, submitted_submission.pk],
-        )
+            args=[project.pk, submitted_submission.pk])
         resp = auth_client.post(
             url,
-            {"result": Submission.Status.PASSED, "feedback": "Great candidate"},
-        )
+            {"result": Submission.Status.PASSED, "feedback": "Great candidate"})
         assert resp.status_code == 204
         submitted_submission.refresh_from_db()
         assert submitted_submission.status == Submission.Status.PASSED
@@ -553,12 +517,10 @@ class TestStateTransitions:
         """제출 → 탈락 (피드백 입력)."""
         url = reverse(
             "projects:submission_feedback",
-            args=[project.pk, submitted_submission.pk],
-        )
+            args=[project.pk, submitted_submission.pk])
         resp = auth_client.post(
             url,
-            {"result": Submission.Status.REJECTED, "feedback": "Not a fit"},
-        )
+            {"result": Submission.Status.REJECTED, "feedback": "Not a fit"})
         assert resp.status_code == 204
         submitted_submission.refresh_from_db()
         assert submitted_submission.status == Submission.Status.REJECTED
@@ -568,8 +530,7 @@ class TestStateTransitions:
         url = reverse("projects:submission_feedback", args=[project.pk, submission.pk])
         resp = auth_client.post(
             url,
-            {"result": Submission.Status.PASSED, "feedback": "test"},
-        )
+            {"result": Submission.Status.PASSED, "feedback": "test"})
         assert resp.status_code == 400
 
     def test_feedback_already_passed_fails(
@@ -580,13 +541,11 @@ class TestStateTransitions:
             project=project,
             candidate=candidate,
             consultant=user_with_org,
-            status=Submission.Status.PASSED,
-        )
+            status=Submission.Status.PASSED)
         url = reverse("projects:submission_feedback", args=[project.pk, sub.pk])
         resp = auth_client.post(
             url,
-            {"result": Submission.Status.REJECTED, "feedback": "changed mind"},
-        )
+            {"result": Submission.Status.REJECTED, "feedback": "changed mind"})
         assert resp.status_code == 400
 
     def test_feedback_already_rejected_fails(
@@ -597,13 +556,11 @@ class TestStateTransitions:
             project=project,
             candidate=candidate,
             consultant=user_with_org,
-            status=Submission.Status.REJECTED,
-        )
+            status=Submission.Status.REJECTED)
         url = reverse("projects:submission_feedback", args=[project.pk, sub.pk])
         resp = auth_client.post(
             url,
-            {"result": Submission.Status.PASSED, "feedback": "reconsidered"},
-        )
+            {"result": Submission.Status.PASSED, "feedback": "reconsidered"})
         assert resp.status_code == 400
 
     def test_client_feedback_at_recorded(
@@ -612,12 +569,10 @@ class TestStateTransitions:
         """피드백 입력 시 client_feedback_at 기록."""
         url = reverse(
             "projects:submission_feedback",
-            args=[project.pk, submitted_submission.pk],
-        )
+            args=[project.pk, submitted_submission.pk])
         auth_client.post(
             url,
-            {"result": Submission.Status.PASSED, "feedback": "ok"},
-        )
+            {"result": Submission.Status.PASSED, "feedback": "ok"})
         submitted_submission.refresh_from_db()
         assert submitted_submission.client_feedback_at is not None
 
@@ -634,8 +589,7 @@ class TestProjectStatusAutoTransition:
         url = reverse("projects:submission_create", args=[project.pk])
         auth_client.post(
             url,
-            {"candidate": str(candidate.pk), "template": "xd_ko"},
-        )
+            {"candidate": str(candidate.pk), "template": "xd_ko"})
         project.refresh_from_db()
         assert project.status == ProjectStatus.RECOMMENDING
 
@@ -648,8 +602,7 @@ class TestProjectStatusAutoTransition:
         url = reverse("projects:submission_create", args=[project.pk])
         auth_client.post(
             url,
-            {"candidate": str(candidate.pk), "template": "xd_ko"},
-        )
+            {"candidate": str(candidate.pk), "template": "xd_ko"})
         project.refresh_from_db()
         assert project.status == ProjectStatus.RECOMMENDING
 
@@ -660,23 +613,20 @@ class TestProjectStatusAutoTransition:
         candidate,
         candidate2,
         interested_contact,
-        interested_contact2,
-    ):
+        interested_contact2):
         """두 번째 Submission 생성 시 status 유지 (이미 RECOMMENDING)."""
         # First submission triggers NEW → RECOMMENDING
         url = reverse("projects:submission_create", args=[project.pk])
         auth_client.post(
             url,
-            {"candidate": str(candidate.pk), "template": "xd_ko"},
-        )
+            {"candidate": str(candidate.pk), "template": "xd_ko"})
         project.refresh_from_db()
         assert project.status == ProjectStatus.RECOMMENDING
 
         # Second submission does not change status
         auth_client.post(
             url,
-            {"candidate": str(candidate2.pk), "template": "xd_en"},
-        )
+            {"candidate": str(candidate2.pk), "template": "xd_en"})
         project.refresh_from_db()
         assert project.status == ProjectStatus.RECOMMENDING
 
@@ -714,8 +664,7 @@ class TestContactTabSubmissionLink:
             consultant=user_with_org,
             channel=Contact.Channel.PHONE,
             contacted_at=timezone.now(),
-            result=Contact.Result.NO_RESPONSE,
-        )
+            result=Contact.Result.NO_RESPONSE)
         url = reverse("projects:project_tab_contacts", args=[project.pk])
         resp = auth_client.get(url)
         content = resp.content.decode()
@@ -742,8 +691,7 @@ class TestHTMXBehavior:
         url = reverse("projects:submission_create", args=[project.pk])
         resp = auth_client.post(
             url,
-            {"candidate": str(candidate.pk), "template": "xd_ko"},
-        )
+            {"candidate": str(candidate.pk), "template": "xd_ko"})
         assert resp.status_code == 200
         hx_trigger = json.loads(resp.headers.get("HX-Trigger", "{}"))
         assert "submissionChanged" in hx_trigger
@@ -767,8 +715,7 @@ class TestModelConstraints:
         sub = Submission.objects.create(
             project=project,
             candidate=candidate,
-            consultant=user_with_org,
-        )
+            consultant=user_with_org)
         assert sub.template == ""
         assert sub.client_feedback_at is None
         assert sub.notes == ""

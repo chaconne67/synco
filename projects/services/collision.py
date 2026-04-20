@@ -134,7 +134,6 @@ def _extract_keywords(title: str) -> set[str]:
 def detect_collisions(
     client_id,
     title: str,
-    org,
     exclude_project_id=None,
 ) -> list[dict]:
     """
@@ -152,11 +151,10 @@ def detect_collisions(
         ...
     ]
     """
-    # Fetch active projects for this client in the same org
+    # Fetch active projects for this client
     candidates = (
         Project.objects.filter(
             client_id=client_id,
-            organization=org,
         )
         .exclude(
             status__in=CLOSED_STATUSES,

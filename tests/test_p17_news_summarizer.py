@@ -3,31 +3,23 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from accounts.models import Organization
 from projects.models import (
     NewsArticle,
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus,
-)
+    SummaryStatus)
 from projects.services.news.summarizer import summarize_article
 
 
-@pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Test Firm")
-
 
 @pytest.fixture
-def source(org):
+def source(db):
     return NewsSource.objects.create(
-        organization=org,
         name="Test Feed",
         url="https://example.com/feed.xml",
         type=NewsSourceType.RSS,
-        category=NewsCategory.HIRING,
-    )
+        category=NewsCategory.HIRING)
 
 
 @pytest.fixture
@@ -37,8 +29,7 @@ def article(source):
         title="AI 채용 시장 동향",
         url="https://example.com/ai-hiring",
         raw_content="AI가 채용 시장을 변화시키고 있다는 내용의 기사입니다.",
-        summary_status=SummaryStatus.PENDING,
-    )
+        summary_status=SummaryStatus.PENDING)
 
 
 class TestSummarizeArticle:
@@ -124,8 +115,7 @@ class TestSummarizeArticle:
             title="Already done",
             url="https://example.com/done",
             summary_status=SummaryStatus.COMPLETED,
-            summary="Already summarized",
-        )
+            summary="Already summarized")
         result = summarize_article(article)
         assert result is True
         mock_client_fn.assert_not_called()

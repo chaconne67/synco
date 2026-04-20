@@ -4,20 +4,14 @@ from projects.models import ProjectApproval
 
 
 def pending_approval_count(request):
-    """Inject pending approval count for OWNER users."""
+    """Inject pending approval count for OWNER (level>=2) users."""
     if not request.user.is_authenticated:
         return {}
 
-    try:
-        membership = request.user.membership
-    except Exception:
-        return {}
-
-    if membership.role != "owner":
+    if request.user.level < 2:
         return {}
 
     count = ProjectApproval.objects.filter(
-        project__organization=membership.organization,
         status=ProjectApproval.Status.PENDING,
     ).count()
 
@@ -33,17 +27,10 @@ def has_new_news(request):
     if not request.user.is_authenticated:
         return {}
 
-    try:
-        membership = request.user.membership
-    except Exception:
-        return {}
-
     from projects.models import NewsArticleRelevance, SummaryStatus
 
     # I-R1-07: Query via NewsArticleRelevance + user's assigned projects
-    user_projects = request.user.assigned_projects.filter(
-        organization=membership.organization
-    )
+    user_projects = request.user.assigned_projects.all()
     if not user_projects.exists():
         return {"has_new_news": False}
 
