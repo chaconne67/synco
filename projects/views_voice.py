@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from accounts.decorators import level_required
+from accounts.services.scope import scope_work_qs
 from candidates.models import Candidate
 from projects.models import MeetingRecord, Project
 from projects.services.voice.action_executor import confirm_action, preview_action
@@ -115,7 +116,9 @@ def voice_intent(request):
 
     project = None
     if ctx["project_id"]:
-        project = Project.objects.filter(pk=ctx["project_id"]).first()
+        project = scope_work_qs(
+            Project.objects.filter(pk=ctx["project_id"]), request.user
+        ).first()
 
     # Entity resolution: candidate_name (singular)
     if result.entities.get("candidate_name"):
@@ -176,7 +179,9 @@ def voice_preview(request):
 
     project = None
     if project_id:
-        project = Project.objects.filter(pk=project_id).first()
+        project = scope_work_qs(
+            Project.objects.filter(pk=project_id), request.user
+        ).first()
 
     result = preview_action(
         intent=intent,
@@ -217,7 +222,9 @@ def voice_confirm(request):
 
     project = None
     if project_id:
-        project = Project.objects.filter(pk=project_id).first()
+        project = scope_work_qs(
+            Project.objects.filter(pk=project_id), request.user
+        ).first()
 
     result = confirm_action(
         intent=intent,
@@ -291,7 +298,9 @@ def voice_meeting_upload(request):
         # Amendment A10: return meeting upload form as partial HTML
         from django.template.loader import render_to_string
 
-        projects = Project.objects.all().order_by("-created_at")[:20]
+        projects = scope_work_qs(Project.objects.all(), request.user).order_by(
+            "-created_at"
+        )[:20]
         html = render_to_string(
             "projects/partials/meeting_upload.html",
             {
@@ -316,7 +325,9 @@ def voice_meeting_upload(request):
     if not project_id or not candidate_id:
         return JsonResponse({"error": "프로젝트와 후보자를 선택해주세요."}, status=400)
 
-    project = Project.objects.filter(pk=project_id).first()
+    project = scope_work_qs(
+        Project.objects.filter(pk=project_id), request.user
+    ).first()
     if not project:
         return JsonResponse({"error": "프로젝트를 찾을 수 없습니다."}, status=404)
 
