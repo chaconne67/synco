@@ -2338,6 +2338,14 @@ a.bg-ink.rounded-card:hover,
   width: 100%;
 }
 
+.w-\[140px\] {
+  width: 140px;
+}
+
+.w-\[180px\] {
+  width: 180px;
+}
+
 .min-w-0 {
   min-width: 0px;
 }
@@ -3263,6 +3271,16 @@ a.bg-ink.rounded-card:hover,
   background-color: rgb(245 158 11 / var(--tw-bg-opacity, 1));
 }
 
+.bg-indigo-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(238 242 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+
 .bg-gradient-to-br {
   background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
 }
@@ -3319,6 +3337,24 @@ a.bg-ink.rounded-card:hover,
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
+.from-amber-200 {
+  --tw-gradient-from: #fde68a var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(253 230 138 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.from-indigo-200 {
+  --tw-gradient-from: #c7d2fe var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(199 210 254 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.from-slate-300 {
+  --tw-gradient-from: #cbd5e1 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(203 213 225 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
 .via-transparent {
   --tw-gradient-to: rgb(0 0 0 / 0)  var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), transparent var(--tw-gradient-via-position), var(--tw-gradient-to);
@@ -3354,6 +3390,18 @@ a.bg-ink.rounded-card:hover,
 
 .to-white {
   --tw-gradient-to: #fff var(--tw-gradient-to-position);
+}
+
+.to-amber-500 {
+  --tw-gradient-to: #f59e0b var(--tw-gradient-to-position);
+}
+
+.to-indigo-500 {
+  --tw-gradient-to: #6366f1 var(--tw-gradient-to-position);
+}
+
+.to-slate-500 {
+  --tw-gradient-to: #64748b var(--tw-gradient-to-position);
 }
 
 .object-contain {
@@ -4097,6 +4145,16 @@ a.bg-ink.rounded-card:hover,
 .\!text-muted {
   --tw-text-opacity: 1 !important;
   color: rgb(100 116 139 / var(--tw-text-opacity, 1)) !important;
+}
+
+.\!text-faint {
+  --tw-text-opacity: 1 !important;
+  color: rgb(148 163 184 / var(--tw-text-opacity, 1)) !important;
+}
+
+.text-info {
+  --tw-text-opacity: 1;
+  color: rgb(99 102 241 / var(--tw-text-opacity, 1));
 }
 
 .underline {

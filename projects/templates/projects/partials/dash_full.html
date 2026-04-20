@@ -77,5 +77,124 @@
       </article>
     </section>
 
+    {# ============ S2: MIDDLE ROW — team + activity ============ #}
+    <section class="grid grid-cols-12 gap-6">
+
+      {# Team Performance #}
+      <article class="col-span-8 bg-surface rounded-card shadow-card p-6">
+        <div class="flex items-center justify-between">
+          <div class="eyebrow">Team Performance</div>
+          <button type="button" aria-disabled="true" class="text-xs font-semibold text-ink3 hover:underline">전체 멤버 보기 →</button>
+        </div>
+
+        <ul class="mt-6 space-y-5">
+          <li class="flex items-center gap-4">
+            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-semibold text-sm">MK</div>
+            <div class="w-[180px] shrink-0">
+              <div class="text-sm font-semibold">Min-ho Kim</div>
+              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">수석 컨설턴트</div>
+            </div>
+            <div class="w-[140px] shrink-0">
+              <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
+              <div class="text-sm font-semibold mt-0.5">8건 진행 중</div>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="eyebrow eyebrow-ko">달성률</div>
+                <div class="text-xs font-semibold tnum text-ink3">92%</div>
+              </div>
+              <div class="progress success"><span style="width:92%"></span></div>
+            </div>
+          </li>
+
+          <li class="flex items-center gap-4">
+            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 flex items-center justify-center text-white font-semibold text-sm">SP</div>
+            <div class="w-[180px] shrink-0">
+              <div class="text-sm font-semibold">Sarah Park</div>
+              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">시니어 컨설턴트</div>
+            </div>
+            <div class="w-[140px] shrink-0">
+              <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
+              <div class="text-sm font-semibold mt-0.5">5건 진행 중</div>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="eyebrow eyebrow-ko">달성률</div>
+                <div class="text-xs font-semibold tnum text-ink3">75%</div>
+              </div>
+              <div class="progress"><span style="width:75%"></span></div>
+            </div>
+          </li>
+
+          <li class="flex items-center gap-4">
+            <div aria-hidden="true" class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-500 flex items-center justify-center text-white font-semibold text-sm">JL</div>
+            <div class="w-[180px] shrink-0">
+              <div class="text-sm font-semibold">Ji-won Lee</div>
+              <div class="eyebrow eyebrow-ko mt-0.5 !text-faint">리서치 어소시에이트</div>
+            </div>
+            <div class="w-[140px] shrink-0">
+              <div class="eyebrow eyebrow-ko">현재 프로젝트</div>
+              <div class="text-sm font-semibold mt-0.5">12건 진행 중</div>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="eyebrow eyebrow-ko">달성률</div>
+                <div class="text-xs font-semibold tnum text-ink3">48%</div>
+              </div>
+              <div class="progress info"><span style="width:48%"></span></div>
+            </div>
+          </li>
+        </ul>
+      </article>
+
+      {# Recent Activity #}
+      <article class="col-span-4 bg-surface rounded-card shadow-card p-6">
+        <div class="flex items-center justify-between">
+          <div class="eyebrow">Recent Activity</div>
+          <button class="text-faint hover:text-ink" type="button" aria-label="새로고침">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          </button>
+        </div>
+        <ul class="mt-5 space-y-4">
+          <li class="flex gap-3">
+            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-emerald-50 text-success flex items-center justify-center shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold leading-snug">후보자 배치가 확정되었습니다</div>
+              <div class="text-xs text-faint mt-0.5">프로젝트 클라우드 / CTO 서치 · 2시간 전</div>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-indigo-50 text-info flex items-center justify-center shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold leading-snug">새 후보자가 추가되었습니다</div>
+              <div class="text-xs text-faint mt-0.5">글로벌 핀테크 확장 · 5시간 전</div>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-amber-50 text-warning flex items-center justify-center shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold leading-snug">고객사 미팅 노트가 업데이트되었습니다</div>
+              <div class="text-xs text-faint mt-0.5">삼성전자 자문 프로젝트 · 어제</div>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-red-50 text-danger flex items-center justify-center shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold leading-snug">프로젝트 마감일이 가까워지고 있습니다</div>
+              <div class="text-xs text-faint mt-0.5">재생에너지 헤드 서치 · 2일 전</div>
+            </div>
+          </li>
+        </ul>
+      </article>
+    </section>
+
   </div>
 </div>
