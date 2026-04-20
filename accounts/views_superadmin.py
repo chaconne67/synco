@@ -21,7 +21,10 @@ def pending_users_list(request):
 @level_required(2)
 @require_POST
 def approve_user(request, user_id):
-    new_level = int(request.POST.get("level", 1))
+    try:
+        new_level = int(request.POST.get("level", 1))
+    except (TypeError, ValueError):
+        new_level = 1
     if new_level not in (1, 2):
         new_level = 1
     User.objects.filter(pk=user_id, level=0).update(level=new_level)

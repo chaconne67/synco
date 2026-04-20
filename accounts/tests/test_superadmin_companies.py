@@ -60,6 +60,15 @@ def test_superuser_sees_pending_list(client):
 
 
 @pytest.mark.django_db
+def test_level1_user_approve_post_gets_403(client):
+    u = User.objects.create_user(username="u1b", email="u1b@e.com", password="p!", level=1)
+    pending = User.objects.create_user(username="pend0", email="pend0@e.com", password="p!", level=0)
+    client.force_login(u)
+    resp = client.post(f"/superadmin/approve/{pending.id}/", {"level": "1"})
+    assert resp.status_code == 403
+
+
+@pytest.mark.django_db
 def test_approve_user_sets_level1(client):
     boss = User.objects.create_user(
         username="boss2", email="boss2@e.com", password="p!", level=2

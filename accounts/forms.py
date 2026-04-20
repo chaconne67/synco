@@ -5,6 +5,8 @@ from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils import timezone
 
+from accounts.models import Organization
+
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
     "focus:ring-2 focus:ring-ink3 focus:border-ink3"
@@ -27,7 +29,6 @@ class OrganizationForm(forms.ModelForm):
     """조직 정보 수정 폼 (owner용). LEGACY — T6에서 views_org.py와 함께 삭제."""
 
     class Meta:
-        from .models import Organization
         model = Organization
         fields = ["name", "logo"]
         widgets = {
