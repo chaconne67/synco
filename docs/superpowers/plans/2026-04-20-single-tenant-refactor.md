@@ -117,7 +117,7 @@
 
 **Files:**
 - Modify: `accounts/models.py:11-28` (User 모델)
-- Create migration: `accounts/migrations/0008_user_level.py` (auto-generated)
+- Create migration: `accounts/migrations/0009_user_level.py` (auto-generated; Django picked 0009 because existing 0008_notificationpreference.py)
 - Modify: `tests/conftest.py` (새 fixture 추가만)
 
 - [ ] **Step 1: Write failing test for User.level default**
@@ -173,7 +173,7 @@ Edit `accounts/models.py`. Inside `class User(AbstractUser):`, add after `push_s
 - [ ] **Step 4: Generate migration**
 
 Run: `uv run python manage.py makemigrations accounts`
-Expected output: `Migrations for 'accounts': accounts/migrations/0008_user_level.py`
+Expected output: `Migrations for 'accounts': accounts/migrations/0009_user_level.py`
 
 - [ ] **Step 5: Apply migration**
 
@@ -257,7 +257,7 @@ Expected: 기존 테스트 모두 통과 (신규 필드는 default 값이 있으
 - [ ] **Step 9: Commit**
 
 ```bash
-git add accounts/models.py accounts/migrations/0008_user_level.py tests/conftest.py tests/accounts/test_user_level_field.py
+git add accounts/models.py accounts/migrations/0009_user_level.py tests/conftest.py tests/accounts/test_user_level_field.py
 git commit -m "$(cat <<'EOF'
 feat(accounts): add User.level field (0=pending, 1=staff, 2=boss)
 
