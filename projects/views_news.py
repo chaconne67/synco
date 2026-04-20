@@ -144,9 +144,8 @@ def news_source_update(request, pk):
     )
 
 
-@login_required
-@require_POST
 @level_required(2)
+@require_POST
 def news_source_delete(request, pk):
     """Delete a news source."""
     org = _get_org(request)
@@ -155,9 +154,8 @@ def news_source_delete(request, pk):
     return redirect("news:news_sources")
 
 
-@login_required
-@require_POST
 @level_required(2)
+@require_POST
 def news_source_toggle(request, pk):
     """Toggle source active/inactive."""
     org = _get_org(request)

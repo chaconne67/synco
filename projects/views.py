@@ -2006,14 +2006,6 @@ def posting_site_delete(request, pk, site_pk):
 # ---------------------------------------------------------------------------
 
 
-def _is_owner(request):
-    """Check if the current user has OWNER role in their organization."""
-    try:
-        return request.user.membership.role == Membership.Role.OWNER
-    except Membership.DoesNotExist:
-        return False
-
-
 @login_required
 @level_required(2)
 def approval_queue(request):
