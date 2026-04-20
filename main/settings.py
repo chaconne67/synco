@@ -143,6 +143,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 # Production (.env.prod) must NOT set this; default False.
 ALLOW_CEO_TEST_LOGIN = os.environ.get("ALLOW_CEO_TEST_LOGIN", "0") == "1"
 
+SYNCO_SUPERUSER_EMAIL = os.environ.get("SYNCO_SUPERUSER_EMAIL", "chaconne67@gmail.com")
+
 # Kakao OAuth
 KAKAO_CLIENT_ID = os.environ.get("KAKAO_CLIENT_ID", "")
 KAKAO_CLIENT_SECRET = os.environ.get("KAKAO_CLIENT_SECRET", "")

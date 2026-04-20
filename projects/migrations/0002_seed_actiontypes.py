@@ -6,6 +6,7 @@ Full suggests_next chain for all 23 types.
 
 from django.db import migrations
 
+
 ACTION_TYPES = [
     # --- Searching phase (13) ---
     {
@@ -289,23 +290,18 @@ ACTION_TYPES = [
 ]
 
 
-def seed_forward(apps, schema_editor):
+def forwards(apps, schema_editor):
     ActionType = apps.get_model("projects", "ActionType")
     for data in ACTION_TYPES:
         ActionType.objects.update_or_create(code=data["code"], defaults=data)
 
 
-def seed_reverse(apps, schema_editor):
+def backwards(apps, schema_editor):
     ActionType = apps.get_model("projects", "ActionType")
     codes = [d["code"] for d in ACTION_TYPES]
     ActionType.objects.filter(code__in=codes).delete()
 
 
 class Migration(migrations.Migration):
-    dependencies = [
-        ("projects", "0001_initial"),
-    ]
-
-    operations = [
-        migrations.RunPython(seed_forward, seed_reverse),
-    ]
+    dependencies = [("projects", "0001_initial")]
+    operations = [migrations.RunPython(forwards, backwards)]
