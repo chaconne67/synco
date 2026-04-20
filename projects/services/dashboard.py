@@ -14,6 +14,7 @@ from accounts.models import Membership, Organization, User
 from projects.models import (
     ActionItem,
     ActionItemStatus,
+    Interview,
     Project,
     ProjectPhase,
     ProjectResult,
@@ -277,6 +278,76 @@ def _team_performance(org):
     return rows
 
 
+_CLIENT_FACING_CODES = {"submit_to_client", "pre_meeting"}
+
+
+def _week_range():
+    now = timezone.now()
+    monday = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    next_monday = monday + timedelta(days=7)
+    return monday, next_monday
+
+
+def _weekly_schedule(org, user, scope_owner, limit: int = 5):
+    """S3 Weekly Schedule: 이번 주 Interview + ActionItem 합집합, 시간 asc."""
+    monday, next_monday = _week_range()
+
+    interviews = Interview.objects.filter(
+        action_item__application__project__organization=org,
+        scheduled_at__gte=monday,
+        scheduled_at__lt=next_monday,
+    ).select_related(
+        "action_item__application__candidate",
+        "action_item__application__project__client",
+    )
+    actions = (
+        ActionItem.objects.filter(
+            application__project__organization=org,
+            scheduled_at__gte=monday,
+            scheduled_at__lt=next_monday,
+        )
+        .exclude(action_type__code="interview_round")
+        .select_related(
+            "action_type",
+            "application__project__client",
+        )
+    )
+
+    if not scope_owner:
+        interviews = interviews.filter(
+            action_item__application__project__assigned_consultants=user
+        )
+        actions = actions.filter(assigned_to=user)
+
+    events = []
+
+    for iv in interviews:
+        candidate = iv.action_item.application.candidate
+        events.append({
+            "scheduled_at": iv.scheduled_at,
+            "label_color": "info",
+            "title": f"{iv.round}차 면접",
+            "subtitle": f"후보자: {candidate.name} · {iv.location or '-'}",
+        })
+
+    for ai in actions:
+        code = ai.action_type.code
+        color = "warning" if code in _CLIENT_FACING_CODES else "ink3"
+        proj = ai.application.project
+        client = proj.client
+        events.append({
+            "scheduled_at": ai.scheduled_at,
+            "label_color": color,
+            "title": ai.title,
+            "subtitle": f"{proj.title} · {client.name}",
+        })
+
+    events.sort(key=lambda e: e["scheduled_at"])
+    return events[:limit]
+
+
 def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     """대시보드 카드 전체 컨텍스트.
 
@@ -289,7 +360,7 @@ def get_dashboard_context(org: Organization, user: User, membership) -> dict:
         "monthly_success": _monthly_success(org, user, scope_owner),
         "project_status": _project_status_counts(org, user, scope_owner),
         "team_performance": _team_performance(org),
-        "weekly_schedule": None,
+        "weekly_schedule": _weekly_schedule(org, user, scope_owner),
         "monthly_calendar": None,
         "_scope_owner": scope_owner,
     }

@@ -5,8 +5,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import Membership, Organization, User
+from candidates.models import Candidate
 from clients.models import Client
-from projects.models import Project
+from projects.models import (
+    ActionItem,
+    ActionType,
+    Application,
+    Interview,
+    Project,
+)
 
 
 @pytest.fixture
@@ -181,3 +188,65 @@ def test_s2_team_performance_empty_rate(owner_client, org, consultant_user):
     body = resp.content.decode()
 
     assert 'data-testid="s2-rate-c1">—<' in body
+
+
+# ===========================================================================
+# S3 Weekly Schedule
+# ===========================================================================
+
+
+def _this_monday_midnight():
+    now = timezone.now()
+    monday = now - timedelta(days=now.weekday())
+    return monday.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+@pytest.fixture
+def interview_type(db):
+    obj, _ = ActionType.objects.get_or_create(
+        code="interview_round", defaults={"label_ko": "면접"}
+    )
+    return obj
+
+
+@pytest.fixture
+def submit_type(db):
+    obj, _ = ActionType.objects.get_or_create(
+        code="submit_to_client", defaults={"label_ko": "서류 제출"}
+    )
+    return obj
+
+
+@pytest.mark.django_db
+def test_s3_weekly_empty(owner_client):
+    """S3 Weekly: 빈 상태 렌더."""
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+    assert "이번 주 일정이 없습니다" in body
+
+
+@pytest.mark.django_db
+def test_s3_weekly_shows_interview(
+    owner_client, org, client_obj, interview_type, consultant_user
+):
+    """S3 Weekly: Interview 표시, '인터뷰' 키워드·후보자명 포함."""
+    monday = _this_monday_midnight()
+    cand = Candidate.objects.create(name="박해준")
+    proj = Project.objects.create(organization=org, client=client_obj, title="P1")
+    app = Application.objects.create(project=proj, candidate=cand)
+    ai = ActionItem.objects.create(
+        application=app,
+        action_type=interview_type,
+        title="1차 면접",
+        scheduled_at=monday + timedelta(days=2, hours=11),
+    )
+    Interview.objects.create(
+        action_item=ai, round=1, scheduled_at=monday + timedelta(days=2, hours=11),
+        type="화상", location="Zoom",
+    )
+
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+    assert "1차 면접" in body
+    assert "박해준" in body
+    assert "이번 주 일정이 없습니다" not in body
