@@ -28,7 +28,7 @@ class TestDashboardAuth:
 
 class TestDashboardOrgIsolation:
     def test_boss_sees_all_actions(
-        self, logged_in_client, application, user, other_org_user, action_type_reach_out
+        self, logged_in_client, application, user, staff_user_2, action_type_reach_out
     ):
         """Boss (level>=2) sees all scheduled actions, not just their own."""
         # user fixture has level=2, so scope_owner=True → sees all
@@ -37,18 +37,17 @@ class TestDashboardOrgIsolation:
             action_type=action_type_reach_out,
             title="다른 사용자 액션",
             status=ActionItemStatus.PENDING,
-            assigned_to=other_org_user,
+            assigned_to=staff_user_2,
             due_at=timezone.now() + timedelta(hours=2),
             scheduled_at=timezone.now(),
         )
 
         response = logged_in_client.get(reverse("dashboard"))
-        content = response.content.decode()
         # Boss sees everything
         assert response.status_code == 200
 
     def test_staff_sees_only_assigned_actions(
-        self, application, other_org_user, action_type_reach_out, db
+        self, application, staff_user_2, action_type_reach_out, db
     ):
         """Staff (level=1) only sees actions assigned to them in weekly schedule."""
         from django.test import Client as TestClient
@@ -63,7 +62,7 @@ class TestDashboardOrgIsolation:
             action_type=action_type_reach_out,
             title="다른 사람 액션",
             status=ActionItemStatus.PENDING,
-            assigned_to=other_org_user,
+            assigned_to=staff_user_2,
             due_at=timezone.now() + timedelta(hours=2),
             scheduled_at=timezone.now(),
         )

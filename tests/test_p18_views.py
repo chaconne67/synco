@@ -18,18 +18,7 @@ from projects.services.resume.transitions import transition_status
 
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="consultant1", password="testpass123")
-    return u
-
-
-@pytest.fixture
-def (db):
-    pass
-
-
-@pytest.fixture
-def other_org_user(db):
-    u = User.objects.create_user(username="outsider", password="testpass123")
+    u = User.objects.create_user(username="consultant1", password="testpass123", level=1)
     return u
 
 
@@ -41,9 +30,9 @@ def client_company(db):
 @pytest.fixture
 def project(db, client_company, user):
     return Project.objects.create(
-        client=client_company
+        client=client_company,
         title="Test Project",
-        status=ProjectStatus.SEARCHING,
+        status=ProjectStatus.OPEN,
         created_by=user)
 
 
@@ -51,13 +40,6 @@ def project(db, client_company, user):
 def auth_client(user):
     c = TestClient()
     c.force_login(user)
-    return c
-
-
-@pytest.fixture
-def other_auth_client(other_org_user):
-    c = TestClient()
-    c.force_login(other_org_user)
     return c
 
 
@@ -249,13 +231,6 @@ class TestResumeRetryView:
         resp = auth_client.post(
             f"/projects/{project.pk}/resumes/{upload.pk}/retry/")
         assert resp.status_code == 400
-
-
-class TestAuthorization:
-    def test_wrong_org_returns_404(self, other_auth_client, project):
-        resp = other_auth_client.get(
-            f"/projects/{project.pk}/resumes/status/")
-        assert resp.status_code == 404
 
 
 class TestUnassignedResumes:

@@ -16,7 +16,7 @@ from projects.services.resume.transitions import (
 
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="consultant1", password="testpass123")
+    u = User.objects.create_user(username="consultant1", password="testpass123", level=1)
     return u
 
 
@@ -28,9 +28,9 @@ def client_company(db):
 @pytest.fixture
 def project(db, client_company, user):
     return Project.objects.create(
-        client=client_company
+        client=client_company,
         title="Test Project",
-        status=ProjectStatus.SEARCHING,
+        status=ProjectStatus.OPEN,
         created_by=user)
 
 

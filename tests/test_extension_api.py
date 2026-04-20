@@ -2,6 +2,7 @@
 
 import json
 
+import pytest
 from django.test import TestCase, Client as DjangoClient
 
 from accounts.models import User
@@ -529,6 +530,7 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
         resp = _post_json(other_client, SAVE_URL, payload)
         self.assertEqual(resp.status_code, 200)
 
+    @pytest.mark.skip(reason="T10 — owned_by removed, test obsolete")
     def test_update_url_no_conflict_when_owned_by_null(self):
         # NOTE: unique_candidate_external_url_per_org uses owned_by as part of the
         # unique key. With owned_by=NULL (single-tenant transitional state), SQL

@@ -23,7 +23,7 @@ def user(db):
 
 
 @pytest.fixture
-def source(org):
+def source(db):
     return NewsSource.objects.create(
         name="Test Feed",
         url="https://example.com/feed.xml",

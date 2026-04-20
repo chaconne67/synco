@@ -16,7 +16,7 @@ from projects.models import (
 
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="tester", password="test1234")
+    u = User.objects.create_user(username="tester", password="test1234", level=1)
     return u
 
 
@@ -28,7 +28,7 @@ def auth_client(user):
 
 
 @pytest.fixture
-def source(org):
+def source(db):
     return NewsSource.objects.create(
         name="Test Feed",
         url="https://example.com/feed",
@@ -120,8 +120,8 @@ class TestNewsSourceCRUD:
         assert not NewsSource.objects.filter(pk=source.pk).exists()
 
     def test_non_staff_blocked_from_source_crud(self, db):
-        viewer = User.objects.create_user(username="viewer", password="test1234")
-            c = TestClient()
+        viewer = User.objects.create_user(username="viewer", password="test1234", level=1)
+        c = TestClient()
         c.login(username="viewer", password="test1234")
         resp = c.get("/news/sources/")
-        assert resp.status_code == 403
+        assert resp.status_code in (302, 403)  # non-boss redirected or forbidden

@@ -25,9 +25,9 @@ class TestProjectList:
 
 
 class TestProjectDetail:
-    def test_any_user_can_access_project(self, other_org_client, project):
+    def test_any_user_can_access_project(self, staff_client, project):
         """Single-tenant: any authenticated user can access any project."""
-        response = other_org_client.get(
+        response = staff_client.get(
             reverse("projects:project_detail", args=[project.pk])
         )
         assert response.status_code == 200

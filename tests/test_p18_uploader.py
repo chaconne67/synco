@@ -20,7 +20,7 @@ from projects.services.resume.uploader import (
 
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="consultant1", password="testpass123")
+    u = User.objects.create_user(username="consultant1", password="testpass123", level=1)
     return u
 
 
@@ -32,9 +32,9 @@ def client_company(db):
 @pytest.fixture
 def project(db, client_company, user):
     return Project.objects.create(
-        client=client_company
+        client=client_company,
         title="Test Project",
-        status=ProjectStatus.SEARCHING,
+        status=ProjectStatus.OPEN,
         created_by=user)
 
 
@@ -106,14 +106,13 @@ class TestCreateUpload:
         batch = uuid.uuid4()
         upload = create_upload(
             file=f,
-            project=project
+            project=project,
             user=user,
             upload_batch=batch)
         assert upload.status == ResumeUpload.Status.PENDING
         assert upload.file_name == "resume.pdf"
         assert upload.file_type == ResumeUpload.FileType.PDF
         assert upload.upload_batch == batch
-        assert upload.organization == org
         assert upload.project == project
 
 
@@ -125,7 +124,7 @@ class TestProcessPendingUpload:
         )
         return create_upload(
             file=f,
-            project=project
+            project=project,
             user=user,
             upload_batch=uuid.uuid4())
 

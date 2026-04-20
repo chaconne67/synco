@@ -18,17 +18,17 @@ from projects.services.news.matcher import match_article
 
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="tester", password="test1234")
+    u = User.objects.create_user(username="tester", password="test1234", level=1)
     return u
 
 
 @pytest.fixture
-def client_co(org):
+def client_co(db):
     return Client.objects.create(name="삼성전자", industry="반도체")
 
 
 @pytest.fixture
-def project(org, client_co, user):
+def project(client_co, user):
     return Project.objects.create(
         client=client_co,
         title="반도체 설계 엔지니어",
@@ -36,7 +36,7 @@ def project(org, client_co, user):
 
 
 @pytest.fixture
-def source(org):
+def source(db):
     return NewsSource.objects.create(
         name="Feed",
         url="https://example.com/feed",

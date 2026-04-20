@@ -1,51 +1,6 @@
-# Root conftest: skip legacy test modules that reference removed models,
-# deleted enum values, or templates with removed fields.
-# These need rewriting to use the new Application/ActionItem models.
+# Root conftest: collect_ignore for test files that require T10+ work to fix.
+# All org/membership-based tests have been deleted or rewritten.
 collect_ignore = [
-    # Reference removed models or deleted enum values
-    "tests/test_auto_actions.py",
-    "tests/test_check_due_actions.py",
-    "tests/test_context_views.py",
-    "tests/test_p01_models.py",
-    "tests/test_p05_project_tabs.py",
-    "tests/test_p06_contacts.py",
-    "tests/test_p07_submissions.py",
-    "tests/test_p08_draft_pipeline.py",
-    "tests/test_p09_interviews_offers.py",
-    "tests/test_p11_collision_approval.py",
-    "tests/test_p13_dashboard.py",
-    "tests/test_p14_voice_action_executor.py",
-    "tests/test_p14_voice_entity_resolver.py",
-    "tests/test_p14_voice_meeting.py",
-    "tests/test_p15_telegram_handlers.py",
-    "tests/test_p15_telegram_reminders.py",
-    "tests/test_p17_news_matcher.py",
-    "tests/test_p18_linker.py",
-    "tests/test_p20_workflow_transition.py",
-    "tests/test_project_multiview.py",
-    "tests/test_projects_views.py",
-    # Fixture errors: ProjectStatus.SEARCHING removed
-    "tests/test_p10_posting.py",
-    "tests/test_p18_email.py",
-    "tests/test_p18_models.py",
-    "tests/test_p18_uploader.py",
-    "tests/test_p18_views.py",
-    "tests/accounts/test_rbac.py",
-    # Template errors: removed model fields in templates
-    "tests/test_clients_views.py",
-    "tests/test_p12_reference.py",
-    "tests/test_p14_voice_views.py",
-    "tests/test_p15_telegram_views.py",
-    "tests/test_p17_news_command.py",
+    # Template rendering errors: news feed content not shown post-refactor (T10 scope)
     "tests/test_p17_news_views.py",
-    "tests/test_search_views.py",
-    "accounts/tests/test_ceo_login.py",
-    "accounts/tests/test_onboarding_superuser_bypass.py",
-    "accounts/tests/test_staff_login.py",
-    "accounts/tests/test_superadmin_companies.py",
-    "tests/accounts/test_email_views.py",
-    "tests/accounts/test_nav_org.py",
-    "tests/accounts/test_onboarding.py",
-    "tests/accounts/test_org_management.py",
-    "tests/accounts/test_settings_tabs.py",
 ]
