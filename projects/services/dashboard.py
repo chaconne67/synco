@@ -179,3 +179,28 @@ def get_project_kanban_cards(
     return cards
 
 
+def get_dashboard_context(org: Organization, user: User, membership) -> dict:
+    """대시보드 카드 전체 컨텍스트.
+
+    Phase 2a: S1-1 Monthly Success, S1-3 Project Status,
+              S2-1 Team Performance, S3 Weekly/Monthly Calendar.
+    Phase 2b 카드(S1-2 Revenue, S2-2 Recent Activity)는 하드코딩 유지.
+    """
+    scope_owner = membership.role == "owner"
+    return {
+        "monthly_success": None,
+        "project_status": None,
+        "team_performance": None,
+        "weekly_schedule": None,
+        "monthly_calendar": None,
+        "_scope_owner": scope_owner,
+    }
+
+
+def _scope_projects(org: Organization, user: User, scope_owner: bool):
+    """권한 스코프 공통 쿼리셋. owner=조직 전체, 아니면 본인 담당만."""
+    qs = Project.objects.filter(organization=org)
+    if not scope_owner:
+        qs = qs.filter(assigned_consultants=user)
+    return qs
+

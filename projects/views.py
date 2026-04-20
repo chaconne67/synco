@@ -21,6 +21,7 @@ from accounts.helpers import _get_org
 from accounts.models import Membership
 
 from projects.services import posting as posting_service
+from projects.services.dashboard import get_dashboard_context
 from projects.services.action_lifecycle import (
     complete_action as complete_action_item,
     create_action as create_action_item,
@@ -2141,10 +2142,12 @@ def approval_cancel(request, pk):
 @login_required
 @membership_required
 def dashboard(request):
-    """대시보드 메인 화면 (Phase 1: 하드코딩 목업)."""
+    """대시보드 메인 화면 (Phase 2a: 실데이터 연결 진행 중)."""
+    membership = request.user.membership
+    ctx = get_dashboard_context(membership.organization, request.user, membership)
     if getattr(request, "htmx", None):
-        return render(request, "projects/partials/dash_full.html")
-    return render(request, "projects/dashboard.html")
+        return render(request, "projects/partials/dash_full.html", ctx)
+    return render(request, "projects/dashboard.html", ctx)
 
 
 # --- P16: Work Continuity ---
