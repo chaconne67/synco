@@ -1,0 +1,60 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}대기 유저 승인 — synco{% endblock %}
+{% block breadcrumb_current %}SuperAdmin · 유저 승인{% endblock %}
+{% block page_title %}유저 승인{% endblock %}
+
+{% block content %}
+<div class="px-10 py-10 max-w-4xl">
+  <div class="mb-10">
+    <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">SuperAdmin</span>
+    <h2 class="text-4xl font-black text-slate-900 tracking-tight">대기 유저 승인</h2>
+    <p class="mt-2 text-sm text-slate-500">Level 0 상태로 대기 중인 유저를 직원(Level 1) 또는 사장(Level 2)으로 승인합니다.</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="border-b border-slate-100">
+        <tr>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">이름</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">이메일 / 사용자명</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">가입일</th>
+          <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">승인</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for user in users %}
+        <tr class="hover:bg-slate-50/60 transition-colors">
+          <td class="px-5 py-3 font-semibold text-slate-900">
+            {{ user.get_full_name|default:user.username }}
+          </td>
+          <td class="px-5 py-3 text-xs text-slate-600">
+            {{ user.email|default:user.username }}
+          </td>
+          <td class="px-5 py-3 text-xs text-slate-400">
+            {{ user.date_joined|date:"Y-m-d H:i" }}
+          </td>
+          <td class="px-5 py-3">
+            <form method="post" action="{% url 'approve_user' user.id %}" class="flex gap-2">
+              {% csrf_token %}
+              <button type="submit" name="level" value="1"
+                      class="rounded-lg bg-ink3 hover:bg-ink2 text-white text-xs font-bold px-4 py-1.5 transition-colors">
+                직원 (L1)
+              </button>
+              <button type="submit" name="level" value="2"
+                      class="rounded-lg bg-slate-700 hover:bg-slate-900 text-white text-xs font-bold px-4 py-1.5 transition-colors">
+                사장 (L2)
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-5 py-12 text-center text-xs font-medium text-slate-400">대기 중인 유저가 없습니다.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

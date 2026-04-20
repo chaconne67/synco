@@ -5,8 +5,6 @@ from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils import timezone
 
-from .models import InviteCode, Organization
-
 INPUT_CSS = (
     "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[15px] "
     "focus:ring-2 focus:ring-ink3 focus:border-ink3"
@@ -20,10 +18,16 @@ FILE_INPUT_CSS = (
 )
 
 
+# ---------------------------------------------------------------------------
+# Legacy forms — kept only until views_org.py is deleted in T6.
+# Do not add new consumers; these will be removed together with views_org.py.
+# ---------------------------------------------------------------------------
+
 class OrganizationForm(forms.ModelForm):
-    """조직 정보 수정 폼 (owner용)."""
+    """조직 정보 수정 폼 (owner용). LEGACY — T6에서 views_org.py와 함께 삭제."""
 
     class Meta:
+        from .models import Organization
         model = Organization
         fields = ["name", "logo"]
         widgets = {
@@ -42,12 +46,10 @@ class OrganizationForm(forms.ModelForm):
 
 
 class InviteCodeCreateForm(forms.Form):
-    """초대코드 생성 폼."""
+    """초대코드 생성 폼. LEGACY — T6에서 views_org.py와 함께 삭제."""
 
     role = forms.ChoiceField(
-        choices=[
-            (r.value, r.label) for r in InviteCode.Role if r != InviteCode.Role.OWNER
-        ],
+        choices=[],
         initial="consultant",
         widget=forms.Select(
             attrs={
@@ -76,6 +78,13 @@ class InviteCodeCreateForm(forms.Form):
         ),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import InviteCode
+        self.fields["role"].choices = [
+            (r.value, r.label) for r in InviteCode.Role if r != InviteCode.Role.OWNER
+        ]
+
     def clean_expires_at(self):
         """Validate future date and convert to end-of-day aware datetime."""
         date_val = self.cleaned_data.get("expires_at")
@@ -92,6 +101,10 @@ class InviteCodeCreateForm(forms.Form):
         )
         return end_of_day
 
+
+# ---------------------------------------------------------------------------
+# Active forms
+# ---------------------------------------------------------------------------
 
 class NotificationPreferenceForm(forms.Form):
     """알림 설정 폼. JSONField를 개별 체크박스로 분리."""

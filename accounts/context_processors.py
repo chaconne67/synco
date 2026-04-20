@@ -1,15 +1,8 @@
-from accounts.models import Membership
-
-
-def membership(request):
-    """Inject current user's membership into template context."""
-    if not request.user.is_authenticated:
-        return {"membership": None}
-
-    try:
-        m = request.user.membership
-        if m.status != "active":
-            return {"membership": None}
-        return {"membership": m}
-    except Membership.DoesNotExist:
-        return {"membership": None}
+def rbac_context(request):
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated:
+        return {"current_user_level": None, "is_superuser": False}
+    return {
+        "current_user_level": user.level,
+        "is_superuser": user.is_superuser,
+    }

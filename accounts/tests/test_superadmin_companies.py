@@ -1,92 +1,119 @@
 import pytest
 
-from accounts.models import InviteCode, Organization, User
+from accounts.models import User
 
 
-SUPERADMIN_URL = "/superadmin/companies/"
+PENDING_URL = "/superadmin/pending/"
 
 
 @pytest.mark.django_db
 def test_anonymous_redirected_to_login(client):
-    resp = client.get(SUPERADMIN_URL)
+    resp = client.get(PENDING_URL)
     assert resp.status_code == 302
     assert "/accounts/login/" in resp.url
 
 
 @pytest.mark.django_db
-def test_non_superuser_gets_404(client):
-    u = User.objects.create_user(username="u1", email="u1@e.com", password="p!")
+def test_level1_user_gets_403(client):
+    u = User.objects.create_user(username="u1", email="u1@e.com", password="p!", level=1)
     client.force_login(u)
-    resp = client.get(SUPERADMIN_URL)
-    assert resp.status_code == 404
+    resp = client.get(PENDING_URL)
+    assert resp.status_code == 403
 
 
 @pytest.mark.django_db
-def test_superuser_get_shows_form_and_empty_list(client):
-    su = User.objects.create_user(
-        username="su",
-        email="su@e.com",
-        password="p!",
-        is_superuser=True,
-        is_staff=True,
-    )
-    client.force_login(su)
-    resp = client.get(SUPERADMIN_URL)
-    assert resp.status_code == 200
-    assert b'name="name"' in resp.content
-
-
-@pytest.mark.django_db
-def test_superuser_post_creates_org_and_owner_invite(client):
-    su = User.objects.create_user(
-        username="su",
-        email="su@e.com",
-        password="p!",
-        is_superuser=True,
-        is_staff=True,
-    )
-    client.force_login(su)
-    resp = client.post(SUPERADMIN_URL, {"name": "ACME 헤드헌팅"})
+def test_level0_user_redirected_to_pending(client):
+    u = User.objects.create_user(username="u0", email="u0@e.com", password="p!", level=0)
+    client.force_login(u)
+    resp = client.get(PENDING_URL)
+    # level_required redirects level 0 to pending_approval
     assert resp.status_code == 302
-    assert resp.url == SUPERADMIN_URL
-    org = Organization.objects.get(name="ACME 헤드헌팅")
-    invite = InviteCode.objects.get(organization=org)
-    assert invite.role == InviteCode.Role.OWNER
-    assert invite.is_active
-    assert invite.created_by == su
 
 
 @pytest.mark.django_db
-def test_superuser_post_empty_name_shows_error(client):
-    su = User.objects.create_user(
-        username="su",
-        email="su@e.com",
-        password="p!",
-        is_superuser=True,
-        is_staff=True,
+def test_level2_user_sees_pending_list(client):
+    boss = User.objects.create_user(
+        username="boss", email="boss@e.com", password="p!", level=2
     )
-    client.force_login(su)
-    resp = client.post(SUPERADMIN_URL, {"name": "   "})
+    pending = User.objects.create_user(
+        username="pending1", email="p1@e.com", password="p!", level=0
+    )
+    client.force_login(boss)
+    resp = client.get(PENDING_URL)
     assert resp.status_code == 200
-    assert Organization.objects.count() == 0
+    assert pending.username.encode() in resp.content or pending.email.encode() in resp.content
 
 
 @pytest.mark.django_db
-def test_list_shows_existing_companies_with_codes(client):
+def test_superuser_sees_pending_list(client):
     su = User.objects.create_user(
-        username="su",
-        email="su@e.com",
-        password="p!",
-        is_superuser=True,
-        is_staff=True,
+        username="su", email="su@e.com", password="p!",
+        is_superuser=True, is_staff=True,
     )
-    org = Organization.objects.create(name="Preexisting Co")
-    InviteCode.objects.create(
-        organization=org,
-        role=InviteCode.Role.OWNER,
-        created_by=su,
+    pending = User.objects.create_user(
+        username="pending2", email="p2@e.com", password="p!", level=0
     )
     client.force_login(su)
-    resp = client.get(SUPERADMIN_URL)
+    resp = client.get(PENDING_URL)
     assert resp.status_code == 200
-    assert b"Preexisting Co" in resp.content
+    assert pending.email.encode() in resp.content
+
+
+@pytest.mark.django_db
+def test_approve_user_sets_level1(client):
+    boss = User.objects.create_user(
+        username="boss2", email="boss2@e.com", password="p!", level=2
+    )
+    pending = User.objects.create_user(
+        username="pend3", email="p3@e.com", password="p!", level=0
+    )
+    client.force_login(boss)
+    resp = client.post(f"/superadmin/approve/{pending.id}/", {"level": "1"})
+    assert resp.status_code == 302
+    pending.refresh_from_db()
+    assert pending.level == 1
+
+
+@pytest.mark.django_db
+def test_approve_user_sets_level2(client):
+    boss = User.objects.create_user(
+        username="boss3", email="boss3@e.com", password="p!", level=2
+    )
+    pending = User.objects.create_user(
+        username="pend4", email="p4@e.com", password="p!", level=0
+    )
+    client.force_login(boss)
+    resp = client.post(f"/superadmin/approve/{pending.id}/", {"level": "2"})
+    assert resp.status_code == 302
+    pending.refresh_from_db()
+    assert pending.level == 2
+
+
+@pytest.mark.django_db
+def test_approve_user_invalid_level_defaults_to_1(client):
+    boss = User.objects.create_user(
+        username="boss4", email="boss4@e.com", password="p!", level=2
+    )
+    pending = User.objects.create_user(
+        username="pend5", email="p5@e.com", password="p!", level=0
+    )
+    client.force_login(boss)
+    resp = client.post(f"/superadmin/approve/{pending.id}/", {"level": "99"})
+    assert resp.status_code == 302
+    pending.refresh_from_db()
+    assert pending.level == 1
+
+
+@pytest.mark.django_db
+def test_approve_user_does_not_affect_already_active_user(client):
+    boss = User.objects.create_user(
+        username="boss5", email="boss5@e.com", password="p!", level=2
+    )
+    active = User.objects.create_user(
+        username="active1", email="a1@e.com", password="p!", level=1
+    )
+    client.force_login(boss)
+    # POST approve on a level-1 user should not change their level (filter is level=0)
+    client.post(f"/superadmin/approve/{active.id}/", {"level": "2"})
+    active.refresh_from_db()
+    assert active.level == 1

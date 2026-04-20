@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from accounts.views import home
-from accounts.views_team import team_member_edit, team_view
+from accounts.views_team import team_list
 from projects.views import dashboard
 
 urlpatterns = [
@@ -14,8 +14,7 @@ urlpatterns = [
     path("", home, name="home"),
     # Dashboard: explicit path only (protected by membership_required in t04)
     path("dashboard/", dashboard, name="dashboard"),
-    path("team/", team_view, name="team"),
-    path("team/<slug:slug>/edit/", team_member_edit, name="team_member_edit"),
+    path("team/", team_list, name="team"),
     # Accounts (includes login, settings, etc. at root prefix)
     path("", include("accounts.urls")),
     path("candidates/", include("candidates.urls")),
