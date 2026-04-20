@@ -29,11 +29,13 @@ def client_company(db):
 
 @pytest.fixture
 def project(db, client_company, user):
-    return Project.objects.create(
+    p = Project.objects.create(
         client=client_company,
         title="Test Project",
         status=ProjectStatus.OPEN,
         created_by=user)
+    p.assigned_consultants.add(user)
+    return p
 
 
 @pytest.fixture

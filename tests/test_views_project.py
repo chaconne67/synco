@@ -25,10 +25,12 @@ class TestProjectList:
 
 
 class TestProjectDetail:
-    def test_any_user_can_access_project(self, staff_client, project):
-        """Single-tenant: any authenticated user can access any project."""
-        response = staff_client.get(
-            reverse("projects:project_detail", args=[project.pk])
+    def test_assigned_staff_can_access_project(self, staff_user, project_assigned_to_staff):
+        from django.test import Client
+        c = Client()
+        c.force_login(staff_user)
+        response = c.get(
+            reverse("projects:project_detail", args=[project_assigned_to_staff.pk])
         )
         assert response.status_code == 200
 
