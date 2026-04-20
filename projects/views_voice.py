@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
+from accounts.decorators import level_required
 from accounts.models import Membership
 from candidates.models import Candidate
 from projects.models import MeetingRecord, Project
@@ -39,6 +40,7 @@ def _get_org(user):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def voice_transcribe(request):
     """POST /voice/transcribe/ — audio file -> text."""
@@ -63,6 +65,7 @@ def voice_transcribe(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def voice_intent(request):
     """POST /voice/intent/ — text -> intent + entities."""
@@ -168,6 +171,7 @@ def voice_intent(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def voice_preview(request):
     """POST /voice/preview/ — intent + entities -> preview (no DB change)."""
@@ -208,6 +212,7 @@ def voice_preview(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def voice_confirm(request):
     """POST /voice/confirm/ — confirm with idempotent token."""
@@ -257,6 +262,7 @@ def voice_confirm(request):
 
 
 @login_required
+@level_required(1)
 @require_GET
 def voice_context(request):
     """GET /voice/context/ — return verified context."""
@@ -278,6 +284,7 @@ def voice_context(request):
 
 
 @login_required
+@level_required(1)
 @require_GET
 def voice_history(request):
     """GET /voice/history/ — return conversation turns."""
@@ -294,6 +301,7 @@ def voice_history(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def voice_reset(request):
     """POST /voice/reset/ — clear conversation state. (Amendment A4)"""
@@ -303,6 +311,7 @@ def voice_reset(request):
 
 
 @login_required
+@level_required(1)
 def voice_meeting_upload(request):
     """POST /voice/meeting-upload/ — upload meeting recording.
     GET /voice/meeting-upload/ — return upload form HTML (Amendment A10)."""
@@ -377,6 +386,7 @@ def voice_meeting_upload(request):
 
 
 @login_required
+@level_required(1)
 @require_GET
 def voice_meeting_status(request, pk):
     """GET /voice/meeting-status/<uuid>/ — poll status."""
@@ -407,6 +417,7 @@ def voice_meeting_status(request, pk):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def voice_meeting_apply(request):
     """POST /voice/meeting-apply/ — apply selected fields."""

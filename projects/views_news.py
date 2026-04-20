@@ -6,7 +6,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.models import Membership, Organization
+from accounts.decorators import level_required
+from accounts.helpers import _get_org
 
 from .forms import NewsSourceForm
 from .models import (
@@ -17,19 +18,8 @@ from .models import (
 )
 
 
-def _get_org(request) -> Organization:
-    return get_object_or_404(Organization, memberships__user=request.user)
-
-
-def _is_staff(request) -> bool:
-    """Check if user has staff-level access (owner role)."""
-    try:
-        return request.user.membership.role in ("owner",)
-    except Membership.DoesNotExist:
-        return False
-
-
 @login_required
+@level_required(1)
 def news_feed(request):
     """News feed main page."""
     org = _get_org(request)
@@ -56,6 +46,7 @@ def news_feed(request):
     request.user.save(update_fields=["last_news_seen_at"])
 
     categories = NewsCategory.choices
+    is_staff = request.user.is_superuser or request.user.level >= 2
 
     return render(
         request,
@@ -65,12 +56,13 @@ def news_feed(request):
             "all_articles": all_articles,
             "categories": categories,
             "active_category": "",
-            "is_staff": _is_staff(request),
+            "is_staff": is_staff,
         },
     )
 
 
 @login_required
+@level_required(1)
 def news_filter(request):
     """HTMX partial: filter articles by category."""
     org = _get_org(request)
@@ -94,11 +86,9 @@ def news_filter(request):
 
 
 @login_required
+@level_required(2)
 def news_sources(request):
     """Source management list page."""
-    if not _is_staff(request):
-        return HttpResponse(status=403)
-
     org = _get_org(request)
     sources = NewsSource.objects.filter(organization=org)
 
@@ -110,11 +100,9 @@ def news_sources(request):
 
 
 @login_required
+@level_required(2)
 def news_source_create(request):
     """Create a new news source."""
-    if not _is_staff(request):
-        return HttpResponse(status=403)
-
     org = _get_org(request)
 
     if request.method == "POST":
@@ -135,11 +123,9 @@ def news_source_create(request):
 
 
 @login_required
+@level_required(2)
 def news_source_update(request, pk):
     """Edit an existing news source."""
-    if not _is_staff(request):
-        return HttpResponse(status=403)
-
     org = _get_org(request)
     source = get_object_or_404(NewsSource, pk=pk, organization=org)
 
@@ -160,11 +146,9 @@ def news_source_update(request, pk):
 
 @login_required
 @require_POST
+@level_required(2)
 def news_source_delete(request, pk):
     """Delete a news source."""
-    if not _is_staff(request):
-        return HttpResponse(status=403)
-
     org = _get_org(request)
     source = get_object_or_404(NewsSource, pk=pk, organization=org)
     source.delete()
@@ -173,11 +157,9 @@ def news_source_delete(request, pk):
 
 @login_required
 @require_POST
+@level_required(2)
 def news_source_toggle(request, pk):
     """Toggle source active/inactive."""
-    if not _is_staff(request):
-        return HttpResponse(status=403)
-
     org = _get_org(request)
     source = get_object_or_404(NewsSource, pk=pk, organization=org)
     source.is_active = not source.is_active

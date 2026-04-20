@@ -127,14 +127,11 @@ class TestApplicationHire:
 
 class TestApplicationAuthEdge:
     def test_unauthenticated_drop_raises(self, application):
-        """Unauthenticated user accessing drop -> AttributeError (missing @login_required).
-        Phase 6 should add @login_required to Phase 3b views.
-        """
+        """Unauthenticated user accessing drop -> redirect (level_required handles auth)."""
         c = Client(raise_request_exception=False)
         response = c.post(
             reverse("projects:application_drop", args=[application.pk]),
             data={"drop_reason": "unfit"},
         )
-        # membership_required without login_required -> 500
-        # Documents current behavior; Phase 6 will fix.
-        assert response.status_code == 500
+        # level_required redirects unauthenticated users.
+        assert response.status_code == 302

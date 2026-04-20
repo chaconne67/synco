@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from accounts.decorators import level_required
 from accounts.models import TelegramBinding, TelegramVerification
 from projects.telegram.auth import validate_webhook_secret
 
@@ -270,6 +271,7 @@ def telegram_webhook(request):
 
 
 @login_required
+@level_required(1)
 def telegram_bind(request):
     """GET/POST /telegram/bind/ — Telegram binding settings."""
     template = "accounts/telegram_bind.html"
@@ -345,6 +347,7 @@ def telegram_bind(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def telegram_unbind(request):
     """POST /telegram/unbind/ — Deactivate Telegram binding."""
@@ -367,6 +370,7 @@ def telegram_unbind(request):
 
 
 @login_required
+@level_required(1)
 def telegram_bind_partial(request):
     """Settings tab partial for telegram binding. Reuses bind logic."""
     template = "accounts/partials/settings_telegram.html"
@@ -442,6 +446,7 @@ def telegram_bind_partial(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def telegram_test_send(request):
     """POST /telegram/test/ — Send a test message."""
@@ -485,6 +490,7 @@ def telegram_test_send(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def telegram_test_partial(request):
     """POST /telegram/test-partial/ — Test message, returns settings tab partial."""
@@ -531,6 +537,7 @@ def telegram_test_partial(request):
 
 
 @login_required
+@level_required(1)
 @require_POST
 def telegram_unbind_partial(request):
     """POST /telegram/unbind-partial/ — Unbind, returns settings tab partial."""

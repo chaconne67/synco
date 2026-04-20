@@ -172,14 +172,12 @@ class TestActionOrgIsolation:
 
 class TestActionAuthEdge:
     def test_unauthenticated_action_raises(self, application, action_type_reach_out):
-        """Unauthenticated user accessing action -> 500 (missing @login_required).
-        Phase 6 should add @login_required to Phase 3b views.
-        """
+        """Unauthenticated user accessing action -> redirect (level_required handles auth)."""
         action = create_action(application, action_type_reach_out, None)
         c = Client(raise_request_exception=False)
         response = c.post(
             reverse("projects:action_complete", args=[action.pk]),
             data={"result": "test"},
         )
-        # Documents current behavior; Phase 6 will fix.
-        assert response.status_code == 500
+        # level_required redirects unauthenticated users.
+        assert response.status_code == 302

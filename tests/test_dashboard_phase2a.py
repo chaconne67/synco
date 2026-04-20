@@ -23,7 +23,7 @@ def org(db):
 
 @pytest.fixture
 def owner(org):
-    u = User.objects.create_user(username="owner", password="x")
+    u = User.objects.create_user(username="owner", password="x", level=2)
     Membership.objects.create(user=u, organization=org, role="owner")
     return u
 

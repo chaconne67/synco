@@ -15,14 +15,14 @@ def org(db):
 
 @pytest.fixture
 def user(db, org):
-    u = User.objects.create_user(username="consultant1", password="testpass123")
+    u = User.objects.create_user(username="consultant1", password="testpass123", level=2)
     Membership.objects.create(user=u, organization=org, role="owner", status="active")
     return u
 
 
 @pytest.fixture
 def other_user(db, org):
-    u = User.objects.create_user(username="consultant2", password="testpass123")
+    u = User.objects.create_user(username="consultant2", password="testpass123", level=2)
     Membership.objects.create(user=u, organization=org, role="owner", status="active")
     return u
 
@@ -30,7 +30,7 @@ def other_user(db, org):
 @pytest.fixture
 def other_org_user(db):
     other_org = Organization.objects.create(name="Other Org")
-    u = User.objects.create_user(username="outsider", password="testpass123")
+    u = User.objects.create_user(username="outsider", password="testpass123", level=2)
     Membership.objects.create(user=u, organization=other_org, status="active")
     return u
 
