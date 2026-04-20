@@ -42,7 +42,7 @@ class Command(BaseCommand):
             )
             .exclude(applications__hired_at__isnull=False)
             .distinct()
-            .select_related("organization", "client")
+            .select_related("client")
         )
 
         count = candidates.count()
