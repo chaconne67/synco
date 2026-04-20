@@ -74,14 +74,14 @@ class TestExtensionAuth(TestCase):
         self.assertEqual(body["status"], "error")
 
     def test_authenticated_returns_user_and_org(self):
-        Membership.objects.create(user=self.user, organization=self.org)
+        # Single-tenant: organization is always None; membership not required.
         self.client.login(username="authuser", password="pass1234")
         resp = self.client.get(AUTH_URL)
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
         self.assertEqual(body["status"], "success")
         self.assertTrue(body["data"]["authenticated"])
-        self.assertEqual(body["data"]["organization"], "Auth Org")
+        self.assertIsNone(body["data"]["organization"])
         # user should be full_name or username
         self.assertIn("홍", body["data"]["user"])
 
@@ -112,8 +112,9 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
         body = resp.json()
         self.assertEqual(body["status"], "success")
         self.assertEqual(body["data"]["operation"], "created")
+        # Single-tenant: owned_by is NULL; candidate exists globally.
         self.assertTrue(
-            Candidate.objects.filter(name="홍길동", owned_by=self.org).exists()
+            Candidate.objects.filter(name="홍길동").exists()
         )
 
     def test_create_with_careers_and_educations(self):
@@ -262,20 +263,18 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
     # --- Org isolation ---
 
     def test_cross_org_isolation(self):
-        """Same URL in different org should create independently."""
-        other_org = Organization.objects.create(name="Other Org")
+        """Single-tenant: second save of same URL is a duplicate (global dedup)."""
         other_user = User.objects.create_user(username="other_ext", password="pass1234")
-        Membership.objects.create(user=other_user, organization=other_org)
 
-        # Save in org1
+        # Save first
         resp1 = _post_json(self.client, SAVE_URL, _base_payload())
         self.assertEqual(resp1.status_code, 201)
 
-        # Save same URL in org2
+        # Save same URL as different user → duplicate detected globally
         other_client = DjangoClient()
         other_client.login(username="other_ext", password="pass1234")
         resp2 = _post_json(other_client, SAVE_URL, _base_payload())
-        self.assertEqual(resp2.status_code, 201)
+        self.assertEqual(resp2.status_code, 409)
 
     # --- Rate limit ---
 
@@ -519,19 +518,22 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
         c = Candidate.objects.get(id=self.candidate_id)
         self.assertTrue(c.educations.filter(institution="KAIST").exists())
 
-    def test_update_wrong_org_returns_404(self):
-        other_org = Organization.objects.create(name="Wrong Org")
+    def test_update_any_user_can_update(self):
+        # Single-tenant: no org isolation; any authenticated user can update.
         other_user = User.objects.create_user(
-            username="wrong_user", password="pass1234"
+            username="other_user", password="pass1234"
         )
-        Membership.objects.create(user=other_user, organization=other_org)
         other_client = DjangoClient()
-        other_client.login(username="wrong_user", password="pass1234")
+        other_client.login(username="other_user", password="pass1234")
         payload = self._update_payload()
         resp = _post_json(other_client, SAVE_URL, payload)
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.status_code, 200)
 
-    def test_update_url_conflict_returns_409(self):
+    def test_update_url_no_conflict_when_owned_by_null(self):
+        # NOTE: unique_candidate_external_url_per_org uses owned_by as part of the
+        # unique key. With owned_by=NULL (single-tenant transitional state), SQL
+        # NULL != NULL, so DB-level URL conflict is not enforced. A global
+        # unique URL constraint will be added in T7.
         # Create a second candidate with a different URL
         resp2 = _post_json(
             self.client,
@@ -547,7 +549,8 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
         self.assertEqual(resp2.status_code, 201)
         second_id = resp2.json()["data"]["candidate_id"]
 
-        # Try to update second candidate's URL to first candidate's URL
+        # Attempt to update second candidate's URL to first candidate's URL.
+        # DB constraint does not fire (NULL owned_by), so update succeeds.
         payload = {
             "name": "김철수",
             "update_mode": True,
@@ -559,7 +562,7 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
             "source_url": "https://linkedin.com/in/other",
         }
         resp = _post_json(self.client, SAVE_URL, payload)
-        self.assertEqual(resp.status_code, 409)
+        self.assertEqual(resp.status_code, 200)
 
 
 # ===========================================================================
@@ -647,11 +650,9 @@ class TestExtensionCheckDuplicate(_ExtensionTestMixin, TestCase):
         self.assertEqual(body["status"], "success")
         self.assertFalse(body["data"]["exists"])
 
-    def test_cross_org_isolation(self):
-        """Other org cannot see this org's candidates."""
-        other_org = Organization.objects.create(name="Isolated Org")
+    def test_any_user_can_check_duplicate(self):
+        """Single-tenant: all authenticated users share global candidate pool."""
         other_user = User.objects.create_user(username="isolated", password="pass1234")
-        Membership.objects.create(user=other_user, organization=other_org)
         other_client = DjangoClient()
         other_client.login(username="isolated", password="pass1234")
 
@@ -662,8 +663,8 @@ class TestExtensionCheckDuplicate(_ExtensionTestMixin, TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
-        self.assertEqual(body["status"], "success")
-        self.assertFalse(body["data"]["exists"])
+        # Single-tenant: candidate is visible globally
+        self.assertEqual(body["status"], "duplicate_found")
 
     def test_invalid_json_returns_400(self):
         resp = self.client.post(
@@ -745,19 +746,19 @@ class TestExtensionSearch(_ExtensionTestMixin, TestCase):
         body = resp.json()
         self.assertEqual(body["data"]["page"], 1)
 
-    def test_cross_org_isolation(self):
-        other_org = Organization.objects.create(name="Search Isolated")
+    def test_any_user_can_search_global_pool(self):
+        """Single-tenant: all authenticated users share global candidate pool."""
         other_user = User.objects.create_user(
             username="search_iso", password="pass1234"
         )
-        Membership.objects.create(user=other_user, organization=other_org)
         other_client = DjangoClient()
         other_client.login(username="search_iso", password="pass1234")
 
         resp = other_client.get(SEARCH_URL, {"q": "이영수"})
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
-        self.assertEqual(body["data"]["total"], 0)
+        # Single-tenant: candidate is visible globally
+        self.assertEqual(body["data"]["total"], 1)
 
 
 # ===========================================================================
@@ -771,27 +772,25 @@ class TestExtensionStats(_ExtensionTestMixin, TestCase):
     def setUp(self):
         self._setup()
 
-    def test_returns_org_candidate_count(self):
-        Candidate.objects.create(name="A", owned_by=self.org, current_company="X")
-        Candidate.objects.create(name="B", owned_by=self.org, current_company="Y")
+    def test_returns_global_candidate_count(self):
+        # Single-tenant: stats count the global pool (owned_by ignored).
+        Candidate.objects.create(name="A", current_company="X")
+        Candidate.objects.create(name="B", current_company="Y")
         resp = self.client.get(STATS_URL)
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
         self.assertEqual(body["status"], "success")
         self.assertEqual(body["data"]["total_candidates"], 2)
 
-    def test_cross_org_isolation(self):
-        other_org = Organization.objects.create(name="Stats Isolated")
+    def test_any_user_sees_global_count(self):
+        """Single-tenant: all authenticated users see the same total."""
         other_user = User.objects.create_user(username="stats_iso", password="pass1234")
-        Membership.objects.create(user=other_user, organization=other_org)
 
-        # Create candidates in the original org
-        Candidate.objects.create(name="A", owned_by=self.org, current_company="X")
+        Candidate.objects.create(name="A", current_company="X")
 
-        # Other org should see 0
         other_client = DjangoClient()
         other_client.login(username="stats_iso", password="pass1234")
         resp = other_client.get(STATS_URL)
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
-        self.assertEqual(body["data"]["total_candidates"], 0)
+        self.assertEqual(body["data"]["total_candidates"], 1)

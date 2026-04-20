@@ -35,12 +35,6 @@ def extension_login_required(view_func):
     return wrapper
 
 
-def _get_user_org(user):
-    """사용자의 Organization 반환. 멤버십 없으면 None."""
-    membership = getattr(user, "membership", None)
-    return membership.organization if membership else None
-
-
 def _json_error(errors, status=400):
     return JsonResponse({"status": "error", "errors": errors}, status=status)
 
@@ -65,14 +59,13 @@ def extension_auth_status(request):
     if request.method != "GET":
         return _json_error(["Method not allowed"], 405)
 
-    org = _get_user_org(request.user)
     return JsonResponse(
         {
             "status": "success",
             "data": {
                 "authenticated": True,
                 "user": request.user.get_full_name() or request.user.username,
-                "organization": org.name if org else None,
+                "organization": None,
             },
         }
     )
@@ -85,11 +78,7 @@ def extension_stats(request):
     if request.method != "GET":
         return _json_error(["Method not allowed"], 405)
 
-    org = _get_user_org(request.user)
-    if org is None:
-        return _json_error(["No organization"], 403)
-
-    count = Candidate.objects.filter(owned_by=org).count()
+    count = Candidate.objects.count()
     return JsonResponse({"status": "success", "data": {"total_candidates": count}})
 
 
@@ -100,15 +89,11 @@ def extension_check_duplicate(request):
     if request.method != "POST":
         return _json_error(["Method not allowed"], 405)
 
-    org = _get_user_org(request.user)
-    if org is None:
-        return _json_error(["No organization"], 403)
-
     data, err = _parse_json_body(request)
     if err:
         return err
 
-    result = identify_candidate_from_extension(data, org)
+    result = identify_candidate_from_extension(data)
 
     if result.match_type == "exact":
         return JsonResponse(
@@ -155,10 +140,6 @@ def extension_search(request):
     if request.method != "GET":
         return _json_error(["Method not allowed"], 405)
 
-    org = _get_user_org(request.user)
-    if org is None:
-        return _json_error(["No organization"], 403)
-
     q = request.GET.get("q", "").strip()
     if len(q) < 2:
         return _json_error(["Query must be at least 2 characters"], 400)
@@ -173,16 +154,12 @@ def extension_search(request):
 
     from django.db.models import Q
 
-    qs = (
-        Candidate.objects.filter(owned_by=org)
-        .filter(
-            Q(name__icontains=q)
-            | Q(current_company__icontains=q)
-            | Q(current_position__icontains=q)
-            | Q(email__icontains=q)
-        )
-        .order_by("-updated_at")
-    )
+    qs = Candidate.objects.filter(
+        Q(name__icontains=q)
+        | Q(current_company__icontains=q)
+        | Q(current_position__icontains=q)
+        | Q(email__icontains=q)
+    ).order_by("-updated_at")
 
     total = qs.count()
     candidates = qs[offset : offset + page_size]
@@ -216,10 +193,6 @@ def extension_save_profile(request):
     if request.method != "POST":
         return _json_error(["Method not allowed"], 405)
 
-    org = _get_user_org(request.user)
-    if org is None:
-        return _json_error(["No organization"], 403)
-
     # DB-backed rate limit: 100/day per user
     today = date.today()
     today_count = ExtractionLog.objects.filter(
@@ -240,11 +213,11 @@ def extension_save_profile(request):
 
     # Update mode
     if cleaned["update_mode"]:
-        return _handle_update(request, cleaned, org)
+        return _handle_update(request, cleaned)
 
     # New save: check duplicates within transaction
     with transaction.atomic():
-        identity = identify_candidate_from_extension(cleaned, org)
+        identity = identify_candidate_from_extension(cleaned)
 
         if identity.match_type == "exact":
             diff = _build_diff(identity.candidate, cleaned)
@@ -284,7 +257,7 @@ def extension_save_profile(request):
 
         # Create new candidate
         try:
-            candidate = _create_candidate(cleaned, org, request.user)
+            candidate = _create_candidate(cleaned, request.user)
         except IntegrityError:
             return _json_error(["Candidate already exists (concurrent save)"], 409)
 
@@ -302,7 +275,7 @@ def extension_save_profile(request):
     )
 
 
-def _create_candidate(cleaned: dict, organization, user) -> Candidate:
+def _create_candidate(cleaned: dict, user) -> Candidate:
     """새 후보자 + Career + Education 생성. 호출자가 transaction.atomic() 보장."""
     candidate = Candidate.objects.create(
         name=cleaned["name"],
@@ -315,7 +288,6 @@ def _create_candidate(cleaned: dict, organization, user) -> Candidate:
         external_profile_url=cleaned["external_profile_url"],
         skills=cleaned["skills"],
         source=Candidate.Source.CHROME_EXT,
-        owned_by=organization,
         consent_status="not_requested",
     )
 
@@ -415,12 +387,11 @@ def _build_diff(candidate: Candidate, cleaned: dict) -> dict:
 
 
 @transaction.atomic
-def _handle_update(request, cleaned: dict, org) -> JsonResponse:
+def _handle_update(request, cleaned: dict) -> JsonResponse:
     """사용자가 확인한 필드만 업데이트."""
     try:
         candidate = Candidate.objects.select_for_update().get(
             id=cleaned["candidate_id"],
-            owned_by=org,
         )
     except (Candidate.DoesNotExist, ValueError):
         return _json_error(["Candidate not found"], 404)

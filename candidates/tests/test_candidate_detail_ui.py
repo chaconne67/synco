@@ -6,7 +6,7 @@ from candidates.models import Candidate, LanguageSkill
 @pytest.fixture
 def auth_client(client, db):
     User = get_user_model()
-    u = User.objects.create_user(username="detail_viewer", password="x")
+    u = User.objects.create_user(username="detail_viewer", password="x", level=1)
     client.force_login(u)
     return client
 
@@ -14,7 +14,7 @@ def auth_client(client, db):
 @pytest.mark.django_db
 def test_detail_page_renders_new_header(client):
     User = get_user_model()
-    u = User.objects.create_user(username="viewer", password="x")
+    u = User.objects.create_user(username="viewer", password="x", level=1)
     client.force_login(u)
     c = Candidate.objects.create(name="상세뷰테스트", current_company="네이버")
     resp = client.get(f"/candidates/{c.pk}/")

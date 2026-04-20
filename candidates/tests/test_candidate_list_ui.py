@@ -4,7 +4,7 @@ from candidates.models import Candidate
 
 def _login(client):
     User = get_user_model()
-    u = User.objects.create_user(username="lister", password="x")
+    u = User.objects.create_user(username="lister", password="x", level=1)
     client.force_login(u)
     return u
 

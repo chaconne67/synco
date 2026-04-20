@@ -1,13 +1,14 @@
 import json
 import uuid
 
-from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from django.db import transaction
+
+from accounts.decorators import level_required
 
 from .models import (
     Candidate,
@@ -66,7 +67,7 @@ def _self_consistency_prefetch() -> Prefetch:
     )
 
 
-@login_required
+@level_required(1)
 def review_list(request):
     status_filter = request.GET.get("status", "needs_review")
     rec_status_filter = request.GET.get("rec_status", "")
@@ -116,7 +117,7 @@ def review_list(request):
     )
 
 
-@login_required
+@level_required(1)
 def review_detail(request, pk):
     candidate = get_object_or_404(
         Candidate.objects.select_related(
@@ -205,7 +206,7 @@ def review_detail(request, pk):
     )
 
 
-@login_required
+@level_required(1)
 def review_confirm(request, pk):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
@@ -230,7 +231,7 @@ def review_confirm(request, pk):
     )
 
 
-@login_required
+@level_required(1)
 def review_reject(request, pk):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
@@ -256,7 +257,7 @@ def review_reject(request, pk):
     )
 
 
-@login_required
+@level_required(1)
 def comment_create(request, pk):
     """Create a comment with recommendation status update."""
     if request.method != "POST":
@@ -301,7 +302,7 @@ def comment_create(request, pk):
 SEARCH_PAGE_SIZE = 20
 
 
-@login_required
+@level_required(1)
 def candidate_list(request):
     """Main search page: candidate list + category tabs + fixed bottom search bar."""
     category_filter = request.GET.get("category")
@@ -424,16 +425,8 @@ def candidate_list(request):
             project_uuid = None
         if project_uuid:
             from projects.models import Project
-            from accounts.helpers import _get_org
 
-            try:
-                org = _get_org(request)
-            except Exception:
-                org = None
-            if org:
-                target_project = Project.objects.filter(
-                    pk=project_uuid, organization=org
-                ).first()
+            target_project = Project.objects.filter(pk=project_uuid).first()
 
     return render(
         request,
@@ -455,7 +448,7 @@ def candidate_list(request):
     )
 
 
-@login_required
+@level_required(1)
 def candidate_create(request):
     """Render Add Candidate form (GET) or create (POST)."""
     from candidates.services.candidate_create import create_candidate, find_duplicate
@@ -531,7 +524,7 @@ def candidate_create(request):
     )
 
 
-@login_required
+@level_required(1)
 def candidate_detail(request, pk):
     """Candidate detail page."""
     from django.db.models import Prefetch
@@ -644,7 +637,7 @@ def candidate_detail(request, pk):
     )
 
 
-@login_required
+@level_required(1)
 def search_chat(request):
     """Handle text search query from chatbot. Returns JSON."""
     if request.method != "POST":
@@ -725,7 +718,7 @@ def search_chat(request):
     )
 
 
-@login_required
+@level_required(1)
 def search_session_turns(request, pk):
     """현재 세션의 과거 대화를 JSON으로 반환. 페이지 로드 시 채팅 로그 복원용."""
     session = SearchSession.objects.filter(pk=pk, user=request.user).first()
@@ -743,7 +736,7 @@ def search_session_turns(request, pk):
     )
 
 
-@login_required
+@level_required(1)
 def search_session_reset(request):
     """현재 사용자의 활성 세션을 종료. 새 대화 시작용."""
     if request.method != "POST":
@@ -754,7 +747,7 @@ def search_session_reset(request):
     return JsonResponse({"ok": True})
 
 
-@login_required
+@level_required(1)
 def voice_transcribe(request):
     """Handle voice audio upload → Whisper transcription. Returns JSON."""
     if request.method != "POST":

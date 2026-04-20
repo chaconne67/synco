@@ -13,7 +13,7 @@ def user(db):
     from django.contrib.auth import get_user_model
 
     User = get_user_model()
-    return User.objects.create_user(username="tester", password="testpass123")
+    return User.objects.create_user(username="tester", password="testpass123", level=1)
 
 
 @pytest.fixture

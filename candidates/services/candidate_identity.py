@@ -200,20 +200,20 @@ class ExtensionIdentityResult:
 
 
 def identify_candidate_from_extension(
-    data: dict, organization
+    data: dict,
 ) -> ExtensionIdentityResult:
     """Extension 프로필 데이터로 중복 감지.
 
     매칭 순서 (first exact match wins):
-      1. external_profile_url 일치 (org 스코핑)
-      2. email 일치 (org 스코핑)
-      3. phone 일치 (org 스코핑)
+      1. external_profile_url 일치
+      2. email 일치
+      3. phone 일치
       4. name+company 유사 매칭 → possible_matches (사용자 확인 필요)
 
     Race condition 방지: 호출자가 transaction.atomic() 내에서 호출해야 함.
     select_for_update()는 exact match 시 적용.
     """
-    base_qs = Candidate.objects.filter(owned_by=organization)
+    base_qs = Candidate.objects.all()
 
     # 1. External URL match
     url = (data.get("external_profile_url") or "").strip()

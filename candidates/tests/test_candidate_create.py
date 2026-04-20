@@ -6,7 +6,7 @@ from candidates.models import Candidate
 @pytest.fixture
 def auth_client(client, db):
     User = get_user_model()
-    u = User.objects.create_user(username="creator", password="x")
+    u = User.objects.create_user(username="creator", password="x", level=1)
     client.force_login(u)
     return client
 
