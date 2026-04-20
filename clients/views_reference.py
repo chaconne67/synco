@@ -9,10 +9,7 @@ from __future__ import annotations
 
 import io
 
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
-
-from accounts.decorators import membership_required
+from accounts.decorators import level_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import HttpResponse
@@ -63,8 +60,7 @@ UNI_CATEGORY_KEYWORDS: dict[str, list[str]] = {
 # --- Index (defaults to university tab) ---
 
 
-@login_required
-@membership_required
+@level_required(1)
 def reference_index(request):
     """Reference management main page, defaults to universities tab."""
     return reference_universities(request)
@@ -73,8 +69,7 @@ def reference_index(request):
 # --- University views ---
 
 
-@login_required
-@membership_required
+@level_required(1)
 def reference_universities(request):
     """University ranking tab content."""
     qs = UniversityTier.objects.all()
@@ -126,7 +121,7 @@ def reference_universities(request):
     return _render_reference_page(request, "universities", ctx)
 
 
-@staff_member_required
+@level_required(2)
 def university_create(request):
     """Create a university. GET=form, POST=save."""
     if request.method == "POST":
@@ -147,7 +142,7 @@ def university_create(request):
     )
 
 
-@staff_member_required
+@level_required(2)
 def university_update(request, pk):
     """Update a university."""
     obj = get_object_or_404(UniversityTier, pk=pk)
@@ -169,7 +164,7 @@ def university_update(request, pk):
     )
 
 
-@staff_member_required
+@level_required(2)
 def university_delete(request, pk):
     """Delete a university."""
     if request.method != "POST":
@@ -179,7 +174,7 @@ def university_delete(request, pk):
     return HttpResponse(status=204, headers={"HX-Trigger": "universityChanged"})
 
 
-@staff_member_required
+@level_required(2)
 def university_import(request):
     """Import universities from CSV."""
     if request.method != "POST":
@@ -204,8 +199,7 @@ def university_import(request):
     return render(request, "clients/partials/ref_import_result.html", result)
 
 
-@login_required
-@membership_required
+@level_required(1)
 def university_export(request):
     """Export universities to CSV."""
     qs = UniversityTier.objects.all()
@@ -230,8 +224,7 @@ def university_export(request):
 # --- Company views ---
 
 
-@login_required
-@membership_required
+@level_required(1)
 def reference_companies(request):
     """Company DB tab content."""
     qs = CompanyProfile.objects.all()
@@ -279,7 +272,7 @@ def reference_companies(request):
     return _render_reference_page(request, "companies", ctx)
 
 
-@staff_member_required
+@level_required(2)
 def company_create(request):
     """Create a company."""
     if request.method == "POST":
@@ -301,7 +294,7 @@ def company_create(request):
     )
 
 
-@staff_member_required
+@level_required(2)
 def company_update(request, pk):
     """Update a company."""
     obj = get_object_or_404(CompanyProfile, pk=pk)
@@ -324,7 +317,7 @@ def company_update(request, pk):
     )
 
 
-@staff_member_required
+@level_required(2)
 def company_delete(request, pk):
     """Delete a company."""
     if request.method != "POST":
@@ -334,7 +327,7 @@ def company_delete(request, pk):
     return HttpResponse(status=204, headers={"HX-Trigger": "companyChanged"})
 
 
-@staff_member_required
+@level_required(2)
 def company_autofill(request):
     """Autofill company fields using Gemini web search.
 
@@ -373,7 +366,7 @@ def company_autofill(request):
         )
 
 
-@staff_member_required
+@level_required(2)
 def company_import(request):
     """Import companies from CSV."""
     if request.method != "POST":
@@ -398,8 +391,7 @@ def company_import(request):
     return render(request, "clients/partials/ref_import_result.html", result)
 
 
-@login_required
-@membership_required
+@level_required(1)
 def company_export(request):
     """Export companies to CSV."""
     qs = CompanyProfile.objects.all()
@@ -424,8 +416,7 @@ def company_export(request):
 # --- Cert views ---
 
 
-@login_required
-@membership_required
+@level_required(1)
 def reference_certs(request):
     """Cert tab content."""
     qs = PreferredCert.objects.all()
@@ -471,7 +462,7 @@ def reference_certs(request):
     return _render_reference_page(request, "certs", ctx)
 
 
-@staff_member_required
+@level_required(2)
 def cert_create(request):
     """Create a cert."""
     if request.method == "POST":
@@ -488,7 +479,7 @@ def cert_create(request):
     )
 
 
-@staff_member_required
+@level_required(2)
 def cert_update(request, pk):
     """Update a cert."""
     obj = get_object_or_404(PreferredCert, pk=pk)
@@ -510,7 +501,7 @@ def cert_update(request, pk):
     )
 
 
-@staff_member_required
+@level_required(2)
 def cert_delete(request, pk):
     """Delete a cert."""
     if request.method != "POST":
@@ -520,7 +511,7 @@ def cert_delete(request, pk):
     return HttpResponse(status=204, headers={"HX-Trigger": "certChanged"})
 
 
-@staff_member_required
+@level_required(2)
 def cert_import(request):
     """Import certs from CSV."""
     if request.method != "POST":
@@ -545,8 +536,7 @@ def cert_import(request):
     return render(request, "clients/partials/ref_import_result.html", result)
 
 
-@login_required
-@membership_required
+@level_required(1)
 def cert_export(request):
     """Export certs to CSV."""
     qs = PreferredCert.objects.all()

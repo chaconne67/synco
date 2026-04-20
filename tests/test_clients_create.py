@@ -1,7 +1,6 @@
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from accounts.models import Organization
 from clients.models import Client
 from clients.services.client_create import (
     apply_logo_upload,
@@ -10,8 +9,11 @@ from clients.services.client_create import (
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Org")
+def legacy_org(db):
+    """Temporary shim until T7 drops organization FK."""
+    from accounts.models import Organization
+
+    return Organization.objects.create(name="Legacy")
 
 
 def test_normalize_contact_persons_drops_empty_rows():
@@ -34,8 +36,8 @@ def test_normalize_contact_persons_preserves_schema():
 
 
 @pytest.mark.django_db
-def test_apply_logo_upload_saves_file(org):
-    c = Client.objects.create(organization=org, name="A")
+def test_apply_logo_upload_saves_file(legacy_org):
+    c = Client.objects.create(organization=legacy_org, name="A")
     f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png")
     apply_logo_upload(c, f)
     c.refresh_from_db()
@@ -43,8 +45,8 @@ def test_apply_logo_upload_saves_file(org):
 
 
 @pytest.mark.django_db
-def test_apply_logo_upload_delete_flag(org):
-    c = Client.objects.create(organization=org, name="A")
+def test_apply_logo_upload_delete_flag(legacy_org):
+    c = Client.objects.create(organization=legacy_org, name="A")
     f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png")
     apply_logo_upload(c, f)
     apply_logo_upload(c, None, delete=True)

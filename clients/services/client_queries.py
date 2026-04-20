@@ -15,7 +15,7 @@ def _category_values(names):
 
 
 def list_clients_with_stats(
-    org,
+    org=None,
     *,
     categories=None,
     sizes=None,
@@ -23,8 +23,9 @@ def list_clients_with_stats(
     offers_range=None,
     success_status=None,
 ):
+    base = Client.objects.filter(organization=org) if org is not None else Client.objects.all()
     qs = (
-        Client.objects.filter(organization=org)
+        base
         .annotate(
             offers_count=Count("projects", distinct=True),
             success_count=Count(
@@ -84,11 +85,12 @@ def _apply_success_status(qs, status):
     return qs
 
 
-def category_counts(org):
+def category_counts(org=None):
     """카테고리 enum name -> 건수. 0건도 포함."""
     counts = {c.name: 0 for c in IndustryCategory}
+    base = Client.objects.filter(organization=org) if org is not None else Client.objects.all()
     qs = (
-        Client.objects.filter(organization=org)
+        base
         .values("industry")
         .annotate(n=Count("id"))
     )
@@ -100,14 +102,13 @@ def category_counts(org):
     return counts
 
 
-def available_regions(org):
-    """조직 내 사용 중인 region 값 리스트(가나다 순)."""
+def available_regions(org=None):
+    """사용 중인 region 값 리스트(가나다 순)."""
+    base = Client.objects.filter(organization=org) if org is not None else Client.objects.all()
     return sorted(
         set(
             v
-            for v in Client.objects.filter(organization=org).values_list(
-                "region", flat=True
-            )
+            for v in base.values_list("region", flat=True)
             if v
         )
     )
@@ -115,7 +116,7 @@ def available_regions(org):
 
 def client_stats(client):
     """단일 고객사의 카드 통계 (리스트용과 동일 집계)."""
-    one = list_clients_with_stats(client.organization).filter(pk=client.pk).first()
+    one = list_clients_with_stats().filter(pk=client.pk).first()
     if not one:
         return {"offers": 0, "success": 0, "active": 0, "placed": 0}
     return {

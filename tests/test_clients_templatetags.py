@@ -1,6 +1,5 @@
 import pytest
 
-from accounts.models import Organization
 from clients.models import Client
 from clients.templatetags.clients_tags import (
     client_initials,
@@ -10,8 +9,11 @@ from clients.templatetags.clients_tags import (
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Org")
+def legacy_org(db):
+    """Temporary shim until T7 drops organization FK."""
+    from accounts.models import Organization
+
+    return Organization.objects.create(name="Legacy")
 
 
 def test_size_badge_class_mapping():
@@ -37,8 +39,8 @@ def test_client_initials_long():
 
 
 @pytest.mark.django_db
-def test_logo_class_deterministic(org):
-    c1 = Client.objects.create(organization=org, name="A")
-    c2 = Client.objects.create(organization=org, name="B")
+def test_logo_class_deterministic(legacy_org):
+    c1 = Client.objects.create(organization=legacy_org, name="A")
+    c2 = Client.objects.create(organization=legacy_org, name="B")
     assert logo_class(c1) == logo_class(c1)
     assert logo_class(c1) in {f"client-logo-{i}" for i in range(1, 9)}

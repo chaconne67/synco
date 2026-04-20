@@ -1,32 +1,21 @@
 import pytest
 from django.urls import reverse
 
-from accounts.models import Organization, Membership, User
 from clients.models import Client, IndustryCategory
 from projects.models import Project
 
 
 @pytest.fixture
-def org(db):
-    return Organization.objects.create(name="Org")
+def legacy_org(db):
+    """Temporary shim until T7 drops organization FK."""
+    from accounts.models import Organization
 
-
-@pytest.fixture
-def owner(org):
-    u = User.objects.create_user(username="owner", password="x")
-    Membership.objects.create(user=u, organization=org, role="owner")
-    return u
-
-
-@pytest.fixture
-def owner_client(client, owner):
-    client.force_login(owner)
-    return client
+    return Organization.objects.create(name="Legacy")
 
 
 @pytest.mark.django_db
-def test_list_renders_header_and_empty_state(owner_client):
-    resp = owner_client.get(reverse("clients:client_list"))
+def test_list_renders_header_and_empty_state(boss_client):
+    resp = boss_client.get(reverse("clients:client_list"))
     assert resp.status_code == 200
     body = resp.content.decode()
     assert "Clients" in body
@@ -34,68 +23,57 @@ def test_list_renders_header_and_empty_state(owner_client):
 
 
 @pytest.mark.django_db
-def test_list_renders_cards(org, owner_client):
+def test_list_renders_cards(db, boss_client, legacy_org):
     Client.objects.create(
-        organization=org,
-        name="SKBP",
-        industry=IndustryCategory.BIO_PHARMA.value
+        organization=legacy_org, name="SKBP", industry=IndustryCategory.BIO_PHARMA.value
     )
-    resp = owner_client.get(reverse("clients:client_list"))
+    resp = boss_client.get(reverse("clients:client_list"))
     assert "SKBP" in resp.content.decode()
 
 
 @pytest.mark.django_db
-def test_list_category_filter(org, owner_client):
-    Client.objects.create(
-        organization=org,
-        name="BioFirm",
-        industry=IndustryCategory.BIO_PHARMA.value
-    )
-    Client.objects.create(
-        organization=org,
-        name="TechCorp",
-        industry=IndustryCategory.IT_SW.value
-    )
-    resp = owner_client.get(reverse("clients:client_list") + "?cat=BIO_PHARMA")
+def test_list_category_filter(db, boss_client, legacy_org):
+    Client.objects.create(organization=legacy_org, name="BioFirm", industry=IndustryCategory.BIO_PHARMA.value)
+    Client.objects.create(organization=legacy_org, name="TechCorp", industry=IndustryCategory.IT_SW.value)
+    resp = boss_client.get(reverse("clients:client_list") + "?cat=BIO_PHARMA")
     body = resp.content.decode()
     assert "BioFirm" in body
     assert "TechCorp" not in body
 
 
 @pytest.mark.django_db
-def test_list_size_filter(org, owner_client):
-    Client.objects.create(organization=org, name="Big", size="대기업")
-    Client.objects.create(organization=org, name="Small", size="중소")
-    resp = owner_client.get(reverse("clients:client_list") + "?size=대기업")
+def test_list_size_filter(db, boss_client, legacy_org):
+    Client.objects.create(organization=legacy_org, name="Big", size="대기업")
+    Client.objects.create(organization=legacy_org, name="Small", size="중소")
+    resp = boss_client.get(reverse("clients:client_list") + "?size=대기업")
     body = resp.content.decode()
     assert "Big" in body
     assert "Small" not in body
 
 
 @pytest.mark.django_db
-def test_list_page_endpoint_returns_next_cards(org, owner_client):
+def test_list_page_endpoint_returns_next_cards(db, boss_client, legacy_org):
     for i in range(10):
-        Client.objects.create(organization=org, name=f"C{i:02d}")
-    resp = owner_client.get(reverse("clients:client_list_page") + "?page=2")
+        Client.objects.create(organization=legacy_org, name=f"C{i:02d}")
+    resp = boss_client.get(reverse("clients:client_list_page") + "?page=2")
     assert resp.status_code == 200
     body = resp.content.decode()
     assert body.count("client-card") == 1
 
 
 @pytest.mark.django_db
-def test_list_active_count_shown(org, owner_client):
-    c = Client.objects.create(organization=org, name="A")
-    Project.objects.create(client=c, organization=org, title="P", status="open")
-    resp = owner_client.get(reverse("clients:client_list"))
+def test_list_active_count_shown(db, boss_client, boss_user, legacy_org):
+    from projects.models import ProjectStatus
+
+    c = Client.objects.create(organization=legacy_org, name="A")
+    Project.objects.create(client=c, organization=legacy_org, title="P", status=ProjectStatus.OPEN, created_by=boss_user)
+    resp = boss_client.get(reverse("clients:client_list"))
     body = resp.content.decode()
     assert "1" in body
     assert "Active" in body
 
 
 @pytest.mark.django_db
-def test_member_cannot_see_add_button(org, db, client):
-    member = User.objects.create_user(username="m", password="x")
-    Membership.objects.create(user=member, organization=org, role="consultant")
-    client.force_login(member)
-    resp = client.get(reverse("clients:client_list"))
+def test_staff_cannot_see_add_button(staff_client):
+    resp = staff_client.get(reverse("clients:client_list"))
     assert "Add Client" not in resp.content.decode()

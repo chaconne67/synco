@@ -1,13 +1,9 @@
 import json
 
-from django.contrib.auth.decorators import login_required
-
-from accounts.decorators import membership_required, role_required
+from accounts.decorators import level_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-
-from accounts.helpers import _get_org
 
 from .forms import ClientForm, ContractForm
 from .models import Client, Contract, IndustryCategory
@@ -56,12 +52,10 @@ def _parse_list_filters(request):
     }
 
 
-@login_required
-@membership_required
+@level_required(1)
 def client_list(request):
-    org = _get_org(request)
     filters = _parse_list_filters(request)
-    qs = list_clients_with_stats(org, **filters)
+    qs = list_clients_with_stats(**filters)
 
     paginator = Paginator(qs, GRID_PAGE_SIZE)
     page_obj = paginator.get_page(1)
@@ -72,8 +66,8 @@ def client_list(request):
         {
             "page_obj": page_obj,
             "total": qs.count(),
-            "cat_counts": category_counts(org),
-            "regions": available_regions(org),
+            "cat_counts": category_counts(),
+            "regions": available_regions(),
             "filters": filters,
             "active_cat": request.GET.get("cat", ""),
             "industry_categories": [
@@ -86,13 +80,11 @@ def client_list(request):
     )
 
 
-@login_required
-@membership_required
+@level_required(1)
 def client_list_page(request):
     """Infinite scroll 페이지 응답 (카드 + 다음 sentinel)."""
-    org = _get_org(request)
     filters = _parse_list_filters(request)
-    qs = list_clients_with_stats(org, **filters)
+    qs = list_clients_with_stats(**filters)
     paginator = Paginator(qs, GRID_PAGE_SIZE)
     page_number = int(request.GET.get("page", "2"))
     page_obj = paginator.get_page(page_number)
@@ -104,11 +96,10 @@ def client_list_page(request):
     )
 
 
-@login_required
-@role_required("owner")
+@level_required(2)
 def client_create(request):
     """Create a new client. GET=form, POST=save."""
-    org = _get_org(request)
+    from accounts.models import Organization
 
     cp_json_str = "[]"
     if request.method == "POST":
@@ -116,7 +107,7 @@ def client_create(request):
         cp_json_str = request.POST.get("contact_persons_json", "[]")
         if form.is_valid():
             client = form.save(commit=False)
-            client.organization = org
+            client.organization = Organization.objects.first()
             try:
                 raw = json.loads(cp_json_str)
             except (json.JSONDecodeError, TypeError):
@@ -134,11 +125,9 @@ def client_create(request):
     )
 
 
-@login_required
-@membership_required
+@level_required(1)
 def client_detail(request, pk):
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
     stats = client_stats(client)
     projects = client_projects(client, status_filter="all")[:20]
 
@@ -156,11 +145,9 @@ def client_detail(request, pk):
     )
 
 
-@login_required
-@membership_required
+@level_required(1)
 def client_projects_panel(request, pk):
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
     status_filter = request.GET.get("status", "all")
     if status_filter not in {"active", "closed", "all"}:
         status_filter = "all"
@@ -177,12 +164,10 @@ def client_projects_panel(request, pk):
     )
 
 
-@login_required
-@role_required("owner")
+@level_required(2)
 def client_update(request, pk):
     """Update an existing client."""
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
 
     if request.method == "POST":
         form = ClientForm(request.POST, request.FILES, instance=client)
@@ -217,15 +202,13 @@ def client_update(request, pk):
     )
 
 
-@login_required
-@role_required("owner")
+@level_required(2)
 def client_delete(request, pk):
     """Delete a client. Block if any projects exist (open or closed)."""
     if request.method != "POST":
         return HttpResponse(status=405)
 
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
 
     if client.projects.exists():
         return render(
@@ -252,12 +235,10 @@ def client_delete(request, pk):
 # --- Contract inline CRUD ---
 
 
-@login_required
-@role_required("owner")
+@level_required(2)
 def contract_create(request, pk):
     """Create a contract for a client (inline)."""
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
 
     if request.method == "POST":
         form = ContractForm(request.POST)
@@ -292,12 +273,10 @@ def contract_create(request, pk):
     )
 
 
-@login_required
-@role_required("owner")
+@level_required(2)
 def contract_update(request, pk, contract_pk):
     """Update a contract (inline)."""
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
     contract = get_object_or_404(Contract, pk=contract_pk, client=client)
 
     if request.method == "POST":
@@ -330,15 +309,13 @@ def contract_update(request, pk, contract_pk):
     )
 
 
-@login_required
-@role_required("owner")
+@level_required(2)
 def contract_delete(request, pk, contract_pk):
     """Delete a contract (inline)."""
     if request.method != "POST":
         return HttpResponse(status=405)
 
-    org = _get_org(request)
-    client = get_object_or_404(Client, pk=pk, organization=org)
+    client = get_object_or_404(Client, pk=pk)
     contract = get_object_or_404(Contract, pk=contract_pk, client=client)
     contract.delete()
 
