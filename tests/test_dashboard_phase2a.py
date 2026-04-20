@@ -196,7 +196,7 @@ def test_s2_team_performance_empty_rate(owner_client, org, consultant_user):
 
 
 def _this_monday_midnight():
-    now = timezone.now()
+    now = timezone.localtime()
     monday = now - timedelta(days=now.weekday())
     return monday.replace(hour=0, minute=0, second=0, microsecond=0)
 

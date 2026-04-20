@@ -278,11 +278,12 @@ def _team_performance(org):
     return rows
 
 
+# action_type codes treated as 고객사-related → warning label color in weekly schedule
 _CLIENT_FACING_CODES = {"submit_to_client", "pre_meeting"}
 
 
 def _week_range():
-    now = timezone.now()
+    now = timezone.localtime()
     monday = (now - timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
