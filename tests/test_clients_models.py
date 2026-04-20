@@ -23,7 +23,6 @@ def test_industry_category_enum_names_for_url_params():
     assert IndustryCategory["ETC"].value == "기타"
 
 
-
 @pytest.mark.django_db
 def test_client_has_website_field():
     c = Client.objects.create(name="X", website="https://example.com")

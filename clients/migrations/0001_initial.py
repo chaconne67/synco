@@ -6,104 +6,284 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Client',
+            name="Client",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=200)),
-                ('industry', models.CharField(blank=True, choices=[('바이오/제약', '바이오 / 제약'), ('헬스케어/의료기기', '헬스케어 / 의료기기'), ('IT/SW', 'IT / SW'), ('소재/부품', '소재 / 부품'), ('금융/캐피탈', '금융 / 캐피탈'), ('소비재/패션', '소비재 / 패션'), ('환경/유틸리티', '환경 / 유틸리티'), ('모빌리티/제조', '모빌리티 / 제조'), ('미디어/엔터', '미디어 / 엔터'), ('건설/부동산', '건설 / 부동산'), ('기타', '기타')], default='기타', max_length=30)),
-                ('size', models.CharField(blank=True, choices=[('대기업', '대기업'), ('중견', '중견'), ('중소', '중소'), ('외국계', '외국계'), ('스타트업', '스타트업')], max_length=20)),
-                ('region', models.CharField(blank=True, max_length=100)),
-                ('contact_persons', models.JSONField(blank=True, default=list)),
-                ('website', models.URLField(blank=True)),
-                ('logo', models.ImageField(blank=True, null=True, upload_to='clients/logos/')),
-                ('description', models.TextField(blank=True)),
-                ('notes', models.TextField(blank=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=200)),
+                (
+                    "industry",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("바이오/제약", "바이오 / 제약"),
+                            ("헬스케어/의료기기", "헬스케어 / 의료기기"),
+                            ("IT/SW", "IT / SW"),
+                            ("소재/부품", "소재 / 부품"),
+                            ("금융/캐피탈", "금융 / 캐피탈"),
+                            ("소비재/패션", "소비재 / 패션"),
+                            ("환경/유틸리티", "환경 / 유틸리티"),
+                            ("모빌리티/제조", "모빌리티 / 제조"),
+                            ("미디어/엔터", "미디어 / 엔터"),
+                            ("건설/부동산", "건설 / 부동산"),
+                            ("기타", "기타"),
+                        ],
+                        default="기타",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "size",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("대기업", "대기업"),
+                            ("중견", "중견"),
+                            ("중소", "중소"),
+                            ("외국계", "외국계"),
+                            ("스타트업", "스타트업"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("region", models.CharField(blank=True, max_length=100)),
+                ("contact_persons", models.JSONField(blank=True, default=list)),
+                ("website", models.URLField(blank=True)),
+                (
+                    "logo",
+                    models.ImageField(
+                        blank=True, null=True, upload_to="clients/logos/"
+                    ),
+                ),
+                ("description", models.TextField(blank=True)),
+                ("notes", models.TextField(blank=True)),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='CompanyProfile',
+            name="CompanyProfile",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=200, unique=True)),
-                ('name_en', models.CharField(blank=True, max_length=200)),
-                ('industry', models.CharField(blank=True, max_length=100)),
-                ('size_category', models.CharField(blank=True, choices=[('대기업', '대기업'), ('중견', '중견'), ('중소', '중소'), ('외국계', '외국계'), ('스타트업', '스타트업')], max_length=50)),
-                ('revenue_range', models.CharField(blank=True, max_length=50)),
-                ('employee_count_range', models.CharField(blank=True, max_length=50)),
-                ('listed', models.CharField(blank=True, choices=[('KOSPI', 'KOSPI'), ('KOSDAQ', 'KOSDAQ'), ('비상장', '비상장'), ('해외상장', '해외상장')], max_length=20)),
-                ('region', models.CharField(blank=True, max_length=100)),
-                ('notes', models.TextField(blank=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=200, unique=True)),
+                ("name_en", models.CharField(blank=True, max_length=200)),
+                ("industry", models.CharField(blank=True, max_length=100)),
+                (
+                    "size_category",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("대기업", "대기업"),
+                            ("중견", "중견"),
+                            ("중소", "중소"),
+                            ("외국계", "외국계"),
+                            ("스타트업", "스타트업"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("revenue_range", models.CharField(blank=True, max_length=50)),
+                ("employee_count_range", models.CharField(blank=True, max_length=50)),
+                (
+                    "listed",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("KOSPI", "KOSPI"),
+                            ("KOSDAQ", "KOSDAQ"),
+                            ("비상장", "비상장"),
+                            ("해외상장", "해외상장"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("region", models.CharField(blank=True, max_length=100)),
+                ("notes", models.TextField(blank=True)),
             ],
             options={
-                'ordering': ['name'],
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='PreferredCert',
+            name="PreferredCert",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=200, unique=True)),
-                ('full_name', models.CharField(blank=True, max_length=200)),
-                ('category', models.CharField(choices=[('회계/재무', '회계/재무'), ('법률', '법률'), ('기술/엔지니어링', '기술/엔지니어링'), ('IT', 'IT'), ('의료/제약', '의료/제약'), ('무역/물류', '무역/물류'), ('건설/부동산', '건설/부동산'), ('식품/환경', '식품/환경'), ('어학', '어학'), ('안전/품질', '안전/품질'), ('기타', '기타')], max_length=30)),
-                ('level', models.CharField(blank=True, choices=[('상', '상'), ('중', '중'), ('하', '하')], max_length=10)),
-                ('aliases', models.JSONField(blank=True, default=list)),
-                ('notes', models.TextField(blank=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=200, unique=True)),
+                ("full_name", models.CharField(blank=True, max_length=200)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("회계/재무", "회계/재무"),
+                            ("법률", "법률"),
+                            ("기술/엔지니어링", "기술/엔지니어링"),
+                            ("IT", "IT"),
+                            ("의료/제약", "의료/제약"),
+                            ("무역/물류", "무역/물류"),
+                            ("건설/부동산", "건설/부동산"),
+                            ("식품/환경", "식품/환경"),
+                            ("어학", "어학"),
+                            ("안전/품질", "안전/품질"),
+                            ("기타", "기타"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "level",
+                    models.CharField(
+                        blank=True,
+                        choices=[("상", "상"), ("중", "중"), ("하", "하")],
+                        max_length=10,
+                    ),
+                ),
+                ("aliases", models.JSONField(blank=True, default=list)),
+                ("notes", models.TextField(blank=True)),
             ],
             options={
-                'ordering': ['category', 'name'],
+                "ordering": ["category", "name"],
             },
         ),
         migrations.CreateModel(
-            name='Contract',
+            name="Contract",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('start_date', models.DateField()),
-                ('end_date', models.DateField(blank=True, null=True)),
-                ('terms', models.TextField(blank=True)),
-                ('status', models.CharField(choices=[('협의중', '협의중'), ('체결', '체결'), ('만료', '만료'), ('해지', '해지')], default='협의중', max_length=20)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contracts', to='clients.client')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("start_date", models.DateField()),
+                ("end_date", models.DateField(blank=True, null=True)),
+                ("terms", models.TextField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("협의중", "협의중"),
+                            ("체결", "체결"),
+                            ("만료", "만료"),
+                            ("해지", "해지"),
+                        ],
+                        default="협의중",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "client",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="contracts",
+                        to="clients.client",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-start_date'],
+                "ordering": ["-start_date"],
             },
         ),
         migrations.CreateModel(
-            name='UniversityTier',
+            name="UniversityTier",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=200)),
-                ('name_en', models.CharField(blank=True, max_length=200)),
-                ('country', models.CharField(default='KR', max_length=10)),
-                ('tier', models.CharField(choices=[('SKY', 'SKY'), ('SSG', '서성한'), ('JKOS', '중경외시'), ('KDH', '건동홍숙이'), ('INSEOUL', '인서울'), ('SCIENCE_ELITE', '과기특'), ('REGIONAL', '지방거점'), ('OVERSEAS_TOP', '해외 최상위'), ('OVERSEAS_HIGH', '해외 상위'), ('OVERSEAS_GOOD', '해외 우수')], max_length=20)),
-                ('university_type', models.CharField(blank=True, choices=[('국립', '국립'), ('국립(특수)', '국립(특수)'), ('사립', '사립'), ('사립(특수)', '사립(특수)'), ('시립', '시립'), ('해외', '해외')], max_length=20)),
-                ('ranking', models.PositiveSmallIntegerField(blank=True, null=True)),
-                ('strengths', models.JSONField(blank=True, default=list)),
-                ('notes', models.TextField(blank=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=200)),
+                ("name_en", models.CharField(blank=True, max_length=200)),
+                ("country", models.CharField(default="KR", max_length=10)),
+                (
+                    "tier",
+                    models.CharField(
+                        choices=[
+                            ("SKY", "SKY"),
+                            ("SSG", "서성한"),
+                            ("JKOS", "중경외시"),
+                            ("KDH", "건동홍숙이"),
+                            ("INSEOUL", "인서울"),
+                            ("SCIENCE_ELITE", "과기특"),
+                            ("REGIONAL", "지방거점"),
+                            ("OVERSEAS_TOP", "해외 최상위"),
+                            ("OVERSEAS_HIGH", "해외 상위"),
+                            ("OVERSEAS_GOOD", "해외 우수"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "university_type",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("국립", "국립"),
+                            ("국립(특수)", "국립(특수)"),
+                            ("사립", "사립"),
+                            ("사립(특수)", "사립(특수)"),
+                            ("시립", "시립"),
+                            ("해외", "해외"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("ranking", models.PositiveSmallIntegerField(blank=True, null=True)),
+                ("strengths", models.JSONField(blank=True, default=list)),
+                ("notes", models.TextField(blank=True)),
             ],
             options={
-                'ordering': [models.OrderBy(models.F('ranking'), nulls_last=True), 'tier', 'name'],
-                'unique_together': {('name', 'country')},
+                "ordering": [
+                    models.OrderBy(models.F("ranking"), nulls_last=True),
+                    "tier",
+                    "name",
+                ],
+                "unique_together": {("name", "country")},
             },
         ),
     ]

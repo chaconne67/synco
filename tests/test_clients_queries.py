@@ -9,8 +9,7 @@ from clients.services.client_queries import (
     client_stats,
     list_clients_with_stats,
 )
-from projects.models import Project, Application
-
+from projects.models import Project
 
 
 @pytest.mark.django_db
@@ -27,11 +26,13 @@ def test_list_clients_with_stats_zero_projects():
 @pytest.mark.django_db
 def test_list_clients_with_stats_counts_projects():
     c = Client.objects.create(name="A")
+    Project.objects.create(client=c, title="P1", status="open", result="")
     Project.objects.create(
-        client=c, title="P1", status="open", result=""
-    )
-    Project.objects.create(
-        client=c, title="P2", status="closed", result="success", closed_at=timezone.now()
+        client=c,
+        title="P2",
+        status="closed",
+        result="success",
+        closed_at=timezone.now(),
     )
     qs = list_clients_with_stats()
     client = qs.get(pk=c.pk)
@@ -68,7 +69,7 @@ def test_filter_by_region():
 
 @pytest.mark.django_db
 def test_filter_by_offers_range():
-    c1 = Client.objects.create(name="Zero")
+    Client.objects.create(name="Zero")
     c2 = Client.objects.create(name="Three")
     for i in range(3):
         Project.objects.create(client=c2, title=f"P{i}", status="open")
@@ -83,8 +84,14 @@ def test_filter_by_offers_range():
 @pytest.mark.django_db
 def test_filter_by_success_status_has():
     c1 = Client.objects.create(name="HasSuccess")
-    c2 = Client.objects.create(name="NoOffers")
-    Project.objects.create(client=c1, title="P", status="closed", result="success", closed_at=timezone.now())
+    Client.objects.create(name="NoOffers")
+    Project.objects.create(
+        client=c1,
+        title="P",
+        status="closed",
+        result="success",
+        closed_at=timezone.now(),
+    )
     qs = list_clients_with_stats(success_status="has")
     assert qs.count() == 1
     assert qs.first().name == "HasSuccess"
@@ -95,7 +102,13 @@ def test_filter_by_success_status_none():
     c1 = Client.objects.create(name="OffersNoSuccess")
     c2 = Client.objects.create(name="HasSuccess")
     Project.objects.create(client=c1, title="P", status="open", result="")
-    Project.objects.create(client=c2, title="Q", status="closed", result="success", closed_at=timezone.now())
+    Project.objects.create(
+        client=c2,
+        title="Q",
+        status="closed",
+        result="success",
+        closed_at=timezone.now(),
+    )
     qs = list_clients_with_stats(success_status="none")
     assert qs.count() == 1
     assert qs.first().name == "OffersNoSuccess"
@@ -136,7 +149,9 @@ def test_available_regions():
 def test_client_stats():
     c = Client.objects.create(name="A")
     Project.objects.create(client=c, title="P", status="open")
-    Project.objects.create(client=c, title="Q", status="closed", result="success", closed_at=timezone.now())
+    Project.objects.create(
+        client=c, title="Q", status="closed", result="success", closed_at=timezone.now()
+    )
     stats = client_stats(c)
     assert stats["offers"] == 2
     assert stats["success"] == 1
@@ -148,7 +163,13 @@ def test_client_stats():
 def test_client_projects_status_filter():
     c = Client.objects.create(name="A")
     Project.objects.create(client=c, title="P1", status="open")
-    Project.objects.create(client=c, title="P2", status="closed", result="success", closed_at=timezone.now())
+    Project.objects.create(
+        client=c,
+        title="P2",
+        status="closed",
+        result="success",
+        closed_at=timezone.now(),
+    )
     assert client_projects(c, status_filter="active").count() == 1
     assert client_projects(c, status_filter="closed").count() == 1
     assert client_projects(c, status_filter="all").count() == 2

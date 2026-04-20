@@ -32,9 +32,7 @@ class TestAddCandidate:
         )
         assert response.status_code == 200
 
-    def test_duplicate_candidate_returns_error(
-        self, logged_in_client, application
-    ):
+    def test_duplicate_candidate_returns_error(self, logged_in_client, application):
         """Duplicate project+candidate -> error response (not 500)."""
         candidate = application.candidate
         response = logged_in_client.post(

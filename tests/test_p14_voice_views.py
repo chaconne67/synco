@@ -13,7 +13,6 @@ from clients.models import Client
 from projects.models import Project
 
 
-
 @pytest.fixture
 def user(db):
     u = User.objects.create_user(username="view_tester", password="test1234", level=1)
@@ -34,10 +33,7 @@ def client_obj(db):
 
 @pytest.fixture
 def project(db, client_obj, user):
-    return Project.objects.create(
-        client=client_obj,
-        title="View Test",
-        created_by=user)
+    return Project.objects.create(client=client_obj, title="View Test", created_by=user)
 
 
 @pytest.fixture
@@ -57,9 +53,8 @@ def test_transcribe_endpoint(mock_transcribe, auth_client):
     audio = io.BytesIO(b"fake audio")
     audio.name = "voice.webm"
     resp = auth_client.post(
-        "/voice/transcribe/",
-        {"audio": audio, "mode": "command"},
-        format="multipart")
+        "/voice/transcribe/", {"audio": audio, "mode": "command"}, format="multipart"
+    )
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["text"] == "홍길동 전화했어"
@@ -67,8 +62,8 @@ def test_transcribe_endpoint(mock_transcribe, auth_client):
 
 def test_context_endpoint(auth_client, project):
     resp = auth_client.get(
-        "/voice/context/",
-        {"page": "project_detail", "project_id": str(project.pk)})
+        "/voice/context/", {"page": "project_detail", "project_id": str(project.pk)}
+    )
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["project_id"] == str(project.pk)
@@ -107,10 +102,8 @@ def test_intent_endpoint(mock_parse, auth_client, project, candidate):
     from projects.services.voice.intent_parser import IntentResult
 
     mock_parse.return_value = IntentResult(
-        intent="status_query",
-        entities={},
-        confidence=0.9,
-        missing_fields=[])
+        intent="status_query", entities={}, confidence=0.9, missing_fields=[]
+    )
     resp = auth_client.post(
         "/voice/intent/",
         json.dumps(
@@ -121,14 +114,17 @@ def test_intent_endpoint(mock_parse, auth_client, project, candidate):
                 ),
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["intent"] == "status_query"
 
 
 # Amendment A12: /voice/preview/ endpoint
-@pytest.mark.skip(reason="T10 — voice preview endpoint response format changed post-refactor")
+@pytest.mark.skip(
+    reason="T10 — voice preview endpoint response format changed post-refactor"
+)
 def test_preview_endpoint(auth_client, project):
     resp = auth_client.post(
         "/voice/preview/",
@@ -139,7 +135,8 @@ def test_preview_endpoint(auth_client, project):
                 "project_id": str(project.pk),
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert resp.status_code == 200
     data = json.loads(resp.content)
     assert data["ok"] is True
@@ -147,7 +144,9 @@ def test_preview_endpoint(auth_client, project):
 
 
 # Amendment A12: /voice/confirm/ with valid and reused tokens
-@pytest.mark.skip(reason="T10 — voice confirm relies on preview token, skipped with preview")
+@pytest.mark.skip(
+    reason="T10 — voice confirm relies on preview token, skipped with preview"
+)
 def test_confirm_valid_and_reused_token(auth_client, project):
     # Get a preview token first
     resp1 = auth_client.post(
@@ -159,7 +158,8 @@ def test_confirm_valid_and_reused_token(auth_client, project):
                 "project_id": str(project.pk),
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     data1 = json.loads(resp1.content)
     token = data1["preview_token"]
 
@@ -174,7 +174,8 @@ def test_confirm_valid_and_reused_token(auth_client, project):
                 "preview_token": token,
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert resp2.status_code == 200
     data2 = json.loads(resp2.content)
     assert data2["ok"] is True
@@ -190,7 +191,8 @@ def test_confirm_valid_and_reused_token(auth_client, project):
                 "preview_token": token,
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert resp3.status_code == 409
 
 
@@ -204,7 +206,8 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
         intent="contact_record",
         entities={"candidate_name": "홍길동", "channel": "전화"},
         confidence=0.9,
-        missing_fields=["contacted_at", "result"])
+        missing_fields=["contacted_at", "result"],
+    )
     resp1 = auth_client.post(
         "/voice/intent/",
         json.dumps(
@@ -215,7 +218,8 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
                 ),
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert resp1.status_code == 200
     data1 = json.loads(resp1.content)
     assert data1["intent"] == "contact_record"
@@ -226,7 +230,8 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
         intent="contact_record",
         entities={"result": "관심"},
         confidence=0.9,
-        missing_fields=[])
+        missing_fields=[],
+    )
     resp2 = auth_client.post(
         "/voice/intent/",
         json.dumps(
@@ -237,7 +242,8 @@ def test_multi_turn_flow(mock_parse, auth_client, project, candidate):
                 ),
             }
         ),
-        content_type="application/json")
+        content_type="application/json",
+    )
     assert resp2.status_code == 200
     data2 = json.loads(resp2.content)
     assert data2["intent"] == "contact_record"

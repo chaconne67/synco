@@ -15,10 +15,11 @@ from projects.models import Project, ProjectStatus, ResumeUpload
 from projects.services.resume.transitions import transition_status
 
 
-
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="consultant1", password="testpass123", level=1)
+    u = User.objects.create_user(
+        username="consultant1", password="testpass123", level=1
+    )
     return u
 
 
@@ -33,7 +34,8 @@ def project(db, client_company, user):
         client=client_company,
         title="Test Project",
         status=ProjectStatus.OPEN,
-        created_by=user)
+        created_by=user,
+    )
     p.assigned_consultants.add(user)
     return p
 
@@ -63,9 +65,7 @@ class TestResumeUploadView:
         f = SimpleUploadedFile(
             "resume.pdf", b"fake pdf", content_type="application/pdf"
         )
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/upload/",
-            {"files": f})
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/upload/", {"files": f})
         assert resp.status_code == 200
         upload = ResumeUpload.objects.filter(project=project).first()
         assert upload is not None
@@ -74,21 +74,16 @@ class TestResumeUploadView:
 
     def test_upload_oversized_file(self, auth_client, project, media_root):
         f = SimpleUploadedFile(
-            "big.pdf",
-            b"x" * (21 * 1024 * 1024),
-            content_type="application/pdf")
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/upload/",
-            {"files": f})
+            "big.pdf", b"x" * (21 * 1024 * 1024), content_type="application/pdf"
+        )
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/upload/", {"files": f})
         assert resp.status_code == 200
         # No upload created, error returned in context
         assert ResumeUpload.objects.filter(project=project).count() == 0
 
     def test_upload_wrong_type(self, auth_client, project, media_root):
         f = SimpleUploadedFile("notes.txt", b"text file", content_type="text/plain")
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/upload/",
-            {"files": f})
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/upload/", {"files": f})
         assert resp.status_code == 200
         assert ResumeUpload.objects.filter(project=project).count() == 0
 
@@ -117,11 +112,12 @@ class TestResumeProcessView:
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
             upload_batch=batch_id,
-            created_by=user)
+            created_by=user,
+        )
 
         resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/process/",
-            {"batch_id": str(batch_id)})
+            f"/projects/{project.pk}/resumes/process/", {"batch_id": str(batch_id)}
+        )
         assert resp.status_code == 200
 
 
@@ -134,10 +130,12 @@ class TestResumeStatusView:
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
             upload_batch=batch_id,
-            created_by=user)
+            created_by=user,
+        )
 
         resp = auth_client.get(
-            f"/projects/{project.pk}/resumes/status/?batch={batch_id}")
+            f"/projects/{project.pk}/resumes/status/?batch={batch_id}"
+        )
         assert resp.status_code == 200
 
 
@@ -165,21 +163,19 @@ class TestResumeLinkView:
                 "extracted": {"name": "김철수", "email": "test@example.com"},
                 "raw_text_used": "resume text",
                 "diagnosis": {"verdict": "pass"},
-            })
+            },
+        )
         transition_status(upload, ResumeUpload.Status.EXTRACTING)
         transition_status(upload, ResumeUpload.Status.EXTRACTED)
 
-        candidate = Candidate.objects.create(
-            name="김철수",
-            email="test@example.com")
+        candidate = Candidate.objects.create(name="김철수", email="test@example.com")
 
         def do_link(u, **kwargs):
             return _mock_link(u, candidate)
 
         mock_link.side_effect = do_link
 
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/{upload.pk}/link/")
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/{upload.pk}/link/")
         assert resp.status_code == 200
 
 
@@ -190,12 +186,12 @@ class TestResumeDiscardView:
             file_name="resume.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
-            created_by=user)
+            created_by=user,
+        )
         transition_status(upload, ResumeUpload.Status.EXTRACTING)
         transition_status(upload, ResumeUpload.Status.EXTRACTED)
 
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/{upload.pk}/discard/")
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/{upload.pk}/discard/")
         assert resp.status_code == 200
         upload.refresh_from_db()
         assert upload.status == ResumeUpload.Status.DISCARDED
@@ -211,12 +207,12 @@ class TestResumeRetryView:
             file_name="resume.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
-            created_by=user)
+            created_by=user,
+        )
         transition_status(upload, ResumeUpload.Status.EXTRACTING)
         transition_status(upload, ResumeUpload.Status.FAILED)
 
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/{upload.pk}/retry/")
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/{upload.pk}/retry/")
         assert resp.status_code == 200
         upload.refresh_from_db()
         assert upload.retry_count == 1
@@ -228,10 +224,10 @@ class TestResumeRetryView:
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.FAILED,
             retry_count=3,
-            created_by=user)
+            created_by=user,
+        )
 
-        resp = auth_client.post(
-            f"/projects/{project.pk}/resumes/{upload.pk}/retry/")
+        resp = auth_client.post(f"/projects/{project.pk}/resumes/{upload.pk}/retry/")
         assert resp.status_code == 400
 
 
@@ -242,7 +238,8 @@ class TestUnassignedResumes:
             file_name="orphan.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.EXTRACTED,
-            created_by=user)
+            created_by=user,
+        )
         resp = auth_client.get("/projects/resumes/unassigned/")
         assert resp.status_code == 200
 
@@ -254,10 +251,10 @@ class TestAssignToProject:
             file_name="orphan.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.EXTRACTED,
-            created_by=user)
+            created_by=user,
+        )
 
-        resp = auth_client.post(
-            f"/projects/resumes/{upload.pk}/assign/{project.pk}/")
+        resp = auth_client.post(f"/projects/resumes/{upload.pk}/assign/{project.pk}/")
         assert resp.status_code == 200
         upload.refresh_from_db()
         assert upload.project == project

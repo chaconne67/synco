@@ -74,9 +74,7 @@ def voice_intent(request):
         else body.get("context", {})
     )
 
-    ctx = resolve_context(
-        user=request.user, context_hint=context_hint
-    )
+    ctx = resolve_context(user=request.user, context_hint=context_hint)
 
     # Amendment A4: multi-turn continuation
     mgr = ConversationManager(request.session)
@@ -254,9 +252,7 @@ def voice_context(request):
         "project_id": request.GET.get("project_id", ""),
         "tab": request.GET.get("tab", ""),
     }
-    ctx = resolve_context(
-        user=request.user, context_hint=context_hint
-    )
+    ctx = resolve_context(user=request.user, context_hint=context_hint)
     if ctx.get("project_id"):
         ctx["project_id"] = str(ctx["project_id"])
     return JsonResponse(ctx)
@@ -325,9 +321,7 @@ def voice_meeting_upload(request):
     if not project_id or not candidate_id:
         return JsonResponse({"error": "프로젝트와 후보자를 선택해주세요."}, status=400)
 
-    project = scope_work_qs(
-        Project.objects.filter(pk=project_id), request.user
-    ).first()
+    project = scope_work_qs(Project.objects.filter(pk=project_id), request.user).first()
     if not project:
         return JsonResponse({"error": "프로젝트를 찾을 수 없습니다."}, status=404)
 

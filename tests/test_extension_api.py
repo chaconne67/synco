@@ -64,7 +64,10 @@ class TestExtensionAuth(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username="authuser", password="pass1234", first_name="길동", last_name="홍",
+            username="authuser",
+            password="pass1234",
+            first_name="길동",
+            last_name="홍",
             level=1,
         )
 
@@ -105,9 +108,7 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
         self.assertEqual(body["status"], "success")
         self.assertEqual(body["data"]["operation"], "created")
         # Single-tenant: owned_by is NULL; candidate exists globally.
-        self.assertTrue(
-            Candidate.objects.filter(name="홍길동").exists()
-        )
+        self.assertTrue(Candidate.objects.filter(name="홍길동").exists())
 
     def test_create_with_careers_and_educations(self):
         payload = _base_payload(
@@ -256,7 +257,7 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
 
     def test_cross_org_isolation(self):
         """Single-tenant: second save of same URL is a duplicate (global dedup)."""
-        other_user = User.objects.create_user(username="other_ext", password="pass1234", level=1)
+        User.objects.create_user(username="other_ext", password="pass1234", level=1)
 
         # Save first
         resp1 = _post_json(self.client, SAVE_URL, _base_payload())
@@ -272,9 +273,7 @@ class TestExtensionSaveProfile(_ExtensionTestMixin, TestCase):
 
     def test_rate_limit_101st_returns_429(self):
         # Pre-seed 100 extraction logs for today
-        candidate = Candidate.objects.create(
-            name="Seed", current_company="Test"
-        )
+        candidate = Candidate.objects.create(name="Seed", current_company="Test")
         for _ in range(100):
             ExtractionLog.objects.create(
                 candidate=candidate,
@@ -512,9 +511,7 @@ class TestExtensionUpdateMode(_ExtensionTestMixin, TestCase):
 
     def test_update_any_user_can_update(self):
         # Single-tenant: no org isolation; any authenticated user can update.
-        other_user = User.objects.create_user(
-            username="other_user", password="pass1234", level=1
-        )
+        User.objects.create_user(username="other_user", password="pass1234", level=1)
         other_client = DjangoClient()
         other_client.login(username="other_user", password="pass1234")
         payload = self._update_payload()
@@ -646,7 +643,7 @@ class TestExtensionCheckDuplicate(_ExtensionTestMixin, TestCase):
 
     def test_any_user_can_check_duplicate(self):
         """Single-tenant: all authenticated users share global candidate pool."""
-        other_user = User.objects.create_user(username="isolated", password="pass1234", level=1)
+        User.objects.create_user(username="isolated", password="pass1234", level=1)
         other_client = DjangoClient()
         other_client.login(username="isolated", password="pass1234")
 
@@ -739,9 +736,7 @@ class TestExtensionSearch(_ExtensionTestMixin, TestCase):
 
     def test_any_user_can_search_global_pool(self):
         """Single-tenant: all authenticated users share global candidate pool."""
-        other_user = User.objects.create_user(
-            username="search_iso", password="pass1234", level=1
-        )
+        User.objects.create_user(username="search_iso", password="pass1234", level=1)
         other_client = DjangoClient()
         other_client.login(username="search_iso", password="pass1234")
 
@@ -775,7 +770,7 @@ class TestExtensionStats(_ExtensionTestMixin, TestCase):
 
     def test_any_user_sees_global_count(self):
         """Single-tenant: all authenticated users see the same total."""
-        other_user = User.objects.create_user(username="stats_iso", password="pass1234", level=1)
+        User.objects.create_user(username="stats_iso", password="pass1234", level=1)
 
         Candidate.objects.create(name="A", current_company="X")
 
@@ -797,7 +792,7 @@ class TestExtensionLevelGate(TestCase):
 
     def test_pending_user_blocked_from_extension(self):
         """level=0 사용자 → extension_login_required가 JSON 403 반환."""
-        u = User.objects.create_user(username="pending_ext", password="x", level=0)
+        User.objects.create_user(username="pending_ext", password="x", level=0)
         c = DjangoClient()
         c.login(username="pending_ext", password="x")
         resp = c.get(AUTH_URL)

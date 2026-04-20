@@ -12,8 +12,8 @@ from projects.models import (
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus)
-
+    SummaryStatus,
+)
 
 
 @pytest.fixture
@@ -29,7 +29,8 @@ def source(db):
         url="https://example.com/feed.xml",
         type=NewsSourceType.RSS,
         category=NewsCategory.HIRING,
-        is_active=True)
+        is_active=True,
+    )
 
 
 class TestFetchNewsCommand:
@@ -99,7 +100,8 @@ class TestFetchNewsCommand:
             source=source,
             title="Failed Article",
             url="https://example.com/failed",
-            summary_status=SummaryStatus.FAILED)
+            summary_status=SummaryStatus.FAILED,
+        )
 
         # Setup httpx mock
         mock_resp = MagicMock()

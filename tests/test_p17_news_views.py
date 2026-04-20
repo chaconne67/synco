@@ -10,8 +10,8 @@ from projects.models import (
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus)
-
+    SummaryStatus,
+)
 
 
 @pytest.fixture
@@ -24,7 +24,9 @@ def user(db):
 @pytest.fixture
 def boss(db):
     """Level-2 (boss) user — required for news source CRUD (level_required(2))."""
-    return User.objects.create_user(username="boss_tester", password="test1234", level=2)
+    return User.objects.create_user(
+        username="boss_tester", password="test1234", level=2
+    )
 
 
 @pytest.fixture
@@ -47,7 +49,8 @@ def source(db):
         name="Test Feed",
         url="https://example.com/feed",
         type=NewsSourceType.RSS,
-        category=NewsCategory.HIRING)
+        category=NewsCategory.HIRING,
+    )
 
 
 @pytest.fixture
@@ -59,7 +62,8 @@ def article(source):
         summary="Summary text",
         category=NewsCategory.HIRING,
         summary_status=SummaryStatus.COMPLETED,
-        published_at=timezone.now())
+        published_at=timezone.now(),
+    )
 
 
 class TestNewsFeed:
@@ -71,7 +75,7 @@ class TestNewsFeed:
 
     @pytest.mark.skip(
         reason="news_feed.html uses hardcoded mockup articles (not DB context) — "
-               "template must render all_articles loop before this assertion can pass"
+        "template must render all_articles loop before this assertion can pass"
     )
     def test_feed_page_loads(self, auth_client, article):
         resp = auth_client.get("/news/")
@@ -93,14 +97,16 @@ class TestNewsFilter:
             url="https://example.com/h",
             category=NewsCategory.HIRING,
             summary_status=SummaryStatus.COMPLETED,
-            published_at=timezone.now())
+            published_at=timezone.now(),
+        )
         NewsArticle.objects.create(
             source=source,
             title="HR News",
             url="https://example.com/hr",
             category=NewsCategory.HR,
             summary_status=SummaryStatus.COMPLETED,
-            published_at=timezone.now())
+            published_at=timezone.now(),
+        )
         resp = auth_client.get("/news/filter/?category=hiring")
         content = resp.content.decode()
         assert "Hiring News" in content
@@ -121,7 +127,8 @@ class TestNewsSourceCRUD:
                 "url": "https://newssite.com/feed",
                 "type": NewsSourceType.RSS,
                 "category": NewsCategory.INDUSTRY,
-            })
+            },
+        )
         assert resp.status_code == 302
         assert NewsSource.objects.filter(name="New Source").exists()
 
@@ -138,8 +145,11 @@ class TestNewsSourceCRUD:
         assert not NewsSource.objects.filter(pk=source.pk).exists()
 
     def test_non_staff_blocked_from_source_crud(self, db):
-        viewer = User.objects.create_user(username="viewer", password="test1234", level=1)
+        User.objects.create_user(username="viewer", password="test1234", level=1)
         c = TestClient()
         c.login(username="viewer", password="test1234")
         resp = c.get("/news/sources/")
-        assert resp.status_code in (302, 403)  # level-1 user gets 403 from level_required(2)
+        assert resp.status_code in (
+            302,
+            403,
+        )  # level-1 user gets 403 from level_required(2)

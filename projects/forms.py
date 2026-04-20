@@ -94,9 +94,7 @@ class ProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["client"].queryset = Client.objects.all()
-        self.fields["assigned_consultants"].queryset = User.objects.filter(
-            level__gte=1
-        )
+        self.fields["assigned_consultants"].queryset = User.objects.filter(level__gte=1)
         self.fields["jd_text"].required = False
         self.fields["jd_file"].required = False
         self.fields["jd_source"].required = False

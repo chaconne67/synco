@@ -51,15 +51,13 @@ def _sweep_overdue_projects():
     today = timezone.now().date()
     now = timezone.now()
 
-    overdue = (
-        Project.objects.filter(
-            status=ProjectStatus.OPEN,
-            deadline__lt=today,
-        )
-        .exclude(applications__hired_at__isnull=False)
-    )
+    overdue = Project.objects.filter(
+        status=ProjectStatus.OPEN,
+        deadline__lt=today,
+    ).exclude(applications__hired_at__isnull=False)
     note_suffix = f"\n\n[AUTO-CLOSE {today.isoformat()}] 마감일 경과로 자동 종료 (실패)"
     from projects.models import Application
+
     for p in overdue:
         Project.objects.filter(pk=p.pk).update(
             status=ProjectStatus.CLOSED,
@@ -258,14 +256,16 @@ def _team_performance():
 
         role_label = "대표" if (user.is_superuser or user.level >= 2) else "컨설턴트"
 
-        rows.append({
-            "username": user.username,
-            "display_name": _display_name(user),
-            "role_label": role_label,
-            "active_count": active_count,
-            "success_rate": rate,
-            "progress_color": _progress_color(rate),
-        })
+        rows.append(
+            {
+                "username": user.username,
+                "display_name": _display_name(user),
+                "role_label": role_label,
+                "active_count": active_count,
+                "success_rate": rate,
+                "progress_color": _progress_color(rate),
+            }
+        )
 
     # sort: rate desc NULLS LAST
     rows.sort(key=lambda r: (r["success_rate"] is None, -(r["success_rate"] or 0)))
@@ -316,24 +316,28 @@ def _weekly_schedule(user, limit: int = 5):
 
     for iv in interviews:
         candidate = iv.action_item.application.candidate
-        events.append({
-            "scheduled_at": iv.scheduled_at,
-            "label_color": "info",
-            "title": f"{iv.round}차 면접",
-            "subtitle": f"후보자: {candidate.name} · {iv.location or '-'}",
-        })
+        events.append(
+            {
+                "scheduled_at": iv.scheduled_at,
+                "label_color": "info",
+                "title": f"{iv.round}차 면접",
+                "subtitle": f"후보자: {candidate.name} · {iv.location or '-'}",
+            }
+        )
 
     for ai in actions:
         code = ai.action_type.code
         color = "warning" if code in _CLIENT_FACING_CODES else "ink3"
         proj = ai.application.project
         client = proj.client
-        events.append({
-            "scheduled_at": ai.scheduled_at,
-            "label_color": color,
-            "title": ai.title,
-            "subtitle": f"{proj.title} · {client.name}",
-        })
+        events.append(
+            {
+                "scheduled_at": ai.scheduled_at,
+                "label_color": color,
+                "title": ai.title,
+                "subtitle": f"{proj.title} · {client.name}",
+            }
+        )
 
     events.sort(key=lambda e: e["scheduled_at"])
     return events[:limit]
@@ -413,12 +417,14 @@ def _monthly_calendar(user) -> list[dict]:
             event_label = "일정" if n_ai == 1 else f"일정 {n_ai}"
         else:
             event_label = None
-        cells.append({
-            "date": cell_date.day,
-            "is_today": cell_date == today,
-            "is_outside": is_outside,
-            "event_label": event_label,
-        })
+        cells.append(
+            {
+                "date": cell_date.day,
+                "is_today": cell_date == today,
+                "is_outside": is_outside,
+                "event_label": event_label,
+            }
+        )
     return cells
 
 
@@ -442,5 +448,5 @@ def get_dashboard_context(user: User) -> dict:
 def _scope_projects(user):
     """업무 스코프 쿼리셋. scope_work_qs 를 그대로 사용."""
     from accounts.services.scope import scope_work_qs
-    return scope_work_qs(Project.objects.all(), user)
 
+    return scope_work_qs(Project.objects.all(), user)

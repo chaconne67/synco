@@ -167,9 +167,7 @@ class TestActionOrgIsolation:
         action = create_action(application, action_type_reach_out, None)
         c = Client()
         c.force_login(staff_user)
-        response = c.get(
-            reverse("projects:action_complete", args=[action.pk])
-        )
+        response = c.get(reverse("projects:action_complete", args=[action.pk]))
         assert response.status_code == 200
 
 

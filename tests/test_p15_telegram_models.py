@@ -4,12 +4,8 @@ import pytest
 from datetime import timedelta
 from django.utils import timezone
 
-from accounts.models import (
-    TelegramBinding,
-    TelegramVerification,
-    User)
+from accounts.models import TelegramBinding, TelegramVerification, User
 from projects.models import Notification
-
 
 
 @pytest.fixture
@@ -37,24 +33,21 @@ class TestTelegramBinding:
 class TestTelegramVerification:
     def test_create_verification(self, user):
         v = TelegramVerification.objects.create(
-            user=user,
-            code="123456",
-            expires_at=timezone.now() + timedelta(minutes=5))
+            user=user, code="123456", expires_at=timezone.now() + timedelta(minutes=5)
+        )
         assert v.consumed is False
         assert v.attempts == 0
 
     def test_expired_verification(self, user):
         v = TelegramVerification.objects.create(
-            user=user,
-            code="123456",
-            expires_at=timezone.now() - timedelta(minutes=1))
+            user=user, code="123456", expires_at=timezone.now() - timedelta(minutes=1)
+        )
         assert v.is_expired is True
 
     def test_valid_verification(self, user):
         v = TelegramVerification.objects.create(
-            user=user,
-            code="123456",
-            expires_at=timezone.now() + timedelta(minutes=5))
+            user=user, code="123456", expires_at=timezone.now() + timedelta(minutes=5)
+        )
         assert v.is_expired is False
 
     def test_consumed_is_expired(self, user):
@@ -62,7 +55,8 @@ class TestTelegramVerification:
             user=user,
             code="123456",
             expires_at=timezone.now() + timedelta(minutes=5),
-            consumed=True)
+            consumed=True,
+        )
         assert v.is_expired is True
 
     def test_max_attempts_exceeded(self, user):
@@ -70,14 +64,14 @@ class TestTelegramVerification:
             user=user,
             code="123456",
             expires_at=timezone.now() + timedelta(minutes=5),
-            attempts=5)
+            attempts=5,
+        )
         assert v.is_blocked is True
 
     def test_str(self, user):
         v = TelegramVerification.objects.create(
-            user=user,
-            code="123456",
-            expires_at=timezone.now() + timedelta(minutes=5))
+            user=user, code="123456", expires_at=timezone.now() + timedelta(minutes=5)
+        )
         assert "123456" in str(v)
 
 
@@ -88,7 +82,8 @@ class TestNotificationChatId:
             type=Notification.Type.REMINDER,
             title="Test",
             body="Test body",
-            telegram_chat_id="999888")
+            telegram_chat_id="999888",
+        )
         n.refresh_from_db()
         assert n.telegram_chat_id == "999888"
 
@@ -97,6 +92,7 @@ class TestNotificationChatId:
             recipient=user,
             type=Notification.Type.REMINDER,
             title="Test",
-            body="Test body")
+            body="Test body",
+        )
         n.refresh_from_db()
         assert n.telegram_chat_id == ""

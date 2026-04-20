@@ -3,14 +3,18 @@
 This file is the executable contract for the scope enforcement spec
 (docs/superpowers/specs/2026-04-21-work-scope-enforcement-design.md).
 """
+
 import pytest
 
 
 @pytest.fixture
 def other_project(db, client_company, staff_user_2):
     from projects.models import Project, ProjectStatus
+
     p = Project.objects.create(
-        client=client_company, title="남의 것", status=ProjectStatus.OPEN,
+        client=client_company,
+        title="남의 것",
+        status=ProjectStatus.OPEN,
         created_by=staff_user_2,
     )
     p.assigned_consultants.add(staff_user_2)
@@ -24,7 +28,9 @@ def test_staff_gets_404_on_other_project_detail(staff_client, other_project):
 
 
 @pytest.mark.django_db
-def test_staff_gets_404_on_other_project_applications_partial(staff_client, other_project):
+def test_staff_gets_404_on_other_project_applications_partial(
+    staff_client, other_project
+):
     resp = staff_client.get(f"/projects/{other_project.pk}/applications/")
     assert resp.status_code == 404
 
@@ -38,10 +44,12 @@ def test_staff_gets_404_on_other_project_timeline(staff_client, other_project):
 @pytest.mark.django_db
 def test_staff_gets_404_on_other_application(staff_client, other_project, candidate):
     from projects.models import Application
+
     app = Application.objects.create(
         project=other_project, candidate=candidate, created_by=other_project.created_by
     )
     from django.urls import reverse
+
     try:
         url = reverse("application_detail", kwargs={"pk": app.pk})
     except Exception:

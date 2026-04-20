@@ -354,4 +354,3 @@ def test_candidate_detail_shows_error_message_for_failed_resume(auth_client, cat
     assert "데이터 추출 실패" in body
     assert "Download failed: 404 Not Found" in body
     assert "fail_ui_001" in body  # Drive link present
-

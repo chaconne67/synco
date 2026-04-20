@@ -9,9 +9,9 @@ from projects.models import (
     NewsCategory,
     NewsSource,
     NewsSourceType,
-    SummaryStatus)
+    SummaryStatus,
+)
 from projects.services.news.fetcher import fetch_articles
-
 
 
 @pytest.fixture
@@ -20,7 +20,8 @@ def source(db):
         name="Test Feed",
         url="https://example.com/feed.xml",
         type=NewsSourceType.RSS,
-        category=NewsCategory.HIRING)
+        category=NewsCategory.HIRING,
+    )
 
 
 def _make_feed_entry(title, link, published=None):
@@ -124,7 +125,8 @@ class TestFetchArticles:
             name="YouTube",
             url="https://youtube.com/@channel",
             type=NewsSourceType.YOUTUBE,
-            category=NewsCategory.INDUSTRY)
+            category=NewsCategory.INDUSTRY,
+        )
         created, skipped = fetch_articles(yt_source)
         assert created == 0
         assert skipped == 0

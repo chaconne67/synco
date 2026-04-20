@@ -6,7 +6,6 @@ from clients.models import Client
 from projects.models import Project, ProjectStatus
 
 
-
 @pytest.fixture
 def delete_client(db):
     return Client.objects.create(

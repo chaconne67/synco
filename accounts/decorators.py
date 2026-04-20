@@ -33,14 +33,10 @@ def level_required(min_level):
                 return view_func(request, *args, **kwargs)
 
             if user.level == 0:
-                return _redirect_named(
-                    "pending_approval", "/accounts/pending/"
-                )
+                return _redirect_named("pending_approval", "/accounts/pending/")
 
             if user.level < min_level:
-                return HttpResponseForbidden(
-                    "이 페이지에 접근할 권한이 없습니다."
-                )
+                return HttpResponseForbidden("이 페이지에 접근할 권한이 없습니다.")
 
             return view_func(request, *args, **kwargs)
 
@@ -55,11 +51,7 @@ def superuser_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_superuser:
-            return HttpResponseForbidden(
-                "개발자 전용 페이지입니다."
-            )
+            return HttpResponseForbidden("개발자 전용 페이지입니다.")
         return view_func(request, *args, **kwargs)
 
     return wrapper
-
-

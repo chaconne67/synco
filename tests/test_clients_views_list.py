@@ -5,7 +5,6 @@ from clients.models import Client, IndustryCategory
 from projects.models import Project
 
 
-
 @pytest.mark.django_db
 def test_list_renders_header_and_empty_state(boss_client):
     resp = boss_client.get(reverse("clients:client_list"))
@@ -17,9 +16,7 @@ def test_list_renders_header_and_empty_state(boss_client):
 
 @pytest.mark.django_db
 def test_list_renders_cards(db, boss_client):
-    Client.objects.create(
-        name="SKBP", industry=IndustryCategory.BIO_PHARMA.value
-    )
+    Client.objects.create(name="SKBP", industry=IndustryCategory.BIO_PHARMA.value)
     resp = boss_client.get(reverse("clients:client_list"))
     assert "SKBP" in resp.content.decode()
 
@@ -59,7 +56,9 @@ def test_list_active_count_shown(db, boss_client, boss_user):
     from projects.models import ProjectStatus
 
     c = Client.objects.create(name="A")
-    Project.objects.create(client=c, title="P", status=ProjectStatus.OPEN, created_by=boss_user)
+    Project.objects.create(
+        client=c, title="P", status=ProjectStatus.OPEN, created_by=boss_user
+    )
     resp = boss_client.get(reverse("clients:client_list"))
     body = resp.content.decode()
     assert "1" in body

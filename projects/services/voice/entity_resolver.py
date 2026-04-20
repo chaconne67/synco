@@ -86,9 +86,7 @@ def resolve_candidate_list(
     not_found: list[str] = []
 
     for name in names:
-        result = resolve_candidate(
-            name=name, project=project
-        )
+        result = resolve_candidate(name=name, project=project)
         if result.status == "resolved":
             resolved_ids.append(str(result.candidate_id))
         elif result.status == "ambiguous":

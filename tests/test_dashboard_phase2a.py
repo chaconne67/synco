@@ -7,13 +7,7 @@ from django.utils import timezone
 from accounts.models import User
 from candidates.models import Candidate
 from clients.models import Client
-from projects.models import (
-    ActionItem,
-    ActionType,
-    Application,
-    Interview,
-    Project)
-
+from projects.models import ActionItem, ActionType, Application, Interview, Project
 
 
 @pytest.mark.django_db
@@ -45,17 +39,17 @@ def test_s1_monthly_success_counts(boss_client, client_obj):
 
     # 이번 달 성공 2건
     for i in range(2):
-        p = Project.objects.create( client=client_obj, title=f"S{i}")
+        p = Project.objects.create(client=client_obj, title=f"S{i}")
         _close_project(p, "success", month_start + timedelta(days=1))
     # 이번 달 실패 1건
-    p = Project.objects.create( client=client_obj, title="F1")
+    p = Project.objects.create(client=client_obj, title="F1")
     _close_project(p, "fail", month_start + timedelta(days=2))
     # 지난 달 성공 (제외되어야 함)
-    p = Project.objects.create( client=client_obj, title="OLD")
+    p = Project.objects.create(client=client_obj, title="OLD")
     _close_project(p, "success", last_month)
     # 진행 중 3건
     for i in range(3):
-        Project.objects.create( client=client_obj, title=f"O{i}")
+        Project.objects.create(client=client_obj, title=f"O{i}")
 
     resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
@@ -83,15 +77,17 @@ def test_s1_project_status_counts(boss_client, client_obj):
     """S1-3: 서칭/스크리닝/완료 개수 렌더."""
     # 서칭 4건
     for i in range(4):
-        Project.objects.create( client=client_obj, title=f"SR{i}",
-            status="open", phase="searching")
+        Project.objects.create(
+            client=client_obj, title=f"SR{i}", status="open", phase="searching"
+        )
     # 스크리닝 2건
     for i in range(2):
-        Project.objects.create( client=client_obj, title=f"SC{i}",
-            status="open", phase="screening")
+        Project.objects.create(
+            client=client_obj, title=f"SC{i}", status="open", phase="screening"
+        )
     # 완료 3건 (성공 2 + 실패 1)
     for i, res in enumerate(["success", "success", "fail"]):
-        p = Project.objects.create( client=client_obj, title=f"CL{i}")
+        p = Project.objects.create(client=client_obj, title=f"CL{i}")
         _close_project(p, res, timezone.now())
 
     resp = boss_client.get(reverse("dashboard"))
@@ -113,7 +109,7 @@ def consultant_user(db):
 @pytest.mark.django_db
 def test_s2_team_performance_lists_members(boss_client, client_obj, consultant_user):
     """S2-1: boss + consultant 목록, viewer 제외."""
-    viewer = User.objects.create_user(username="v1", password="x", first_name="뷰어")
+    User.objects.create_user(username="v1", password="x", first_name="뷰어")
 
     resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
@@ -134,15 +130,14 @@ def test_s2_team_performance_success_rate(boss_client, client_obj, consultant_us
     """S2-1: 성공률 = 본인 담당 success / 본인 담당 closed."""
     # consultant가 담당한 프로젝트 4건 closed (3성공 1실패) + 2 open
     for i in range(3):
-        p = Project.objects.create( client=client_obj, title=f"S{i}")
+        p = Project.objects.create(client=client_obj, title=f"S{i}")
         p.assigned_consultants.add(consultant_user)
         _close_project(p, "success", timezone.now())
-    p = Project.objects.create( client=client_obj, title="F")
+    p = Project.objects.create(client=client_obj, title="F")
     p.assigned_consultants.add(consultant_user)
     _close_project(p, "fail", timezone.now())
     for i in range(2):
-        p = Project.objects.create( client=client_obj, title=f"O{i}", status="open"
-        )
+        p = Project.objects.create(client=client_obj, title=f"O{i}", status="open")
         p.assigned_consultants.add(consultant_user)
 
     resp = boss_client.get(reverse("dashboard"))
@@ -205,16 +200,21 @@ def test_s3_weekly_shows_interview(
     """S3 Weekly: Interview 표시, '인터뷰' 키워드·후보자명 포함."""
     monday = _this_monday_midnight()
     cand = Candidate.objects.create(name="박해준")
-    proj = Project.objects.create( client=client_obj, title="P1")
+    proj = Project.objects.create(client=client_obj, title="P1")
     app = Application.objects.create(project=proj, candidate=cand)
     ai = ActionItem.objects.create(
         application=app,
         action_type=interview_type,
         title="1차 면접",
-        scheduled_at=monday + timedelta(days=2, hours=11))
+        scheduled_at=monday + timedelta(days=2, hours=11),
+    )
     Interview.objects.create(
-        action_item=ai, round=1, scheduled_at=monday + timedelta(days=2, hours=11),
-        type="화상", location="Zoom")
+        action_item=ai,
+        round=1,
+        scheduled_at=monday + timedelta(days=2, hours=11),
+        type="화상",
+        location="Zoom",
+    )
 
     resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
@@ -254,19 +254,17 @@ def test_s3_monthly_interview_label(
     mid_month = now.replace(day=15, hour=10, minute=0, second=0, microsecond=0)
 
     cand = Candidate.objects.create(name="이월력")
-    proj = Project.objects.create( client=client_obj, title="CalP")
+    proj = Project.objects.create(client=client_obj, title="CalP")
     app = Application.objects.create(project=proj, candidate=cand)
     ai = ActionItem.objects.create(
         application=app,
         action_type=interview_type,
         title="2차 면접",
-        scheduled_at=mid_month)
-    Interview.objects.create(
-        action_item=ai,
-        round=2,
         scheduled_at=mid_month,
-        type="대면",
-        location="서울")
+    )
+    Interview.objects.create(
+        action_item=ai, round=2, scheduled_at=mid_month, type="대면", location="서울"
+    )
 
     resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()
@@ -274,9 +272,7 @@ def test_s3_monthly_interview_label(
 
 
 @pytest.mark.django_db
-def test_s3_monthly_outside_day_shows_event(
-    boss_client, client_obj, submit_type
-):
+def test_s3_monthly_outside_day_shows_event(boss_client, client_obj, submit_type):
     """S3 Monthly: 전/다음달 outside 셀에도 ActionItem 라벨이 뜬다."""
     # grid 시작일 (이번 달 첫 주의 일요일)
     now = timezone.localtime()
@@ -288,11 +284,14 @@ def test_s3_monthly_outside_day_shows_event(
 
     outside_day = grid_start + timedelta(hours=10)  # 이전 달의 일요일
     cand = Candidate.objects.create(name="이전달")
-    proj = Project.objects.create( client=client_obj, title="Outside")
+    proj = Project.objects.create(client=client_obj, title="Outside")
     app = Application.objects.create(project=proj, candidate=cand)
     ActionItem.objects.create(
-        application=app, action_type=submit_type,
-        title="서류 제출", scheduled_at=outside_day)
+        application=app,
+        action_type=submit_type,
+        title="서류 제출",
+        scheduled_at=outside_day,
+    )
 
     resp = boss_client.get(reverse("dashboard"))
     body = resp.content.decode()

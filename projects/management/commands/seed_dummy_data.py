@@ -68,23 +68,87 @@ PROJECT_TITLES = [
 # (title keyword → 연봉 범위 원 단위, 태그 키워드 3종)
 # 포지션 레벨에 따른 연봉/수수료율 차등
 PROJECT_COMPENSATION = {
-    "CTO 후보":           {"salary": 250_000_000, "fee": "25.00", "keywords": ["기술전략", "CTO 15Y+", "조직 빌딩"]},
-    "전략기획 임원":      {"salary": 200_000_000, "fee": "25.00", "keywords": ["M&A", "IR", "CXO 경력"]},
-    "재무회계 이사":      {"salary": 180_000_000, "fee": "22.00", "keywords": ["IPO 준비", "CFO 경력", "15Y+"]},
-    "마케팅 총괄":        {"salary": 170_000_000, "fee": "22.00", "keywords": ["B2C", "CMO", "D2C"]},
-    "법무 실장":          {"salary": 160_000_000, "fee": "22.00", "keywords": ["변호사", "컴플라이언스", "12Y+"]},
-    "글로벌 세일즈 디렉터": {"salary": 180_000_000, "fee": "22.00", "keywords": ["영문 비즈니스", "B2B", "APAC"]},
-    "HR 팀장":            {"salary": 130_000_000, "fee": "20.00", "keywords": ["HRBP", "채용 설계", "10Y+"]},
-    "UX 디자인 리드":     {"salary": 140_000_000, "fee": "20.00", "keywords": ["디자인 시스템", "모바일", "15Y+"]},
-    "프로덕트 매니저":    {"salary": 130_000_000, "fee": "20.00", "keywords": ["PMF", "B2C 앱", "그로스"]},
-    "백엔드 리드":        {"salary": 150_000_000, "fee": "20.00", "keywords": ["분산시스템", "Java/Kotlin", "100만 MAU+"]},
-    "시니어 프론트엔드 개발자": {"salary": 120_000_000, "fee": "20.00", "keywords": ["React", "TypeScript", "10Y+"]},
-    "AI/ML 엔지니어":     {"salary": 160_000_000, "fee": "22.00", "keywords": ["LLM", "PyTorch", "논문 5편+"]},
-    "데이터 사이언티스트": {"salary": 140_000_000, "fee": "20.00", "keywords": ["ML Ops", "A/B 테스트", "SQL"]},
-    "SRE/인프라 엔지니어": {"salary": 140_000_000, "fee": "20.00", "keywords": ["k8s", "IaC", "관제"]},
-    "반도체 공정 엔지니어": {"salary": 130_000_000, "fee": "20.00", "keywords": ["EUV", "수율", "파운드리"]},
+    "CTO 후보": {
+        "salary": 250_000_000,
+        "fee": "25.00",
+        "keywords": ["기술전략", "CTO 15Y+", "조직 빌딩"],
+    },
+    "전략기획 임원": {
+        "salary": 200_000_000,
+        "fee": "25.00",
+        "keywords": ["M&A", "IR", "CXO 경력"],
+    },
+    "재무회계 이사": {
+        "salary": 180_000_000,
+        "fee": "22.00",
+        "keywords": ["IPO 준비", "CFO 경력", "15Y+"],
+    },
+    "마케팅 총괄": {
+        "salary": 170_000_000,
+        "fee": "22.00",
+        "keywords": ["B2C", "CMO", "D2C"],
+    },
+    "법무 실장": {
+        "salary": 160_000_000,
+        "fee": "22.00",
+        "keywords": ["변호사", "컴플라이언스", "12Y+"],
+    },
+    "글로벌 세일즈 디렉터": {
+        "salary": 180_000_000,
+        "fee": "22.00",
+        "keywords": ["영문 비즈니스", "B2B", "APAC"],
+    },
+    "HR 팀장": {
+        "salary": 130_000_000,
+        "fee": "20.00",
+        "keywords": ["HRBP", "채용 설계", "10Y+"],
+    },
+    "UX 디자인 리드": {
+        "salary": 140_000_000,
+        "fee": "20.00",
+        "keywords": ["디자인 시스템", "모바일", "15Y+"],
+    },
+    "프로덕트 매니저": {
+        "salary": 130_000_000,
+        "fee": "20.00",
+        "keywords": ["PMF", "B2C 앱", "그로스"],
+    },
+    "백엔드 리드": {
+        "salary": 150_000_000,
+        "fee": "20.00",
+        "keywords": ["분산시스템", "Java/Kotlin", "100만 MAU+"],
+    },
+    "시니어 프론트엔드 개발자": {
+        "salary": 120_000_000,
+        "fee": "20.00",
+        "keywords": ["React", "TypeScript", "10Y+"],
+    },
+    "AI/ML 엔지니어": {
+        "salary": 160_000_000,
+        "fee": "22.00",
+        "keywords": ["LLM", "PyTorch", "논문 5편+"],
+    },
+    "데이터 사이언티스트": {
+        "salary": 140_000_000,
+        "fee": "20.00",
+        "keywords": ["ML Ops", "A/B 테스트", "SQL"],
+    },
+    "SRE/인프라 엔지니어": {
+        "salary": 140_000_000,
+        "fee": "20.00",
+        "keywords": ["k8s", "IaC", "관제"],
+    },
+    "반도체 공정 엔지니어": {
+        "salary": 130_000_000,
+        "fee": "20.00",
+        "keywords": ["EUV", "수율", "파운드리"],
+    },
 }
-DEFAULT_COMP = {"salary": 120_000_000, "fee": "20.00", "keywords": ["리더십", "기술전문성", "글로벌 경험"]}
+DEFAULT_COMP = {
+    "salary": 120_000_000,
+    "fee": "20.00",
+    "keywords": ["리더십", "기술전문성", "글로벌 경험"],
+}
 
 CANDIDATE_NAMES = [
     "김민준",
@@ -240,14 +304,8 @@ class Command(BaseCommand):
         self.stdout.write(f"  clients: {Client.objects.count()}")
         self.stdout.write(f"  projects: {Project.objects.count()}")
         self.stdout.write(f"  candidates: {Candidate.objects.count()}")
-        self.stdout.write(
-            "  applications: "
-            f"{Application.objects.count()}"
-        )
-        self.stdout.write(
-            "  action_items: "
-            f"{ActionItem.objects.count()}"
-        )
+        self.stdout.write(f"  applications: {Application.objects.count()}")
+        self.stdout.write(f"  action_items: {ActionItem.objects.count()}")
 
     def _resolve_creator(self):
         """Return a level>=2 (boss) user for dummy data attribution."""

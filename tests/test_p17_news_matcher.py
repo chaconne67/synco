@@ -11,9 +11,9 @@ from projects.models import (
     NewsSource,
     NewsSourceType,
     Project,
-    SummaryStatus)
+    SummaryStatus,
+)
 from projects.services.news.matcher import match_article
-
 
 
 @pytest.fixture
@@ -30,9 +30,8 @@ def client_co(db):
 @pytest.fixture
 def project(client_co, user):
     return Project.objects.create(
-        client=client_co,
-        title="반도체 설계 엔지니어",
-        created_by=user)
+        client=client_co, title="반도체 설계 엔지니어", created_by=user
+    )
 
 
 @pytest.fixture
@@ -41,7 +40,8 @@ def source(db):
         name="Feed",
         url="https://example.com/feed",
         type=NewsSourceType.RSS,
-        category=NewsCategory.HIRING)
+        category=NewsCategory.HIRING,
+    )
 
 
 class TestMatchArticle:
@@ -51,7 +51,8 @@ class TestMatchArticle:
             title="삼성전자 대규모 채용",
             url="https://example.com/samsung",
             tags=["삼성전자", "채용"],
-            summary_status=SummaryStatus.COMPLETED)
+            summary_status=SummaryStatus.COMPLETED,
+        )
         count = match_article(article)
         assert count >= 1
         rel = NewsArticleRelevance.objects.get(article=article, project=project)
@@ -63,24 +64,23 @@ class TestMatchArticle:
             title="반도체 산업 전망",
             url="https://example.com/semiconductor",
             tags=["반도체", "전망"],
-            summary_status=SummaryStatus.COMPLETED)
+            summary_status=SummaryStatus.COMPLETED,
+        )
         count = match_article(article)
         assert count >= 1
 
     def test_no_match_below_threshold(self, source, user):
-        unrelated_client = Client.objects.create(
-            name="무관회사", industry="패션"
-        )
+        unrelated_client = Client.objects.create(name="무관회사", industry="패션")
         unrelated_project = Project.objects.create(
-            client=unrelated_client,
-            title="패션 디자이너",
-            created_by=user)
+            client=unrelated_client, title="패션 디자이너", created_by=user
+        )
         article = NewsArticle.objects.create(
             source=source,
             title="의료 AI 발전",
             url="https://example.com/medical",
             tags=["의료", "AI"],
-            summary_status=SummaryStatus.COMPLETED)
+            summary_status=SummaryStatus.COMPLETED,
+        )
         match_article(article)
         assert not NewsArticleRelevance.objects.filter(
             article=article, project=unrelated_project
@@ -92,7 +92,8 @@ class TestMatchArticle:
             title="삼성전자 뉴스",
             url="https://example.com/samsung2",
             tags=["삼성전자"],
-            summary_status=SummaryStatus.COMPLETED)
+            summary_status=SummaryStatus.COMPLETED,
+        )
         count1 = match_article(article)
         count2 = match_article(article)
         assert count1 == count2

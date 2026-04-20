@@ -8,15 +8,14 @@ from django.db import IntegrityError
 from accounts.models import EmailMonitorConfig, User
 from clients.models import Client
 from projects.models import Project, ProjectStatus, ResumeUpload
-from projects.services.resume.transitions import (
-    ALLOWED_TRANSITIONS,
-    transition_status)
-
+from projects.services.resume.transitions import ALLOWED_TRANSITIONS, transition_status
 
 
 @pytest.fixture
 def user(db):
-    u = User.objects.create_user(username="consultant1", password="testpass123", level=1)
+    u = User.objects.create_user(
+        username="consultant1", password="testpass123", level=1
+    )
     return u
 
 
@@ -31,7 +30,8 @@ def project(db, client_company, user):
         client=client_company,
         title="Test Project",
         status=ProjectStatus.OPEN,
-        created_by=user)
+        created_by=user,
+    )
 
 
 class TestResumeUploadCreation:
@@ -47,7 +47,8 @@ class TestResumeUploadCreation:
             email_subject="Test subject",
             email_from="test@example.com",
             email_message_id="msg123",
-            email_attachment_id="att456")
+            email_attachment_id="att456",
+        )
         assert upload.pk is not None
         assert isinstance(upload.pk, uuid.UUID)
         assert upload.created_at is not None
@@ -67,23 +68,22 @@ class TestResumeUploadCreation:
             status=ResumeUpload.Status.PENDING,
             email_message_id="msg-001",
             email_attachment_id="att-001",
-            created_by=user)
+            created_by=user,
+        )
         ResumeUpload.objects.create(**common)
         with pytest.raises(IntegrityError):
             ResumeUpload.objects.create(**common)
 
     def test_base_model_uuid_pk(self, user):
         upload = ResumeUpload.objects.create(
-            file_name="test.docx",
-            file_type=ResumeUpload.FileType.DOCX,
-            created_by=user)
+            file_name="test.docx", file_type=ResumeUpload.FileType.DOCX, created_by=user
+        )
         assert isinstance(upload.pk, uuid.UUID)
 
     def test_base_model_timestamps(self, user):
         upload = ResumeUpload.objects.create(
-            file_name="test.doc",
-            file_type=ResumeUpload.FileType.DOC,
-            created_by=user)
+            file_name="test.doc", file_type=ResumeUpload.FileType.DOC, created_by=user
+        )
         assert upload.created_at is not None
         assert upload.updated_at is not None
 
@@ -91,8 +91,8 @@ class TestResumeUploadCreation:
 class TestEmailMonitorConfigEncryption:
     def test_credential_encryption_roundtrip(self, user):
         config = EmailMonitorConfig.objects.create(
-            user=user,
-            gmail_credentials=b"placeholder")
+            user=user, gmail_credentials=b"placeholder"
+        )
         creds = {
             "access_token": "ya29.secret",
             "refresh_token": "1//0frefresh",
@@ -114,7 +114,8 @@ class TestStateTransitions:
             file_name="valid.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
-            created_by=user)
+            created_by=user,
+        )
         # pending -> extracting
         upload = transition_status(upload, ResumeUpload.Status.EXTRACTING)
         assert upload.status == ResumeUpload.Status.EXTRACTING
@@ -132,7 +133,8 @@ class TestStateTransitions:
             file_name="invalid.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
-            created_by=user)
+            created_by=user,
+        )
         # pending -> linked is not allowed
         with pytest.raises(ValueError, match="Invalid transition"):
             transition_status(upload, ResumeUpload.Status.LINKED)
@@ -146,7 +148,8 @@ class TestStateTransitions:
             file_name="fail.pdf",
             file_type=ResumeUpload.FileType.PDF,
             status=ResumeUpload.Status.PENDING,
-            created_by=user)
+            created_by=user,
+        )
         upload = transition_status(upload, ResumeUpload.Status.EXTRACTING)
         upload = transition_status(upload, ResumeUpload.Status.FAILED)
         # failed -> pending (retry)

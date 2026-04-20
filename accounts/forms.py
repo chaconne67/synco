@@ -7,6 +7,7 @@ from django import forms
 # Active forms
 # ---------------------------------------------------------------------------
 
+
 class NotificationPreferenceForm(forms.Form):
     """알림 설정 폼. JSONField를 개별 체크박스로 분리."""
 

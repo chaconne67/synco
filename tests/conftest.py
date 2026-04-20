@@ -33,8 +33,11 @@ def boss_user(db):
 @pytest.fixture
 def dev_user(db):
     return User.objects.create_user(
-        username="dev_u", password="x", level=2,
-        is_superuser=True, is_staff=True,
+        username="dev_u",
+        password="x",
+        level=2,
+        is_superuser=True,
+        is_staff=True,
     )
 
 
@@ -96,12 +99,14 @@ def project_assigned_to_staff(db, client_company, staff_user):
 @pytest.fixture
 def candidate(db):
     from candidates.models import Candidate
+
     return Candidate.objects.create(name="김후보")
 
 
 @pytest.fixture
 def application(db, project, candidate, boss_user):
     from projects.models import Application
+
     return Application.objects.create(
         project=project, candidate=candidate, created_by=boss_user
     )
@@ -111,6 +116,7 @@ def application(db, project, candidate, boss_user):
 def second_application(db, project, boss_user):
     from candidates.models import Candidate
     from projects.models import Application
+
     c2 = Candidate.objects.create(name="이후보")
     return Application.objects.create(
         project=project, candidate=c2, created_by=boss_user
@@ -120,12 +126,14 @@ def second_application(db, project, boss_user):
 @pytest.fixture
 def third_candidate(db):
     from candidates.models import Candidate
+
     return Candidate.objects.create(name="박후보")
 
 
 @pytest.fixture
 def third_application(db, project, third_candidate, boss_user):
     from projects.models import Application
+
     return Application.objects.create(
         project=project, candidate=third_candidate, created_by=boss_user
     )
@@ -137,18 +145,21 @@ def third_application(db, project, third_candidate, boss_user):
 @pytest.fixture
 def action_type_reach_out(db):
     from projects.models import ActionType
+
     return ActionType.objects.get(code="reach_out")
 
 
 @pytest.fixture
 def action_type_submit(db):
     from projects.models import ActionType
+
     return ActionType.objects.get(code="submit_to_client")
 
 
 @pytest.fixture
 def action_type_confirm_hire(db):
     from projects.models import ActionType
+
     return ActionType.objects.get(code="confirm_hire")
 
 
@@ -156,7 +167,11 @@ def action_type_confirm_hire(db):
 def submission_factory(db, project, boss_user):
     from candidates.models import Candidate
     from projects.models import (
-        ActionItem, ActionItemStatus, ActionType, Application, Submission,
+        ActionItem,
+        ActionItemStatus,
+        ActionType,
+        Application,
+        Submission,
     )
 
     counter = {"n": 0}
@@ -170,7 +185,9 @@ def submission_factory(db, project, boss_user):
         )
         at = ActionType.objects.get(code="submit_to_client")
         ai = ActionItem.objects.create(
-            application=app, action_type=at, title="Test submit",
+            application=app,
+            action_type=at,
+            title="Test submit",
             status=ActionItemStatus.DONE,
         )
         return Submission.objects.create(action_item=ai, batch_id=batch_id)
@@ -182,7 +199,9 @@ def submission_factory(db, project, boss_user):
 def _disable_manifest_storage(settings):
     settings.STORAGES = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
     }
 
 

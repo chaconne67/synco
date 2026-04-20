@@ -25,8 +25,11 @@ class TestProjectList:
 
 
 class TestProjectDetail:
-    def test_assigned_staff_can_access_project(self, staff_user, project_assigned_to_staff):
+    def test_assigned_staff_can_access_project(
+        self, staff_user, project_assigned_to_staff
+    ):
         from django.test import Client
+
         c = Client()
         c.force_login(staff_user)
         response = c.get(

@@ -6,7 +6,6 @@ from clients.models import Client
 from projects.models import Project, ProjectStatus
 
 
-
 @pytest.fixture
 def detail_client():
     return Client.objects.create(

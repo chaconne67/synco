@@ -44,6 +44,7 @@ def test_pending_page_button_enabled_after_promotion(client, pending_user):
 @pytest.mark.django_db
 def test_invite_code_url_removed(client):
     from django.urls import NoReverseMatch
+
     with pytest.raises(NoReverseMatch):
         reverse("invite_code")
 
@@ -169,6 +170,7 @@ def test_login_rejects_wrong_password(client):
 @pytest.mark.django_db
 def test_kakao_urls_removed(client):
     from django.urls import NoReverseMatch
+
     with pytest.raises(NoReverseMatch):
         reverse("kakao_login")
     with pytest.raises(NoReverseMatch):

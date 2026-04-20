@@ -43,7 +43,8 @@ class TestLegacyEmailSettings:
         client.force_login(active_user)
         response = client.post(
             "/accounts/email/settings/",
-            {"filter_from": "test@example.com", "is_active": "on"})
+            {"filter_from": "test@example.com", "is_active": "on"},
+        )
         assert response.status_code == 200
         assert "accounts/email_settings.html" in [t.name for t in response.templates]
 
@@ -57,16 +58,16 @@ class TestSettingsEmailHTMX:
         from accounts.models import EmailMonitorConfig
 
         EmailMonitorConfig.objects.create(
-            user=active_user,
-            gmail_credentials=b"",
-            is_active=True)
+            user=active_user, gmail_credentials=b"", is_active=True
+        )
         client = TestClient()
         client.force_login(active_user)
         response = client.post(
             "/accounts/settings/email/",
             {"filter_from": "test@example.com", "is_active": "on"},
             HTTP_HX_REQUEST="true",
-            HTTP_HX_TARGET="settings-content")
+            HTTP_HX_TARGET="settings-content",
+        )
         assert response.status_code == 200
         assert "accounts/partials/settings_email.html" in [
             t.name for t in response.templates

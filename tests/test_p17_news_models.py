@@ -12,9 +12,9 @@ from projects.models import (
     NewsSource,
     NewsSourceType,
     Project,
-    SummaryStatus)
+    SummaryStatus,
+)
 from clients.models import Client
-
 
 
 @pytest.fixture
@@ -30,7 +30,9 @@ def client_co(db):
 
 @pytest.fixture
 def project(client_co, user):
-    return Project.objects.create(client=client_co, title="Backend Dev", created_by=user)
+    return Project.objects.create(
+        client=client_co, title="Backend Dev", created_by=user
+    )
 
 
 @pytest.fixture
@@ -39,7 +41,8 @@ def news_source(db):
         name="TechCrunch Korea",
         url="https://techcrunch.com/feed/",
         type=NewsSourceType.RSS,
-        category=NewsCategory.INDUSTRY)
+        category=NewsCategory.INDUSTRY,
+    )
 
 
 @pytest.fixture
@@ -52,7 +55,8 @@ def news_article(news_source):
         summary_status=SummaryStatus.COMPLETED,
         summary="AI is transforming hiring.",
         category=NewsCategory.HIRING,
-        tags=["AI", "채용"])
+        tags=["AI", "채용"],
+    )
 
 
 class TestNewsSource:
@@ -68,13 +72,11 @@ class TestNewsSource:
     @pytest.mark.django_db
     def test_source_ordering(self):
         NewsSource.objects.create(
-            name="A",
-            url="https://a.com/feed",
-            category=NewsCategory.HR)
+            name="A", url="https://a.com/feed", category=NewsCategory.HR
+        )
         s2 = NewsSource.objects.create(
-            name="B",
-            url="https://b.com/feed",
-            category=NewsCategory.HR)
+            name="B", url="https://b.com/feed", category=NewsCategory.HR
+        )
         sources = list(NewsSource.objects.all())
         # ordering = ["-created_at"], so s2 (newer) comes first
         assert sources[0] == s2

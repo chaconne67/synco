@@ -9,8 +9,8 @@ from projects.models import Notification
 from projects.services.notification import (
     send_notification,
     send_bulk_notifications,
-    update_telegram_message)
-
+    update_telegram_message,
+)
 
 
 @pytest.fixture
@@ -32,7 +32,8 @@ def notification(user):
         recipient=user,
         type=Notification.Type.REMINDER,
         title="Test Reminder",
-        body="Test body")
+        body="Test body",
+    )
 
 
 class TestSendNotification:
@@ -74,15 +75,11 @@ class TestSendBulk:
     def test_bulk_send(self, mock_send, binding, user):
         mock_send.return_value = "msg_1"
         n1 = Notification.objects.create(
-            recipient=user,
-            type=Notification.Type.NEWS,
-            title="News 1",
-            body="Body 1")
+            recipient=user, type=Notification.Type.NEWS, title="News 1", body="Body 1"
+        )
         n2 = Notification.objects.create(
-            recipient=user,
-            type=Notification.Type.NEWS,
-            title="News 2",
-            body="Body 2")
+            recipient=user, type=Notification.Type.NEWS, title="News 2", body="Body 2"
+        )
         count = send_bulk_notifications([n1, n2])
         assert count == 2
 

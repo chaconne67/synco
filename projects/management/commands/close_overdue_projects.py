@@ -53,8 +53,7 @@ class Command(BaseCommand):
         self.stdout.write(f"대상: {count}건")
         for p in candidates:
             self.stdout.write(
-                f"  - [{p.client.name}] · {p.title} "
-                f"(deadline={p.deadline}, pk={p.pk})"
+                f"  - [{p.client.name}] · {p.title} (deadline={p.deadline}, pk={p.pk})"
             )
 
         if opts["dry_run"]:
@@ -62,7 +61,9 @@ class Command(BaseCommand):
             return
 
         # 실제 종료 처리 (signal 우회 — .update() 로 일괄)
-        note_suffix = f"\n\n[AUTO-CLOSE {today.isoformat()}] 마감일 경과로 자동 종료 (실패)"
+        note_suffix = (
+            f"\n\n[AUTO-CLOSE {today.isoformat()}] 마감일 경과로 자동 종료 (실패)"
+        )
         for p in candidates:
             new_note = (p.note or "") + note_suffix
             Project.objects.filter(pk=p.pk).update(

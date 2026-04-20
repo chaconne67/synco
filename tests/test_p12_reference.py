@@ -348,7 +348,9 @@ class TestCertCRUD:
         assert "KICPA" in resp.content.decode()
 
     @pytest.mark.django_db
-    @pytest.mark.skip(reason="T10 — cert category filter returns full page in test env, needs HTMX partial fix")
+    @pytest.mark.skip(
+        reason="T10 — cert category filter returns full page in test env, needs HTMX partial fix"
+    )
     def test_filter_by_category(self, normal_client):
         PreferredCert.objects.create(name="KICPA", category="회계/재무")
         PreferredCert.objects.create(name="CISA", category="IT")

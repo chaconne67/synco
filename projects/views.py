@@ -1073,7 +1073,9 @@ def submission_batch_create(request, pk):
 def submission_update(request, pk, sub_pk):
     """추천 서류 수정."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
+    submission = get_scoped_object_or_404(
+        Submission, request.user, pk=sub_pk, action_item__application__project=project
+    )
 
     if request.method == "POST":
         form = SubmissionForm(
@@ -1110,7 +1112,9 @@ def submission_update(request, pk, sub_pk):
 def submission_delete(request, pk, sub_pk):
     """추천 서류 삭제. 면접/오퍼 존재 시 차단."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
+    submission = get_scoped_object_or_404(
+        Submission, request.user, pk=sub_pk, action_item__application__project=project
+    )
 
     # 삭제 보호: 면접 존재 시 차단
     if submission.interviews.exists():
@@ -1132,7 +1136,9 @@ def submission_delete(request, pk, sub_pk):
 def submission_submit(request, pk, sub_pk):
     """고객사에 제출 (작성중 → 제출)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
+    submission = get_scoped_object_or_404(
+        Submission, request.user, pk=sub_pk, action_item__application__project=project
+    )
 
     from projects.services.submission import InvalidTransition, submit_to_client
 
@@ -1152,7 +1158,9 @@ def submission_submit(request, pk, sub_pk):
 def submission_feedback(request, pk, sub_pk):
     """고객사 피드백 입력 (제출 → 통과/탈락)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
+    submission = get_scoped_object_or_404(
+        Submission, request.user, pk=sub_pk, action_item__application__project=project
+    )
 
     if request.method == "POST":
         form = SubmissionFeedbackForm(request.POST)
@@ -1194,7 +1202,9 @@ def submission_feedback(request, pk, sub_pk):
 def submission_download(request, pk, sub_pk):
     """첨부파일 다운로드. 파일 없으면 404."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
+    submission = get_scoped_object_or_404(
+        Submission, request.user, pk=sub_pk, action_item__application__project=project
+    )
 
     if not submission.document_file:
         from django.http import Http404
@@ -1220,21 +1230,23 @@ MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25MB (Whisper API limit)
 
 
 def _get_draft_context(request, pk, sub_pk):
-    """Draft 뷰 공통: org 검증 + project + submission + draft(get_or_create)."""
+    """Draft 뷰 공통: project + submission + draft(get_or_create)."""
     project = get_scoped_object_or_404(Project, request.user, pk=pk)
-    submission = get_scoped_object_or_404(Submission, request.user, pk=sub_pk, action_item__application__project=project)
+    submission = get_scoped_object_or_404(
+        Submission, request.user, pk=sub_pk, action_item__application__project=project
+    )
     draft, _created = SubmissionDraft.objects.get_or_create(
         submission=submission,
         defaults={"masking_config": DEFAULT_MASKING_CONFIG.copy()},
     )
-    return org, project, submission, draft
+    return project, submission, draft
 
 
 @login_required
 @level_required(1)
 def submission_draft(request, pk, sub_pk):
     """초안 작업 메인 화면. 현재 상태에 따라 적절한 단계 표시."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
     return render(
         request,
         "projects/submission_draft.html",
@@ -1252,7 +1264,7 @@ def submission_draft(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def draft_generate(request, pk, sub_pk):
     """AI 초안 생성. Gemini API 호출."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     if draft.status not in (DraftStatus.PENDING, DraftStatus.DRAFT_GENERATED):
         return HttpResponse("이미 초안 생성이 완료되었습니다.", status=400)
@@ -1279,7 +1291,7 @@ def draft_generate(request, pk, sub_pk):
 @level_required(1)
 def draft_consultation(request, pk, sub_pk):
     """상담 내용 직접 입력."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     if request.method == "POST":
         draft.consultation_input = request.POST.get("consultation_input", "")
@@ -1316,7 +1328,7 @@ def draft_consultation(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def draft_consultation_audio(request, pk, sub_pk):
     """녹음 파일 업로드 + Whisper 딕테이션."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     audio_file = request.FILES.get("audio_file")
     if not audio_file:
@@ -1376,7 +1388,7 @@ def draft_consultation_audio(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def draft_finalize(request, pk, sub_pk):
     """AI 최종 정리: 초안 + 상담 병합."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     allowed_statuses = {
         DraftStatus.DRAFT_GENERATED,
@@ -1412,7 +1424,7 @@ def draft_finalize(request, pk, sub_pk):
 @level_required(1)
 def draft_review(request, pk, sub_pk):
     """컨설턴트가 final_content_json을 직접 수정."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     if request.method == "POST":
         try:
@@ -1446,7 +1458,7 @@ def draft_review(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def draft_convert(request, pk, sub_pk):
     """제출용 Word 파일 변환 + 마스킹."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     allowed_statuses = {DraftStatus.REVIEWED, DraftStatus.CONVERTED}
     if draft.status not in allowed_statuses:
@@ -1496,7 +1508,7 @@ def draft_convert(request, pk, sub_pk):
 @level_required(1)
 def draft_preview(request, pk, sub_pk):
     """현재 단계의 데이터를 미리보기."""
-    _org, project, submission, draft = _get_draft_context(request, pk, sub_pk)
+    project, submission, draft = _get_draft_context(request, pk, sub_pk)
 
     # final_content_json이 있으면 최종, 없으면 auto_draft_json
     preview_data = draft.final_content_json or draft.auto_draft_json

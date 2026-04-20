@@ -23,24 +23,20 @@ def list_clients_with_stats(
     success_status=None,
 ):
     base = Client.objects.all()
-    qs = (
-        base
-        .annotate(
-            offers_count=Count("projects", distinct=True),
-            success_count=Count(
-                "projects", filter=Q(projects__result="success"), distinct=True
-            ),
-            active_count=Count(
-                "projects", filter=Q(projects__status="open"), distinct=True
-            ),
-            placed_count=Count(
-                "projects__applications",
-                filter=Q(projects__applications__hired_at__isnull=False),
-                distinct=True,
-            ),
-        )
-        .order_by("-created_at")
-    )
+    qs = base.annotate(
+        offers_count=Count("projects", distinct=True),
+        success_count=Count(
+            "projects", filter=Q(projects__result="success"), distinct=True
+        ),
+        active_count=Count(
+            "projects", filter=Q(projects__status="open"), distinct=True
+        ),
+        placed_count=Count(
+            "projects__applications",
+            filter=Q(projects__applications__hired_at__isnull=False),
+            distinct=True,
+        ),
+    ).order_by("-created_at")
 
     if categories:
         cat_values = _category_values(categories)
@@ -88,11 +84,7 @@ def category_counts():
     """카테고리 enum name -> 건수. 0건도 포함."""
     counts = {c.name: 0 for c in IndustryCategory}
     base = Client.objects.all()
-    qs = (
-        base
-        .values("industry")
-        .annotate(n=Count("id"))
-    )
+    qs = base.values("industry").annotate(n=Count("id"))
     value_to_name = {c.value: c.name for c in IndustryCategory}
     for row in qs:
         name = value_to_name.get(row["industry"])
@@ -104,13 +96,7 @@ def category_counts():
 def available_regions():
     """사용 중인 region 값 리스트(가나다 순)."""
     base = Client.objects.all()
-    return sorted(
-        set(
-            v
-            for v in base.values_list("region", flat=True)
-            if v
-        )
-    )
+    return sorted(set(v for v in base.values_list("region", flat=True) if v))
 
 
 def client_stats(client):

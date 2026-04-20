@@ -92,7 +92,9 @@ def test_reject_project_happy_path(approval, boss_user, pending_project):
 
 
 @pytest.mark.django_db
-def test_reject_project_creates_notification(approval, boss_user, staff_user, pending_project):
+def test_reject_project_creates_notification(
+    approval, boss_user, staff_user, pending_project
+):
     reject_project(approval, admin_user=boss_user)
 
     notif = Notification.objects.filter(recipient=staff_user).last()

@@ -8,7 +8,6 @@ from clients.services.client_create import (
 )
 
 
-
 def test_normalize_contact_persons_drops_empty_rows():
     raw = [
         {"name": "A", "position": "CEO", "phone": "", "email": ""},
@@ -23,7 +22,15 @@ def test_normalize_contact_persons_drops_empty_rows():
 
 
 def test_normalize_contact_persons_preserves_schema():
-    raw = [{"name": "A", "position": "CEO", "phone": "010", "email": "a@x.com", "extra": "drop"}]
+    raw = [
+        {
+            "name": "A",
+            "position": "CEO",
+            "phone": "010",
+            "email": "a@x.com",
+            "extra": "drop",
+        }
+    ]
     out = normalize_contact_persons(raw)
     assert set(out[0].keys()) == {"name", "position", "phone", "email"}
 
@@ -31,7 +38,9 @@ def test_normalize_contact_persons_preserves_schema():
 @pytest.mark.django_db
 def test_apply_logo_upload_saves_file():
     c = Client.objects.create(name="A")
-    f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png")
+    f = SimpleUploadedFile(
+        "logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png"
+    )
     apply_logo_upload(c, f)
     c.refresh_from_db()
     assert c.logo.name.startswith("clients/logos/")
@@ -40,7 +49,9 @@ def test_apply_logo_upload_saves_file():
 @pytest.mark.django_db
 def test_apply_logo_upload_delete_flag():
     c = Client.objects.create(name="A")
-    f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png")
+    f = SimpleUploadedFile(
+        "logo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100, content_type="image/png"
+    )
     apply_logo_upload(c, f)
     apply_logo_upload(c, None, delete=True)
     c.refresh_from_db()

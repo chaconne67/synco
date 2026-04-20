@@ -8,7 +8,6 @@ from clients.templatetags.clients_tags import (
 )
 
 
-
 def test_size_badge_class_mapping():
     assert size_badge_class("대기업") == "badge enterprise"
     assert size_badge_class("중견") == "badge midcap"
@@ -34,6 +33,6 @@ def test_client_initials_long():
 @pytest.mark.django_db
 def test_logo_class_deterministic():
     c1 = Client.objects.create(name="A")
-    c2 = Client.objects.create(name="B")
+    Client.objects.create(name="B")
     assert logo_class(c1) == logo_class(c1)
     assert logo_class(c1) in {f"client-logo-{i}" for i in range(1, 9)}

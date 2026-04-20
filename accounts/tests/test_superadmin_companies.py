@@ -15,7 +15,9 @@ def test_anonymous_redirected_to_login(client):
 
 @pytest.mark.django_db
 def test_level1_user_gets_403(client):
-    u = User.objects.create_user(username="u1", email="u1@e.com", password="p!", level=1)
+    u = User.objects.create_user(
+        username="u1", email="u1@e.com", password="p!", level=1
+    )
     client.force_login(u)
     resp = client.get(PENDING_URL)
     assert resp.status_code == 403
@@ -23,7 +25,9 @@ def test_level1_user_gets_403(client):
 
 @pytest.mark.django_db
 def test_level0_user_redirected_to_pending(client):
-    u = User.objects.create_user(username="u0", email="u0@e.com", password="p!", level=0)
+    u = User.objects.create_user(
+        username="u0", email="u0@e.com", password="p!", level=0
+    )
     client.force_login(u)
     resp = client.get(PENDING_URL)
     # level_required redirects level 0 to pending_approval
@@ -41,14 +45,20 @@ def test_level2_user_sees_pending_list(client):
     client.force_login(boss)
     resp = client.get(PENDING_URL)
     assert resp.status_code == 200
-    assert pending.username.encode() in resp.content or pending.email.encode() in resp.content
+    assert (
+        pending.username.encode() in resp.content
+        or pending.email.encode() in resp.content
+    )
 
 
 @pytest.mark.django_db
 def test_superuser_sees_pending_list(client):
     su = User.objects.create_user(
-        username="su", email="su@e.com", password="p!",
-        is_superuser=True, is_staff=True,
+        username="su",
+        email="su@e.com",
+        password="p!",
+        is_superuser=True,
+        is_staff=True,
     )
     pending = User.objects.create_user(
         username="pending2", email="p2@e.com", password="p!", level=0
@@ -61,8 +71,12 @@ def test_superuser_sees_pending_list(client):
 
 @pytest.mark.django_db
 def test_level1_user_approve_post_gets_403(client):
-    u = User.objects.create_user(username="u1b", email="u1b@e.com", password="p!", level=1)
-    pending = User.objects.create_user(username="pend0", email="pend0@e.com", password="p!", level=0)
+    u = User.objects.create_user(
+        username="u1b", email="u1b@e.com", password="p!", level=1
+    )
+    pending = User.objects.create_user(
+        username="pend0", email="pend0@e.com", password="p!", level=0
+    )
     client.force_login(u)
     resp = client.post(f"/superadmin/approve/{pending.id}/", {"level": "1"})
     assert resp.status_code == 403
