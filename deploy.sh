@@ -3,6 +3,9 @@ set -euo pipefail
 
 DRY_RUN=0
 SKIP_TESTS=0
+# --company=SLUG 인자 파싱 (현재는 single-tenant, 값 무시하고 "synco" 고정).
+# 2번째 회사가 추가될 때 이 스텁을 실구현.
+COMPANY="synco"
 
 for arg in "$@"; do
     case "$arg" in
@@ -12,13 +15,19 @@ for arg in "$@"; do
         --skip-tests)
             SKIP_TESTS=1
             ;;
+        --company=*)
+            COMPANY="${arg#*=}"
+            ;;
         *)
             echo "Unknown option: $arg" >&2
-            echo "Usage: ./deploy.sh [--dry-run] [--skip-tests]" >&2
+            echo "Usage: ./deploy.sh [--dry-run] [--skip-tests] [--company=SLUG]" >&2
             exit 1
             ;;
     esac
 done
+
+export SYNCO_COMPANY_SLUG="$COMPANY"
+echo ">>> Deploying synco (company=$COMPANY)"
 
 TAG=$(date +%Y%m%d%H%M%S)
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
