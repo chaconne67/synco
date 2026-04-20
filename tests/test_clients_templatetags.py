@@ -8,13 +8,6 @@ from clients.templatetags.clients_tags import (
 )
 
 
-@pytest.fixture
-def legacy_org(db):
-    """Temporary shim until T7 drops organization FK."""
-    from accounts.models import Organization
-
-    return Organization.objects.create(name="Legacy")
-
 
 def test_size_badge_class_mapping():
     assert size_badge_class("대기업") == "badge enterprise"

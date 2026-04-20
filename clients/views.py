@@ -107,7 +107,11 @@ def client_create(request):
         cp_json_str = request.POST.get("contact_persons_json", "[]")
         if form.is_valid():
             client = form.save(commit=False)
-            client.organization = Organization.objects.first()
+            org = Organization.objects.first()
+            if org is None:
+                # T7 will drop this FK; until then we require a seeded org.
+                return redirect("clients:client_list")
+            client.organization = org
             try:
                 raw = json.loads(cp_json_str)
             except (json.JSONDecodeError, TypeError):

@@ -1,8 +1,8 @@
 """Reference data management views.
 
 Permission model:
-- Read (list, search, export): @login_required
-- Write (create, update, delete, import): @staff_member_required
+- Read (list, search, export): @level_required(1)
+- Write (create, update, delete, import): @level_required(2)
 """
 
 from __future__ import annotations

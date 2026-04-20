@@ -23,13 +23,6 @@ def test_industry_category_enum_names_for_url_params():
     assert IndustryCategory["ETC"].value == "기타"
 
 
-@pytest.fixture
-def legacy_org(db):
-    """Temporary shim until T7 drops organization FK."""
-    from accounts.models import Organization
-
-    return Organization.objects.create(name="Legacy")
-
 
 @pytest.mark.django_db
 def test_client_has_website_field(legacy_org):

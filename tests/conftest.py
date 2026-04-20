@@ -188,6 +188,14 @@ def _disable_manifest_storage(settings):
     }
 
 
+@pytest.fixture
+def legacy_org(db):
+    """Temporary shim until T7 drops organization FK from Client/Project/Contract."""
+    from accounts.models import Organization
+
+    return Organization.objects.create(name="Legacy")
+
+
 # --- Level-based fixtures (single-tenant refactor) ---
 
 

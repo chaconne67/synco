@@ -8,13 +8,6 @@ from clients.services.client_create import (
 )
 
 
-@pytest.fixture
-def legacy_org(db):
-    """Temporary shim until T7 drops organization FK."""
-    from accounts.models import Organization
-
-    return Organization.objects.create(name="Legacy")
-
 
 def test_normalize_contact_persons_drops_empty_rows():
     raw = [

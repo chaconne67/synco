@@ -12,13 +12,6 @@ from clients.services.client_queries import (
 from projects.models import Project, Application
 
 
-@pytest.fixture
-def legacy_org(db):
-    """Temporary shim until T7 drops organization FK."""
-    from accounts.models import Organization
-
-    return Organization.objects.create(name="Legacy")
-
 
 @pytest.mark.django_db
 def test_list_clients_with_stats_zero_projects(legacy_org):
