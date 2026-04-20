@@ -1,7 +1,12 @@
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import Membership, Organization, User
+from clients.models import Client
+from projects.models import Project
 
 
 @pytest.fixture
@@ -30,14 +35,6 @@ def test_dashboard_renders_with_empty_org(owner_client):
     assert b"Monthly Success" in resp.content
 
 
-from datetime import timedelta
-
-from django.utils import timezone
-
-from clients.models import Client
-from projects.models import Project
-
-
 def _close_project(project, result, at):
     """Helper: close a project at specific datetime."""
     Project.objects.filter(pk=project.pk).update(
@@ -53,7 +50,7 @@ def client_obj(org):
 @pytest.mark.django_db
 def test_s1_monthly_success_counts(owner_client, org, client_obj):
     """S1-1: 이번 달 성공/진행중/성공률 렌더."""
-    now = timezone.now()
+    now = timezone.localtime()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month = month_start - timedelta(days=1)
 

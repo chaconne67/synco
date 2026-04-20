@@ -182,8 +182,8 @@ def get_project_kanban_cards(
 
 def _monthly_success(org, user, scope_owner):
     """S1-1 Monthly Success: 이번 달 성공·진행중·성공률."""
-    now = timezone.now()
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    now_local = timezone.localtime()
+    month_start = now_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     qs = _scope_projects(org, user, scope_owner)
 
     closed_this_month = qs.filter(
