@@ -1,0 +1,78 @@
+{% extends request.htmx|yesno:"common/base_partial.html,common/base.html" %}
+
+{% block title %}{{ member.name }} — Edit · synco{% endblock %}
+{% block breadcrumb_current %}Team / {{ member.name }}{% endblock %}
+{% block page_title %}{{ member.name }} 정보 수정{% endblock %}
+
+{% block content %}
+{# OOB: HTMX 스왑 시 상단바 동기화 #}
+<span id="top-breadcrumb-current" hx-swap-oob="true" class="text-slate-600">Team / {{ member.name }}</span>
+<h2 id="top-page-title" hx-swap-oob="true" class="text-2xl font-black text-slate-900 tracking-tight">{{ member.name }} 정보 수정</h2>
+
+<div class="px-8 py-8 max-w-[720px] pb-32">
+
+  <a href="{% url 'team' %}"
+     hx-get="{% url 'team' %}" hx-target="#main-content" hx-push-url="true"
+     class="inline-flex items-center gap-2 text-xs font-semibold text-muted hover:text-ink3 mb-6">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    팀 목록으로
+  </a>
+
+  <div class="eyebrow">Edit Member</div>
+  <h2 class="text-3xl font-bold tracking-tight mb-8">{{ member.name }}</h2>
+
+  <form method="post" action="{% url 'team_member_edit' member.slug %}" class="space-y-6">
+    {% csrf_token %}
+
+    <section class="bg-surface rounded-card shadow-card p-6">
+      <div class="eyebrow mb-5">기본 정보</div>
+      <div>
+        <label for="f-name" class="block text-xs font-semibold text-ink3 mb-1.5">이름 <span class="text-danger">*</span></label>
+        <input id="f-name" name="name" type="text" value="{{ member.name }}" required
+               class="w-full rounded-lg border border-hair bg-surface px-3 py-2 text-sm focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none">
+      </div>
+    </section>
+
+    <section class="bg-surface rounded-card shadow-card p-6">
+      <div class="eyebrow mb-5">연락처</div>
+      <div class="grid grid-cols-2 gap-5">
+        <div>
+          <label for="f-email" class="block text-xs font-semibold text-ink3 mb-1.5">이메일</label>
+          <input id="f-email" name="email" type="email" value="{{ member.email }}"
+                 class="w-full rounded-lg border border-hair bg-surface px-3 py-2 text-sm focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none">
+        </div>
+        <div>
+          <label for="f-phone" class="block text-xs font-semibold text-ink3 mb-1.5">전화번호</label>
+          <input id="f-phone" name="phone" type="tel" value="{{ member.phone }}" placeholder="010-0000-0000"
+                 class="w-full rounded-lg border border-hair bg-surface px-3 py-2 text-sm focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none">
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-surface rounded-card shadow-card p-6">
+      <div class="eyebrow mb-5">멤버십 상태</div>
+      <div class="flex items-center gap-3">
+        <select name="status"
+                class="rounded-lg border border-hair bg-surface px-3 py-2 text-sm focus:border-ink3 focus:ring-2 focus:ring-ink3/10 outline-none">
+          <option value="active" {% if member.status == "active" %}selected{% endif %}>Active</option>
+          <option value="pending" {% if member.status == "pending" %}selected{% endif %}>Pending</option>
+          <option value="rejected" {% if member.status == "rejected" %}selected{% endif %}>Rejected</option>
+        </select>
+        <p class="text-xs text-faint">Pending: 승인 대기 · Rejected: 가입 거부</p>
+      </div>
+    </section>
+
+    <div class="sticky bottom-0 bg-canvas pt-4 flex items-center justify-between">
+      <button type="button"
+              class="text-sm font-semibold text-danger hover:underline">삭제</button>
+      <div class="flex items-center gap-3">
+        <a href="{% url 'team' %}"
+           hx-get="{% url 'team' %}" hx-target="#main-content" hx-push-url="true"
+           class="text-sm text-muted hover:text-ink3">취소</a>
+        <button type="submit"
+                class="px-6 h-10 rounded-lg bg-ink3 text-white text-sm font-semibold hover:bg-ink2">저장</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
