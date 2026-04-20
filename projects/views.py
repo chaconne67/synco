@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.decorators import level_required
-from accounts.services.scope import scope_work_qs
+from accounts.services.scope import get_scoped_object_or_404, scope_work_qs
 from clients.models import Client
 
 from projects.services import posting as posting_service
@@ -360,7 +360,7 @@ def _build_tab_context(project):
 @level_required(1)
 def project_detail(request, pk):
     """Project detail — Application-based view."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     applications = (
         Application.objects.filter(project=project)
@@ -396,7 +396,7 @@ def project_detail(request, pk):
 @level_required(1)
 def project_applications_partial(request, pk):
     """HTMX partial: application list for a project. R1-11: explicit prefetch."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     applications = (
         Application.objects.filter(project=project)
         .select_related("candidate")
@@ -425,7 +425,7 @@ def project_applications_partial(request, pk):
 @level_required(1)
 def project_timeline_partial(request, pk):
     """HTMX partial: action timeline for a project."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     actions = (
         ActionItem.objects.filter(application__project=project)
         .select_related("application__candidate", "action_type", "assigned_to")
@@ -442,7 +442,7 @@ def project_timeline_partial(request, pk):
 @level_required(1)
 def project_update(request, pk):
     """Update an existing project."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     # Block edit if pending approval exists
     has_pending_approval = ProjectApproval.objects.filter(
@@ -452,9 +452,7 @@ def project_update(request, pk):
         return HttpResponse(status=403)
 
     if request.method == "POST":
-        form = ProjectForm(
-            request.POST, request.FILES, instance=project
-        )
+        form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             form.save()
             return redirect("projects:project_detail", pk=project.pk)
@@ -475,7 +473,7 @@ def project_delete(request, pk):
     if request.method != "POST":
         return HttpResponse(status=405)
 
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     # Block delete if pending approval exists
     has_pending_approval = ProjectApproval.objects.filter(
@@ -515,7 +513,7 @@ def project_delete(request, pk):
 @level_required(1)
 def project_close(request, pk):
     """GET: render close modal form. POST: close the project."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     # Permission: owner or assigned consultant
     is_owner = request.user.is_superuser or request.user.level >= 2
@@ -573,7 +571,7 @@ def project_close(request, pk):
 @require_http_methods(["POST"])
 def project_reopen(request, pk):
     """Reopen a closed project."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     # Permission: owner or assigned consultant
     is_owner = request.user.is_superuser or request.user.level >= 2
@@ -643,7 +641,7 @@ def _build_overview_context(project):
 @level_required(1)
 def project_tab_overview(request, pk):
     """개요: JD 요약, 퍼널, 담당자, 최근 진행 현황."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     context = _build_overview_context(project)
     context["project"] = project
 
@@ -663,7 +661,7 @@ def project_tab_overview(request, pk):
 @level_required(1)
 def project_tab_search(request, pk):
     """서칭: 매칭 결과 + Application 상태 표시."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     results = []
     if project.requirements:
@@ -708,7 +706,7 @@ def project_tab_search(request, pk):
 @level_required(1)
 def project_tab_submissions(request, pk):
     """추천 탭: 상태별 그룹핑 목록."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submissions = project.submissions.select_related(
         "candidate", "consultant"
     ).order_by("-created_at")
@@ -737,7 +735,7 @@ def project_tab_submissions(request, pk):
 @level_required(1)
 def project_tab_interviews(request, pk):
     """면접 탭: 후보자별 그룹핑, 차수 순 정렬."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     interviews = (
         Interview.objects.filter(submission__project=project)
@@ -778,7 +776,7 @@ def project_tab_interviews(request, pk):
 @require_http_methods(["POST"])
 def analyze_jd(request, pk):
     """JD 분석 트리거. 파일 업로드 시 텍스트 추출 후 AI 분석."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     from projects.services.jd_analysis import (
         analyze_jd as run_analysis,
@@ -826,7 +824,7 @@ def analyze_jd(request, pk):
 @level_required(1)
 def jd_results(request, pk):
     """JD 분석 결과 표시 (HTMX partial)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     return render(
         request,
@@ -845,7 +843,7 @@ def jd_results(request, pk):
 @level_required(1)
 def drive_picker(request, pk):
     """Drive 파일 선택 UI. GET=파일 목록, POST=파일 선택+텍스트 추출."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if request.method == "POST":
         file_id = request.POST.get("file_id")
@@ -918,7 +916,7 @@ def drive_picker(request, pk):
 @require_http_methods(["POST"])
 def start_search_session(request, pk):
     """프로젝트 requirements → SearchSession 생성 → 후보자 검색으로 redirect."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if not project.requirements:
         return render(
@@ -945,7 +943,7 @@ def start_search_session(request, pk):
 @level_required(1)
 def jd_matching_results(request, pk):
     """프로젝트 상세 내 후보자 매칭 결과 목록."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if not project.requirements:
         return render(
@@ -974,15 +972,13 @@ def jd_matching_results(request, pk):
 @level_required(1)
 def submission_create(request, pk):
     """추천 서류 등록."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if _has_pending_approval(project):
         return HttpResponse(status=403)
 
     if request.method == "POST":
-        form = SubmissionForm(
-            request.POST, request.FILES
-        )
+        form = SubmissionForm(request.POST, request.FILES)
         if form.is_valid():
             submission = form.save(commit=False)
             submission.project = project
@@ -1029,7 +1025,7 @@ def submission_create(request, pk):
 @require_http_methods(["POST"])
 def submission_batch_create(request, pk):
     """선택한 여러 Application 을 한 batch_id 로 묶어 Submission 생성."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     app_ids = request.POST.getlist("application_ids")
     if not app_ids:
         return HttpResponseBadRequest("application_ids required")
@@ -1076,7 +1072,7 @@ def submission_batch_create(request, pk):
 @level_required(1)
 def submission_update(request, pk, sub_pk):
     """추천 서류 수정."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     if request.method == "POST":
@@ -1113,7 +1109,7 @@ def submission_update(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def submission_delete(request, pk, sub_pk):
     """추천 서류 삭제. 면접/오퍼 존재 시 차단."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     # 삭제 보호: 면접 존재 시 차단
@@ -1135,7 +1131,7 @@ def submission_delete(request, pk, sub_pk):
 @require_http_methods(["POST"])
 def submission_submit(request, pk, sub_pk):
     """고객사에 제출 (작성중 → 제출)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     from projects.services.submission import InvalidTransition, submit_to_client
@@ -1155,7 +1151,7 @@ def submission_submit(request, pk, sub_pk):
 @level_required(1)
 def submission_feedback(request, pk, sub_pk):
     """고객사 피드백 입력 (제출 → 통과/탈락)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     if request.method == "POST":
@@ -1197,7 +1193,7 @@ def submission_feedback(request, pk, sub_pk):
 @level_required(1)
 def submission_download(request, pk, sub_pk):
     """첨부파일 다운로드. 파일 없으면 404."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
 
     if not submission.document_file:
@@ -1225,7 +1221,7 @@ MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25MB (Whisper API limit)
 
 def _get_draft_context(request, pk, sub_pk):
     """Draft 뷰 공통: org 검증 + project + submission + draft(get_or_create)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     submission = get_object_or_404(Submission, pk=sub_pk, project=project)
     draft, _created = SubmissionDraft.objects.get_or_create(
         submission=submission,
@@ -1526,7 +1522,7 @@ def draft_preview(request, pk, sub_pk):
 @level_required(1)
 def interview_create(request, pk):
     """면접 등록."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if _has_pending_approval(project):
         return HttpResponse(status=403)
@@ -1598,7 +1594,7 @@ def interview_create(request, pk):
 @level_required(1)
 def interview_update(request, pk, interview_pk):
     """면접 수정."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     interview = get_object_or_404(
         Interview,
         pk=interview_pk,
@@ -1633,7 +1629,7 @@ def interview_update(request, pk, interview_pk):
 @require_http_methods(["POST"])
 def interview_delete(request, pk, interview_pk):
     """면접 삭제."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     interview = get_object_or_404(
         Interview,
         pk=interview_pk,
@@ -1651,7 +1647,7 @@ def interview_delete(request, pk, interview_pk):
 @level_required(1)
 def interview_result(request, pk, interview_pk):
     """면접 결과 입력 (대기 → 합격/보류/탈락)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     interview = get_object_or_404(
         Interview,
         pk=interview_pk,
@@ -1703,7 +1699,7 @@ def interview_result(request, pk, interview_pk):
 @require_http_methods(["POST"])
 def posting_generate(request, pk):
     """AI 공지 초안 생성. overwrite=true 필요 시 기존 내용 보호."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     # I-07: 덮어쓰기 보호 — 기존 내용 있으면 overwrite 파라미터 필요
     if project.posting_text and request.POST.get("overwrite") != "true":
@@ -1759,7 +1755,7 @@ def posting_generate(request, pk):
 @level_required(1)
 def posting_edit(request, pk):
     """공지 내용 편집. GET=폼, POST=저장."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if request.method == "POST":
         form = PostingEditForm(request.POST)
@@ -1793,7 +1789,7 @@ def posting_edit(request, pk):
 @level_required(1)
 def posting_download(request, pk):
     """공지 파일 다운로드 (.txt)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if not project.posting_text:
         return HttpResponse(status=404)
@@ -1815,7 +1811,7 @@ def posting_download(request, pk):
 @level_required(1)
 def posting_sites(request, pk):
     """포스팅 사이트 목록 (HTMX partial)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     sites = project.posting_sites.filter(is_active=True)
     total_applicants = sum(s.applicant_count for s in sites)
@@ -1836,7 +1832,7 @@ def posting_sites(request, pk):
 @require_http_methods(["GET", "POST"])
 def posting_site_add(request, pk):
     """포스팅 사이트 추가."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if request.method == "POST":
         form = PostingSiteForm(request.POST)
@@ -1894,7 +1890,7 @@ def posting_site_add(request, pk):
 @require_http_methods(["GET", "POST"])
 def posting_site_update(request, pk, site_pk):
     """포스팅 사이트 수정."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     site = get_object_or_404(PostingSite, pk=site_pk, project=project)
 
     if request.method == "POST":
@@ -1934,7 +1930,7 @@ def posting_site_update(request, pk, site_pk):
 @require_http_methods(["POST"])
 def posting_site_delete(request, pk, site_pk):
     """포스팅 사이트 비활성화 (소프트 삭제)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     site = get_object_or_404(PostingSite, pk=site_pk, project=project)
 
     site.is_active = False
@@ -2028,8 +2024,8 @@ def approval_decide(request, appr_pk):
         elif decision == "합류":
             merge_target = None
             if merge_target_id:
-                merge_target = get_object_or_404(
-                    Project, pk=merge_target_id
+                merge_target = get_scoped_object_or_404(
+                    Project, request.user, pk=merge_target_id
                 )
             merge_project(approval, request.user, merge_target=merge_target)
         elif decision == "메시지":
@@ -2047,7 +2043,7 @@ def approval_decide(request, appr_pk):
 @require_http_methods(["POST"])
 def approval_cancel(request, pk):
     """Requester cancels their approval request."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     approval = get_object_or_404(
         ProjectApproval,
@@ -2101,7 +2097,7 @@ from .models import AutoAction
 @require_http_methods(["GET"])
 def project_context(request, pk):
     """GET: Return active context banner partial."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     ctx = get_active_context(project, request.user)
     return render(
         request,
@@ -2119,7 +2115,7 @@ def project_context(request, pk):
 @require_http_methods(["POST"])
 def project_context_save(request, pk):
     """POST: Save/update context (autosave endpoint)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     content_type = request.content_type or ""
     if "application/json" in content_type:
@@ -2156,7 +2152,7 @@ def project_context_save(request, pk):
 @require_http_methods(["POST"])
 def project_context_resume(request, pk):
     """POST: Resume from context → redirect to target form."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     ctx = get_active_context(project, request.user)
     if not ctx:
         return HttpResponse(status=404)
@@ -2173,7 +2169,7 @@ def project_context_resume(request, pk):
 @require_http_methods(["POST"])
 def project_context_discard(request, pk):
     """POST: Discard the active context."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     discard_context(project, request.user)
     return render(
         request,
@@ -2191,7 +2187,7 @@ def project_context_discard(request, pk):
 @require_http_methods(["GET"])
 def project_auto_actions(request, pk):
     """GET: List pending auto-actions."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     actions = get_pending_actions(project)
     return render(
         request,
@@ -2208,7 +2204,7 @@ def project_auto_actions(request, pk):
 @require_http_methods(["POST"])
 def auto_action_apply(request, pk, action_pk):
     """POST: Apply an auto-action."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     action = get_object_or_404(AutoAction, pk=action_pk, project=project)
     try:
         apply_action(action.pk, request.user)
@@ -2230,7 +2226,7 @@ def auto_action_apply(request, pk, action_pk):
 @require_http_methods(["POST"])
 def auto_action_dismiss(request, pk, action_pk):
     """POST: Dismiss an auto-action."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     action = get_object_or_404(AutoAction, pk=action_pk, project=project)
     try:
         dismiss_action(action.pk, request.user)
@@ -2254,7 +2250,7 @@ def auto_action_dismiss(request, pk, action_pk):
 @level_required(1)
 def resume_upload(request, pk):
     """POST: Upload resume files → create ResumeUpload(pending) per file."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if request.method != "POST":
         return HttpResponseBadRequest()
@@ -2291,7 +2287,7 @@ def resume_upload(request, pk):
 @level_required(1)
 def resume_process_pending(request, pk):
     """POST: Process all pending uploads for batch. Runs extraction synchronously."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     batch_id = request.POST.get("batch_id")
     if not batch_id:
@@ -2323,7 +2319,7 @@ def resume_process_pending(request, pk):
 @level_required(1)
 def resume_upload_status(request, pk):
     """GET: HTMX polling endpoint for upload status."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     batch_id = request.GET.get("batch")
     uploads = ResumeUpload.objects.filter(
@@ -2347,7 +2343,7 @@ def resume_upload_status(request, pk):
 @level_required(1)
 def resume_link_candidate(request, pk, resume_pk):
     """POST: Link extracted resume to candidate."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     upload = get_object_or_404(
         ResumeUpload.objects.filter(project=project),
         pk=resume_pk,
@@ -2373,7 +2369,7 @@ def resume_link_candidate(request, pk, resume_pk):
 @level_required(1)
 def resume_discard(request, pk, resume_pk):
     """POST: Discard resume upload + delete physical file."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     upload = get_object_or_404(
         ResumeUpload.objects.filter(project=project),
         pk=resume_pk,
@@ -2397,7 +2393,7 @@ def resume_discard(request, pk, resume_pk):
 @level_required(1)
 def resume_retry(request, pk, resume_pk):
     """POST: Retry failed extraction (max 3 retries)."""
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
     upload = get_object_or_404(
         ResumeUpload.objects.filter(project=project),
         pk=resume_pk,
@@ -2450,7 +2446,7 @@ def resume_assign_project(request, resume_pk, project_pk):
         ResumeUpload.objects.filter(project__isnull=True),
         pk=resume_pk,
     )
-    project = get_object_or_404(Project, pk=project_pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=project_pk)
 
     upload.project = project
     upload.save(update_fields=["project", "updated_at"])
@@ -2480,7 +2476,7 @@ def project_add_candidate(request, pk):
     POST (candidate_id): 서칭 페이지의 "프로젝트에 추가" 버튼 — 단건 직접 추가.
     POST (form): 모달 폼을 통한 추가 (기존 방식).
     """
-    project = get_object_or_404(Project, pk=pk)
+    project = get_scoped_object_or_404(Project, request.user, pk=pk)
 
     if request.method == "GET":
         form = ApplicationCreateForm()
