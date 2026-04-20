@@ -75,9 +75,12 @@ class TestApplicationDrop:
         )
         assert response.status_code == 200
 
-    def test_other_user_can_drop(self, staff_client, application):
-        """Single-tenant: any authenticated user can drop an application."""
-        response = staff_client.post(
+    def test_assigned_staff_can_drop(self, staff_user, project, application):
+        """Level 1 staff assigned to the project can drop an application."""
+        project.assigned_consultants.add(staff_user)
+        c = Client()
+        c.force_login(staff_user)
+        response = c.post(
             reverse("projects:application_drop", args=[application.pk]),
             data={"drop_reason": "unfit"},
         )
@@ -113,9 +116,12 @@ class TestApplicationHire:
         application.project.refresh_from_db()
         assert application.project.status == ProjectStatus.CLOSED
 
-    def test_other_user_can_hire(self, staff_client, application):
-        """Single-tenant: any authenticated user can hire."""
-        response = staff_client.post(
+    def test_assigned_staff_can_hire(self, staff_user, project, application):
+        """Level 1 staff assigned to the project can hire."""
+        project.assigned_consultants.add(staff_user)
+        c = Client()
+        c.force_login(staff_user)
+        response = c.post(
             reverse("projects:application_hire", args=[application.pk]),
         )
         assert response.status_code in (200, 204, 302)

@@ -159,12 +159,15 @@ class TestActionProposeNext:
 
 
 class TestActionOrgIsolation:
-    def test_any_user_can_access_action(
-        self, staff_client, application, action_type_reach_out
+    def test_assigned_staff_can_access_action(
+        self, staff_user, project, application, action_type_reach_out
     ):
-        """Single-tenant: any authenticated user can access any action."""
+        """Level 1 staff assigned to the project can access the action."""
+        project.assigned_consultants.add(staff_user)
         action = create_action(application, action_type_reach_out, None)
-        response = staff_client.get(
+        c = Client()
+        c.force_login(staff_user)
+        response = c.get(
             reverse("projects:action_complete", args=[action.pk])
         )
         assert response.status_code == 200
