@@ -87,3 +87,33 @@ def test_s1_monthly_success_empty(owner_client):
     assert 'data-testid="s1-success-count">0<' in body
     assert 'data-testid="s1-active-count">0<' in body
     assert 'data-testid="s1-success-rate">—<' in body
+
+
+@pytest.mark.django_db
+def test_s1_project_status_counts(owner_client, org, client_obj):
+    """S1-3: 서칭/스크리닝/완료 개수 렌더."""
+    # 서칭 4건
+    for i in range(4):
+        Project.objects.create(
+            organization=org, client=client_obj, title=f"SR{i}",
+            status="open", phase="searching",
+        )
+    # 스크리닝 2건
+    for i in range(2):
+        Project.objects.create(
+            organization=org, client=client_obj, title=f"SC{i}",
+            status="open", phase="screening",
+        )
+    # 완료 3건 (성공 2 + 실패 1)
+    for i, res in enumerate(["success", "success", "fail"]):
+        p = Project.objects.create(
+            organization=org, client=client_obj, title=f"CL{i}",
+        )
+        _close_project(p, res, timezone.now())
+
+    resp = owner_client.get(reverse("dashboard"))
+    body = resp.content.decode()
+
+    assert 'data-testid="s3-searching">4<' in body
+    assert 'data-testid="s3-screening">2<' in body
+    assert 'data-testid="s3-closed">3<' in body

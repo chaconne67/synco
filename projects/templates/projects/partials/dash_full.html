@@ -57,21 +57,21 @@
               <span class="status-dot bg-success"></span>
               <span class="text-sm font-medium text-ink2">진행</span>
             </div>
-            <span class="text-lg font-bold tnum">42</span>
+            <span class="text-lg font-bold tnum" data-testid="s3-searching">{{ project_status.searching }}</span>
           </li>
           <li class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="status-dot bg-warning"></span>
               <span class="text-sm font-medium text-ink2">심사</span>
             </div>
-            <span class="text-lg font-bold tnum">18</span>
+            <span class="text-lg font-bold tnum" data-testid="s3-screening">{{ project_status.screening }}</span>
           </li>
           <li class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="status-dot bg-info"></span>
               <span class="text-sm font-medium text-ink2">완료</span>
             </div>
-            <span class="text-lg font-bold tnum">114</span>
+            <span class="text-lg font-bold tnum" data-testid="s3-closed">{{ project_status.closed }}</span>
           </li>
         </ul>
       </article>

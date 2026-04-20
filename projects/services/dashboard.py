@@ -201,6 +201,20 @@ def _monthly_success(org, user, scope_owner):
     }
 
 
+def _project_status_counts(org, user, scope_owner):
+    """S1-3 Project Status: searching/screening/closed 누적 개수."""
+    qs = _scope_projects(org, user, scope_owner)
+    return {
+        "searching": qs.filter(
+            status=ProjectStatus.OPEN, phase=ProjectPhase.SEARCHING
+        ).count(),
+        "screening": qs.filter(
+            status=ProjectStatus.OPEN, phase=ProjectPhase.SCREENING
+        ).count(),
+        "closed": qs.filter(status=ProjectStatus.CLOSED).count(),
+    }
+
+
 def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     """대시보드 카드 전체 컨텍스트.
 
@@ -211,7 +225,7 @@ def get_dashboard_context(org: Organization, user: User, membership) -> dict:
     scope_owner = membership.role == "owner"
     return {
         "monthly_success": _monthly_success(org, user, scope_owner),
-        "project_status": None,
+        "project_status": _project_status_counts(org, user, scope_owner),
         "team_performance": None,
         "weekly_schedule": None,
         "monthly_calendar": None,
