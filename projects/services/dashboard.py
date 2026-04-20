@@ -217,12 +217,6 @@ def _project_status_counts(user, scope_owner):
     }
 
 
-_ROLE_LABEL_KO = {
-    "owner": "대표",
-    "consultant": "컨설턴트",
-}
-
-
 def _display_name(user) -> str:
     """한글 이름 표시. last+first → get_full_name → username."""
     parts = (user.last_name or "").strip() + (user.first_name or "").strip()

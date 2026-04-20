@@ -129,7 +129,7 @@ def test_s1_project_status_counts(owner_client, org, client_obj):
 @pytest.fixture
 def consultant_user(org):
     u = User.objects.create_user(
-        username="c1", password="x", first_name="민호", last_name="김"
+        username="c1", password="x", first_name="민호", last_name="김", level=1
     )
     Membership.objects.create(user=u, organization=org, role="consultant")
     return u

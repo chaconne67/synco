@@ -76,9 +76,8 @@ class TestVerifyUserAccess:
         project = Project.objects.create(
             client=client, organization=org, title="Test", created_by=binding.user
         )
-        user, user_org = verify_telegram_user_access("12345", project)
+        user = verify_telegram_user_access("12345", project)
         assert user == binding.user
-        assert user_org == org
 
     def test_unknown_chat_id(self):
         with pytest.raises(Exception):
@@ -90,9 +89,3 @@ class TestVerifyUserAccess:
         with pytest.raises(Exception):
             verify_telegram_user_access("12345", MagicMock(organization=MagicMock()))
 
-    def test_wrong_organization(self, binding):
-        other_org = Organization.objects.create(name="Other Firm")
-        mock_obj = MagicMock()
-        mock_obj.organization = other_org
-        with pytest.raises(Exception):
-            verify_telegram_user_access("12345", mock_obj)

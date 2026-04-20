@@ -35,10 +35,7 @@ def match_article(article: NewsArticle) -> int:
     if not article.source:
         return 0
 
-    org = article.source.organization
-
     projects = Project.objects.filter(
-        organization=org,
         status__in=ACTIVE_STATUSES,
     ).select_related("client")
 

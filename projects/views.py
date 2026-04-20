@@ -694,7 +694,7 @@ def project_tab_search(request, pk):
     if project.requirements:
         from projects.services.candidate_matching import match_candidates
 
-        results = match_candidates(project.requirements, organization=org, limit=50)
+        results = match_candidates(project.requirements, limit=50)
 
         # Application-based status lookup
         project_applications = {

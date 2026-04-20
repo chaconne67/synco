@@ -30,6 +30,9 @@ def process_email_config(config: EmailMonitorConfig) -> int:
     client = GmailClient(config)
     # Single-tenant: use the single org for ResumeUpload FK (required until T6 removes it).
     org = _get_single_org()
+    if org is None:
+        logger.warning("No organization configured; skipping resume upload creation")
+        return 0
     count = 0
 
     messages = client.get_new_messages()
