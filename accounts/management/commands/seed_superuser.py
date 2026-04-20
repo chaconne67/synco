@@ -31,10 +31,11 @@ class Command(BaseCommand):
                 user.set_password(password)
                 user.save(update_fields=["password"])
         else:
+            user.username = email
             user.level = 2
             user.is_superuser = True
             user.is_staff = True
-            user.save(update_fields=["level", "is_superuser", "is_staff"])
+            user.save(update_fields=["username", "level", "is_superuser", "is_staff"])
             if password:
                 user.set_password(password)
                 user.save(update_fields=["password"])

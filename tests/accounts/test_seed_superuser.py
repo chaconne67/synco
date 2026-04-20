@@ -40,6 +40,7 @@ def test_seed_superuser_promotes_existing_user(settings):
     u = User.objects.get(email="chaconne67@gmail.com")
     assert u.level == 2
     assert u.is_superuser is True
+    assert u.username == "chaconne67@gmail.com"
 
 
 @pytest.mark.django_db
