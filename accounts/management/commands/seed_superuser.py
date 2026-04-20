@@ -12,16 +12,17 @@ class Command(BaseCommand):
         if not email:
             raise CommandError("SYNCO_SUPERUSER_EMAIL is not configured.")
 
-        user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                "username": email.split("@")[0],
-                "level": 2,
-                "is_superuser": True,
-                "is_staff": True,
-            },
-        )
-        if not created:
+        user = User.objects.filter(email=email).first()
+        created = user is None
+        if created:
+            user = User.objects.create(
+                email=email,
+                username=email.split("@")[0],
+                level=2,
+                is_superuser=True,
+                is_staff=True,
+            )
+        else:
             user.level = 2
             user.is_superuser = True
             user.is_staff = True
