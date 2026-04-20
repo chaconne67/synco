@@ -10,13 +10,19 @@ from django.urls import reverse
 from .models import User
 
 
-@login_required
 def home(request):
-    """Root redirect -- route by user.level."""
+    """Root: anonymous → 랜딩, authenticated → level 별 라우팅."""
     user = request.user
+    if not user.is_authenticated:
+        return render(request, "accounts/landing.html")
     if user.is_superuser or user.level >= 1:
         return redirect("dashboard")
     return redirect("pending_approval")
+
+
+def landing_page(request):
+    """공개 마케팅 랜딩 (로그인 여부 무관)."""
+    return render(request, "accounts/landing.html")
 
 
 @login_required

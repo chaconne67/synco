@@ -1,0 +1,827 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>synco — 말로 일하는 AI 헤드헌팅 플랫폼</title>
+  <meta name="description" content="말로 시키고, 텔레그램으로 받으세요. AI가 후보자 검색·매칭·검증을 대신합니다. 컴퓨터 앞에 붙어있지 않아도 됩니다.">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+
+  <style>
+    :root {
+      --ink: #0A0A0A;
+      --ink-2: #27272A;
+      --muted: #52525B;
+      --muted-2: #9CA3AF;
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --surface-2: #F4F4F5;
+      --border: #E4E4E7;
+      --border-soft: #F1F1F3;
+      --brand: #4A56A8;
+      --brand-deep: #2F3A86;
+      --brand-soft: #EEF0F9;
+      --accent-green: #10B981;
+      --accent-green-soft: #D1FAE5;
+      --accent-amber: #F59E0B;
+      --accent-amber-soft: #FEF3C7;
+      --accent-rose: #F43F5E;
+      --accent-rose-soft: #FFE4E6;
+    }
+    html, body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      font-feature-settings: 'ss03', 'ss04';
+      -webkit-font-smoothing: antialiased;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .display-h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.02;
+    }
+    .display-h2 {
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 800;
+      letter-spacing: -0.024em;
+      line-height: 1.08;
+    }
+    .section-eyebrow {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--brand);
+    }
+    .cta-dark {
+      background: var(--ink);
+      color: #fff;
+      border-radius: 9999px;
+      padding: 14px 28px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: transform .12s ease, background .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cta-dark:hover { background: #18181B; transform: translateY(-1px); }
+    .cta-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 13px 24px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: background .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cta-ghost:hover { background: var(--surface-2); }
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .card-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.02), 0 12px 40px -12px rgba(15,23,42,.08);
+    }
+    .subtle-grid {
+      background-image:
+        linear-gradient(to right, rgba(15,23,42,.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15,23,42,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .dot-grid {
+      background-image: radial-gradient(rgba(15,23,42,.08) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    .logo-fade {
+      mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    }
+    .gradient-soft-indigo {
+      background: linear-gradient(135deg, #EEF0F9 0%, #DDE2F4 50%, #F5F6FC 100%);
+    }
+    .gradient-soft-sand {
+      background: linear-gradient(160deg, #FEF9F0 0%, #FFF3E0 50%, #FFE7CC 100%);
+    }
+    .gradient-soft-mint {
+      background: linear-gradient(150deg, #E6FCF5 0%, #D1FAE5 100%);
+    }
+    .gradient-dark-hero {
+      background: linear-gradient(160deg, #0A0A0A 0%, #1E1E2E 60%, #2F3A86 100%);
+    }
+    @keyframes voice-pulse {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+    .wave-bar {
+      display: inline-block;
+      width: 3px;
+      height: 100%;
+      background: currentColor;
+      border-radius: 999px;
+      transform-origin: center;
+      animation: voice-pulse 1.2s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: .1s; }
+    .wave-bar:nth-child(3) { animation-delay: .2s; }
+    .wave-bar:nth-child(4) { animation-delay: .3s; }
+    .wave-bar:nth-child(5) { animation-delay: .4s; }
+    .wave-bar:nth-child(6) { animation-delay: .5s; }
+    .wave-bar:nth-child(7) { animation-delay: .6s; }
+    .photo-frame {
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px -20px rgba(15,23,42,.25), 0 8px 24px -8px rgba(15,23,42,.12);
+      position: relative;
+    }
+    .photo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================== -->
+  <!-- Top Nav                                         -->
+  <!-- ============================================== -->
+  <header class="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-[color:var(--border-soft)]">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10 h-16 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2">
+        <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[color:var(--ink)] text-white text-sm font-black tracking-tight">S</span>
+        <span class="text-lg font-extrabold tracking-tight">synco</span>
+        <span class="ml-1 hidden sm:inline-block text-xs font-semibold uppercase tracking-wider text-[color:var(--brand)] bg-[color:var(--brand-soft)] px-2 py-0.5 rounded-full">VOICE AI</span>
+      </a>
+      <nav class="hidden lg:flex items-center gap-9 text-[13.5px] text-[color:var(--muted)]">
+        <a href="#voice" class="hover:text-[color:var(--ink)] transition">음성 에이전트</a>
+        <a href="#remote" class="hover:text-[color:var(--ink)] transition">원격 업무</a>
+        <a href="#matching" class="hover:text-[color:var(--ink)] transition">자동 매칭</a>
+        <a href="#trust" class="hover:text-[color:var(--ink)] transition">위조 검출</a>
+      </nav>
+      <div class="flex items-center gap-5">
+        <a href="{% url 'login' %}" class="hidden sm:inline text-[13.5px] font-medium text-[color:var(--muted)] hover:text-[color:var(--ink)] transition">로그인</a>
+        <a href="{% url 'signup' %}"
+           class="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--ink)] text-white text-sm font-semibold px-4 py-2 hover:bg-[#18181B] transition">
+          시작하기
+          <svg class="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================== -->
+  <!-- Hero                                            -->
+  <!-- ============================================== -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 subtle-grid opacity-70 pointer-events-none"></div>
+    <div class="relative mx-auto max-w-7xl px-6 lg:px-10 pt-20 lg:pt-28 pb-20 lg:pb-28">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+        <!-- Hero text -->
+        <div>
+          <div class="pill-badge mb-6">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--brand)] opacity-50"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--brand)]"></span>
+            </span>
+            말로 일하는 헤드헌팅
+          </div>
+          <h1 class="display-h1 mb-6">
+            말로 시키세요.<br>
+            <span class="text-[color:var(--brand)]">synco가 합니다.</span>
+          </h1>
+          <p class="text-lg lg:text-xl leading-[1.65] text-[color:var(--muted)] max-w-xl mb-10">
+            후보자 검색도, 미팅 정리도, 이메일 답장도 &mdash; 목소리 하나면 충분합니다.<br class="hidden sm:inline">
+            카페에서, 공항에서, 거실 소파에서.
+            synco는 헤드헌터가 책상 앞에 붙어있지 않아도 되게 만듭니다.
+          </p>
+          <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'signup' %}" class="cta-dark">
+              무료로 시작하기
+              <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+            </a>
+            <a href="#voice" class="cta-ghost">
+              음성 데모 보기
+              <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+            </a>
+          </div>
+          <p class="mt-6 text-sm text-[color:var(--muted-2)]">
+            가입 시
+            <a href="/terms/" class="underline hover:text-[color:var(--ink)]">이용약관</a>과
+            <a href="/privacy/" class="underline hover:text-[color:var(--ink)]">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.
+          </p>
+        </div>
+
+        <!-- Hero: Voice agent mockup -->
+        <div class="relative">
+          <!-- Voice chat card -->
+          <div class="card-panel p-6 lg:p-7 relative z-10">
+            <div class="flex items-center justify-between mb-5 pb-4 border-b border-[color:var(--border-soft)]">
+              <div class="flex items-center gap-3">
+                <div class="relative h-10 w-10 rounded-full bg-gradient-to-br from-[color:var(--brand)] to-[color:var(--brand-deep)] flex items-center justify-center text-white">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+                  <span class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-sm text-[color:var(--ink)]">synco 음성 에이전트</div>
+                  <div class="text-xs text-[color:var(--muted-2)]">듣는 중 &middot; Seoul</div>
+                </div>
+              </div>
+              <div class="flex items-end gap-0.5 h-5 text-[color:var(--brand)]">
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+              </div>
+            </div>
+
+            <!-- Chat messages -->
+            <div class="space-y-3 mb-5">
+              <!-- User bubble -->
+              <div class="flex justify-end">
+                <div class="bg-[color:var(--brand)] text-white text-sm font-medium rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%] shadow-sm">
+                  "핀테크 5년차 이상 백엔드, 매칭 점수 상위 5명 뽑아줘"
+                </div>
+              </div>
+              <!-- Agent response -->
+              <div class="flex justify-start">
+                <div class="bg-[color:var(--surface-2)] text-[color:var(--ink)] text-sm rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%]">
+                  <div class="font-semibold mb-1.5">14명 매칭 완료 &middot; 상위 5명 추렸습니다</div>
+                  <div class="flex items-center gap-2 text-xs text-[color:var(--muted)]">
+                    <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>박지훈 98</span>
+                    <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>이서연 94</span>
+                    <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>최민호 91</span>
+                    <span class="text-[color:var(--muted-2)]">+2</span>
+                  </div>
+                </div>
+              </div>
+              <!-- User bubble -->
+              <div class="flex justify-end">
+                <div class="bg-[color:var(--brand)] text-white text-sm font-medium rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%] shadow-sm">
+                  "박지훈한테 미팅 제안 이메일 보내줘"
+                </div>
+              </div>
+              <div class="flex justify-start">
+                <div class="bg-[color:var(--surface-2)] text-[color:var(--ink)] text-sm rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%]">
+                  <span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    초안 작성 &middot; 검토 대기
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mic input bar -->
+            <div class="flex items-center gap-2 rounded-full bg-[color:var(--surface-2)] border border-[color:var(--border-soft)] px-4 py-2.5">
+              <div class="h-6 w-6 rounded-full bg-[color:var(--brand)] flex items-center justify-center text-white">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3z"/></svg>
+              </div>
+              <div class="flex-1 text-xs text-[color:var(--muted-2)]">눌러서 말하기 &middot; "면접 일정 잡아줘"</div>
+              <kbd class="text-xs font-mono text-[color:var(--muted-2)] bg-white border border-[color:var(--border)] rounded px-1.5 py-0.5">Space</kbd>
+            </div>
+          </div>
+
+          <!-- Floating stat card: weekly voice commands -->
+          <div class="hidden lg:flex absolute -left-8 -bottom-10 card-panel px-5 py-4 z-20 items-center gap-3" style="max-width:260px;">
+            <div class="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4l4 4 4-4m5-6a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="text-xs text-[color:var(--muted)]">이번 주 음성 명령</div>
+              <div class="text-lg font-extrabold text-[color:var(--ink)] leading-none mt-1">2,489건 <span class="text-xs font-semibold text-emerald-600">+22%</span></div>
+            </div>
+          </div>
+
+          <!-- Background decoration -->
+          <div class="absolute -right-16 -top-16 h-60 w-60 rounded-full bg-[color:var(--brand-soft)] blur-3xl pointer-events-none"></div>
+          <div class="absolute -right-4 bottom-8 h-32 w-32 rounded-full bg-emerald-100 blur-3xl pointer-events-none opacity-70"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Logo wall                                       -->
+  <!-- ============================================== -->
+  <section id="customers" class="py-14 border-y border-[color:var(--border-soft)] bg-white">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <p class="text-center text-sm font-semibold uppercase tracking-wider text-[color:var(--muted-2)] mb-8">
+        국내 헤드헌팅 기업이 synco와 함께합니다
+      </p>
+      <div class="logo-fade">
+        <div class="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-70">
+          <div class="text-2xl font-black tracking-tight text-[color:var(--muted)]">HUNTREE</div>
+          <div class="text-2xl font-serif italic text-[color:var(--muted)]">Peopleful</div>
+          <div class="text-2xl font-black tracking-tighter text-[color:var(--muted)]">CAREER+</div>
+          <div class="text-2xl font-bold text-[color:var(--muted)]">Talentium</div>
+          <div class="text-2xl font-black tracking-tight text-[color:var(--muted)]">JOBSCOUT</div>
+          <div class="text-2xl font-bold italic text-[color:var(--muted)]">recruit.kr</div>
+          <div class="text-2xl font-black text-[color:var(--muted)]">HR:LAB</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Stats band                                      -->
+  <!-- ============================================== -->
+  <section class="py-16 lg:py-20 bg-[color:var(--bg)]">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <div class="grid sm:grid-cols-3 gap-6 lg:gap-8">
+        <div class="card-panel p-8">
+          <div class="text-sm font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">시간 절약</div>
+          <div class="text-5xl font-extrabold tracking-tight leading-none text-[color:var(--ink)]">73<span class="text-2xl ml-1 text-[color:var(--muted)]">%</span></div>
+          <p class="mt-3 text-sm text-[color:var(--muted)]">음성·자동화로 헤드헌터가 줄인 주당 평균 작업 시간.</p>
+        </div>
+        <div class="card-panel p-8">
+          <div class="text-sm font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">매칭 정확도</div>
+          <div class="text-5xl font-extrabold tracking-tight leading-none text-[color:var(--ink)]">94<span class="text-2xl ml-1 text-[color:var(--muted)]">%</span></div>
+          <p class="mt-3 text-sm text-[color:var(--muted)]">JD와 후보자 매칭 점수가 실제 합격·추천으로 이어진 비율.</p>
+        </div>
+        <div class="card-panel p-8">
+          <div class="text-sm font-semibold text-[color:var(--brand)] uppercase tracking-wider mb-3">위조 이력서 감지</div>
+          <div class="text-5xl font-extrabold tracking-tight leading-none text-[color:var(--ink)]">1,240<span class="text-2xl ml-1 text-[color:var(--muted)]">건</span></div>
+          <p class="mt-3 text-sm text-[color:var(--muted)]">누적 감지된 의심·위조 이력서. 평균 월 180건 이상 경고.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Features                                        -->
+  <!-- ============================================== -->
+  <section id="features" class="py-20 lg:py-28 bg-white">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+
+      <div class="text-center max-w-2xl mx-auto mb-16 lg:mb-20">
+        <div class="section-eyebrow mb-3">WHY SYNCO</div>
+        <h2 class="display-h2 mb-5">시간과 장소의 제약에서 벗어나세요.</h2>
+        <p class="text-lg text-[color:var(--muted)] leading-relaxed">
+          음성과 메신저로 지시하고, AI가 검색·매칭·검증·정리까지.
+          synco는 헤드헌터의 시간과 에너지를 가장 가치 있는 곳 &mdash; 사람에게 &mdash; 돌려드립니다.
+        </p>
+      </div>
+
+      <!-- Feature 1: Voice agent (hero feature) -->
+      <div id="voice" class="grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center mb-24 lg:mb-32">
+        <div>
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">01 &mdash; VOICE AGENT</span>
+            <span class="inline-flex items-center gap-1 text-xs font-bold text-[color:var(--brand)] bg-[color:var(--brand-soft)] rounded-full px-2.5 py-0.5">MOST LOVED</span>
+          </div>
+          <h3 class="text-4xl lg:text-4xl font-extrabold tracking-tight leading-[1.08] mb-5">
+            말로 묻고,<br>말로 시키세요.
+          </h3>
+          <p class="text-base text-[color:var(--muted)] leading-[1.75] mb-6">
+            "핀테크 5년차 찾아줘", "박지훈한테 미팅 제안 이메일 써줘",
+            "어제 미팅 내용 정리해서 보고서 만들어줘". 마이크 버튼 한 번이면
+            synco가 알아서 검색·작성·요약·전송까지 처리합니다.
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+              <div class="text-sm font-bold text-[color:var(--ink)]">후보자 검색</div>
+              <div class="text-xs text-[color:var(--muted)] mt-0.5">조건 말하면 즉시 랭킹</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              </div>
+              <div class="text-sm font-bold text-[color:var(--ink)]">미팅 정리</div>
+              <div class="text-xs text-[color:var(--muted)] mt-0.5">녹음 → 요약·액션 아이템</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <div class="text-sm font-bold text-[color:var(--ink)]">이메일 자동 작성</div>
+              <div class="text-xs text-[color:var(--muted)] mt-0.5">톤·맥락 맞춰 초안 생성</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-4">
+              <div class="text-[color:var(--brand)] mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <div class="text-sm font-bold text-[color:var(--ink)]">문서 초안</div>
+              <div class="text-xs text-[color:var(--muted)] mt-0.5">리포트·추천서 자동 생성</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 1 visual: microphone photo (height matches left column) -->
+        <div class="relative">
+          <div class="photo-frame aspect-[5/4] relative gradient-soft-indigo">
+            <img src="https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=900&q=80&auto=format&fit=crop"
+                 alt="음성 에이전트"
+                 onerror="this.style.display='none'"
+                 class="absolute inset-0" />
+          </div>
+          <div class="absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-[color:var(--brand-soft)] blur-3xl pointer-events-none"></div>
+        </div>
+      </div>
+
+      <!-- Feature 2: Telegram / remote -->
+      <div id="remote" class="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center mb-24 lg:mb-32">
+        <!-- Visual (left on desktop): clean family photo -->
+        <div class="relative order-2 lg:order-1">
+          <div class="photo-frame aspect-[5/4] relative gradient-soft-sand">
+            <img src="https://images.unsplash.com/photo-1609220136736-443140cffec6?w=900&q=80&auto=format&fit=crop"
+                 alt="가족과 함께하는 즐거운 순간"
+                 onerror="this.style.display='none'"
+                 class="absolute inset-0" />
+          </div>
+          <div class="absolute -left-4 -top-4 h-28 w-28 rounded-full bg-amber-100 blur-3xl pointer-events-none opacity-80"></div>
+          <div class="absolute -right-6 -bottom-8 h-36 w-36 rounded-full bg-rose-100 blur-3xl pointer-events-none opacity-60"></div>
+        </div>
+
+        <div class="order-1 lg:order-2">
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">02 &mdash; TELEGRAM SYNC</span>
+            <span class="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-100 rounded-full px-2.5 py-0.5">WORK ANYWHERE</span>
+          </div>
+          <h3 class="text-4xl lg:text-4xl font-extrabold tracking-tight leading-[1.08] mb-5">
+            집에서도, 출장 중에도.<br>
+            가족과 더 함께.
+          </h3>
+          <p class="text-base text-[color:var(--muted)] leading-[1.75] mb-6">
+            컴퓨터 앞에 붙어있지 않아도 헤드헌팅은 돌아갑니다.
+            텔레그램으로 synco와 대화하세요. 새 이력서·매칭 결과·위조 경고·답장 초안이
+            필요한 순간에 푸시로 도착하고, 한 번의 승인으로 실행됩니다.
+          </p>
+
+          <!-- Telegram bot mockup (inline within text area) -->
+          <div class="card-panel p-4 max-w-md">
+            <div class="flex items-center gap-2 mb-3 pb-3 border-b border-[color:var(--border-soft)]">
+              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-bold text-[color:var(--ink)]">synco bot</div>
+                <div class="text-xs text-[color:var(--muted-2)]">방금 전 &middot; 온라인</div>
+              </div>
+              <span class="text-xs font-bold text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">TELEGRAM</span>
+            </div>
+            <div class="space-y-2">
+              <div class="bg-sky-50 border border-sky-100 rounded-lg rounded-tl-sm px-3 py-2">
+                <div class="text-xs font-semibold text-sky-900 mb-0.5">📋 오늘의 브리핑</div>
+                <div class="text-xs text-[color:var(--muted)] leading-relaxed">신규 이력서 14건 &middot; 위조 의심 2건 &middot; 매칭 진행 5건</div>
+              </div>
+              <div class="bg-sky-50 border border-sky-100 rounded-lg rounded-tl-sm px-3 py-2">
+                <div class="text-xs font-semibold text-sky-900 mb-0.5">✉️ 답장 대기</div>
+                <div class="text-xs text-[color:var(--muted)] leading-relaxed">박지훈님 &middot; "일정 가능합니다" &rarr; 자동 답장 초안 준비됨</div>
+              </div>
+              <div class="bg-sky-50 border border-sky-100 rounded-lg rounded-tl-sm px-3 py-2">
+                <div class="text-xs font-semibold text-sky-900 mb-0.5">🎤 음성 메모</div>
+                <div class="text-xs text-[color:var(--muted)] leading-relaxed">걸어가면서 남긴 지시 2건 &rarr; 실행 완료</div>
+              </div>
+              <div class="flex items-center justify-end gap-2 pt-1">
+                <button class="text-xs font-semibold text-[color:var(--muted)] px-2 py-1">나중에</button>
+                <button class="text-xs font-bold text-white bg-sky-600 rounded-lg px-3 py-1.5">원터치 승인</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 3: JD matching & scoring -->
+      <div id="matching" class="grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center mb-24 lg:mb-32">
+        <div>
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">03 &mdash; JD MATCHING</span>
+            <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-100 rounded-full px-2.5 py-0.5">AUTO-SCORED</span>
+          </div>
+          <h3 class="text-4xl lg:text-4xl font-extrabold tracking-tight leading-[1.08] mb-5">
+            JD만 넣으면,<br>매칭 시스템이 알아서 찾습니다.
+          </h3>
+          <p class="text-base text-[color:var(--muted)] leading-[1.75] mb-6">
+            고객사 JD를 붙여넣으면 synco가 즉시 후보자 풀을 훑고 매칭 점수로 줄을 세웁니다.
+            점수가 왜 그 점수인지 근거까지 함께 보여드려서, 헤드헌터는 "왜?" 대신 "누구?"에만 집중하면 됩니다.
+          </p>
+          <ul class="space-y-3 text-sm">
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">요구사항 추출</strong> &mdash; JD에서 필수/우대 조건을 자동 분리.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">매칭 점수</strong> &mdash; 경력·스택·도메인·연차 가중치로 100점 만점 랭킹.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-5 w-5 rounded-full bg-[color:var(--brand-soft)] text-[color:var(--brand)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span><strong class="text-[color:var(--ink)]">매칭 근거</strong> &mdash; 왜 이 점수인지 항목별 이유를 함께 제공.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Matching visual -->
+        <div class="relative">
+          <div class="card-panel p-6">
+            <!-- JD header -->
+            <div class="flex items-start justify-between mb-4 pb-4 border-b border-[color:var(--border-soft)]">
+              <div>
+                <div class="text-xs uppercase tracking-wider font-semibold text-[color:var(--muted-2)]">INPUT &middot; JD</div>
+                <div class="text-sm font-bold text-[color:var(--ink)] mt-1">핀테크 백엔드 리드 &middot; 토스뱅크</div>
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                  <span class="text-xs font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">Kotlin</span>
+                  <span class="text-xs font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">MSA</span>
+                  <span class="text-xs font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">5년+</span>
+                  <span class="text-xs font-semibold bg-[color:var(--brand-soft)] text-[color:var(--brand)] rounded-full px-2 py-0.5">Payment</span>
+                </div>
+              </div>
+              <div class="text-xs text-[color:var(--muted-2)] text-right">
+                <div>분석 완료</div>
+                <div class="font-mono">0.8s</div>
+              </div>
+            </div>
+
+            <div class="text-xs uppercase tracking-wider font-semibold text-[color:var(--muted-2)] mb-3">OUTPUT &middot; 매칭 상위 3명</div>
+
+            <!-- Match row 1 -->
+            <div class="space-y-3">
+              <div class="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">박</div>
+                    <div>
+                      <div class="text-sm font-bold text-[color:var(--ink)]">박지훈 &middot; 카카오뱅크</div>
+                      <div class="text-xs text-[color:var(--muted)]">7년차 &middot; Kotlin/Spring</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xl font-black text-emerald-600 leading-none">98</div>
+                    <div class="text-xs text-[color:var(--muted-2)] mt-0.5">MATCH</div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Kotlin 주언어</span>
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Payment 도메인</span>
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ 리드 경험</span>
+                </div>
+              </div>
+
+              <!-- Match row 2 -->
+              <div class="rounded-xl border border-[color:var(--border-soft)] p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-xs">이</div>
+                    <div>
+                      <div class="text-sm font-bold text-[color:var(--ink)]">이서연 &middot; 토스페이먼츠</div>
+                      <div class="text-xs text-[color:var(--muted)]">6년차 &middot; Kotlin/Kafka</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xl font-black text-[color:var(--ink)] leading-none">94</div>
+                    <div class="text-xs text-[color:var(--muted-2)] mt-0.5">MATCH</div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Kotlin/Kafka</span>
+                  <span class="text-xs bg-amber-100 text-amber-800 font-semibold rounded px-1.5 py-0.5">△ 리드 경험 부족</span>
+                </div>
+              </div>
+
+              <!-- Match row 3 -->
+              <div class="rounded-xl border border-[color:var(--border-soft)] p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs">최</div>
+                    <div>
+                      <div class="text-sm font-bold text-[color:var(--ink)]">최민호 &middot; 네이버페이</div>
+                      <div class="text-xs text-[color:var(--muted)]">5년차 &middot; Java/MSA</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xl font-black text-[color:var(--ink)] leading-none">91</div>
+                    <div class="text-xs text-[color:var(--muted-2)] mt-0.5">MATCH</div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ MSA</span>
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold rounded px-1.5 py-0.5">✓ Payment</span>
+                  <span class="text-xs bg-amber-100 text-amber-800 font-semibold rounded px-1.5 py-0.5">△ Java (우대: Kotlin)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute -right-8 -top-4 h-32 w-32 rounded-full bg-emerald-100 blur-3xl pointer-events-none opacity-70"></div>
+        </div>
+      </div>
+
+      <!-- Feature 4: Resume forgery detection -->
+      <div id="trust" class="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
+        <div class="relative order-2 lg:order-1">
+          <!-- Photo bg with warning card overlay -->
+          <div class="photo-frame aspect-[5/4] relative" style="background: linear-gradient(135deg, #FFF5F5 0%, #FEE4E6 50%, #FDE2E4 100%);">
+            <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=900&q=80&auto=format&fit=crop"
+                 alt="이력서 검토"
+                 onerror="this.style.display='none'"
+                 class="absolute inset-0" />
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(244,63,94,0.15)] via-transparent to-transparent"></div>
+          </div>
+
+          <!-- Suspicious resume alert card (floating) -->
+          <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 lg:left-8 lg:top-auto lg:translate-x-0 lg:bottom-8 lg:translate-y-0 w-[300px] card-panel p-5 z-20">
+            <div class="flex items-start gap-3 mb-3">
+              <div class="h-9 w-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="text-xs font-bold text-rose-700 uppercase tracking-wider">위조 의심</div>
+                <div class="text-sm font-bold text-[color:var(--ink)] mt-0.5">김○○ &middot; 시니어 개발자</div>
+              </div>
+              <div class="text-xs font-mono text-rose-600 font-bold">87%</div>
+            </div>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-start gap-2">
+                <span class="text-rose-500 font-bold flex-shrink-0">!</span>
+                <span class="text-[color:var(--muted)]">재직 기간 중 <strong class="text-[color:var(--ink)]">회사 폐업</strong> 이력 (2021.06)</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-rose-500 font-bold flex-shrink-0">!</span>
+                <span class="text-[color:var(--muted)]">학력 연도와 경력 시작점 <strong class="text-[color:var(--ink)]">시간 모순</strong></span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-amber-500 font-bold flex-shrink-0">△</span>
+                <span class="text-[color:var(--muted)]">동일 인물 이력서 2건, 경력 불일치</span>
+              </div>
+            </div>
+            <button class="mt-4 w-full text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg py-2 transition">검수 큐로 보내기</button>
+          </div>
+          <div class="absolute -right-8 -bottom-4 h-40 w-40 rounded-full bg-rose-100 blur-3xl pointer-events-none opacity-60"></div>
+        </div>
+
+        <div class="order-1 lg:order-2">
+          <div class="inline-flex items-center gap-2 mb-4">
+            <span class="section-eyebrow">04 &mdash; TRUST &amp; SAFETY</span>
+            <span class="inline-flex items-center gap-1 text-xs font-bold text-rose-800 bg-rose-100 rounded-full px-2.5 py-0.5">GUARDRAIL</span>
+          </div>
+          <h3 class="text-4xl lg:text-4xl font-extrabold tracking-tight leading-[1.08] mb-5">
+            가짜 이력서,<br>AI가 먼저 잡습니다.
+          </h3>
+          <p class="text-base text-[color:var(--muted)] leading-[1.75] mb-6">
+            이력서의 시간선 모순, 폐업한 회사 재직 기록, 동일 인물의 불일치 이력, 비정상적인 성과 수치 &mdash;
+            synco는 사람이 놓치기 쉬운 위조·허위 신호를 자동으로 잡아내 검수 큐로 올립니다.
+            고객사에 보내기 전에 한 번 더 거르세요.
+          </p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-3 text-center">
+              <div class="text-2xl font-extrabold text-[color:var(--ink)]">1,240</div>
+              <div class="text-xs text-[color:var(--muted)] mt-1">누적 감지</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-3 text-center">
+              <div class="text-2xl font-extrabold text-[color:var(--ink)]">180<span class="text-xs font-semibold text-[color:var(--muted)]">/월</span></div>
+              <div class="text-xs text-[color:var(--muted)] mt-1">평균 경고</div>
+            </div>
+            <div class="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--surface-2)] p-3 text-center">
+              <div class="text-2xl font-extrabold text-[color:var(--ink)]">12<span class="text-xs font-semibold text-[color:var(--muted)]">가지</span></div>
+              <div class="text-xs text-[color:var(--muted)] mt-1">검출 룰</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Workflow band                                   -->
+  <!-- ============================================== -->
+  <section id="workflow" class="py-20 lg:py-24 bg-[color:var(--surface-2)] border-y border-[color:var(--border-soft)]">
+    <div class="mx-auto max-w-5xl px-6 lg:px-10 text-center">
+      <div class="section-eyebrow mb-3">어떻게 일하나</div>
+      <h2 class="display-h2 mb-14">말 한 마디로, 끝까지.</h2>
+      <div class="grid sm:grid-cols-4 gap-6 text-left">
+        <div>
+          <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-base mb-4">01</div>
+          <div class="font-bold text-base mb-1.5">말하기</div>
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed">마이크 한 번 누르고 요청. "핀테크 5년차 찾아줘" 한 마디면 됩니다.</p>
+        </div>
+        <div>
+          <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-base mb-4">02</div>
+          <div class="font-bold text-base mb-1.5">AI가 찾고 매칭</div>
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed">후보자 풀을 훑어 매칭 점수로 정렬, 위조 의심은 자동으로 걸러냅니다.</p>
+        </div>
+        <div>
+          <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-base mb-4">03</div>
+          <div class="font-bold text-base mb-1.5">텔레그램으로 푸시</div>
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed">결과와 초안이 메신저로 도착. 어디에 있든 한 번의 탭으로 승인.</p>
+        </div>
+        <div>
+          <div class="h-10 w-10 rounded-xl bg-[color:var(--ink)] text-white flex items-center justify-center font-black text-base mb-4">04</div>
+          <div class="font-bold text-base mb-1.5">사람에 집중</div>
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed">정리된 요약·이메일 초안 위에서, 헤드헌터는 판단과 대화에만 집중.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Final CTA                                       -->
+  <!-- ============================================== -->
+  <section id="cta" class="py-20 lg:py-28 gradient-dark-hero text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20 subtle-grid pointer-events-none" style="background-size:80px 80px;"></div>
+    <div class="relative mx-auto max-w-3xl px-6 lg:px-10 text-center">
+      <h2 class="display-h2 mb-5">
+        더 빠른 헤드헌팅,<br>지금 시작하세요.
+      </h2>
+      <p class="text-lg text-white/70 leading-relaxed mb-10 max-w-xl mx-auto">
+        말로 시키고, 텔레그램으로 받으세요. 신용카드 없이 이메일만으로
+        1분 안에 팀을 만들 수 있습니다.
+      </p>
+      <div class="flex items-center justify-center gap-3">
+        <a href="{% url 'signup' %}"
+           class="inline-flex items-center gap-1.5 rounded-full bg-white text-[color:var(--ink)] text-sm font-semibold px-6 py-3 hover:bg-[#F4F4F5] transition">
+          무료로 시작하기
+          <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+        </a>
+        <a href="{% url 'login' %}"
+           class="inline-flex items-center gap-1.5 rounded-full border border-white/20 text-white text-sm font-semibold px-6 py-3 hover:bg-white/10 transition">
+          로그인
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- Footer                                          -->
+  <!-- ============================================== -->
+  <footer class="bg-[color:var(--bg)] border-t border-[color:var(--border-soft)]">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10 py-14">
+      <div class="grid md:grid-cols-4 gap-10 mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[color:var(--ink)] text-white text-sm font-black">S</span>
+            <span class="text-lg font-extrabold tracking-tight">synco</span>
+          </div>
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed">
+            말로 일하는 AI 헤드헌팅 플랫폼. 헤드헌터가 사람에 집중하게 합니다.
+          </p>
+        </div>
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-[color:var(--ink)] mb-4">제품</div>
+          <ul class="space-y-2.5 text-sm text-[color:var(--muted)]">
+            <li><a href="#voice" class="hover:text-[color:var(--ink)]">음성 에이전트</a></li>
+            <li><a href="#remote" class="hover:text-[color:var(--ink)]">원격 업무</a></li>
+            <li><a href="#matching" class="hover:text-[color:var(--ink)]">자동 매칭</a></li>
+            <li><a href="#trust" class="hover:text-[color:var(--ink)]">위조 검출</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-[color:var(--ink)] mb-4">회사</div>
+          <ul class="space-y-2.5 text-sm text-[color:var(--muted)]">
+            <li><a href="#" class="hover:text-[color:var(--ink)]">소개</a></li>
+            <li><a href="#" class="hover:text-[color:var(--ink)]">블로그</a></li>
+            <li><a href="#" class="hover:text-[color:var(--ink)]">채용</a></li>
+            <li><a href="#" class="hover:text-[color:var(--ink)]">연락처</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-[color:var(--ink)] mb-4">법적 고지</div>
+          <ul class="space-y-2.5 text-sm text-[color:var(--muted)]">
+            <li><a href="/terms/" class="hover:text-[color:var(--ink)]">이용약관</a></li>
+            <li><a href="/privacy/" class="hover:text-[color:var(--ink)]">개인정보처리방침</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-[color:var(--border-soft)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <p class="text-xs text-[color:var(--muted-2)]">© 2026 synco. All rights reserved.</p>
+        <p class="text-xs text-[color:var(--muted-2)]">Powered by AprilLabs</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
