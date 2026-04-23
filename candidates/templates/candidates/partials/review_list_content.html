@@ -2,7 +2,7 @@
   <div class="mb-10">
     <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Quality Review</span>
     <h2 class="text-4xl font-black text-slate-900 tracking-tight">이력서 검토</h2>
-    <p class="text-sm text-slate-500 mt-2">총 <span class="text-slate-900 font-bold">{{ total }}</span>건</p>
+    <p class="text-sm text-muted mt-2">총 <span class="text-slate-900 font-bold">{{ total }}</span>건</p>
   </div>
 
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-2 mb-3 inline-flex items-center gap-1 flex-wrap">
@@ -12,7 +12,7 @@
       hx-target="#main-content"
       hx-push-url="true"
       class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors
-        {% if status_filter == value %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+        {% if status_filter == value %}bg-ink3 text-white shadow-sm{% else %}text-muted hover:text-slate-900 hover:bg-slate-50{% endif %}">
       {{ label }}
     </button>
     {% endfor %}
@@ -24,35 +24,35 @@
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}"
       hx-target="#main-content" hx-push-url="true"
       class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
-        {% if not rec %}bg-slate-900 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
+        {% if not rec %}bg-slate-900 text-white{% else %}bg-white border border-slate-100 text-muted hover:bg-slate-50{% endif %}">
       전체
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=pending"
       hx-target="#main-content" hx-push-url="true"
       class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
-        {% if rec == 'pending' %}bg-slate-900 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
+        {% if rec == 'pending' %}bg-slate-900 text-white{% else %}bg-white border border-slate-100 text-muted hover:bg-slate-50{% endif %}">
       미결정
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=recommended"
       hx-target="#main-content" hx-push-url="true"
       class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
-        {% if rec == 'recommended' %}bg-emerald-600 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
+        {% if rec == 'recommended' %}bg-emerald-600 text-white{% else %}bg-white border border-slate-100 text-muted hover:bg-slate-50{% endif %}">
       추천
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=not_recommended"
       hx-target="#main-content" hx-push-url="true"
       class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
-        {% if rec == 'not_recommended' %}bg-rose-600 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
+        {% if rec == 'not_recommended' %}bg-rose-600 text-white{% else %}bg-white border border-slate-100 text-muted hover:bg-slate-50{% endif %}">
       비추천
     </button>
     <button
       hx-get="{% url 'candidates:review_list' %}?status={{ status_filter }}&rec_status=on_hold"
       hx-target="#main-content" hx-push-url="true"
       class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors
-        {% if rec == 'on_hold' %}bg-amber-600 text-white{% else %}bg-white border border-slate-100 text-slate-500 hover:bg-slate-50{% endif %}">
+        {% if rec == 'on_hold' %}bg-amber-600 text-white{% else %}bg-white border border-slate-100 text-muted hover:bg-slate-50{% endif %}">
       보류
     </button>
     {% endwith %}
@@ -82,7 +82,7 @@
               {% endif %}
             {% endif %}
           </div>
-          <div class="text-xs text-slate-500 space-y-0.5">
+          <div class="text-xs text-muted space-y-0.5">
             {% if candidate.current_company or candidate.current_position %}
             <p class="truncate">
               {% if candidate.current_company %}<span class="text-slate-700 font-semibold">{{ candidate.current_company }}</span>{% endif %}
@@ -90,7 +90,7 @@
               {% if candidate.current_position %}{{ candidate.current_position }}{% endif %}
             </p>
             {% endif %}
-            <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-slate-400 mt-2">
+            <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-faint mt-2">
               {% if candidate.birth_year %}
               <span>{{ candidate.birth_year }}년생</span>
               {% endif %}
@@ -128,7 +128,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
     </div>
-    <p class="text-sm font-medium text-slate-500">검토할 후보자가 없습니다</p>
+    <p class="text-sm font-medium text-muted">검토할 후보자가 없습니다</p>
   </div>
   {% endif %}
 </div>

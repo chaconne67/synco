@@ -3,12 +3,12 @@
 <div class="space-y-1">
   {% for action in actions %}
     <div class="py-2">
-      <p class="text-xs text-slate-500">{{ action.created_at|date:"Y-m-d H:i" }}</p>
+      <p class="text-xs text-muted">{{ action.created_at|date:"Y-m-d H:i" }}</p>
       <p class="text-sm text-slate-700">
-        <span class="rounded-full bg-slate-50 px-2 py-0.5 text-xs text-slate-500">{{ action.action_type.label_ko }}</span>
+        <span class="rounded-full bg-slate-50 px-2 py-0.5 text-xs text-muted">{{ action.action_type.label_ko }}</span>
         <span class="ml-1">{{ action.application.candidate.name }}</span>
         {% if action.channel %}
-          <span class="text-xs text-slate-500">· {{ action.get_channel_display }}</span>
+          <span class="text-xs text-muted">· {{ action.get_channel_display }}</span>
         {% endif %}
       </p>
       {% if action.status == 'done' %}
@@ -16,15 +16,15 @@
       {% elif action.status == 'skipped' %}
         <span class="text-xs text-amber-400">건너뜀</span>
       {% elif action.status == 'cancelled' %}
-        <span class="text-xs text-slate-500">취소됨</span>
+        <span class="text-xs text-muted">취소됨</span>
       {% else %}
         <span class="text-xs text-ink3">대기</span>
       {% endif %}
       {% if action.result %}
-        <p class="mt-1 text-xs text-slate-400">{{ action.result|truncatechars:120 }}</p>
+        <p class="mt-1 text-xs text-faint">{{ action.result|truncatechars:120 }}</p>
       {% endif %}
     </div>
   {% empty %}
-    <p class="text-sm text-slate-500 py-4">타임라인이 없습니다.</p>
+    <p class="text-sm text-muted py-4">타임라인이 없습니다.</p>
   {% endfor %}
 </div>

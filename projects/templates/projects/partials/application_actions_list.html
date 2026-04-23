@@ -4,6 +4,6 @@
   {% for action in actions %}
     {% include "projects/partials/action_item_card.html" with action=action %}
   {% empty %}
-    <p class="text-xs text-slate-500">진행 중 액션이 없습니다.</p>
+    <p class="text-xs text-muted">진행 중 액션이 없습니다.</p>
   {% endfor %}
 </div>

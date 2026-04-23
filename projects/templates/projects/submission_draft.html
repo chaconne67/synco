@@ -10,7 +10,7 @@
     <div>
       <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Submission Draft</span>
       <h2 class="text-4xl font-black text-slate-900 tracking-tight">{{ submission.candidate.name }}</h2>
-      <p class="mt-2 text-sm text-slate-500">{{ project.title }}</p>
+      <p class="mt-2 text-sm text-muted">{{ project.title }}</p>
     </div>
     <a href="{% url 'projects:project_detail' project.pk %}"
        hx-get="{% url 'projects:project_tab_submissions' project.pk %}"

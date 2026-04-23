@@ -38,17 +38,24 @@ def pending_approval_page(request):
 
 
 def login_view(request):
-    """Email + password login."""
+    """아이디(username) 또는 이메일 + 비밀번호 로그인."""
     if request.user.is_authenticated:
         return redirect("home")
 
     error = None
     if request.method == "POST":
-        email = (request.POST.get("email") or "").strip().lower()
+        identifier = (request.POST.get("identifier") or "").strip()
         password = request.POST.get("password") or ""
-        user = authenticate(request, username=email, password=password)
+
+        username = identifier
+        if "@" in identifier:
+            match = User.objects.filter(email__iexact=identifier).first()
+            if match is not None:
+                username = match.username
+
+        user = authenticate(request, username=username, password=password)
         if user is None:
-            error = "이메일 또는 비밀번호가 올바르지 않습니다."
+            error = "아이디(또는 이메일) 또는 비밀번호가 올바르지 않습니다."
         else:
             login(request, user)
             return redirect("home")

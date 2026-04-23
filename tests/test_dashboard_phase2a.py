@@ -120,9 +120,9 @@ def test_s2_team_performance_lists_members(boss_client, client_obj, consultant_u
     assert "boss_u" in body
     # viewer 제외
     assert "뷰어" not in body
-    # 역할 한글
-    assert "컨설턴트" in body
-    assert "대표" in body
+    # 역할 라벨
+    assert "MANAGER" in body
+    assert "CEO" in body
 
 
 @pytest.mark.django_db

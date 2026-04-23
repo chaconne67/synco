@@ -31,7 +31,7 @@ echo ">>> Deploying synco (company=$COMPANY)"
 
 TAG=$(date +%Y%m%d%H%M%S)
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_ROOT="/home/docker"
+DEPLOY_ROOT="/home/chaconne/synco-deploy"
 DEPLOY_APP_DIR="${DEPLOY_ROOT}/synco"
 DEPLOY_SRC_DIR="${DEPLOY_APP_DIR}/src"
 DEPLOY_TEMPLATE_DIR="${PROJECT_ROOT}/deploy"
@@ -159,11 +159,11 @@ sync_optional_env_keys_() {
 
     log "Merge optional AI env keys into production env when missing ..."
 
-    python3 - <<'PY'
+    python3 - <<PY
 from pathlib import Path
 
-source_path = Path("/home/work/synco/.env")
-target_path = Path("/home/docker/synco/.env.prod")
+source_path = Path("${PROJECT_ROOT}/.env")
+target_path = Path("${PROD_ENV_FILE}")
 allowed = [
     "GEMINI_API_KEY",
     "OPENAI_API_KEY",
@@ -199,7 +199,7 @@ for key in allowed:
         appended.append(f"{key}={source[key]}")
 
 if appended:
-    text = target_path.read_text().rstrip() + "\n\n# Synced from /home/work/synco/.env for deploy parity\n" + "\n".join(appended) + "\n"
+    text = target_path.read_text().rstrip() + "\n\n# Synced from ${PROJECT_ROOT}/.env for deploy parity\n" + "\n".join(appended) + "\n"
     target_path.write_text(text)
 PY
 }

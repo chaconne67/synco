@@ -3,9 +3,9 @@
 <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mb-4">
   <div class="flex items-start justify-between gap-4 flex-wrap mb-5">
     <div>
-      <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">검토 사항 · Review Notices</h3>
+      <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase">검토 사항 · Review Notices</h3>
       {% if candidate.review_notice_summary %}
-      <p class="text-sm text-slate-500 mt-2">{{ candidate.review_notice_summary }}</p>
+      <p class="text-sm text-muted mt-2">{{ candidate.review_notice_summary }}</p>
       {% endif %}
     </div>
     <div class="flex items-center gap-2 flex-wrap">

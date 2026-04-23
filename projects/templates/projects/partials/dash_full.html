@@ -1,4 +1,4 @@
-{# Dashboard content — Phase 1 hardcoded mockup. Real data wiring in Phase 2. #}
+{% load humanize %}
 <div class="max-w-[1280px] w-full">
   <div class="px-8 py-8 space-y-6">
 
@@ -34,14 +34,7 @@
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
         </div>
         <div class="mt-6">
-          <div class="text-4xl leading-none font-bold tnum">₩ 842,500</div>
-        </div>
-        <div class="mt-auto pt-6">
-          <div class="flex items-center justify-between mb-2">
-            <div class="eyebrow eyebrow-ko !text-muted">목표 달성률</div>
-            <div class="text-xs font-semibold tnum">76%</div>
-          </div>
-          <div class="progress dark"><span style="width:76%"></span></div>
+          <div class="text-4xl leading-none font-bold tnum" data-testid="s1-revenue-total">₩ {{ estimated_revenue.total|floatformat:0|intcomma }}</div>
         </div>
       </article>
 
@@ -120,42 +113,33 @@
           </button>
         </div>
         <ul class="mt-5 space-y-4">
+          {% for ev in recent_activity %}
           <li class="flex gap-3">
+            {% if ev.kind == 'success' %}
             <div aria-hidden="true" class="w-7 h-7 rounded-full bg-emerald-50 text-success flex items-center justify-center shrink-0 mt-0.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <div class="min-w-0">
-              <div class="text-sm font-semibold leading-snug">후보자 배치가 확정되었습니다</div>
-              <div class="text-xs text-faint mt-0.5">프로젝트 클라우드 / CTO 서치 · 2시간 전</div>
-            </div>
-          </li>
-          <li class="flex gap-3">
+            {% elif ev.kind == 'plus' %}
             <div aria-hidden="true" class="w-7 h-7 rounded-full bg-indigo-50 text-info flex items-center justify-center shrink-0 mt-0.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </div>
-            <div class="min-w-0">
-              <div class="text-sm font-semibold leading-snug">새 후보자가 추가되었습니다</div>
-              <div class="text-xs text-faint mt-0.5">글로벌 핀테크 확장 · 5시간 전</div>
-            </div>
-          </li>
-          <li class="flex gap-3">
+            {% elif ev.kind == 'document' %}
             <div aria-hidden="true" class="w-7 h-7 rounded-full bg-amber-50 text-warning flex items-center justify-center shrink-0 mt-0.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
             </div>
+            {% else %}
+            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-slate-100 text-muted flex items-center justify-center shrink-0 mt-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            {% endif %}
             <div class="min-w-0">
-              <div class="text-sm font-semibold leading-snug">고객사 미팅 노트가 업데이트되었습니다</div>
-              <div class="text-xs text-faint mt-0.5">삼성전자 자문 프로젝트 · 어제</div>
+              <div class="text-sm font-semibold leading-snug">{{ ev.title }}</div>
+              <div class="text-xs text-faint mt-0.5">{{ ev.subtitle }} · {{ ev.ts|naturaltime }}</div>
             </div>
           </li>
-          <li class="flex gap-3">
-            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-red-50 text-danger flex items-center justify-center shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div class="min-w-0">
-              <div class="text-sm font-semibold leading-snug">프로젝트 마감일이 가까워지고 있습니다</div>
-              <div class="text-xs text-faint mt-0.5">재생에너지 헤드 서치 · 2일 전</div>
-            </div>
-          </li>
+          {% empty %}
+          <li class="text-sm text-faint py-6 text-center">최근 활동이 없습니다.</li>
+          {% endfor %}
         </ul>
       </article>
     </section>

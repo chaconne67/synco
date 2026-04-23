@@ -11,13 +11,13 @@
         {{ candidate.name }}
         {% include "candidates/partials/_recommendation_badge.html" %}
       </h4>
-      <p class="text-xs text-slate-500 mt-1 truncate">
+      <p class="text-xs text-muted mt-1 truncate">
         {% if candidate.current_company %}
           <span class="text-slate-700 font-semibold">{{ candidate.current_company }}</span>{% if candidate.current_position %} <span class="mx-1 text-slate-300">·</span> {{ candidate.current_position }}{% endif %}
         {% elif candidate.current_position %}
           {{ candidate.current_position }}
         {% else %}
-          <span class="text-slate-400">정보 없음</span>
+          <span class="text-faint">정보 없음</span>
         {% endif %}
       </p>
     </div>
@@ -39,7 +39,7 @@
     </span>
     {% endfor %}
     {% for career in candidate.careers.all|slice:":2" %}
-    <span class="text-xs font-medium text-slate-500 bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
+    <span class="text-xs font-medium text-muted bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
       {{ career.company }}
     </span>
     {% endfor %}
@@ -57,7 +57,7 @@
     {% endif %}
   </div>
   {% if candidate.review_notice_card_summary %}
-  <p class="text-xs text-slate-500 mt-2 leading-relaxed">{{ candidate.review_notice_card_summary }}</p>
+  <p class="text-xs text-muted mt-2 leading-relaxed">{{ candidate.review_notice_card_summary }}</p>
   {% endif %}
   {% endif %}
 </a>

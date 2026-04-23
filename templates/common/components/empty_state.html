@@ -2,7 +2,7 @@
   {% if icon %}
   <div class="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center mb-6 text-slate-300">{{ icon }}</div>
   {% endif %}
-  <p class="text-slate-500 text-sm font-medium mb-6 max-w-md">{{ message }}</p>
+  <p class="text-muted text-sm font-medium mb-6 max-w-md">{{ message }}</p>
   {% if cta_url and cta_text %}
   <a href="{{ cta_url }}"
      hx-get="{{ cta_url }}" hx-target="#main-content" hx-push-url="true"

@@ -8,9 +8,9 @@
     <h4 class="text-base font-bold text-slate-900 group-hover:text-ink3 transition-colors line-clamp-2">{{ article.title }}</h4>
   </div>
   {% if article.summary %}
-  <p class="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">{{ article.summary }}</p>
+  <p class="text-sm text-muted mt-2 line-clamp-2 leading-relaxed">{{ article.summary }}</p>
   {% endif %}
-  <div class="flex items-center gap-2 mt-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+  <div class="flex items-center gap-2 mt-3 text-xs font-bold uppercase tracking-widest text-faint">
     <span>{{ article.source.name }}</span>
     {% if article.published_at %}
     <span class="text-slate-700">·</span>
@@ -19,13 +19,13 @@
     {% if article.tags %}
     <span class="text-slate-700">·</span>
     {% for tag in article.tags|slice:":3" %}
-    <span class="text-slate-500 normal-case tracking-normal">#{{ tag }}</span>
+    <span class="text-muted normal-case tracking-normal">#{{ tag }}</span>
     {% endfor %}
     {% endif %}
   </div>
 </a>
 {% empty %}
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-12 text-center">
-  <p class="text-sm font-medium text-slate-500">뉴스가 없습니다</p>
+  <p class="text-sm font-medium text-muted">뉴스가 없습니다</p>
 </div>
 {% endfor %}

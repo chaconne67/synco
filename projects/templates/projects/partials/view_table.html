@@ -52,7 +52,7 @@
             </span>
             {% endif %}
           </td>
-          <td class="px-4 py-3 text-sm text-slate-500">
+          <td class="px-4 py-3 text-sm text-muted">
             {% for consultant in project.assigned_consultants.all %}
               {{ consultant.get_short_name }}{% if not forloop.last %}, {% endif %}
             {% empty %}
@@ -81,17 +81,17 @@
   {% if page_obj.has_previous %}
   <a hx-get="/projects/?view=table&tab_switch=1&scope={{ scope }}&client={{ current_client }}&status={{ current_status }}&sort={{ current_sort }}&page={{ page_obj.previous_page_number }}"
      hx-target="#view-content"
-     class="px-3 py-2 rounded-lg text-base text-slate-500 hover:bg-slate-100 transition cursor-pointer">
+     class="px-3 py-2 rounded-lg text-base text-muted hover:bg-slate-100 transition cursor-pointer">
     이전
   </a>
   {% endif %}
-  <span class="px-3 py-2 text-base text-slate-500">
+  <span class="px-3 py-2 text-base text-muted">
     {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
   </span>
   {% if page_obj.has_next %}
   <a hx-get="/projects/?view=table&tab_switch=1&scope={{ scope }}&client={{ current_client }}&status={{ current_status }}&sort={{ current_sort }}&page={{ page_obj.next_page_number }}"
      hx-target="#view-content"
-     class="px-3 py-2 rounded-lg text-base text-slate-500 hover:bg-slate-100 transition cursor-pointer">
+     class="px-3 py-2 rounded-lg text-base text-muted hover:bg-slate-100 transition cursor-pointer">
     다음
   </a>
   {% endif %}
@@ -101,7 +101,7 @@
 {% else %}
 <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
   {% if membership and membership.role == 'owner' %}
-  <p class="text-slate-500 text-base mb-4">
+  <p class="text-muted text-base mb-4">
     {% if scope == "mine" %}
     담당 프로젝트가 없습니다.
     {% else %}
@@ -114,8 +114,8 @@
     새 프로젝트 만들기
   </a>
   {% else %}
-  <p class="text-slate-500 text-base">배정된 프로젝트가 없습니다.</p>
-  <p class="text-slate-400 text-sm mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
+  <p class="text-muted text-base">배정된 프로젝트가 없습니다.</p>
+  <p class="text-faint text-sm mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
   {% endif %}
 </div>
 {% endif %}

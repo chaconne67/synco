@@ -33,7 +33,7 @@
     </div>
     <div class="flex-1 min-w-0">
       <p class="text-sm font-medium text-slate-700 truncate">{{ upload.file_name }}</p>
-      <p class="text-xs text-slate-400">추출중...</p>
+      <p class="text-xs text-faint">추출중...</p>
     </div>
 
     {% elif upload.status == "extracted" %}
@@ -112,7 +112,7 @@
       재시도 ({{ upload.retry_count }}/3)
     </button>
     {% else %}
-    <span class="text-xs text-slate-400 shrink-0">재시도 초과</span>
+    <span class="text-xs text-faint shrink-0">재시도 초과</span>
     {% endif %}
 
     {% elif upload.status == "linked" %}
@@ -129,12 +129,12 @@
 
     {% elif upload.status == "discarded" %}
     <!-- Discarded: strikethrough -->
-    <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-5 h-5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
     </svg>
     <div class="flex-1 min-w-0">
-      <p class="text-sm font-medium text-slate-400 truncate line-through">{{ upload.file_name }}</p>
-      <p class="text-xs text-slate-400">폐기됨</p>
+      <p class="text-sm font-medium text-faint truncate line-through">{{ upload.file_name }}</p>
+      <p class="text-xs text-faint">폐기됨</p>
     </div>
 
     {% endif %}
@@ -142,6 +142,6 @@
   {% endfor %}
 
   {% if not uploads and not errors %}
-  <p class="text-sm text-slate-400 text-center py-2">업로드된 이력서가 없습니다.</p>
+  <p class="text-sm text-faint text-center py-2">업로드된 이력서가 없습니다.</p>
   {% endif %}
 </div>

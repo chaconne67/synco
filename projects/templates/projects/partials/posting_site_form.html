@@ -13,31 +13,31 @@
 
     <div class="grid grid-cols-2 gap-3 mb-3">
       <div>
-        <label class="block text-sm text-slate-500 mb-1">{{ form.site.label }}</label>
+        <label class="block text-sm text-muted mb-1">{{ form.site.label }}</label>
         {{ form.site }}
         {% if form.site.errors %}
         <p class="text-xs text-rose-600 mt-0.5">{{ form.site.errors.0 }}</p>
         {% endif %}
       </div>
       <div>
-        <label class="block text-sm text-slate-500 mb-1">{{ form.posted_at.label }}</label>
+        <label class="block text-sm text-muted mb-1">{{ form.posted_at.label }}</label>
         {{ form.posted_at }}
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mb-3">
       <div>
-        <label class="block text-sm text-slate-500 mb-1">{{ form.applicant_count.label }}</label>
+        <label class="block text-sm text-muted mb-1">{{ form.applicant_count.label }}</label>
         {{ form.applicant_count }}
       </div>
       <div>
-        <label class="block text-sm text-slate-500 mb-1">{{ form.url.label }}</label>
+        <label class="block text-sm text-muted mb-1">{{ form.url.label }}</label>
         {{ form.url }}
       </div>
     </div>
 
     <div class="mb-3">
-      <label class="block text-sm text-slate-500 mb-1">{{ form.notes.label }}</label>
+      <label class="block text-sm text-muted mb-1">{{ form.notes.label }}</label>
       {{ form.notes }}
     </div>
 
@@ -50,7 +50,7 @@
               hx-get="{% url 'projects:posting_sites' project.pk %}"
               hx-target="#posting-sites-area"
               hx-swap="innerHTML"
-              class="px-3 py-1.5 text-slate-500 text-sm hover:text-slate-700 transition">
+              class="px-3 py-1.5 text-muted text-sm hover:text-slate-700 transition">
         취소
       </button>
     </div>

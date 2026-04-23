@@ -6,7 +6,7 @@
 {% endif %}
 
 <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-  <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">조직 정보 · Organization</h3>
+  <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-5">조직 정보 · Organization</h3>
 
   <form method="post"
         enctype="multipart/form-data"
@@ -23,7 +23,7 @@
 
     <div class="space-y-5">
       <div>
-        <label for="id_name" class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">조직명</label>
+        <label for="id_name" class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">조직명</label>
         {{ form.name }}
         {% if form.name.errors %}
         <p class="mt-2 text-xs font-semibold text-rose-600">{{ form.name.errors|first }}</p>
@@ -31,7 +31,7 @@
       </div>
 
       <div>
-        <label for="id_logo" class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">로고</label>
+        <label for="id_logo" class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">로고</label>
         {% if org.logo %}
         <div class="mb-3">
           <img src="{{ org.logo.url }}" alt="조직 로고" class="w-16 h-16 rounded-xl object-cover border border-slate-100">
@@ -44,15 +44,15 @@
       </div>
 
       <div class="flex items-center justify-between py-3 border-t border-slate-100">
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">플랜</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-faint">플랜</span>
         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-ink3/10 text-ink3 border border-ink3/20">
           {{ org.get_plan_display }}
         </span>
       </div>
 
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">DB 공유</span>
-        <span class="text-xs font-bold uppercase tracking-widest {% if org.db_share_enabled %}text-emerald-600{% else %}text-slate-400{% endif %}">
+        <span class="text-xs font-bold uppercase tracking-widest text-faint">DB 공유</span>
+        <span class="text-xs font-bold uppercase tracking-widest {% if org.db_share_enabled %}text-emerald-600{% else %}text-faint{% endif %}">
           {% if org.db_share_enabled %}사용 중{% else %}미사용{% endif %}
         </span>
       </div>

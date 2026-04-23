@@ -201,6 +201,92 @@ def _monthly_success(user):
     }
 
 
+def _estimated_revenue(user):
+    """S1-2 Estimated Revenue: 올해 등록 + (진행중 OR 확정) 프로젝트의 예상 수수료 합계 (원).
+
+    확정 = CLOSED + result=SUCCESS.
+    annual_salary·fee_percent 둘 중 하나라도 비어있으면 그 프로젝트는 제외.
+    """
+    now_local = timezone.localtime()
+    year_start = now_local.replace(
+        month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    qs = _scope_projects(user).filter(
+        created_at__gte=year_start,
+        annual_salary__isnull=False,
+        fee_percent__isnull=False,
+    ).filter(
+        Q(status=ProjectStatus.OPEN)
+        | Q(status=ProjectStatus.CLOSED, result=ProjectResult.SUCCESS)
+    )
+    total = sum(p.expected_fee or 0 for p in qs)
+    return {"total": total}
+
+
+def _recent_activity(user, limit: int = 6):
+    """S2-2 Recent Activity: 사용자 스코프 기준 최근 이벤트, 시간 desc.
+
+    집계 이벤트:
+    - Application.hired_at  → 후보자 배치 확정 (success)
+    - Submission.submitted_at → 서류 고객사 송부 (document)
+    - Application.created_at → 새 후보자 추가 (plus)
+    - Project.closed_at + result=SUCCESS → 프로젝트 성공 종료 (success)
+    """
+    from accounts.services.scope import scope_work_qs
+    from projects.models import Application, Submission
+
+    events = []
+
+    projects_qs = scope_work_qs(Project.objects.all(), user)
+    for p in projects_qs.filter(
+        status=ProjectStatus.CLOSED,
+        result=ProjectResult.SUCCESS,
+        closed_at__isnull=False,
+    ).select_related("client").order_by("-closed_at")[:limit]:
+        events.append({
+            "kind": "success",
+            "title": "프로젝트가 성공으로 종료되었습니다",
+            "subtitle": f"{p.client.name} · {p.title}",
+            "ts": p.closed_at,
+        })
+
+    apps_qs = scope_work_qs(Application.objects.all(), user)
+    for a in apps_qs.filter(hired_at__isnull=False).select_related(
+        "project", "project__client", "candidate"
+    ).order_by("-hired_at")[:limit]:
+        events.append({
+            "kind": "success",
+            "title": "후보자 배치가 확정되었습니다",
+            "subtitle": f"{a.project.client.name} · {a.project.title}",
+            "ts": a.hired_at,
+        })
+
+    subs_qs = scope_work_qs(Submission.objects.all(), user)
+    for s in subs_qs.filter(submitted_at__isnull=False).select_related(
+        "action_item__application__project__client"
+    ).order_by("-submitted_at")[:limit]:
+        project = s.action_item.application.project
+        events.append({
+            "kind": "document",
+            "title": "서류가 고객사에 송부되었습니다",
+            "subtitle": f"{project.client.name} · {project.title}",
+            "ts": s.submitted_at,
+        })
+
+    for a in apps_qs.select_related(
+        "project__client"
+    ).order_by("-created_at")[:limit]:
+        events.append({
+            "kind": "plus",
+            "title": "새 후보자가 추가되었습니다",
+            "subtitle": f"{a.project.client.name} · {a.project.title}",
+            "ts": a.created_at,
+        })
+
+    events.sort(key=lambda e: e["ts"], reverse=True)
+    return events[:limit]
+
+
 def _project_status_counts(user):
     """S1-3 Project Status: searching/screening/closed 누적 개수."""
     qs = _scope_projects(user)
@@ -254,7 +340,7 @@ def _team_performance():
         success_count = closed.filter(result=ProjectResult.SUCCESS).count()
         rate = round(success_count / closed_total * 100) if closed_total else None
 
-        role_label = "대표" if (user.is_superuser or user.level >= 2) else "컨설턴트"
+        role_label = "CEO" if (user.is_superuser or user.level >= 2) else "MANAGER"
 
         rows.append(
             {
@@ -437,8 +523,10 @@ def get_dashboard_context(user: User) -> dict:
     """
     return {
         "monthly_success": _monthly_success(user),
+        "estimated_revenue": _estimated_revenue(user),
         "project_status": _project_status_counts(user),
         "team_performance": _team_performance(),
+        "recent_activity": _recent_activity(user),
         "weekly_schedule": _weekly_schedule(user),
         "monthly_calendar": _monthly_calendar(user),
         "_scope_owner": user.is_superuser or user.level >= 2,

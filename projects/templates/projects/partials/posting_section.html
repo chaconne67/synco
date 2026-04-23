@@ -1,6 +1,6 @@
 <section id="posting-section" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">공지</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase">공지</h2>
   </div>
 
   {% if error %}
@@ -23,12 +23,12 @@
       <button hx-get="{% url 'projects:project_tab_overview' project.pk %}"
               hx-target="#tab-content"
               type="button"
-              class="px-3 py-1.5 text-slate-500 text-sm hover:text-slate-700 transition">
+              class="px-3 py-1.5 text-muted text-sm hover:text-slate-700 transition">
         취소
       </button>
     </div>
     <div id="posting-loading" class="htmx-indicator mt-2">
-      <span class="text-sm text-slate-400">생성 중...</span>
+      <span class="text-sm text-faint">생성 중...</span>
     </div>
   </div>
   {% endif %}
@@ -51,7 +51,7 @@
           다운로드
         </a>
         <button onclick="navigator.clipboard.writeText(document.getElementById('posting-preview-text').innerText)"
-                class="text-sm text-slate-500 hover:text-slate-700 font-medium transition">
+                class="text-sm text-muted hover:text-slate-700 font-medium transition">
           클립보드 복사
         </button>
       </div>
@@ -65,7 +65,7 @@
     <!-- 공지 미생성 상태 -->
     {% if project.jd_text or project.jd_raw_text %}
     <div class="text-center py-4">
-      <p class="text-sm text-slate-400 mb-3">공지가 아직 생성되지 않았습니다.</p>
+      <p class="text-sm text-faint mb-3">공지가 아직 생성되지 않았습니다.</p>
       <button hx-post="{% url 'projects:posting_generate' project.pk %}"
               hx-target="#posting-section"
               hx-swap="outerHTML"
@@ -74,11 +74,11 @@
         공지 생성
       </button>
       <div id="posting-loading" class="htmx-indicator mt-2">
-        <span class="text-sm text-slate-400">생성 중...</span>
+        <span class="text-sm text-faint">생성 중...</span>
       </div>
     </div>
     {% else %}
-    <p class="text-sm text-slate-400">JD를 먼저 등록해주세요.</p>
+    <p class="text-sm text-faint">JD를 먼저 등록해주세요.</p>
     {% endif %}
   {% endif %}
 

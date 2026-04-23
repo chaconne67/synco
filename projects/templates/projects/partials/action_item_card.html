@@ -9,31 +9,31 @@
           {{ action.action_type.label_ko }}
         </span>
         {% if action.channel %}
-          <span class="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span class="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold text-muted uppercase tracking-wider">
             {{ action.get_channel_display }}
           </span>
         {% endif %}
       </div>
       <p class="mt-3 text-sm font-bold text-slate-900 tracking-tight">{{ action.title }}</p>
       {% if action.application %}
-        <p class="mt-1 text-xs text-slate-500">
+        <p class="mt-1 text-xs text-muted">
           <a href="{% url 'projects:project_detail' action.application.project.id %}"
              hx-get="{% url 'projects:project_detail' action.application.project.id %}"
              hx-target="#main-content" hx-push-url="true"
              class="font-semibold text-slate-700 hover:text-ink3 transition-colors">
             {{ action.application.project.client.name }} · {{ action.application.project.title }}
           </a>
-          <span class="mx-1 text-slate-500">·</span>
+          <span class="mx-1 text-muted">·</span>
           <span class="font-medium">{{ action.application.candidate.name }}</span>
         </p>
       {% endif %}
       {% if action.due_at %}
-        <p class="mt-3 text-xs font-bold uppercase tracking-wider {% if variant == 'overdue' %}text-rose-600{% elif variant == 'today' %}text-ink3{% else %}text-slate-400{% endif %}">
+        <p class="mt-3 text-xs font-bold uppercase tracking-wider {% if variant == 'overdue' %}text-rose-600{% elif variant == 'today' %}text-ink3{% else %}text-faint{% endif %}">
           마감 · {{ action.due_at|naturaltime }}
         </p>
       {% endif %}
       {% if action.note %}
-        <p class="mt-2 text-xs text-slate-500 leading-relaxed">{{ action.note }}</p>
+        <p class="mt-2 text-xs text-muted leading-relaxed">{{ action.note }}</p>
       {% endif %}
       {% if action.status == 'done' and action.result %}
         <div class="mt-3 rounded-lg bg-emerald-50 border border-emerald-100 p-3">

@@ -627,7 +627,7 @@ video {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .eyebrow-ko {
@@ -769,7 +769,7 @@ a.bg-ink.rounded-card:hover,
 }
 
 .progress.muted   > span {
-  background: #94A3B8;
+  background: #64748B;
 }
 
 .progress.dark {
@@ -1001,7 +1001,7 @@ a.bg-ink.rounded-card:hover,
   gap: 6px;
   padding: 8px 16px;
   border-radius: 999px;
-  color: #64748B;
+  color: #475569;
   transition: background .15s ease, color .15s ease;
 }
 
@@ -1018,7 +1018,7 @@ a.bg-ink.rounded-card:hover,
 /* 칸반 컬럼 헤더 — col-title text-xs = 12px */
 
 .col-title .count {
-  color: #94A3B8;
+  color: #64748B;
   font-weight: 700;
   font-feature-settings: "tnum" 1;
   font-variant-numeric: tabular-nums;
@@ -1049,7 +1049,7 @@ a.bg-ink.rounded-card:hover,
   align-items: center;
   gap: 6px;
   position: relative;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .stage-step .dot {
@@ -1064,7 +1064,7 @@ a.bg-ink.rounded-card:hover,
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94A3B8;
+  color: #64748B;
   flex-shrink: 0;
 }
 
@@ -1236,7 +1236,7 @@ a.bg-ink.rounded-card:hover,
 .stat .num .unit {
   font-size: 11px;
   font-weight: 600;
-  color: #94A3B8;
+  color: #64748B;
   margin-left: 2px;
 }
 
@@ -1245,7 +1245,7 @@ a.bg-ink.rounded-card:hover,
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94A3B8;
+  color: #64748B;
   margin-top: 6px;
 }
 
@@ -1334,7 +1334,7 @@ a.bg-ink.rounded-card:hover,
   padding: 16px 4px;
   margin-right: 32px;
   gap: 10px;
-  color: #94A3B8;
+  color: #64748B;
   transition: color .15s ease;
 }
 
@@ -1370,7 +1370,7 @@ a.bg-ink.rounded-card:hover,
   padding: 0 7px;
   border-radius: 999px;
   background: #F1F5F9;
-  color: #64748B;
+  color: #475569;
   font-size: 10px;
   font-weight: 700;
 }
@@ -1397,11 +1397,11 @@ a.bg-ink.rounded-card:hover,
 }
 
 .filter-input::-moz-placeholder {
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .filter-input::placeholder {
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .filter-input:focus {
@@ -1423,7 +1423,7 @@ a.bg-ink.rounded-card:hover,
   -webkit-appearance: none;
      -moz-appearance: none;
           appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
   background-repeat: no-repeat;
   background-position: right 12px center;
 }
@@ -1446,7 +1446,7 @@ a.bg-ink.rounded-card:hover,
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #94A3B8;
+  color: #64748B;
   border-bottom: 1px solid #E2E8F0;
   white-space: nowrap;
 }
@@ -1478,7 +1478,7 @@ a.bg-ink.rounded-card:hover,
 .ref-table tbody td.tnum-col {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: #64748B;
+  color: #475569;
 }
 
 .ref-table tbody td.primary {
@@ -1489,12 +1489,12 @@ a.bg-ink.rounded-card:hover,
 }
 
 .ref-table tbody td.en {
-  color: #64748B;
+  color: #475569;
   font-size: 12px;
 }
 
 .ref-table tbody td.note {
-  color: #64748B;
+  color: #475569;
   font-size: 12px;
 }
 
@@ -1657,7 +1657,7 @@ a.bg-ink.rounded-card:hover,
 
 .pill.private   {
   background: #F1F5F9;
-  color: #64748B;
+  color: #475569;
 }
 
 /* Company size */
@@ -1701,7 +1701,7 @@ a.bg-ink.rounded-card:hover,
 
 .pill.lvl-low    {
   background: #F1F5F9;
-  color: #64748B;
+  color: #475569;
 }
 
 /* Sub-filter chip divider (reused) */
@@ -3152,6 +3152,11 @@ a.bg-ink.rounded-card:hover,
   background-color: rgb(217 119 6 / var(--tw-bg-opacity, 1));
 }
 
+.bg-blue-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
+}
+
 .bg-canvas {
   --tw-bg-opacity: 1;
   background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
@@ -3196,7 +3201,12 @@ a.bg-ink.rounded-card:hover,
 
 .bg-faint {
   --tw-bg-opacity: 1;
-  background-color: rgb(148 163 184 / var(--tw-bg-opacity, 1));
+  background-color: rgb(100 116 139 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
 }
 
 .bg-hair {
@@ -3971,7 +3981,7 @@ a.bg-ink.rounded-card:hover,
 
 .\!text-faint {
   --tw-text-opacity: 1 !important;
-  color: rgb(148 163 184 / var(--tw-text-opacity, 1)) !important;
+  color: rgb(100 116 139 / var(--tw-text-opacity, 1)) !important;
 }
 
 .\!text-info {
@@ -3991,7 +4001,7 @@ a.bg-ink.rounded-card:hover,
 
 .\!text-muted {
   --tw-text-opacity: 1 !important;
-  color: rgb(100 116 139 / var(--tw-text-opacity, 1)) !important;
+  color: rgb(71 85 105 / var(--tw-text-opacity, 1)) !important;
 }
 
 .\!text-red-600 {
@@ -4050,6 +4060,11 @@ a.bg-ink.rounded-card:hover,
   color: rgb(120 53 15 / var(--tw-text-opacity, 1));
 }
 
+.text-blue-800 {
+  --tw-text-opacity: 1;
+  color: rgb(30 64 175 / var(--tw-text-opacity, 1));
+}
+
 .text-danger {
   --tw-text-opacity: 1;
   color: rgb(239 68 68 / var(--tw-text-opacity, 1));
@@ -4077,12 +4092,17 @@ a.bg-ink.rounded-card:hover,
 
 .text-faint {
   --tw-text-opacity: 1;
-  color: rgb(148 163 184 / var(--tw-text-opacity, 1));
+  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
 }
 
 .text-gray-400 {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity, 1));
+}
+
+.text-green-800 {
+  --tw-text-opacity: 1;
+  color: rgb(22 101 52 / var(--tw-text-opacity, 1));
 }
 
 .text-hair {
@@ -4112,7 +4132,7 @@ a.bg-ink.rounded-card:hover,
 
 .text-muted {
   --tw-text-opacity: 1;
-  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
+  color: rgb(71 85 105 / var(--tw-text-opacity, 1));
 }
 
 .text-orange-600 {
@@ -4307,8 +4327,14 @@ a.bg-ink.rounded-card:hover,
 }
 
 .shadow-card {
-  --tw-shadow: 0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06);
-  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color), 0 1px 3px 0 var(--tw-shadow-color);
+  --tw-shadow: 0 2px 4px -1px rgba(15,23,42,0.08), 0 4px 12px -2px rgba(15,23,42,0.10);
+  --tw-shadow-colored: 0 2px 4px -1px var(--tw-shadow-color), 0 4px 12px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-fab {
+  --tw-shadow: 0 10px 15px -3px rgba(15,23,42,0.15), 0 4px 6px -2px rgba(15,23,42,0.08);
+  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -2px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
@@ -4595,22 +4621,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 .placeholder\:text-faint::-moz-placeholder {
   --tw-text-opacity: 1;
-  color: rgb(148 163 184 / var(--tw-text-opacity, 1));
+  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
 }
 
 .placeholder\:text-faint::placeholder {
   --tw-text-opacity: 1;
-  color: rgb(148 163 184 / var(--tw-text-opacity, 1));
-}
-
-.placeholder\:text-slate-400::-moz-placeholder {
-  --tw-text-opacity: 1;
-  color: rgb(148 163 184 / var(--tw-text-opacity, 1));
-}
-
-.placeholder\:text-slate-400::placeholder {
-  --tw-text-opacity: 1;
-  color: rgb(148 163 184 / var(--tw-text-opacity, 1));
+  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
 }
 
 .after\:absolute::after {
@@ -4918,11 +4934,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   color: rgb(136 19 55 / var(--tw-text-opacity, 1));
 }
 
-.hover\:text-slate-600:hover {
-  --tw-text-opacity: 1;
-  color: rgb(71 85 105 / var(--tw-text-opacity, 1));
-}
-
 .hover\:text-slate-700:hover {
   --tw-text-opacity: 1;
   color: rgb(51 65 85 / var(--tw-text-opacity, 1));
@@ -4948,8 +4959,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 
 .hover\:shadow-card:hover {
-  --tw-shadow: 0 1px 2px 0 rgba(15,23,42,0.04), 0 1px 3px 0 rgba(15,23,42,0.06);
-  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color), 0 1px 3px 0 var(--tw-shadow-color);
+  --tw-shadow: 0 2px 4px -1px rgba(15,23,42,0.08), 0 4px 12px -2px rgba(15,23,42,0.10);
+  --tw-shadow-colored: 0 2px 4px -1px var(--tw-shadow-color), 0 4px 12px -2px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 

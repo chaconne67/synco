@@ -1,6 +1,6 @@
 <!-- Comment form -->
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-  <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">검수 판정 · Review Verdict</h3>
+  <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-5">검수 판정 · Review Verdict</h3>
 
   <form hx-post="{% url 'candidates:comment_create' candidate.pk %}"
         hx-target="#comment-list"
@@ -10,23 +10,23 @@
 
     <!-- Recommendation status -->
     <div>
-      <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">판정 · Verdict</label>
+      <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-3">판정 · Verdict</label>
       <div class="flex gap-2">
         {% with current=candidate.recommendation_status %}
         <label class="flex-1 cursor-pointer">
           <input type="radio" name="recommendation_status" value="recommended" class="peer sr-only"
                  {% if current == "recommended" %}checked{% endif %}>
-          <div class="text-center py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-100 bg-white text-slate-500 hover:bg-slate-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-200 peer-checked:text-emerald-700 transition-colors">추천</div>
+          <div class="text-center py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-100 bg-white text-muted hover:bg-slate-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-200 peer-checked:text-emerald-700 transition-colors">추천</div>
         </label>
         <label class="flex-1 cursor-pointer">
           <input type="radio" name="recommendation_status" value="not_recommended" class="peer sr-only"
                  {% if current == "not_recommended" %}checked{% endif %}>
-          <div class="text-center py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-100 bg-white text-slate-500 hover:bg-slate-50 peer-checked:bg-rose-50 peer-checked:border-rose-200 peer-checked:text-rose-700 transition-colors">비추천</div>
+          <div class="text-center py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-100 bg-white text-muted hover:bg-slate-50 peer-checked:bg-rose-50 peer-checked:border-rose-200 peer-checked:text-rose-700 transition-colors">비추천</div>
         </label>
         <label class="flex-1 cursor-pointer">
           <input type="radio" name="recommendation_status" value="on_hold" class="peer sr-only"
                  {% if current == "on_hold" %}checked{% endif %}>
-          <div class="text-center py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-100 bg-white text-slate-500 hover:bg-slate-50 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-700 transition-colors">보류</div>
+          <div class="text-center py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-100 bg-white text-muted hover:bg-slate-50 peer-checked:bg-amber-50 peer-checked:border-amber-200 peer-checked:text-amber-700 transition-colors">보류</div>
         </label>
         {% endwith %}
       </div>
@@ -35,7 +35,7 @@
     <!-- Reason codes — 비추천/보류 선택 시에만 노출 -->
     {% with current=candidate.recommendation_status %}
     <div id="reason-codes-wrapper"{% if current != "not_recommended" and current != "on_hold" %} hidden{% endif %}>
-      <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">사유 선택 · Reasons</label>
+      <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-3">사유 선택 · Reasons</label>
       <div class="grid grid-cols-2 gap-2">
         {% for code, label in reason_codes.items %}
         <label class="flex items-center gap-2 cursor-pointer py-1.5">
@@ -50,13 +50,13 @@
 
     <!-- Content with voice input -->
     <div>
-      <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">코멘트 · Comment</label>
+      <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-3">코멘트 · Comment</label>
       <div class="relative">
         <textarea name="content" rows="3"
-                  class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition pr-12"
+                  class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/10 transition pr-12"
                   placeholder="인터뷰 결과, 확인 사항 등을 기록하세요"></textarea>
         <button type="button" data-voice-input
-                class="absolute right-3 top-3 w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-ink3 hover:border-ink3/30 transition-all"
+                class="absolute right-3 top-3 w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-faint hover:text-ink3 hover:border-ink3/30 transition-all"
                 title="음성 입력">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"

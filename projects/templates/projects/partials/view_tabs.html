@@ -4,19 +4,19 @@
   <a hx-get="{{ base_url }}?view=board&tab_switch=1&{{ filter_params }}"
      hx-target="#view-content"
      class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-2
-       {% if view_type == 'board' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+       {% if view_type == 'board' %}bg-ink3 text-white shadow-sm{% else %}text-muted hover:text-slate-900 hover:bg-slate-50{% endif %}">
     <i class="fa-solid fa-columns"></i> Board
   </a>
   <a hx-get="{{ base_url }}?view=list&tab_switch=1&{{ filter_params }}"
      hx-target="#view-content"
      class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-2
-       {% if view_type == 'list' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+       {% if view_type == 'list' %}bg-ink3 text-white shadow-sm{% else %}text-muted hover:text-slate-900 hover:bg-slate-50{% endif %}">
     <i class="fa-solid fa-list"></i> List
   </a>
   <a hx-get="{{ base_url }}?view=table&tab_switch=1&{{ filter_params }}"
      hx-target="#view-content"
      class="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-2
-       {% if view_type == 'table' %}bg-ink3 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+       {% if view_type == 'table' %}bg-ink3 text-white shadow-sm{% else %}text-muted hover:text-slate-900 hover:bg-slate-50{% endif %}">
     <i class="fa-solid fa-table"></i> Table
   </a>
   {% endwith %}

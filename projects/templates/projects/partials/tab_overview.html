@@ -13,7 +13,7 @@
   <!-- JD 요약 -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">JD 요약</h2>
+      <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase">JD 요약</h2>
       {% if project.jd_text or project.jd_file or project.jd_raw_text %}
       <div class="flex items-center gap-2">
         <button hx-post="{% url 'projects:analyze_jd' project.pk %}"
@@ -32,14 +32,14 @@
       <div class="space-y-2">
         {% if reqs.position %}
         <div class="flex items-start justify-between">
-          <span class="text-sm text-slate-500 w-20 shrink-0">포지션</span>
+          <span class="text-sm text-muted w-20 shrink-0">포지션</span>
           <span class="text-sm text-slate-800 text-right">{{ reqs.position }}</span>
         </div>
         {% endif %}
 
         {% if reqs.min_experience_years or reqs.max_experience_years %}
         <div class="flex items-start justify-between">
-          <span class="text-sm text-slate-500 w-20 shrink-0">경력</span>
+          <span class="text-sm text-muted w-20 shrink-0">경력</span>
           <span class="text-sm text-slate-800 text-right">
             {% if reqs.min_experience_years and reqs.max_experience_years %}
               {{ reqs.min_experience_years }}~{{ reqs.max_experience_years }}년
@@ -54,14 +54,14 @@
 
         {% if reqs.education_fields %}
         <div class="flex items-start justify-between">
-          <span class="text-sm text-slate-500 w-20 shrink-0">전공</span>
+          <span class="text-sm text-muted w-20 shrink-0">전공</span>
           <span class="text-sm text-slate-800 text-right">{{ reqs.education_fields|join:", " }}</span>
         </div>
         {% endif %}
 
         {% if reqs.keywords %}
         <div class="flex items-start">
-          <span class="text-sm text-slate-500 w-20 shrink-0">키워드</span>
+          <span class="text-sm text-muted w-20 shrink-0">키워드</span>
           <div class="flex flex-wrap gap-1.5">
             {% for kw in reqs.keywords %}
             <span class="px-2 py-0.5 bg-ink3/10 text-ink3 text-xs rounded-full">{{ kw }}</span>
@@ -72,16 +72,16 @@
 
         {% if reqs.role_summary %}
         <div class="pt-2 border-t border-slate-50">
-          <span class="text-sm text-slate-500 block mb-1">직무 요약</span>
+          <span class="text-sm text-muted block mb-1">직무 요약</span>
           <p class="text-sm text-slate-700">{{ reqs.role_summary }}</p>
         </div>
         {% endif %}
       </div>
       {% endwith %}
     {% elif project.jd_text or project.jd_file or project.jd_raw_text %}
-      <p class="text-sm text-slate-400">분석을 시작해주세요.</p>
+      <p class="text-sm text-faint">분석을 시작해주세요.</p>
     {% else %}
-      <p class="text-sm text-slate-400">JD를 먼저 등록해주세요.</p>
+      <p class="text-sm text-faint">JD를 먼저 등록해주세요.</p>
     {% endif %}
     </div>
 
@@ -98,7 +98,7 @@
 
   <!-- 진행 현황 (퍼널) -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">진행 현황</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-4">진행 현황</h2>
     <div class="flex items-center gap-3 text-sm">
       <a hx-get="{% url 'projects:project_tab_submissions' project.pk %}"
          hx-target="#tab-content"
@@ -107,7 +107,7 @@
          class="text-slate-600 hover:text-ink3 cursor-pointer transition">
         추천 <span class="font-semibold text-slate-800">{{ funnel.submissions }}</span>
       </a>
-      <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      <svg class="w-3 h-3 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       <a hx-get="{% url 'projects:project_tab_interviews' project.pk %}"
          hx-target="#tab-content"
          hx-push-url="false"
@@ -128,7 +128,7 @@
 
   <!-- 담당 컨설턴트 -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">담당 컨설턴트</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-4">담당 컨설턴트</h2>
     {% if consultants %}
     <div class="space-y-2">
       {% for consultant in consultants %}
@@ -138,21 +138,21 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-base text-slate-400">배정된 컨설턴트가 없습니다.</p>
+    <p class="text-base text-faint">배정된 컨설턴트가 없습니다.</p>
     {% endif %}
   </section>
 
   <!-- 최근 진행 현황 -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">최근 진행 현황</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-4">최근 진행 현황</h2>
     {% if recent_submissions %}
     <div class="space-y-2">
       {% for submission in recent_submissions %}
       <div class="flex items-center justify-between text-sm">
         <div class="flex items-center gap-2">
-          <span class="text-slate-400 w-16 shrink-0">{{ submission.created_at|date:"m/d" }}</span>
+          <span class="text-faint w-16 shrink-0">{{ submission.created_at|date:"m/d" }}</span>
           <span class="text-slate-800 font-medium">{{ submission.candidate.name }}</span>
-          <span class="text-slate-500">추천</span>
+          <span class="text-muted">추천</span>
         </div>
         <span class="text-sm px-1.5 py-0.5 rounded bg-ink3/10 text-ink3">
           {{ submission.get_status_display }}
@@ -161,7 +161,7 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-sm text-slate-400">진행 이력이 없습니다.</p>
+    <p class="text-sm text-faint">진행 이력이 없습니다.</p>
     {% endif %}
   </section>
 

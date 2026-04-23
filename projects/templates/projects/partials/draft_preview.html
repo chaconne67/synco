@@ -8,7 +8,7 @@
       <a href="{% url 'projects:submission_draft' project.pk submission.pk %}"
          hx-get="{% url 'projects:submission_draft' project.pk submission.pk %}"
          hx-target="#main-content"
-         class="text-sm text-slate-500 hover:text-slate-700">
+         class="text-sm text-muted hover:text-slate-700">
         &larr; 돌아가기
       </a>
     </div>
@@ -22,7 +22,7 @@
           {% for key, value in preview_data.personal_info.items %}
             {% if value and value != "None" %}
             <div>
-              <span class="text-slate-500">{{ key }}:</span>
+              <span class="text-muted">{{ key }}:</span>
               <span class="text-slate-900">{{ value }}</span>
             </div>
             {% endif %}
@@ -59,10 +59,10 @@
         <div class="mb-3 last:mb-0">
           <div class="font-medium text-sm text-slate-900">
             {{ career.company }} — {{ career.position }}
-            {% if career.period %}<span class="text-slate-500 font-normal">({{ career.period }})</span>{% endif %}
+            {% if career.period %}<span class="text-muted font-normal">({{ career.period }})</span>{% endif %}
           </div>
           {% if career.company_intro %}
-          <p class="text-xs text-slate-500 mt-1">{{ career.company_intro }}</p>
+          <p class="text-xs text-muted mt-1">{{ career.company_intro }}</p>
           {% endif %}
           {% if career.responsibilities %}
           <ul class="text-sm text-slate-600 mt-1 list-disc list-inside">
@@ -83,7 +83,7 @@
         {% for edu in preview_data.educations %}
         <p class="text-sm text-slate-600">
           {{ edu.institution }} {{ edu.degree }} {{ edu.major }}
-          {% if edu.period %}<span class="text-slate-400">({{ edu.period }})</span>{% endif %}
+          {% if edu.period %}<span class="text-faint">({{ edu.period }})</span>{% endif %}
         </p>
         {% endfor %}
       </div>
@@ -102,7 +102,7 @@
       {% endif %}
 
     {% else %}
-      <p class="text-sm text-slate-500">미리보기할 데이터가 없습니다.</p>
+      <p class="text-sm text-muted">미리보기할 데이터가 없습니다.</p>
     {% endif %}
   </div>
 

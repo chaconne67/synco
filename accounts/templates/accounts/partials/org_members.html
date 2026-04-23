@@ -7,7 +7,7 @@
 
 <section class="bg-white rounded-xl border border-slate-100 shadow-sm">
   <div class="p-6 border-b border-slate-100">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">멤버 목록 · Members</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase">멤버 목록 · Members</h3>
   </div>
 
   <div class="divide-y divide-slate-100">
@@ -36,7 +36,7 @@
               {% elif member.status == 'pending' %}승인대기
               {% else %}거절{% endif %}
             </span>
-            <span class="text-xs font-medium text-slate-400">{{ member.created_at|date:"Y-m-d" }}</span>
+            <span class="text-xs font-medium text-faint">{{ member.created_at|date:"Y-m-d" }}</span>
           </div>
         </div>
       </div>
@@ -88,7 +88,7 @@
       </div>
     </div>
     {% empty %}
-    <div class="p-12 text-center text-sm font-medium text-slate-400">
+    <div class="p-12 text-center text-sm font-medium text-faint">
       멤버가 없습니다
     </div>
     {% endfor %}

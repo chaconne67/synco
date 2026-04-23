@@ -145,7 +145,7 @@ def test_login_authenticates_valid_credentials(client):
     )
     resp = client.post(
         reverse("login"),
-        {"email": "login@example.com", "password": "right-pass"},
+        {"identifier": "login@example.com", "password": "right-pass"},
     )
     assert resp.status_code == 302
     assert "_auth_user_id" in client.session
@@ -160,7 +160,7 @@ def test_login_rejects_wrong_password(client):
     )
     resp = client.post(
         reverse("login"),
-        {"email": "wrong@example.com", "password": "bad-pass"},
+        {"identifier": "wrong@example.com", "password": "bad-pass"},
     )
     assert resp.status_code == 200
     assert "올바르지 않습니다" in resp.content.decode()

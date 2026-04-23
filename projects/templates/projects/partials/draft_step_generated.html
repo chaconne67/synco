@@ -28,16 +28,16 @@
   {# 자동 보정 내역 #}
   {% if draft.auto_corrections %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-3">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">자동 보정 내역 ({{ draft.auto_corrections|length }}건)</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase">자동 보정 내역 ({{ draft.auto_corrections|length }}건)</h3>
     <div class="divide-y divide-slate-100">
       {% for correction in draft.auto_corrections %}
       <div class="py-2 text-sm">
-        <span class="text-slate-500">{{ correction.field }}:</span>
+        <span class="text-muted">{{ correction.field }}:</span>
         <span class="text-rose-600 line-through">{{ correction.original }}</span>
         &rarr;
         <span class="text-emerald-600 font-medium">{{ correction.corrected }}</span>
         {% if correction.reason %}
-        <span class="text-slate-400 ml-1">({{ correction.reason }})</span>
+        <span class="text-faint ml-1">({{ correction.reason }})</span>
         {% endif %}
       </div>
       {% endfor %}
@@ -47,7 +47,7 @@
 
   {# 다음 단계 선택 #}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-4">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">다음 단계</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase">다음 단계</h3>
     <div class="flex flex-wrap gap-3">
       <a href="{% url 'projects:draft_consultation' project.pk submission.pk %}"
          hx-get="{% url 'projects:draft_consultation' project.pk submission.pk %}"

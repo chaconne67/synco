@@ -9,8 +9,8 @@
   <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
     <div>
       <span class="text-xs font-bold uppercase tracking-[0.25em] text-ink3 mb-2 block">Owner Review</span>
-      <h2 class="text-4xl font-black text-slate-900 tracking-tight">승인 요청 <span class="text-slate-400">{{ approval_count }}</span></h2>
-      <p class="mt-2 text-sm text-slate-500">팀원이 제출한 프로젝트 등록 요청을 검토하세요.</p>
+      <h2 class="text-4xl font-black text-slate-900 tracking-tight">승인 요청 <span class="text-faint">{{ approval_count }}</span></h2>
+      <p class="mt-2 text-sm text-muted">팀원이 제출한 프로젝트 등록 요청을 검토하세요.</p>
     </div>
     <a href="{% url 'projects:project_list' %}"
        hx-get="{% url 'projects:project_list' %}" hx-target="#main-content" hx-push-url="true"
@@ -30,8 +30,8 @@
     <div class="w-14 h-14 mx-auto mb-4 bg-slate-50 rounded-full flex items-center justify-center">
       <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     </div>
-    <p class="text-sm font-medium text-slate-500">대기 중인 승인 요청이 없습니다</p>
-    <p class="mt-1 text-xs font-bold uppercase tracking-widest text-slate-400">All caught up</p>
+    <p class="text-sm font-medium text-muted">대기 중인 승인 요청이 없습니다</p>
+    <p class="mt-1 text-xs font-bold uppercase tracking-widest text-faint">All caught up</p>
   </div>
   {% endif %}
 </div>

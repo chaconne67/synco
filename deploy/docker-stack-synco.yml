@@ -27,12 +27,12 @@ services:
 
   synco_app:
     image: __APP_IMAGE__
-    env_file: /home/docker/synco/.env.prod
+    env_file: /home/chaconne/synco-deploy/synco/.env.prod
     volumes:
-      - /home/docker/synco/.secrets:/app/.secrets:ro
-      - /home/docker/synco/.claude:/root/.claude:ro
-      - /home/docker/synco/.claude.json:/root/.claude.json:ro
-      - /home/docker/synco/runtime/logs:/app/logs
+      - /home/chaconne/synco-deploy/synco/.secrets:/app/.secrets:ro
+      - /home/chaconne/synco-deploy/synco/.claude:/root/.claude:ro
+      - /home/chaconne/synco-deploy/synco/.claude.json:/root/.claude.json:ro
+      - /home/chaconne/synco-deploy/synco/runtime/logs:/app/logs
     environment:
       TZ: Asia/Seoul
     networks:

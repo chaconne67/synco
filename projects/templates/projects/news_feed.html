@@ -7,7 +7,7 @@
 {% block extra_head %}
 <style>
   .tnum { font-feature-settings: "tnum" 1, "ss01" 1; font-variant-numeric: tabular-nums; }
-  .eyebrow-news { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; }
+  .eyebrow-news { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B; }
 
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -54,7 +54,7 @@
 
   .source {
     display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; font-weight: 600; color: #64748B;
+    font-size: 11px; font-weight: 600; color: #475569;
   }
   .source .src-dot {
     width: 4px; height: 4px; border-radius: 999px; background: #CBD5E1;
@@ -104,7 +104,7 @@
   .pulse-item:last-child { border-bottom: 0; }
   .pulse-item .num {
     flex-shrink: 0;
-    font-size: 11px; font-weight: 800; color: #94A3B8;
+    font-size: 11px; font-weight: 800; color: #64748B;
     font-variant-numeric: tabular-nums;
     width: 16px;
   }
@@ -113,7 +113,7 @@
     line-height: 1.4;
   }
   .pulse-item .meta {
-    font-size: 11px; color: #94A3B8; margin-top: 4px;
+    font-size: 11px; color: #64748B; margin-top: 4px;
   }
 </style>
 {% endblock %}
@@ -165,7 +165,7 @@
       <!-- Featured -->
       <a href="https://news.samsung.com/kr/%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90-2026%EB%85%84-%EC%A0%95%EA%B8%B0-%EC%9E%84%EC%9B%90-%EC%9D%B8%EC%82%AC" target="_blank" rel="noopener" class="block bg-surface rounded-card shadow-card news-card p-6 group">
         <div class="flex items-center gap-2 mb-4">
-          <span class="eyebrow-news" style="color:#DC2626">● Featured</span>
+          <span class="eyebrow-news !text-red-600">● Featured</span>
           <span class="cat hr">인사</span>
         </div>
         <div class="hero-tile mb-5">
@@ -460,7 +460,7 @@
     <aside class="col-span-4 space-y-6">
 
       <article class="bg-ink rounded-card shadow-card p-6 text-white">
-        <div class="eyebrow-news" style="color:#64748B">Industry Pulse</div>
+        <div class="eyebrow-news !text-muted">Industry Pulse</div>
         <div class="mt-2 text-[13px] font-semibold text-white/80 leading-relaxed">
           이번 주 수집된 임원 인사·HR 기사
         </div>

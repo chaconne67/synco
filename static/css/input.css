@@ -17,7 +17,7 @@
   .eyebrow {
     @apply text-xs font-bold uppercase;
     letter-spacing: 0.08em;
-    color: #94A3B8;
+    color: #64748B;
   }
   .eyebrow-ko {
     @apply text-xs font-semibold;
@@ -109,7 +109,7 @@
   }
   .progress.success > span { background: #10B981; }
   .progress.info    > span { background: #6366F1; }
-  .progress.muted   > span { background: #94A3B8; }
+  .progress.muted   > span { background: #64748B; }
   .progress.dark { background: #1E293B; }
   .progress.dark > span { background: #FFFFFF; }
 
@@ -252,7 +252,7 @@
     gap: 6px;
     padding: 8px 16px;
     border-radius: 999px;
-    color: #64748B;
+    color: #475569;
     transition: background .15s ease, color .15s ease;
   }
   .view-toggle button:hover { color: #0F172A; }
@@ -276,7 +276,7 @@
     color: #334155;
   }
   .col-title .count {
-    color: #94A3B8;
+    color: #64748B;
     font-weight: 700;
     font-feature-settings: "tnum" 1;
     font-variant-numeric: tabular-nums;
@@ -313,7 +313,7 @@
     align-items: center;
     gap: 6px;
     position: relative;
-    color: #94A3B8;
+    color: #64748B;
   }
   .stage-step .dot {
     @apply text-xs font-bold;
@@ -325,7 +325,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94A3B8;
+    color: #64748B;
     flex-shrink: 0;
   }
   .stage-step.passed .dot {
@@ -404,8 +404,8 @@
   }
   .stat + .stat { border-left: 1px solid #F1F5F9; padding-left: 16px; }
   .stat .num { font-size: 20px; font-weight: 800; line-height: 1; color: #0F172A; letter-spacing: -0.01em; }
-  .stat .num .unit { font-size: 11px; font-weight: 600; color: #94A3B8; margin-left: 2px; }
-  .stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; margin-top: 6px; }
+  .stat .num .unit { font-size: 11px; font-weight: 600; color: #64748B; margin-left: 2px; }
+  .stat .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B; margin-top: 6px; }
 
   /* Client logo tile — 8 gradients */
   .client-logo-tile {
@@ -442,7 +442,7 @@
     padding: 16px 4px;
     margin-right: 32px;
     gap: 10px;
-    color: #94A3B8;
+    color: #64748B;
     transition: color .15s ease;
   }
   .ref-tab::after {
@@ -459,7 +459,7 @@
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 22px; height: 20px; padding: 0 7px;
     border-radius: 999px;
-    background: #F1F5F9; color: #64748B;
+    background: #F1F5F9; color: #475569;
     font-size: 10px; font-weight: 700;
   }
   .ref-tab.is-active .count { background: #0F172A; color: #fff; }
@@ -475,7 +475,7 @@
     outline: none;
     transition: border-color .15s ease, box-shadow .15s ease;
   }
-  .filter-input::placeholder { color: #94A3B8; }
+  .filter-input::placeholder { color: #64748B; }
   .filter-input:focus {
     border-color: #334155;
     box-shadow: 0 0 0 3px rgba(51,65,85,0.08);
@@ -490,7 +490,7 @@
     color: #334155;
     outline: none;
     appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
@@ -503,7 +503,7 @@
     padding: 14px 16px;
     font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.08em;
-    color: #94A3B8;
+    color: #64748B;
     border-bottom: 1px solid #E2E8F0;
     white-space: nowrap;
   }
@@ -520,7 +520,7 @@
   .ref-table tbody td.tnum-col {
     text-align: right;
     font-variant-numeric: tabular-nums;
-    color: #64748B;
+    color: #475569;
   }
   .ref-table tbody td.primary {
     font-weight: 700;
@@ -528,8 +528,8 @@
     font-size: 14px;
     letter-spacing: -0.01em;
   }
-  .ref-table tbody td.en { color: #64748B; font-size: 12px; }
-  .ref-table tbody td.note { color: #64748B; font-size: 12px; }
+  .ref-table tbody td.en { color: #475569; font-size: 12px; }
+  .ref-table tbody td.note { color: #475569; font-size: 12px; }
 
   /* Rank chip (universities) */
   .ref-table .rank {
@@ -589,7 +589,7 @@
   .pill.kospi     { background: #DBEAFE; color: #1E40AF; }
   .pill.kosdaq    { background: #CCFBF1; color: #115E59; }
   .pill.global    { background: #EDE9FE; color: #5B21B6; }
-  .pill.private   { background: #F1F5F9; color: #64748B; }
+  .pill.private   { background: #F1F5F9; color: #475569; }
   /* Company size */
   .pill.enterprise { background: #F1F5F9; color: #334155; }
   .pill.midcap     { background: #DBEAFE; color: #1E40AF; }
@@ -599,7 +599,7 @@
   /* Cert level */
   .pill.lvl-high   { background: #FEE2E2; color: #991B1B; }
   .pill.lvl-mid    { background: #FEF3C7; color: #92400E; }
-  .pill.lvl-low    { background: #F1F5F9; color: #64748B; }
+  .pill.lvl-low    { background: #F1F5F9; color: #475569; }
 
   /* Sub-filter chip divider (reused) */
   .cat-divider {

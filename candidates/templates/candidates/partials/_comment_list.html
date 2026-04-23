@@ -1,11 +1,11 @@
 {% if comments %}
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mt-4">
-  <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">코멘트 이력 · Comment History</h3>
+  <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-5">코멘트 이력 · Comment History</h3>
   <div class="divide-y divide-slate-100">
     {% for comment in comments %}
     <div class="py-4 first:pt-0 last:pb-0">
       <div class="flex items-center gap-2 mb-2 flex-wrap">
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-faint">{{ comment.created_at|date:"Y.m.d H:i" }}</span>
         {% if comment.author %}
         <span class="text-xs font-semibold text-slate-600">{{ comment.author.get_full_name|default:comment.author.username }}</span>
         {% endif %}

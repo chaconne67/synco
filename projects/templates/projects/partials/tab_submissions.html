@@ -5,7 +5,7 @@
 
   <!-- 상단: 추천 등록 버튼 -->
   <div class="flex justify-between items-center">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">추천 이력 ({{ total_count }}건)</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase">추천 이력 ({{ total_count }}건)</h2>
     <button hx-get="{% url 'projects:submission_create' project.pk %}"
             hx-target="#submission-form-area"
             class="text-sm bg-ink3 text-white px-3 py-1.5 rounded-lg hover:bg-ink2 transition">
@@ -19,16 +19,16 @@
   <!-- 작성중 -->
   {% if drafting %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-3">작성중 ({{ drafting|length }}건)</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-3">작성중 ({{ drafting|length }}건)</h3>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">등록일</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">등록일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-faint">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -36,8 +36,8 @@
           <tr class="border-b border-slate-50">
             <td class="py-2 text-slate-900 font-bold">{{ submission.candidate.name }}</td>
             <td class="py-2 text-slate-600">{{ submission.get_template_display|default:"-" }}</td>
-            <td class="py-2 text-slate-500">{{ submission.created_at|date:"m/d" }}</td>
-            <td class="py-2 text-slate-500">
+            <td class="py-2 text-muted">{{ submission.created_at|date:"m/d" }}</td>
+            <td class="py-2 text-muted">
               {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
@@ -76,11 +76,11 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">제출일</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">제출일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-faint">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -88,8 +88,8 @@
           <tr class="border-b border-slate-50">
             <td class="py-2 text-slate-900 font-bold">{{ submission.candidate.name }}</td>
             <td class="py-2 text-slate-600">{{ submission.get_template_display|default:"-" }}</td>
-            <td class="py-2 text-slate-500">{% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}-{% endif %}</td>
-            <td class="py-2 text-slate-500">
+            <td class="py-2 text-muted">{% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}-{% endif %}</td>
+            <td class="py-2 text-muted">
               {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
@@ -117,11 +117,11 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">제출일</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">제출일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-faint">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -129,8 +129,8 @@
           <tr class="border-b border-slate-50">
             <td class="py-2 text-slate-900 font-bold">{{ submission.candidate.name }}</td>
             <td class="py-2 text-slate-600">{{ submission.get_template_display|default:"-" }}</td>
-            <td class="py-2 text-slate-500">{% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}-{% endif %}</td>
-            <td class="py-2 text-slate-500">
+            <td class="py-2 text-muted">{% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}-{% endif %}</td>
+            <td class="py-2 text-muted">
               {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
@@ -159,11 +159,11 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">후보자</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">양식</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">제출일</th>
-            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-slate-400">담당</th>
-            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-slate-400">작업</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">후보자</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">양식</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">제출일</th>
+            <th class="text-left py-2 text-xs font-bold uppercase tracking-widest text-faint">담당</th>
+            <th class="text-right py-2 text-xs font-bold uppercase tracking-widest text-faint">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -171,8 +171,8 @@
           <tr class="border-b border-slate-50">
             <td class="py-2 text-slate-900 font-bold">{{ submission.candidate.name }}</td>
             <td class="py-2 text-slate-600">{{ submission.get_template_display|default:"-" }}</td>
-            <td class="py-2 text-slate-500">{% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}-{% endif %}</td>
-            <td class="py-2 text-slate-500">
+            <td class="py-2 text-muted">{% if submission.submitted_at %}{{ submission.submitted_at|date:"m/d" }}{% else %}-{% endif %}</td>
+            <td class="py-2 text-muted">
               {% if submission.consultant %}{{ submission.consultant.get_full_name|default:submission.consultant.username }}{% else %}-{% endif %}
             </td>
             <td class="py-2 text-right">
@@ -191,7 +191,7 @@
 
   {% if total_count == 0 %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <p class="text-sm text-slate-400">컨택에서 관심 후보자가 생기면 추천서류를 작성할 수 있습니다.</p>
+    <p class="text-sm text-faint">컨택에서 관심 후보자가 생기면 추천서류를 작성할 수 있습니다.</p>
   </div>
   {% endif %}
 </div>

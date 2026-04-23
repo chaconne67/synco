@@ -2,30 +2,30 @@
 
 <div class="space-y-4">
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">내 정보 · Profile</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-5">내 정보 · Profile</h3>
 
     <dl class="space-y-4">
       <div class="flex items-center justify-between">
-        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400">이름</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-faint">이름</dt>
         <dd class="text-sm font-bold text-slate-900">{{ user.first_name|default:"-" }}</dd>
       </div>
       <div class="flex items-center justify-between">
-        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400">소속</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-faint">소속</dt>
         <dd class="text-sm font-bold text-slate-900">{{ user.company_name|default:"-" }}</dd>
       </div>
       <div class="flex items-center justify-between">
-        <dt class="text-xs font-bold uppercase tracking-widest text-slate-400">전화번호</dt>
+        <dt class="text-xs font-bold uppercase tracking-widest text-faint">전화번호</dt>
         <dd class="text-sm font-bold text-slate-900">{{ user.phone|default:"-" }}</dd>
       </div>
     </dl>
   </section>
 
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-5">앱 정보 · App</h3>
+    <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-5">앱 정보 · App</h3>
 
     <div class="divide-y divide-slate-100">
       <div class="flex items-center justify-between py-3 first:pt-0">
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">버전</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-faint">버전</span>
         <span class="text-sm font-bold text-slate-900">1.0.0</span>
       </div>
       <a href="{% url 'terms' %}" class="flex items-center justify-between py-3 group hover:text-ink3 transition-colors">

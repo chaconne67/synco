@@ -5,7 +5,7 @@
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex items-center justify-between">
     <div>
       <span class="text-sm font-medium text-slate-800">{{ item.candidate.name }}</span>
-      <span class="text-sm text-slate-500 ml-2">
+      <span class="text-sm text-muted ml-2">
         {{ item.candidate.current_company }} · {{ item.candidate.current_position }}
       </span>
     </div>
@@ -19,6 +19,6 @@
     </div>
   </div>
   {% empty %}
-  <p class="text-sm text-slate-400">매칭되는 후보자가 없습니다.</p>
+  <p class="text-sm text-faint">매칭되는 후보자가 없습니다.</p>
   {% endfor %}
 </div>

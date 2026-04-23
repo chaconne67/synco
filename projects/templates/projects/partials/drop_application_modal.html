@@ -5,15 +5,15 @@
      hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
   <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl shadow-slate-900/20 p-8">
     <header class="mb-5 flex items-center justify-between">
-      <h3 id="modal-title-drop-application" class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">드롭 처리 · Drop</h3>
+      <h3 id="modal-title-drop-application" class="text-xs font-black tracking-[0.2em] text-faint uppercase">드롭 처리 · Drop</h3>
       <button type="button"
               onclick="document.getElementById('modal-container').innerHTML = ''"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-faint hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
     </header>
 
     <div class="mb-5 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
       <p class="text-sm font-bold text-slate-900">{{ application.candidate.name }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ application.project.title }}</p>
+      <p class="mt-1 text-xs text-muted">{{ application.project.title }}</p>
     </div>
 
     {% if form.non_field_errors %}
@@ -28,7 +28,7 @@
       {% csrf_token %}
       <div class="space-y-5">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">드롭 사유</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">드롭 사유</label>
           <div class="space-y-2">
             <label class="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 cursor-pointer hover:border-rose-200 hover:bg-rose-50/40 transition-colors">
               <input type="radio" name="drop_reason" value="unfit" {% if form.drop_reason.value == "unfit" %}checked{% endif %}
@@ -57,9 +57,9 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">메모 (선택)</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">메모 (선택)</label>
           <textarea name="drop_note" rows="2"
-                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">{{ form.drop_note.value|default:"" }}</textarea>
+                    class="w-full rounded-xl bg-slate-50 border border-transparent focus:border-ink3 focus:bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/10 transition">{{ form.drop_note.value|default:"" }}</textarea>
         </div>
       </div>
 

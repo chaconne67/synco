@@ -1,14 +1,14 @@
 {# 대기 상태 — AI 초안 생성 버튼 #}
 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-8 space-y-5">
-  <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">AI 초안 생성 · Generate</h3>
+  <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase">AI 초안 생성 · Generate</h3>
   <p class="text-sm text-slate-600">
     <span class="text-slate-900 font-bold">{{ candidate.name }}</span> 후보자의 데이터를 기반으로 AI가 추천 서류 초안을 자동 생성합니다.
   </p>
 
   <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-2">
-    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">양식</span> <span class="text-slate-900 font-semibold ml-2">{{ submission.get_template_display|default:"미선택" }}</span></p>
-    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">경력</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.total_experience_years|default:"–" }}년</span></p>
-    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">현재</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.current_company|default:"–" }} {{ candidate.current_position|default:"" }}</span></p>
+    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">양식</span> <span class="text-slate-900 font-semibold ml-2">{{ submission.get_template_display|default:"미선택" }}</span></p>
+    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">경력</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.total_experience_years|default:"–" }}년</span></p>
+    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">현재</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.current_company|default:"–" }} {{ candidate.current_position|default:"" }}</span></p>
   </div>
 
   <form hx-post="{% url 'projects:draft_generate' project.pk submission.pk %}"

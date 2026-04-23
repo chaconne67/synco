@@ -5,16 +5,16 @@
      hx-on:keydown.escape="document.getElementById('modal-container').innerHTML = ''">
   <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl shadow-slate-900/20 p-8">
     <header class="mb-5 flex items-center justify-between">
-      <h3 id="modal-title-propose-next" class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">후속 액션 제안 · Next</h3>
+      <h3 id="modal-title-propose-next" class="text-xs font-black tracking-[0.2em] text-faint uppercase">후속 액션 제안 · Next</h3>
       <button type="button"
               onclick="document.getElementById('modal-container').innerHTML = ''"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-faint hover:text-slate-900 hover:bg-slate-50 transition-colors">&#10005;</button>
     </header>
 
     <div class="mb-5 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
       <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">완료된 액션</p>
-      <p class="mt-2 text-sm font-bold text-slate-900">{{ completed_action.action_type.label_ko }} <span class="mx-1 text-slate-500">·</span> {{ completed_action.title }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ completed_action.application.candidate.name }}</p>
+      <p class="mt-2 text-sm font-bold text-slate-900">{{ completed_action.action_type.label_ko }} <span class="mx-1 text-muted">·</span> {{ completed_action.title }}</p>
+      <p class="mt-1 text-xs text-muted">{{ completed_action.application.candidate.name }}</p>
     </div>
 
     <p class="mb-5 text-sm text-slate-600 font-medium">다음에 진행할 액션을 선택하세요.</p>
@@ -31,12 +31,12 @@
             <div class="flex-1 min-w-0">
               <span class="text-sm font-bold text-slate-900">{{ suggestion.label_ko }}</span>
               {% if suggestion.description %}
-                <p class="text-xs text-slate-500 mt-0.5">{{ suggestion.description }}</p>
+                <p class="text-xs text-muted mt-0.5">{{ suggestion.description }}</p>
               {% endif %}
             </div>
           </label>
         {% empty %}
-          <p class="text-xs font-medium text-slate-400 text-center py-4">제안할 후속 액션이 없습니다.</p>
+          <p class="text-xs font-medium text-faint text-center py-4">제안할 후속 액션이 없습니다.</p>
         {% endfor %}
       </div>
 

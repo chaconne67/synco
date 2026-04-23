@@ -28,12 +28,12 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100">
-            <th class="text-left py-2 text-slate-500 font-medium">차수</th>
-            <th class="text-left py-2 text-slate-500 font-medium">유형</th>
-            <th class="text-left py-2 text-slate-500 font-medium">일정</th>
-            <th class="text-left py-2 text-slate-500 font-medium">장소</th>
-            <th class="text-left py-2 text-slate-500 font-medium">결과</th>
-            <th class="text-right py-2 text-slate-500 font-medium">작업</th>
+            <th class="text-left py-2 text-muted font-medium">차수</th>
+            <th class="text-left py-2 text-muted font-medium">유형</th>
+            <th class="text-left py-2 text-muted font-medium">일정</th>
+            <th class="text-left py-2 text-muted font-medium">장소</th>
+            <th class="text-left py-2 text-muted font-medium">결과</th>
+            <th class="text-right py-2 text-muted font-medium">작업</th>
           </tr>
         </thead>
         <tbody>
@@ -41,14 +41,14 @@
           <tr class="border-b border-slate-50">
             <td class="py-2 text-slate-800 font-medium">{{ interview.round }}차</td>
             <td class="py-2 text-slate-600">{{ interview.get_type_display }}</td>
-            <td class="py-2 text-slate-500">{{ interview.scheduled_at|date:"m/d H:i" }}</td>
-            <td class="py-2 text-slate-500">{{ interview.location|default:"-" }}</td>
+            <td class="py-2 text-muted">{{ interview.scheduled_at|date:"m/d H:i" }}</td>
+            <td class="py-2 text-muted">{{ interview.location|default:"-" }}</td>
             <td class="py-2">
               <span class="text-sm px-1.5 py-0.5 rounded
                 {% if interview.result == '합격' %}bg-emerald-50 text-emerald-600
                 {% elif interview.result == '탈락' %}bg-rose-50 text-rose-600
                 {% elif interview.result == '보류' %}bg-amber-50 text-amber-600
-                {% else %}bg-slate-50 text-slate-500{% endif %}">
+                {% else %}bg-slate-50 text-muted{% endif %}">
                 {{ interview.get_result_display }}
               </span>
             </td>
@@ -75,7 +75,7 @@
 
   {% if total_count == 0 %}
   <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <p class="text-sm text-slate-400">면접 이력이 없습니다.</p>
+    <p class="text-sm text-faint">면접 이력이 없습니다.</p>
   </div>
   {% endif %}
 </div>

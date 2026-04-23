@@ -7,7 +7,7 @@
   {% for c in high_collisions %}
   <div class="bg-white rounded-xl border border-rose-100 p-4 space-y-1.5">
     <p class="text-sm font-bold text-slate-900">{{ c.project.client.name }} <span class="mx-1 text-slate-300">·</span> {{ c.project.title }}</p>
-    <p class="text-xs text-slate-500">담당: {{ c.consultant_name }} <span class="text-slate-300">·</span> {{ c.status_display }}</p>
+    <p class="text-xs text-muted">담당: {{ c.consultant_name }} <span class="text-slate-300">·</span> {{ c.status_display }}</p>
     <p class="text-xs font-bold uppercase tracking-widest text-rose-600">유사도 · {{ c.score }}</p>
   </div>
   {% endfor %}
@@ -15,9 +15,9 @@
     등록 시 관리자 승인이 필요합니다. 아래에 요청 사유를 입력해 주세요.
   </p>
   <div>
-    <label for="approval_message" class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">요청 메시지 (선택)</label>
+    <label for="approval_message" class="block text-xs font-bold uppercase tracking-widest text-faint mb-2">요청 메시지 (선택)</label>
     <textarea name="approval_message" id="approval_message" rows="2"
-              class="w-full rounded-xl bg-white border border-slate-200 focus:border-ink3 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-ink3/10 transition"
+              class="w-full rounded-xl bg-white border border-slate-200 focus:border-ink3 px-4 py-3 text-sm text-slate-900 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ink3/10 transition"
               placeholder="승인 요청 사유를 입력하세요..."></textarea>
   </div>
 </div>

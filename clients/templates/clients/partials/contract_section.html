@@ -97,7 +97,7 @@
           <span class="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full
             {% if contract.status == '체결' %}bg-emerald-50 text-emerald-700 border border-emerald-100
             {% elif contract.status == '협의중' %}bg-amber-50 text-amber-700 border border-amber-100
-            {% elif contract.status == '만료' %}bg-slate-50 text-slate-500 border border-slate-100
+            {% elif contract.status == '만료' %}bg-slate-50 text-muted border border-slate-100
             {% elif contract.status == '해지' %}bg-rose-50 text-rose-600 border border-rose-100
             {% else %}bg-slate-50 text-slate-600 border border-slate-100{% endif %}">
             {{ contract.get_status_display }}

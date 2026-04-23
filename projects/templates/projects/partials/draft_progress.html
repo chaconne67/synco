@@ -9,11 +9,11 @@
     {# 대기 #}
     <li class="flex items-center gap-1">
       <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
-        {% if draft.status == 'pending' %}bg-ink3 text-white{% elif draft.status != 'pending' %}bg-emerald-500 text-white{% else %}bg-slate-200 text-slate-500{% endif %}">
+        {% if draft.status == 'pending' %}bg-ink3 text-white{% elif draft.status != 'pending' %}bg-emerald-500 text-white{% else %}bg-slate-200 text-muted{% endif %}">
         {% if draft.status != 'pending' %}&#10003;{% else %}1{% endif %}
       </span>
-      <span class="{% if draft.status == 'pending' %}font-bold text-slate-900{% else %}text-slate-500{% endif %}">대기</span>
-      <span class="mx-1 text-slate-500">&rarr;</span>
+      <span class="{% if draft.status == 'pending' %}font-bold text-slate-900{% else %}text-muted{% endif %}">대기</span>
+      <span class="mx-1 text-muted">&rarr;</span>
     </li>
 
     {# 초안 생성 #}
@@ -22,12 +22,12 @@
       <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
         {% if draft.status == 'draft_generated' %}bg-ink3 text-white
         {% elif draft.status != 'pending' and draft.status != 'draft_generated' %}bg-emerald-500 text-white
-        {% else %}bg-slate-200 text-slate-500{% endif %}">
+        {% else %}bg-slate-200 text-muted{% endif %}">
         {% if draft.status != 'pending' and draft.status != 'draft_generated' %}&#10003;{% else %}2{% endif %}
       </span>
       {% endwith %}
-      <span class="{% if draft.status == 'draft_generated' %}font-bold text-slate-900{% else %}text-slate-500{% endif %}">초안</span>
-      <span class="mx-1 text-slate-500">&rarr;</span>
+      <span class="{% if draft.status == 'draft_generated' %}font-bold text-slate-900{% else %}text-muted{% endif %}">초안</span>
+      <span class="mx-1 text-muted">&rarr;</span>
     </li>
 
     {# 상담 #}
@@ -35,11 +35,11 @@
       <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
         {% if draft.status == 'consultation_added' %}bg-ink3 text-white
         {% elif draft.status == 'finalized' or draft.status == 'reviewed' or draft.status == 'converted' %}bg-emerald-500 text-white
-        {% else %}bg-slate-200 text-slate-500{% endif %}">
+        {% else %}bg-slate-200 text-muted{% endif %}">
         {% if draft.status == 'finalized' or draft.status == 'reviewed' or draft.status == 'converted' %}&#10003;{% else %}3{% endif %}
       </span>
-      <span class="{% if draft.status == 'consultation_added' %}font-bold text-slate-900{% else %}text-slate-500{% endif %}">상담</span>
-      <span class="mx-1 text-slate-500">&rarr;</span>
+      <span class="{% if draft.status == 'consultation_added' %}font-bold text-slate-900{% else %}text-muted{% endif %}">상담</span>
+      <span class="mx-1 text-muted">&rarr;</span>
     </li>
 
     {# AI 정리 #}
@@ -47,11 +47,11 @@
       <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
         {% if draft.status == 'finalized' %}bg-ink3 text-white
         {% elif draft.status == 'reviewed' or draft.status == 'converted' %}bg-emerald-500 text-white
-        {% else %}bg-slate-200 text-slate-500{% endif %}">
+        {% else %}bg-slate-200 text-muted{% endif %}">
         {% if draft.status == 'reviewed' or draft.status == 'converted' %}&#10003;{% else %}4{% endif %}
       </span>
-      <span class="{% if draft.status == 'finalized' %}font-bold text-slate-900{% else %}text-slate-500{% endif %}">정리</span>
-      <span class="mx-1 text-slate-500">&rarr;</span>
+      <span class="{% if draft.status == 'finalized' %}font-bold text-slate-900{% else %}text-muted{% endif %}">정리</span>
+      <span class="mx-1 text-muted">&rarr;</span>
     </li>
 
     {# 검토 #}
@@ -59,21 +59,21 @@
       <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
         {% if draft.status == 'reviewed' %}bg-ink3 text-white
         {% elif draft.status == 'converted' %}bg-emerald-500 text-white
-        {% else %}bg-slate-200 text-slate-500{% endif %}">
+        {% else %}bg-slate-200 text-muted{% endif %}">
         {% if draft.status == 'converted' %}&#10003;{% else %}5{% endif %}
       </span>
-      <span class="{% if draft.status == 'reviewed' %}font-bold text-slate-900{% else %}text-slate-500{% endif %}">검토</span>
-      <span class="mx-1 text-slate-500">&rarr;</span>
+      <span class="{% if draft.status == 'reviewed' %}font-bold text-slate-900{% else %}text-muted{% endif %}">검토</span>
+      <span class="mx-1 text-muted">&rarr;</span>
     </li>
 
     {# 변환 #}
     <li class="flex items-center gap-1">
       <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
         {% if draft.status == 'converted' %}bg-emerald-500 text-white
-        {% else %}bg-slate-200 text-slate-500{% endif %}">
+        {% else %}bg-slate-200 text-muted{% endif %}">
         {% if draft.status == 'converted' %}&#10003;{% else %}6{% endif %}
       </span>
-      <span class="{% if draft.status == 'converted' %}font-bold text-slate-900{% else %}text-slate-500{% endif %}">완료</span>
+      <span class="{% if draft.status == 'converted' %}font-bold text-slate-900{% else %}text-muted{% endif %}">완료</span>
     </li>
 
   </ol>

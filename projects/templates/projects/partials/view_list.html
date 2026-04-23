@@ -18,7 +18,7 @@
       <h3 class="text-base font-semibold text-emerald-700">{{ group.label }}</h3>
       <span class="text-xs text-emerald-500">(경과일 10일 미만)</span>
       {% endif %}
-      <span class="text-xs text-slate-400 ml-auto">{{ group.projects|length }}건</span>
+      <span class="text-xs text-faint ml-auto">{{ group.projects|length }}건</span>
     </div>
 
     <!-- Project Items -->
@@ -31,8 +31,8 @@
           <div class="min-w-0 flex-1">
             <h4 class="text-base font-semibold text-slate-900 truncate">{{ project.title }}</h4>
             <div class="flex items-center gap-2 mt-1 flex-wrap">
-              <span class="text-sm text-slate-500">{{ project.client.name }}</span>
-              <span class="text-sm text-slate-400">·</span>
+              <span class="text-sm text-muted">{{ project.client.name }}</span>
+              <span class="text-sm text-faint">·</span>
               <span class="text-sm px-2 py-0.5 rounded-full
                 {% if project.status == 'new' %}bg-ink3/10 text-ink3
                 {% elif project.status == 'searching' %}bg-amber-50 text-amber-600
@@ -44,8 +44,8 @@
                 {% else %}bg-slate-50 text-slate-600{% endif %}">
                 {{ project.get_status_display }}
               </span>
-              <span class="text-sm text-slate-400">·</span>
-              <span class="text-sm {% if project.days_elapsed > 20 %}text-rose-600 font-medium{% elif project.days_elapsed > 10 %}text-amber-600{% else %}text-slate-500{% endif %}">
+              <span class="text-sm text-faint">·</span>
+              <span class="text-sm {% if project.days_elapsed > 20 %}text-rose-600 font-medium{% elif project.days_elapsed > 10 %}text-amber-600{% else %}text-muted{% endif %}">
                 {{ project.days_elapsed }}일 경과
               </span>
             </div>
@@ -65,7 +65,7 @@
                       onclick="event.stopPropagation(); if(!confirm('승인 요청을 취소하시겠습니까?')) return false; this.form.submit();">취소</button>
             </form>
             {% endif %}
-            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
           </div>
@@ -81,7 +81,7 @@
   {% if not has_any %}
   <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
     {% if membership and membership.role == 'owner' %}
-    <p class="text-slate-500 text-base mb-4">
+    <p class="text-muted text-base mb-4">
       {% if scope == "mine" %}
       담당 프로젝트가 없습니다.
       {% else %}
@@ -94,8 +94,8 @@
       새 프로젝트 만들기
     </a>
     {% else %}
-    <p class="text-slate-500 text-base">배정된 프로젝트가 없습니다.</p>
-    <p class="text-slate-400 text-sm mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
+    <p class="text-muted text-base">배정된 프로젝트가 없습니다.</p>
+    <p class="text-faint text-sm mt-1">관리자가 프로젝트를 배정하면 여기에 표시됩니다.</p>
     {% endif %}
   </div>
   {% endif %}

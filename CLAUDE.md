@@ -53,7 +53,7 @@ uv run ruff format .        # 포맷
 
 | 서버 | IP | 역할 | 비고 |
 |------|-----|------|------|
-| **운영/개발** | 49.247.46.171 | synco 앱 배포 + 개발 | Docker Swarm + Nginx |
+| **운영/개발** | 115.68.224.161 (외부) / 10.2.1.53 (내부, `exdigm-306674`) | synco 앱 배포 + 개발 | Docker Swarm + Nginx, 배포 루트 `/home/chaconne/synco-deploy/` |
 | **DB** | 49.247.45.243 | PostgreSQL 상시 운용 | /mnt 100GB 디스크 (73GB 여유) |
 | **코코넛** | 49.247.38.186 | 다른 팀의 coconut 운영 서버 | synco 작업에서 **수정·재시작·kill 금지**, 읽기 전용 조사만 |
 
@@ -70,7 +70,7 @@ ssh -o IdentityFile=~/.ssh/id_ed25519 chaconne@49.247.38.186  # 코코넛 (read-
   - 데이터 경로: `/mnt/synco-pgdata/`
   - 포트: 5432, `restart: always` 상시 운용
   - 접속: `postgresql://synco:<password>@49.247.45.243:5432/synco`
-- **개발 DB:** Docker 로컬 PostgreSQL @ 49.247.46.171
+- **개발 DB:** Docker 로컬 PostgreSQL @ 운영/개발 서버 호스트
   - 개발 전용, 자유롭게 실험 가능
   - 접속: `postgresql://synco:synco@localhost:5432/synco`
 
@@ -84,7 +84,7 @@ ssh -o IdentityFile=~/.ssh/id_ed25519 chaconne@49.247.38.186  # 코코넛 (read-
 
 ### 배포 방식
 
-Docker Swarm 기반. 레포의 `./deploy.sh`, `deploy/docker-stack-synco.yml`, `deploy/nginx/`가 단일 진실 소스. 운영 서버에는 `/home/docker/synco/` 에 `.env.prod`·`.secrets/`·`.claude/`·`runtime/logs/`·`src/`(rsync 대상) 가 배치돼 있음. 배포 실행은 `./deploy.sh`, 파이프라인 단계는 스크립트 본문 참조.
+Docker Swarm 기반. 레포의 `./deploy.sh`, `deploy/docker-stack-synco.yml`, `deploy/nginx/`가 단일 진실 소스. 운영 서버에는 `/home/chaconne/synco-deploy/synco/` 에 `.env.prod`·`.secrets/`·`.claude/`·`runtime/logs/`·`src/`(rsync 대상) 가 배치돼 있음. 배포 실행은 `./deploy.sh`, 파이프라인 단계는 스크립트 본문 참조.
 
 ### 개발 환경
 
@@ -108,8 +108,7 @@ uv run python manage.py runserver 0.0.0.0:8000
 운영 미적용 migration 확인:
 
 ```bash
-ssh chaconne@49.247.46.171 \
-  "docker exec \$(docker ps -qf name=synco_web) python manage.py showmigrations | grep '\[ \]'"
+docker exec $(docker ps -qf name=Synco_synco_app) python manage.py showmigrations | grep '\[ \]'
 ```
 
 ## Skill routing — 배포 스킬 거절

@@ -5,16 +5,16 @@
   <!-- Connection Status -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Gmail 연결</h2>
+      <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase">Gmail 연결</h2>
       <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-        {% if config.is_active %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-slate-500{% endif %}">
+        {% if config.is_active %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-muted{% endif %}">
         <span class="w-1.5 h-1.5 rounded-full
           {% if config.is_active %}bg-emerald-500{% else %}bg-slate-400{% endif %}"></span>
         {% if config.is_active %}활성{% else %}비활성{% endif %}
       </span>
     </div>
 
-    <div class="space-y-3 text-sm text-slate-500">
+    <div class="space-y-3 text-sm text-muted">
       {% if config.last_checked_at %}
         <div class="flex items-center justify-between">
           <span>마지막 확인</span>
@@ -26,7 +26,7 @@
 
   <!-- Filter Settings -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">필터 설정</h2>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-4">필터 설정</h2>
 
     <form method="post"
           hx-post="{% url 'settings_email' %}"
@@ -35,15 +35,15 @@
       {% csrf_token %}
       <div class="space-y-4">
         <div>
-          <label for="filter_from" class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">발신자 필터</label>
+          <label for="filter_from" class="block text-xs font-bold uppercase tracking-widest text-faint mb-1.5">발신자 필터</label>
           <input type="text" name="filter_from" id="filter_from"
                  value="{{ config.filter_from|join:', ' }}"
                  placeholder="email1@example.com, email2@example.com"
                  class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ink3/30 focus:border-transparent">
-          <p class="mt-1 text-xs text-slate-400">쉼표로 구분하여 입력하세요. 비워두면 모든 발신자의 이메일을 확인합니다.</p>
+          <p class="mt-1 text-xs text-faint">쉼표로 구분하여 입력하세요. 비워두면 모든 발신자의 이메일을 확인합니다.</p>
         </div>
         <div class="flex items-center justify-between">
-          <label for="is_active" class="text-xs font-bold uppercase tracking-widest text-slate-400">모니터링 활성화</label>
+          <label for="is_active" class="text-xs font-bold uppercase tracking-widest text-faint">모니터링 활성화</label>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" name="is_active" id="is_active"
                    {% if config.is_active %}checked{% endif %} class="sr-only peer">
@@ -59,8 +59,8 @@
 
   <!-- Disconnect -->
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-    <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-3">연결 해제</h2>
-    <p class="text-sm text-slate-400 mb-4">Gmail 연결을 해제합니다. 이미 가져온 이력서는 유지됩니다.</p>
+    <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-3">연결 해제</h2>
+    <p class="text-sm text-faint mb-4">Gmail 연결을 해제합니다. 이미 가져온 이력서는 유지됩니다.</p>
     <a href="{% url 'email_disconnect' %}"
        onclick="return confirm('Gmail 연결을 해제하시겠습니까?')"
        class="block w-full text-center py-2.5 text-sm font-medium text-rose-500 border border-rose-100 rounded-lg hover:bg-rose-50 transition">
@@ -73,13 +73,13 @@
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
     <div class="text-center py-8">
       <div class="w-16 h-16 mx-auto mb-4 bg-slate-50 rounded-full flex items-center justify-center">
-        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 text-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
         </svg>
       </div>
       <h2 class="text-lg font-bold text-slate-900 mb-2">Gmail 연결</h2>
-      <p class="text-sm text-slate-400 mb-6 max-w-sm mx-auto">
+      <p class="text-sm text-faint mb-6 max-w-sm mx-auto">
         Gmail을 연결하면 이메일로 수신된 이력서를 자동으로 가져올 수 있습니다.
       </p>
       <a href="{% url 'email_connect' %}"

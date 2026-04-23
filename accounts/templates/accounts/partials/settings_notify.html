@@ -2,7 +2,7 @@
 {% load static %}
 
 <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-  <h2 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase mb-4">알림 설정</h2>
+  <h2 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-4">알림 설정</h2>
 
   <form method="post"
         hx-post="{% url 'settings_notify' %}"
@@ -13,9 +13,9 @@
     <div class="space-y-1">
       <!-- Header row -->
       <div class="grid grid-cols-3 gap-4 pb-2 border-b border-slate-100">
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">알림 유형</span>
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 text-center">웹</span>
-        <span class="text-xs font-bold uppercase tracking-widest text-slate-400 text-center">텔레그램</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-faint">알림 유형</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-faint text-center">웹</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-faint text-center">텔레그램</span>
       </div>
 
       <!-- Contact result -->
