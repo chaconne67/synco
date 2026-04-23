@@ -3,6 +3,8 @@ services:
     image: __NGINX_IMAGE__
     ports:
       - "80:80"
+    volumes:
+      - /var/www/certbot:/var/www/certbot:ro
     environment:
       TZ: Asia/Seoul
     networks:
