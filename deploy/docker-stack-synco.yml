@@ -25,6 +25,23 @@ services:
       rollback_config:
         order: stop-first
 
+  synco_db:
+    image: pgvector/pgvector:pg16
+    env_file: /home/chaconne/synco-deploy/synco/.env.prod
+    volumes:
+      - /mnt/pgdata/prod:/var/lib/postgresql/data
+    environment:
+      TZ: Asia/Seoul
+    networks:
+      - net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == moa-svr
+      restart_policy:
+        condition: on-failure
+
   synco_app:
     image: __APP_IMAGE__
     env_file: /home/chaconne/synco-deploy/synco/.env.prod
@@ -35,6 +52,9 @@ services:
       - /home/chaconne/synco-deploy/synco/runtime/logs:/app/logs
     environment:
       TZ: Asia/Seoul
+    command: >-
+      sh -c "python manage.py migrate --noinput &&
+             exec gunicorn main.wsgi:application --bind 0.0.0.0:8000"
     networks:
       - net
     deploy:
