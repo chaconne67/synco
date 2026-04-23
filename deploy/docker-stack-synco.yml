@@ -3,10 +3,6 @@ services:
     image: __NGINX_IMAGE__
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/cert:ro
-      - /var/www/certbot:/var/www/certbot:ro
     environment:
       TZ: Asia/Seoul
     networks:
