@@ -30,7 +30,7 @@ ALLOWED_HOSTS = os.environ.get(
 ).split(",")
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS", "http://office.exdigm.com"
+    "CSRF_TRUSTED_ORIGINS", "https://office.exdigm.com"
 ).split(",")
 
 # CSRF — make token available to JS via cookie
@@ -153,7 +153,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 # Telegram Bot
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-SITE_URL = os.environ.get("SITE_URL", "http://office.exdigm.com")
+SITE_URL = os.environ.get("SITE_URL", "https://office.exdigm.com")
 TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
 
 # Google Drive OAuth files
