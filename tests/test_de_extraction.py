@@ -1250,6 +1250,163 @@ class TestEducationChanged:
         assert len(education_changed) == 1
         assert education_changed[0]["severity"] == "RED"
 
+    @pytest.mark.parametrize(
+        "prev_inst,cur_inst",
+        [
+            ("동국대학교", "Dongguk University"),
+            ("Dongguk University", "동국대학교"),
+            ("한국외국어대학교", "Hankuk University of Foreign Language"),
+            ("Hankuk University of Foreign Studies", "한국외국어대학교"),
+            ("한국외국어대학교 (Hankuk University of Foreign Language)", "Hankuk University of Foreign Language"),
+            ("한양대학교", "Hanyang University"),
+            ("성균관대학교", "Sungkyunkwan University"),
+            ("고려대학교", "Korea University"),
+            ("서울대학교", "Seoul National University"),
+            ("Korea Maritime and Ocean University", "한국해양대학교"),
+            ("이화여자대학교", "Ewha Womans University"),
+            ("KAIST", "한국과학기술원"),
+        ],
+    )
+    def test_institution_alias_treated_same(self, prev_inst, cur_inst):
+        """동일 학교의 한↔영 표기는 cross-version에서 변경으로 잡지 않는다.
+
+        근본 원인: LLM이 같은 영문 이력서에서도 institution을 한글/영문/병기
+        형태로 비결정적으로 출력 (강수연 5/5 한글 vs batch 1회 영문). alias
+        map으로 한↔영 변형을 같은 canonical로 매핑해야 cross-version FP를
+        막는다.
+        """
+        previous = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": prev_inst,
+                    "degree": "학사",
+                    "start_year": 2010,
+                    "end_year": 2014,
+                },
+            ],
+        }
+        current = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": cur_inst,
+                    "degree": "학사",
+                    "start_year": 2010,
+                    "end_year": 2014,
+                },
+            ],
+        }
+        flags = compare_versions(current, previous)
+        edu_changed = [f for f in flags if f["type"] == "EDUCATION_CHANGED"]
+        assert edu_changed == [], (
+            f"{prev_inst!r} ↔ {cur_inst!r} 는 같은 학교인데 변경으로 분류됨"
+        )
+
+    def test_real_institution_change_still_detected(self):
+        """alias map 도입 후에도 다른 학교는 RED로 잡혀야 한다."""
+        previous = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": "서울대학교",
+                    "degree": "학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
+            ],
+        }
+        current = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": "Korea University",  # 고려대 — 다른 학교
+                    "degree": "학사",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
+            ],
+        }
+        flags = compare_versions(current, previous)
+        edu_changed = [f for f in flags if f["type"] == "EDUCATION_CHANGED"]
+        assert len(edu_changed) == 1
+
+
+class TestCareerReclassifiedToEtc:
+    """Career → career_etc 재분류 시 cross-version에서 '삭제됨' RED 방지."""
+
+    def test_career_reclassified_to_etc_not_deleted(self):
+        """이전 careers 항목이 새 추출에서 career_etc로 옮겨지면 삭제 아님.
+
+        근본 원인: P3 prompt 강화로 인턴/짧은경력이 career_etc로 분류되는
+        케이스가 늘었는데 (고지연), cross-version은 careers끼리만 비교해서
+        '경력 삭제됨' RED 폭발. career_etc까지 검색해야 정보 보존 인식.
+        """
+        previous = {
+            "careers": [
+                {
+                    "company": "KOTRA",
+                    "start_date": "2006-01",
+                    "end_date": "2006-03",
+                    "position": "Intern",
+                },
+                {
+                    "company": "롯데쇼핑",
+                    "start_date": "2006-07",
+                    "end_date": "2008-03",
+                    "position": "주임",
+                },
+            ],
+            "educations": [],
+        }
+        current = {
+            "careers": [
+                {
+                    "company": "롯데쇼핑",
+                    "start_date": "2006-07",
+                    "end_date": "2008-03",
+                    "position": "주임",
+                },
+            ],
+            "career_etc": [
+                {
+                    "type": "인턴/기타경력",
+                    "company": "KOTRA",
+                    "role": "전시컨벤션 인턴",
+                    "start_date": "2006-01",
+                    "end_date": "2006-03",
+                },
+            ],
+            "educations": [],
+        }
+        flags = compare_versions(current, previous)
+        deleted = [f for f in flags if f["type"] == "CAREER_DELETED"]
+        assert deleted == [], (
+            "이전 careers가 새 career_etc에 보존됐는데 '삭제됨'으로 분류됨"
+        )
+
+    def test_career_truly_deleted_still_detected(self):
+        """완전히 사라진 경력은 여전히 CAREER_DELETED로 잡혀야 한다."""
+        previous = {
+            "careers": [
+                {
+                    "company": "삼성전자",
+                    "start_date": "2018-01",
+                    "end_date": "2022-12",
+                    "position": "사원",
+                },
+            ],
+            "educations": [],
+        }
+        current = {
+            "careers": [],
+            "career_etc": [],
+            "educations": [],
+        }
+        flags = compare_versions(current, previous)
+        deleted = [f for f in flags if f["type"] == "CAREER_DELETED"]
+        assert len(deleted) == 1
+
 
 class TestCrossVersionComprehensive:
     def test_multiple_flag_types_combined(self):

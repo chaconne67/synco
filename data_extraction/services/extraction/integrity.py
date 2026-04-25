@@ -880,9 +880,103 @@ def _match_careers(
     return matched, unmatched_current, unmatched_previous
 
 
+# Korean university name aliases (한↔영 표기 매핑).
+# Used by cross-version institution matching to bridge LLM non-determinism
+# in extracted institution naming. canonical form on the left, lowercased
+# variants on the right. Add new entries when verification surfaces them.
+_INSTITUTION_ALIASES: dict[str, tuple[str, ...]] = {
+    "동국대학교": ("dongguk university", "dongguk univ", "the university of dongguk", "the graduate school of dongguk"),
+    "한국외국어대학교": ("hankuk university of foreign studies", "hankuk university of foreign language", "hankuk univ of foreign studies", "hufs"),
+    "한국해양대학교": ("korea maritime and ocean university", "korea maritime university"),
+    "고려대학교": ("korea university", "korea univ"),
+    "서울대학교": ("seoul national university", "snu"),
+    "연세대학교": ("yonsei university", "yonsei univ"),
+    "한양대학교": ("hanyang university", "hanyang univ"),
+    "성균관대학교": ("sungkyunkwan university", "skku"),
+    "이화여자대학교": ("ewha womans university", "ewha univ", "ewha"),
+    "서강대학교": ("sogang university", "sogang univ"),
+    "중앙대학교": ("chung-ang university", "chung ang university", "chungang university", "cau"),
+    "경희대학교": ("kyung hee university", "kyunghee university", "khu"),
+    "한국과학기술원": ("kaist", "korea advanced institute of science and technology"),
+    "포항공과대학교": ("postech", "pohang university of science and technology"),
+    "단국대학교": ("dankook university", "the university of dankook", "the graduate school of dankook"),
+    "건국대학교": ("konkuk university",),
+    "동덕여자대학교": ("dongduk womans university", "dongduk women's university"),
+    "서울여자대학교": ("seoul women's university", "seoul womens university"),
+    "숙명여자대학교": ("sookmyung women's university", "sookmyung womens university"),
+    "성신여자대학교": ("sungshin women's university", "sungshin womens university"),
+    "덕성여자대학교": ("duksung women's university", "duksung womens university"),
+    "광운대학교": ("kwangwoon university",),
+    "국민대학교": ("kookmin university",),
+    "명지대학교": ("myongji university",),
+    "상명대학교": ("sangmyung university",),
+    "세종대학교": ("sejong university",),
+    "숭실대학교": ("soongsil university",),
+    "아주대학교": ("ajou university",),
+    "인하대학교": ("inha university",),
+    "전남대학교": ("chonnam national university", "jeonnam national university"),
+    "전북대학교": ("chonbuk national university", "jeonbuk national university"),
+    "충남대학교": ("chungnam national university",),
+    "충북대학교": ("chungbuk national university",),
+    "강원대학교": ("kangwon national university",),
+    "경상국립대학교": ("gyeongsang national university", "gyeongsang nat'l university"),
+    "경북대학교": ("kyungpook national university", "knu"),
+    "부산대학교": ("pusan national university", "pnu"),
+    "제주대학교": ("jeju national university",),
+    "한국기술교육대학교": ("korea university of technology and education", "koreatech"),
+    "서울과학기술대학교": ("seoul national university of science and technology", "seoultech"),
+    "한경국립대학교": ("hankyong national university",),
+    "한밭대학교": ("hanbat national university",),
+    "공주대학교": ("kongju national university",),
+    "강남대학교": ("kangnam university",),
+    "가천대학교": ("gachon university",),
+    "을지대학교": ("eulji university",),
+    "차의과학대학교": ("cha university",),
+    "홍익대학교": ("hongik university",),
+    "한성대학교": ("hansung university",),
+    "동아대학교": ("dong-a university", "donga university"),
+}
+
+# Build reverse lookup once: lowercased name → canonical
+_INSTITUTION_REVERSE: dict[str, str] = {}
+for _canonical, _aliases in _INSTITUTION_ALIASES.items():
+    _INSTITUTION_REVERSE[_canonical.lower()] = _canonical
+    for _alias in _aliases:
+        _INSTITUTION_REVERSE[_alias.lower()] = _canonical
+
+
 def _normalize_education(edu: dict) -> str:
-    """Normalize institution name for comparison."""
-    return re.sub(r"\s+", " ", edu.get("institution", "").strip().lower())
+    """Normalize institution name for comparison.
+
+    Maps known Korean university name variants (한↔영, 약어, 한+영 병기) to a
+    canonical Korean form so that cross-version matching tolerates LLM
+    non-determinism in institution naming.
+    """
+    raw = (edu.get("institution") or "").strip()
+    if not raw:
+        return ""
+    norm = re.sub(r"\s+", " ", raw.lower())
+    # Strip trailing parenthetical bilingual annotation: "X (Y)" → "X" / "Y"
+    no_paren = re.sub(r"\s*\([^)]*\)\s*$", "", norm).strip()
+    paren_inner = None
+    paren_match = re.search(r"\(([^)]+)\)", norm)
+    if paren_match:
+        paren_inner = paren_match.group(1).strip()
+
+    # Try canonical mapping on each form
+    for candidate in (norm, no_paren, paren_inner):
+        if candidate and candidate in _INSTITUTION_REVERSE:
+            return _INSTITUTION_REVERSE[candidate].lower()
+
+    # Substring within combined Korean+English notation (e.g.,
+    # "한국외국어대학교 (Hankuk Univ of Foreign Language)" — both halves match)
+    for canonical_lower, canonical in (
+        (k, v) for k, v in _INSTITUTION_REVERSE.items() if len(k) >= 5
+    ):
+        if canonical_lower in norm:
+            return canonical.lower()
+
+    return no_paren or norm
 
 
 _DEGREE_PHD_RE = re.compile(
@@ -952,10 +1046,42 @@ def _education_match_keys(edu: dict) -> set[str]:
     return keys
 
 
-def _check_career_deleted(unmatched_previous: list[dict]) -> list[dict]:
-    """Detect CAREER_DELETED: careers in previous that are missing from current."""
+def _career_in_etc(career: dict, current_career_etc: list[dict]) -> bool:
+    """Check if a previous career has been re-classified into current career_etc.
+
+    Reclassification (careers → career_etc) is not deletion — the information
+    is still preserved as a non-formal career entry. Match by normalized
+    company name (substring either direction) so we tolerate minor variants.
+    """
+    prev_company_norm = _normalize_company(career.get("company") or "")
+    if not prev_company_norm or len(prev_company_norm) < 2:
+        return False
+    for etc in current_career_etc or []:
+        etc_company_norm = _normalize_company(etc.get("company") or "")
+        if not etc_company_norm:
+            continue
+        if (
+            prev_company_norm == etc_company_norm
+            or prev_company_norm in etc_company_norm
+            or etc_company_norm in prev_company_norm
+        ):
+            return True
+    return False
+
+
+def _check_career_deleted(
+    unmatched_previous: list[dict],
+    current_career_etc: list[dict] | None = None,
+) -> list[dict]:
+    """Detect CAREER_DELETED: careers in previous that are missing from current.
+
+    Excludes reclassification cases (previous career now in current career_etc)
+    — those preserve the information so are not actual deletions.
+    """
     flags = []
     for career in unmatched_previous:
+        if _career_in_etc(career, current_career_etc or []):
+            continue  # reclassified to career_etc, not deleted
         duration = _career_duration_months(career)
         severity = "RED" if duration > 24 else "YELLOW"
         company = career.get("company", "?")
@@ -1168,8 +1294,10 @@ def compare_versions(current: dict, previous: dict) -> list[dict]:
         current_careers, previous_careers
     )
 
+    current_career_etc = current.get("career_etc", []) or []
+
     flags: list[dict] = []
-    flags.extend(_check_career_deleted(unmatched_prev))
+    flags.extend(_check_career_deleted(unmatched_prev, current_career_etc))
     flags.extend(_check_career_period_changed(matched))
     flags.extend(_check_career_added_retroactively(unmatched_cur, previous_careers))
     flags.extend(_check_education_changed(current_educations, previous_educations))
