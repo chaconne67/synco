@@ -1035,6 +1035,42 @@ class TestCareerAddedRetroactively:
         assert len(flags) == 0
 
 
+@pytest.fixture
+def seeded_university_master(db):
+    """Load UniversityTier seed (migration 0003 SEED list) into test DB.
+
+    Cross-version institution-alias tests need the master populated to
+    resolve 한↔영 variants to a canonical form.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    from clients.models import UniversityTier
+    from clients.services.institution_resolver import _invalidate_lookup_index
+
+    mig_path = (
+        Path(__file__).resolve().parent.parent
+        / "clients/migrations/0003_seed_university_master.py"
+    )
+    spec = importlib.util.spec_from_file_location("_seed_mig", mig_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    for name, name_en, aliases in mod.SEED:
+        UniversityTier.objects.get_or_create(
+            name=name,
+            country="KR",
+            defaults={
+                "name_en": name_en,
+                "tier": "",
+                "aliases": aliases,
+                "auto_added": False,
+                "needs_review": True,
+            },
+        )
+    _invalidate_lookup_index()
+
+
+@pytest.mark.usefixtures("seeded_university_master")
 class TestEducationChanged:
     def test_degree_changed_red(self):
         previous = {
@@ -1336,6 +1372,7 @@ class TestEducationChanged:
         assert len(edu_changed) == 1
 
 
+@pytest.mark.usefixtures("seeded_university_master")
 class TestCareerReclassifiedToEtc:
     """Career → career_etc 재분류 시 cross-version에서 '삭제됨' RED 방지."""
 
@@ -1412,6 +1449,7 @@ class TestCareerReclassifiedToEtc:
         assert len(deleted) == 1
 
 
+@pytest.mark.usefixtures("seeded_university_master")
 class TestCrossVersionComprehensive:
     def test_multiple_flag_types_combined(self):
         previous = {
@@ -2105,6 +2143,7 @@ class TestPipelineRetry:
         assert mock_s1.call_count == 2
 
 
+@pytest.mark.usefixtures("seeded_university_master")
 class TestPipelineCrossVersion:
     @patch("data_extraction.services.extraction.integrity.normalize_education_group")
     @patch("data_extraction.services.extraction.integrity.normalize_career_group")

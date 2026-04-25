@@ -238,6 +238,7 @@ def extract_raw_data(
     for attempt in range(max_retries):
         result = _call_llm(STEP1_SYSTEM_PROMPT, prompt)
         if result and "name" in result:
+            _canonicalize_institutions(result)
             return result
         if attempt < max_retries - 1:
             logger.warning(
@@ -247,6 +248,31 @@ def extract_raw_data(
             )
 
     return None
+
+
+def _canonicalize_institutions(extracted: dict) -> None:
+    """Map every educations[].institution to its UniversityTier canonical form.
+
+    LLM output is non-deterministic about institution naming (한↔영, 약어,
+    한+영 병기, 띄어쓰기). Canonicalizing at extraction time ensures both
+    the saved record and any downstream cross-version comparison work on
+    the same canonical form, eliminating false-positive EDUCATION_CHANGED
+    flags caused by LLM output variance.
+    """
+    try:
+        from clients.services.institution_resolver import resolve_institution
+    except Exception:
+        logger.exception("institution_resolver import failed; skip canonicalization")
+        return
+
+    educations = extracted.get("educations") or []
+    for edu in educations:
+        raw = (edu.get("institution") or "").strip()
+        if not raw:
+            continue
+        canonical = resolve_institution(raw)
+        if canonical and canonical != raw:
+            edu["institution"] = canonical
 
 
 # ===========================================================================
@@ -880,112 +906,41 @@ def _match_careers(
     return matched, unmatched_current, unmatched_previous
 
 
-# Korean university name aliases (한↔영 표기 매핑).
-# Used by cross-version institution matching to bridge LLM non-determinism
-# in extracted institution naming. canonical form on the left, lowercased
-# variants on the right. Add new entries when verification surfaces them.
-_INSTITUTION_ALIASES: dict[str, tuple[str, ...]] = {
-    "동국대학교": ("dongguk university", "dongguk univ", "the university of dongguk", "the graduate school of dongguk"),
-    "한국외국어대학교": ("hankuk university of foreign studies", "hankuk university of foreign language", "hankuk univ of foreign studies", "hufs"),
-    "한국해양대학교": ("korea maritime and ocean university", "korea maritime university"),
-    "고려대학교": ("korea university", "korea univ"),
-    "서울대학교": ("seoul national university", "snu"),
-    "연세대학교": ("yonsei university", "yonsei univ"),
-    "한양대학교": ("hanyang university", "hanyang univ"),
-    "성균관대학교": ("sungkyunkwan university", "skku"),
-    "이화여자대학교": ("ewha womans university", "ewha univ", "ewha"),
-    "서강대학교": ("sogang university", "sogang univ"),
-    "중앙대학교": ("chung-ang university", "chung ang university", "chungang university", "cau"),
-    "경희대학교": ("kyung hee university", "kyunghee university", "khu"),
-    "한국과학기술원": ("kaist", "korea advanced institute of science and technology"),
-    "포항공과대학교": ("postech", "pohang university of science and technology"),
-    "단국대학교": ("dankook university", "the university of dankook", "the graduate school of dankook"),
-    "건국대학교": ("konkuk university",),
-    "동덕여자대학교": ("dongduk womans university", "dongduk women's university"),
-    "서울여자대학교": ("seoul women's university", "seoul womens university"),
-    "숙명여자대학교": ("sookmyung women's university", "sookmyung womens university"),
-    "성신여자대학교": ("sungshin women's university", "sungshin womens university"),
-    "덕성여자대학교": ("duksung women's university", "duksung womens university"),
-    "광운대학교": ("kwangwoon university",),
-    "국민대학교": ("kookmin university",),
-    "명지대학교": ("myongji university",),
-    "상명대학교": ("sangmyung university",),
-    "세종대학교": ("sejong university",),
-    "숭실대학교": ("soongsil university",),
-    "아주대학교": ("ajou university",),
-    "인하대학교": ("inha university",),
-    "전남대학교": ("chonnam national university", "jeonnam national university"),
-    "전북대학교": ("chonbuk national university", "jeonbuk national university"),
-    "충남대학교": ("chungnam national university",),
-    "충북대학교": ("chungbuk national university",),
-    "강원대학교": ("kangwon national university",),
-    "경상국립대학교": ("gyeongsang national university", "gyeongsang nat'l university"),
-    "경북대학교": ("kyungpook national university", "knu"),
-    "부산대학교": ("pusan national university", "pnu"),
-    "제주대학교": ("jeju national university",),
-    "한국기술교육대학교": ("korea university of technology and education", "koreatech"),
-    "서울과학기술대학교": ("seoul national university of science and technology", "seoultech"),
-    "한경국립대학교": ("hankyong national university",),
-    "한밭대학교": ("hanbat national university",),
-    "공주대학교": ("kongju national university",),
-    "강남대학교": ("kangnam university",),
-    "가천대학교": ("gachon university",),
-    "을지대학교": ("eulji university",),
-    "차의과학대학교": ("cha university",),
-    "홍익대학교": ("hongik university",),
-    "한성대학교": ("hansung university",),
-    "동아대학교": ("dong-a university", "donga university"),
-}
-
-# Build reverse lookup once: lowercased name → canonical
-_INSTITUTION_REVERSE: dict[str, str] = {}
-for _canonical, _aliases in _INSTITUTION_ALIASES.items():
-    _INSTITUTION_REVERSE[_canonical.lower()] = _canonical
-    for _alias in _aliases:
-        _INSTITUTION_REVERSE[_alias.lower()] = _canonical
-
-
 def _strip_korean_spaces(s: str) -> str:
-    """Remove whitespace between Hangul characters only — preserves spaces in
-    English text. "청주 대학교" → "청주대학교" but "Seoul National University"
-    stays "seoul national university" (lowercase).
-    """
+    """Remove whitespace between Hangul characters only."""
     return re.sub(r"(?<=[가-힣])\s+(?=[가-힣])", "", s)
 
 
 def _normalize_education(edu: dict) -> str:
     """Normalize institution name for comparison.
 
-    Maps known Korean university name variants (한↔영, 약어, 한+영 병기) to a
-    canonical Korean form so that cross-version matching tolerates LLM
-    non-determinism in institution naming.
+    Institution canonicalization (한↔영, 약어, 한+영 병기 등) is now handled at
+    extraction time by clients.services.institution_resolver, which maps to
+    UniversityTier canonical form. This function only does lightweight string
+    normalization for cases where extraction-time mapping was skipped (e.g.,
+    legacy data, unit tests without DB, LLM low-confidence cases).
+
+    Falls back to lowercase + 한글 공백 정리 if resolver/DB is unavailable.
     """
     raw = (edu.get("institution") or "").strip()
     if not raw:
         return ""
-    norm = re.sub(r"\s+", " ", raw.lower())
-    norm = _strip_korean_spaces(norm)
-    # Strip trailing parenthetical bilingual annotation: "X (Y)" → "X" / "Y"
-    no_paren = re.sub(r"\s*\([^)]*\)\s*$", "", norm).strip()
-    paren_inner = None
-    paren_match = re.search(r"\(([^)]+)\)", norm)
-    if paren_match:
-        paren_inner = _strip_korean_spaces(paren_match.group(1).strip())
 
-    # Try canonical mapping on each form
-    for candidate in (norm, no_paren, paren_inner):
-        if candidate and candidate in _INSTITUTION_REVERSE:
-            return _INSTITUTION_REVERSE[candidate].lower()
+    # Lightweight fallback used when resolver fails (e.g., no DB in tests).
+    fallback = _strip_korean_spaces(re.sub(r"\s+", " ", raw.lower()))
 
-    # Substring within combined Korean+English notation (e.g.,
-    # "한국외국어대학교 (Hankuk Univ of Foreign Language)" — both halves match)
-    for canonical_lower, canonical in (
-        (k, v) for k, v in _INSTITUTION_REVERSE.items() if len(k) >= 5
-    ):
-        if canonical_lower in norm:
-            return canonical.lower()
+    try:
+        from clients.services.institution_resolver import (
+            normalize_for_match,
+            resolve_institution,
+        )
 
-    return no_paren or norm
+        canonical = resolve_institution(raw, allow_llm=False)
+        if canonical and canonical != raw:
+            return normalize_for_match(canonical)
+        return normalize_for_match(raw)
+    except Exception:
+        return fallback
 
 
 _DEGREE_PHD_RE = re.compile(

@@ -105,20 +105,34 @@ class UniversityTier(BaseModel):
     name = models.CharField(max_length=200)
     name_en = models.CharField(max_length=200, blank=True)
     country = models.CharField(max_length=10, default="KR")
-    tier = models.CharField(max_length=20, choices=Tier.choices)
+    tier = models.CharField(max_length=20, choices=Tier.choices, blank=True)
     university_type = models.CharField(
         max_length=20, choices=UniversityType.choices, blank=True
     )
     ranking = models.PositiveSmallIntegerField(null=True, blank=True)
     strengths = models.JSONField(default=list, blank=True)
     notes = models.TextField(blank=True)
+    aliases = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="canonical name 외 표기 변형 (한+영 병기, 약어, LLM 비결정 출력 등)",
+    )
+    auto_added = models.BooleanField(
+        default=False,
+        help_text="LLM이 자동 등록한 항목. 검수자 라벨링 후 false 처리.",
+    )
+    needs_review = models.BooleanField(
+        default=False,
+        help_text="검수 대기 (tier 미부여, LLM confidence 낮음, 또는 신규 발견).",
+    )
 
     class Meta:
         ordering = [models.F("ranking").asc(nulls_last=True), "tier", "name"]
         unique_together = [("name", "country")]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.get_tier_display()})"
+        tier_label = self.get_tier_display() if self.tier else "미분류"
+        return f"{self.name} ({tier_label})"
 
 
 class CompanyProfile(BaseModel):
