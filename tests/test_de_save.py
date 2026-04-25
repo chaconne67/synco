@@ -137,6 +137,8 @@ class TestSaveNewCandidate:
         assert resume.processing_status == Resume.ProcessingStatus.TEXT_ONLY
         assert resume.raw_text == "자기소개서 형식의 원문 텍스트"
         assert "stored raw text only" in resume.error_message
+        assert resume.extraction_state.status == "text_only"
+        assert resume.extraction_state.extraction_completed_at is not None
 
 
 class TestSaveUpdateExisting:
@@ -194,6 +196,33 @@ class TestSaveUpdateExisting:
         )
         assert c2.current_resume != old_resume
         assert c2.current_resume.version == 2
+
+    def test_successful_save_clears_previous_error_message(self, category):
+        from data_extraction.services.save import save_pipeline_result
+
+        candidate = Candidate.objects.create(
+            name="실패후성공",
+            validation_status=Candidate.ValidationStatus.NEEDS_REVIEW,
+        )
+        Resume.objects.create(
+            candidate=candidate,
+            file_name="retry.doc",
+            drive_file_id="drive_retry_success",
+            drive_folder=category.name,
+            processing_status=Resume.ProcessingStatus.FAILED,
+            error_message="Text quality: empty",
+        )
+
+        save_pipeline_result(
+            pipeline_result=_make_pipeline_result(name="실패후성공"),
+            raw_text="성공한 이력서 텍스트",
+            category=category,
+            primary_file=_make_primary_file("drive_retry_success"),
+        )
+
+        resume = Resume.objects.get(drive_file_id="drive_retry_success")
+        assert resume.processing_status == Resume.ProcessingStatus.STRUCTURED
+        assert resume.error_message == ""
 
     def test_only_latest_resume_remains_primary(self, category):
         from data_extraction.services.save import save_pipeline_result
@@ -318,10 +347,10 @@ class TestNoMergeByNameOnly:
         assert Candidate.objects.count() == 2
 
 
-class TestPlaceholderOnFailure:
-    """save_failed_resume / save_text_only_resume must create Candidate + Resume."""
+class TestIncompleteExtractionPersistence:
+    """Only text-bearing incomplete extraction should surface as Candidate."""
 
-    def test_save_failed_resume_creates_candidate(self, db):
+    def test_save_failed_resume_records_resume_state_without_candidate(self, db):
         from data_extraction.services.save import save_failed_resume
 
         file_info = {
@@ -336,13 +365,23 @@ class TestPlaceholderOnFailure:
             "Download failed: 404",
             filename_meta={"name": "홍길동", "birth_year": 1990},
         )
-        assert Candidate.objects.count() == 1
-        assert candidate.name == "홍길동"
-        assert candidate.validation_status == "needs_review"
+        assert candidate is None
+        assert Candidate.objects.count() == 0
+        resume = Resume.objects.get(drive_file_id="fail_001")
+        assert resume.candidate is None
+        assert resume.processing_status == Resume.ProcessingStatus.FAILED
+        assert resume.extraction_state.status == "failed"
 
-    def test_save_failed_resume_creates_linked_resume(self, db):
+    def test_save_failed_resume_clears_existing_candidate_link(self, db):
         from data_extraction.services.save import save_failed_resume
 
+        existing = Candidate.objects.create(name="기존후보")
+        Resume.objects.create(
+            candidate=existing,
+            file_name="test.pdf",
+            drive_file_id="fail_002",
+            processing_status=Resume.ProcessingStatus.TEXT_ONLY,
+        )
         file_info = {
             "file_name": "test.pdf",
             "file_id": "fail_002",
@@ -351,35 +390,13 @@ class TestPlaceholderOnFailure:
         }
         candidate = save_failed_resume(file_info, "HR", "Text extraction failed")
         resume = Resume.objects.get(drive_file_id="fail_002")
-        assert resume.candidate == candidate
+        assert candidate is None
+        assert resume.candidate is None
+        assert resume.is_primary is False
         assert resume.processing_status == Resume.ProcessingStatus.FAILED
         assert "Text extraction failed" in resume.error_message
-
-    def test_save_failed_resume_links_current_resume(self, db):
-        from data_extraction.services.save import save_failed_resume
-
-        file_info = {
-            "file_name": "test.pdf",
-            "file_id": "fail_003",
-            "mime_type": "application/pdf",
-            "file_size": 500,
-        }
-        candidate = save_failed_resume(file_info, "HR", "Error")
-        candidate.refresh_from_db()
-        assert candidate.current_resume is not None
-        assert candidate.current_resume.drive_file_id == "fail_003"
-
-    def test_save_failed_resume_links_category(self, db):
-        from data_extraction.services.save import save_failed_resume
-
-        file_info = {
-            "file_name": "test.pdf",
-            "file_id": "fail_004",
-            "mime_type": "application/pdf",
-            "file_size": 500,
-        }
-        candidate = save_failed_resume(file_info, "Finance", "Error")
-        assert candidate.categories.filter(name="Finance").exists()
+        assert resume.extraction_state.status == "failed"
+        assert "Text extraction failed" in resume.extraction_state.last_error
 
     def test_save_text_only_creates_candidate_with_raw_text(self, db):
         from data_extraction.services.save import save_text_only_resume
@@ -403,38 +420,44 @@ class TestPlaceholderOnFailure:
         assert resume.processing_status == Resume.ProcessingStatus.TEXT_ONLY
         assert resume.raw_text == "이력서 원문 텍스트 내용"
         assert candidate.current_resume == resume
+        assert resume.extraction_state.status == "text_only"
 
-    def test_placeholder_name_falls_back_to_filename(self, db):
-        from data_extraction.services.save import save_failed_resume
+    def test_text_only_name_falls_back_to_filename(self, db):
+        from data_extraction.services.save import save_text_only_resume
 
         file_info = {
             "file_name": "resume_unknown.pdf",
-            "file_id": "fail_005",
+            "file_id": "text_005",
             "mime_type": "application/pdf",
             "file_size": 500,
         }
-        candidate = save_failed_resume(file_info, "HR", "Error")
+        candidate = save_text_only_resume(
+            file_info,
+            "HR",
+            raw_text="원문 텍스트",
+            error_msg="Structured extraction failed",
+        )
         assert candidate.name == "resume_unknown.pdf"
 
-    def test_placeholder_name_uses_filename_meta(self, db):
-        from data_extraction.services.save import save_failed_resume
+    def test_text_only_name_uses_filename_meta(self, db):
+        from data_extraction.services.save import save_text_only_resume
 
         file_info = {
             "file_name": "홍길동_90.pdf",
-            "file_id": "fail_006",
+            "file_id": "text_006",
             "mime_type": "application/pdf",
             "file_size": 500,
         }
-        candidate = save_failed_resume(
+        candidate = save_text_only_resume(
             file_info,
             "HR",
-            "Error",
+            raw_text="원문 텍스트",
+            error_msg="Structured extraction failed",
             filename_meta={"name": "홍길동"},
         )
         assert candidate.name == "홍길동"
 
-    def test_save_pipeline_result_failure_creates_placeholder(self, category):
-        """save_pipeline_result with extracted=None still creates a Candidate+Resume."""
+    def test_save_pipeline_result_empty_raw_text_does_not_create_candidate(self, category):
         from data_extraction.services.save import save_pipeline_result
 
         pipeline_result = _make_pipeline_result()
@@ -442,17 +465,15 @@ class TestPlaceholderOnFailure:
 
         result = save_pipeline_result(
             pipeline_result=pipeline_result,
-            raw_text="원문 텍스트",
+            raw_text="",
             category=category,
             primary_file=_make_primary_file("drive_placeholder"),
         )
-        # Returns None for caller stats (extraction failed)
         assert result is None
-        # But Candidate + Resume exist in DB
-        assert Candidate.objects.count() == 1
+        assert Candidate.objects.count() == 0
         resume = Resume.objects.get(drive_file_id="drive_placeholder")
-        assert resume.candidate is not None
-        assert resume.candidate.current_resume == resume
+        assert resume.candidate is None
+        assert resume.processing_status == Resume.ProcessingStatus.FAILED
 
 
 class TestNormalizeSkillsForSave:

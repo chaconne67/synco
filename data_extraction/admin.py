@@ -1,6 +1,25 @@
 from django.contrib import admin
 
-from .models import GeminiBatchItem, GeminiBatchJob
+from .models import GeminiBatchItem, GeminiBatchJob, ResumeExtractionState
+
+
+@admin.register(ResumeExtractionState)
+class ResumeExtractionStateAdmin(admin.ModelAdmin):
+    list_display = (
+        "resume",
+        "status",
+        "attempt_count",
+        "provider",
+        "pipeline",
+        "last_attempted_at",
+        "updated_at",
+    )
+    search_fields = (
+        "resume__file_name",
+        "resume__drive_file_id",
+        "last_error",
+    )
+    list_filter = ("status", "provider", "pipeline")
 
 
 @admin.register(GeminiBatchJob)

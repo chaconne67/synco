@@ -4,20 +4,59 @@
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
     <h3 class="text-xs font-black tracking-[0.2em] text-faint uppercase mb-5">내 정보 · Profile</h3>
 
-    <dl class="space-y-4">
-      <div class="flex items-center justify-between">
-        <dt class="text-xs font-bold uppercase tracking-widest text-faint">이름</dt>
-        <dd class="text-sm font-bold text-slate-900">{{ user.first_name|default:"-" }}</dd>
+    <form method="post"
+          action="{% url 'settings_profile' %}"
+          enctype="multipart/form-data"
+          class="space-y-6">
+      {% csrf_token %}
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+        {% if user.avatar %}
+          <img src="{{ user.avatar.url }}"
+               alt="{{ user.display_name }}"
+               class="w-24 h-24 rounded-lg object-cover border border-slate-200 bg-slate-50">
+        {% else %}
+          <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-ink3 to-ink2 text-white text-2xl font-black flex items-center justify-center">
+            {{ user.display_initial }}
+          </div>
+        {% endif %}
+        <div class="min-w-0 flex-1">
+          <label for="{{ form.avatar.id_for_label }}" class="text-xs font-bold uppercase tracking-widest text-faint block mb-2">프로필 이미지</label>
+          <input id="{{ form.avatar.id_for_label }}"
+                 name="{{ form.avatar.html_name }}"
+                 type="file"
+                 accept="image/*"
+                 class="block w-full text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-ink3 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-ink2">
+          <p class="mt-2 text-xs font-semibold text-faint">JPG, PNG, WebP 이미지를 사용할 수 있습니다. 5MB 이하 이미지는 512px 프로필 이미지로 자동 최적화됩니다.</p>
+          {% if form.avatar.errors %}<p class="mt-2 text-xs font-semibold text-rose-600">{{ form.avatar.errors.0 }}</p>{% endif %}
+        </div>
       </div>
-      <div class="flex items-center justify-between">
-        <dt class="text-xs font-bold uppercase tracking-widest text-faint">소속</dt>
-        <dd class="text-sm font-bold text-slate-900">{{ user.company_name|default:"-" }}</dd>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block">
+          <span class="text-xs font-bold uppercase tracking-widest text-faint block mb-2">성</span>
+          <input type="text" name="{{ form.last_name.html_name }}" value="{{ form.last_name.value|default_if_none:'' }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:border-ink3 focus:outline-none">
+        </label>
+        <label class="block">
+          <span class="text-xs font-bold uppercase tracking-widest text-faint block mb-2">이름</span>
+          <input type="text" name="{{ form.first_name.html_name }}" value="{{ form.first_name.value|default_if_none:'' }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:border-ink3 focus:outline-none">
+        </label>
+        <label class="block">
+          <span class="text-xs font-bold uppercase tracking-widest text-faint block mb-2">소속</span>
+          <input type="text" name="{{ form.company_name.html_name }}" value="{{ form.company_name.value|default_if_none:'' }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:border-ink3 focus:outline-none">
+        </label>
+        <label class="block">
+          <span class="text-xs font-bold uppercase tracking-widest text-faint block mb-2">전화번호</span>
+          <input type="text" name="{{ form.phone.html_name }}" value="{{ form.phone.value|default_if_none:'' }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:border-ink3 focus:outline-none">
+        </label>
       </div>
-      <div class="flex items-center justify-between">
-        <dt class="text-xs font-bold uppercase tracking-widest text-faint">전화번호</dt>
-        <dd class="text-sm font-bold text-slate-900">{{ user.phone|default:"-" }}</dd>
+
+      <div class="flex justify-end">
+        <button type="submit" class="rounded-lg bg-ink3 px-5 py-2.5 text-sm font-bold text-white hover:bg-ink2 transition-colors">
+          저장
+        </button>
       </div>
-    </dl>
+    </form>
   </section>
 
   <section class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">

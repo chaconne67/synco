@@ -1,6 +1,11 @@
+import io
+
 import pytest
-from django.test import Client as TestClient
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client as TestClient
+from django.test import override_settings
+from PIL import Image
 
 
 User = get_user_model()
@@ -77,6 +82,58 @@ class TestSettingsProfileTab:
         assert "<html" not in content
         # Should NOT contain tab bar (only partial)
         assert "settings_tab_bar" not in content
+
+    def test_profile_post_updates_name_and_avatar(self, active_user, tmp_path):
+        client = TestClient()
+        client.force_login(active_user)
+        image_bytes = io.BytesIO()
+        Image.new("RGB", (1200, 900), color="navy").save(image_bytes, format="PNG")
+        image_bytes.seek(0)
+        image = SimpleUploadedFile(
+            "avatar.png",
+            image_bytes.getvalue(),
+            content_type="image/png",
+        )
+
+        with override_settings(MEDIA_ROOT=tmp_path):
+            response = client.post(
+                "/accounts/settings/profile/",
+                {
+                    "last_name": "홍",
+                    "first_name": "길동",
+                    "company_name": "Synco",
+                    "phone": "010-0000-0000",
+                    "avatar": image,
+                },
+            )
+            assert response.status_code == 302
+            active_user.refresh_from_db()
+            assert active_user.display_name == "홍길동"
+            assert active_user.avatar.name.startswith("accounts/avatars/")
+            with Image.open(active_user.avatar.path) as optimized:
+                assert optimized.size == (512, 512)
+                assert optimized.format == "JPEG"
+
+    def test_profile_avatar_rejects_large_files(self, active_user):
+        client = TestClient()
+        client.force_login(active_user)
+        image = SimpleUploadedFile(
+            "avatar.png",
+            b"x" * (5 * 1024 * 1024 + 1),
+            content_type="image/png",
+        )
+
+        response = client.post(
+            "/accounts/settings/profile/",
+            {
+                "last_name": "홍",
+                "first_name": "길동",
+                "avatar": image,
+            },
+        )
+
+        assert response.status_code == 200
+        assert "5MB 이하" in response.content.decode()
 
 
 @pytest.mark.django_db

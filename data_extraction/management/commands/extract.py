@@ -18,13 +18,14 @@ Usage:
 
     # Batch mode — step by step
     uv run python manage.py extract --drive "URL_OR_ID" --batch --step prepare
-    uv run python manage.py extract --batch --step submit --job-id 3
-    uv run python manage.py extract --batch --step poll --job-id 3
-    uv run python manage.py extract --batch --step ingest --job-id 3
+    uv run python manage.py extract --batch --step submit --job-id JOB_UUID
+    uv run python manage.py extract --batch --step poll --job-id JOB_UUID
+    uv run python manage.py extract --batch --step ingest --job-id JOB_UUID
+    uv run python manage.py extract --batch --step next --job-id JOB_UUID
 
     # Status
     uv run python manage.py extract --batch --status
-    uv run python manage.py extract --batch --status --job-id 3
+    uv run python manage.py extract --batch --status --job-id JOB_UUID
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from django.core.management.base import BaseCommand, CommandError
 
 from candidates.models import Category, Resume
+from data_extraction.models import ResumeExtractionState
 from data_extraction.services.drive import (
     discover_folders,
     download_file,
@@ -46,6 +48,13 @@ from data_extraction.services.drive import (
 )
 from data_extraction.services.filename import group_by_person
 from data_extraction.services.pipeline import run_extraction_with_retry
+from data_extraction.services.state import (
+    ensure_resume_for_drive_file,
+    mark_attempt_started,
+    mark_downloaded,
+    mark_extracting,
+    mark_text_extracted,
+)
 from data_extraction.services.text import extract_text, preprocess_resume_text
 
 
@@ -94,9 +103,29 @@ class Command(BaseCommand):
             help="Re-extract existing files (skip check disabled)",
         )
         parser.add_argument(
+            "--retry-failed",
+            action="store_true",
+            help="Retry files whose previous extraction status is failed",
+        )
+        parser.add_argument(
+            "--failed-only",
+            action="store_true",
+            help="Process only files whose previous extraction status is failed",
+        )
+        parser.add_argument(
             "--shuffle",
             action="store_true",
             help="Randomize file order before applying --limit",
+        )
+        parser.add_argument(
+            "--birth-year-filter",
+            action="store_true",
+            help="Enable pre-LLM birth-year filtering after text extraction",
+        )
+        parser.add_argument(
+            "--birth-year",
+            type=int,
+            help="4-digit birth year cutoff or 2-digit age cutoff",
         )
         parser.add_argument(
             "--batch",
@@ -106,12 +135,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--step",
             type=str,
-            choices=["prepare", "submit", "poll", "ingest"],
-            help="Batch step: prepare, submit, poll, ingest",
+            choices=["prepare", "submit", "poll", "ingest", "next"],
+            help="Batch step: prepare, submit, poll, ingest, next",
         )
         parser.add_argument(
             "--job-id",
-            type=int,
+            type=str,
             help="Batch job ID (required for submit/poll/ingest steps)",
         )
         parser.add_argument(
@@ -134,7 +163,8 @@ class Command(BaseCommand):
             return self._handle_status(options)
 
         if options.get("batch"):
-            return self._handle_batch(options)
+            self._handle_batch(options)
+            return None
 
         return self._handle_realtime(options)
 
@@ -148,13 +178,25 @@ class Command(BaseCommand):
         drive = options.get("drive")
         batch = options.get("batch")
         status = options.get("status")
+        birth_year_filter = options.get("birth_year_filter")
+        birth_year = options.get("birth_year")
 
         # --status doesn't require --drive
         if status:
             return
 
-        # --step submit|poll|ingest requires --job-id
-        if step in ("submit", "poll", "ingest") and not job_id:
+        if birth_year_filter and birth_year is None:
+            raise CommandError("--birth-year is required with --birth-year-filter")
+        if birth_year_filter:
+            from data_extraction.services.text import normalize_birth_year_filter_value
+
+            try:
+                normalize_birth_year_filter_value(birth_year)
+            except ValueError as exc:
+                raise CommandError(str(exc))
+
+        # --step submit|poll|ingest|next requires --job-id
+        if step in ("submit", "poll", "ingest", "next") and not job_id:
             raise CommandError(f"--step {step} requires --job-id")
 
         # Realtime mode and --step prepare require --drive
@@ -179,8 +221,12 @@ class Command(BaseCommand):
         workers = options.get("workers") or 5
         self.use_integrity = options.get("integrity", False)
         self.force = options.get("force", False)
+        self.retry_failed = options.get("retry_failed", False)
+        self.failed_only = options.get("failed_only", False)
         self.shuffle = options.get("shuffle", False)
         self.provider = options.get("provider", "gemini")
+        self.birth_year_filter = options.get("birth_year_filter", False)
+        self.birth_year_value = options.get("birth_year")
 
         provider_label = (
             f" [provider: {self.provider}]" if self.provider != "gemini" else ""
@@ -279,13 +325,14 @@ class Command(BaseCommand):
 
         # -- Phase 4: Process all new groups in parallel --
         t0 = time.time()
-        succeeded, failed = self._process_all(
+        succeeded, failed, filtered = self._process_all(
             work_items["new_groups"], workers, work_items["existing_ids"]
         )
         phase4_sec = time.time() - t0
 
         self.stdout.write(
-            f"Phase 4 — Process: {succeeded} succeeded, {failed} failed ({phase4_sec:.1f}s)"
+            f"Phase 4 — Process: {succeeded} succeeded, {failed} failed, "
+            f"{filtered} filtered ({phase4_sec:.1f}s)"
         )
 
         # Update category candidate counts
@@ -306,6 +353,7 @@ class Command(BaseCommand):
             phase2_sec,
             phase3_sec,
             phase4_sec,
+            filtered=filtered,
         )
 
     def _collect_work_items(
@@ -339,9 +387,6 @@ class Command(BaseCommand):
                 import random
 
                 random.shuffle(normalized)
-            if limit:
-                normalized = normalized[:limit]
-
             total_files += len(normalized)
             groups = group_by_person(normalized)
             folder_groups[folder_name] = groups
@@ -353,24 +398,43 @@ class Command(BaseCommand):
                     all_file_ids.add(other["file_id"])
 
         # Single bulk DB query
-        existing_ids = set(
+        resume_statuses = dict(
             Resume.objects.filter(drive_file_id__in=all_file_ids).values_list(
                 "drive_file_id",
-                flat=True,
+                "processing_status",
             )
         )
+        existing_ids = set(resume_statuses)
 
         # Filter new groups
         for folder_name, groups in folder_groups.items():
             for g in groups:
-                if g["primary"]["file_id"] in existing_ids and not getattr(
-                    self, "force", False
+                primary_id = g["primary"]["file_id"]
+                is_existing = primary_id in existing_ids
+                is_retryable_failed = (
+                    (
+                        getattr(self, "retry_failed", False)
+                        or getattr(self, "failed_only", False)
+                    )
+                    and resume_statuses.get(primary_id) == Resume.ProcessingStatus.FAILED
+                )
+                if getattr(self, "failed_only", False) and not is_retryable_failed:
+                    if is_existing:
+                        total_skipped += 1
+                    continue
+                if (
+                    is_existing
+                    and not getattr(self, "force", False)
+                    and not is_retryable_failed
                 ):
                     total_skipped += 1
                 else:
                     g["_folder_name"] = folder_name
                     all_new_groups.append(g)
                     affected_folders.add(folder_name)
+
+        if limit:
+            all_new_groups = all_new_groups[:limit]
 
         return {
             "new_groups": all_new_groups,
@@ -386,10 +450,11 @@ class Command(BaseCommand):
         groups: list[dict],
         workers: int,
         existing_ids: set,
-    ) -> tuple[int, int]:
-        """Process all groups in a single thread pool. Returns (succeeded, failed)."""
+    ) -> tuple[int, int, int]:
+        """Process all groups in a single thread pool."""
         succeeded = 0
         failed = 0
+        filtered = 0
 
         # Pre-create categories
         folder_names = {g["_folder_name"] for g in groups}
@@ -419,7 +484,14 @@ class Command(BaseCommand):
                 folder_name = group["_folder_name"]
                 try:
                     result = future.result()
-                    if result:
+                    if result == "filtered":
+                        filtered += 1
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"  FILTER: [{folder_name}] {primary_name} (birth year)"
+                            )
+                        )
+                    elif result:
                         succeeded += 1
                         self.stdout.write(
                             self.style.SUCCESS(f"  OK: [{folder_name}] {primary_name}")
@@ -435,7 +507,7 @@ class Command(BaseCommand):
                     failed += 1
                     self.stderr.write(f"  FAIL: [{folder_name}] {primary_name}: {e}")
 
-        return succeeded, failed
+        return succeeded, failed, filtered
 
     def _process_group(
         self,
@@ -443,7 +515,7 @@ class Command(BaseCommand):
         folder_name: str,
         category: Category,
         existing_ids: set,
-    ) -> bool:
+    ) -> bool | str:
         """Process a single person group: download, extract, LLM, validate, save.
 
         Each worker creates its own Drive service (not thread-safe).
@@ -463,11 +535,18 @@ class Command(BaseCommand):
         folder_name: str,
         category: Category,
         existing_ids: set,
-    ) -> bool:
+    ) -> bool | str:
         primary = group["primary"]
         others = group["others"]
         parsed = group["parsed"]
         service = get_drive_service()
+        resume = ensure_resume_for_drive_file(primary, folder_name)
+        mark_attempt_started(
+            resume,
+            status=ResumeExtractionState.Status.DOWNLOADING,
+            provider=self.provider,
+            pipeline="integrity" if self.use_integrity else "legacy",
+        )
 
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -475,6 +554,7 @@ class Command(BaseCommand):
                 try:
                     dest_path = os.path.join(tmpdir, primary["file_name"])
                     download_file(service, primary["file_id"], dest_path)
+                    mark_downloaded(resume)
                 except Exception as e:
                     self._save_failed_resume(
                         primary,
@@ -488,6 +568,7 @@ class Command(BaseCommand):
                 try:
                     raw_text = extract_text(dest_path)
                     raw_text = preprocess_resume_text(raw_text)
+                    mark_text_extracted(resume)
                 except Exception as e:
                     self._save_failed_resume(
                         primary,
@@ -509,7 +590,43 @@ class Command(BaseCommand):
                     )
                     return False
 
+                if self.birth_year_filter:
+                    from data_extraction.services.text import passes_birth_year_filter
+
+                    birth_filter = passes_birth_year_filter(
+                        raw_text,
+                        self.birth_year_value,
+                        enabled=True,
+                    )
+                    if not birth_filter.passed:
+                        from data_extraction.services.state import mark_completed
+
+                        mark_completed(
+                            resume,
+                            status=ResumeExtractionState.Status.SKIPPED,
+                            error=f"Birth year filter: {birth_filter.reason}",
+                            provider=self.provider,
+                            pipeline=(
+                                "integrity" if self.use_integrity else "legacy"
+                            ),
+                            metadata={
+                                "birth_year_filter": {
+                                    "cutoff_year": birth_filter.cutoff_year,
+                                    "detected_year": birth_filter.detected_year,
+                                    "source": birth_filter.source,
+                                    "evidence": birth_filter.evidence,
+                                    "reason": birth_filter.reason,
+                                }
+                            },
+                        )
+                        return "filtered"
+
                 # Step 3: Extract + Validate + Retry
+                mark_extracting(
+                    resume,
+                    provider=self.provider,
+                    pipeline="integrity" if self.use_integrity else "legacy",
+                )
                 pipeline_result = run_extraction_with_retry(
                     raw_text=raw_text,
                     file_path=dest_path,
@@ -649,6 +766,7 @@ class Command(BaseCommand):
         phase2_sec: float = 0,
         phase3_sec: float = 0,
         phase4_sec: float = 0,
+        filtered: int = 0,
     ):
         self.stdout.write("\n=== Extract Summary ===")
         self.stdout.write(f"Total time: {total_sec:.1f}s")
@@ -663,6 +781,8 @@ class Command(BaseCommand):
         self.stdout.write(f"Skipped (existing): {work_items['skipped']}")
         self.stdout.write(f"New: {len(work_items['new_groups'])}")
         self.stdout.write(self.style.SUCCESS(f"Succeeded: {succeeded}"))
+        if filtered:
+            self.stdout.write(self.style.WARNING(f"Filtered: {filtered}"))
         if failed:
             self.stdout.write(self.style.ERROR(f"Failed: {failed}"))
         else:
@@ -684,11 +804,13 @@ class Command(BaseCommand):
             return self._batch_poll(options)
         elif step == "ingest":
             return self._batch_ingest(options)
+        elif step == "next":
+            return self._batch_next(options)
         else:
             # Full pipeline: prepare -> submit -> poll -> ingest
             return self._batch_full(options)
 
-    def _get_job(self, job_id: int):
+    def _get_job(self, job_id: str):
         from data_extraction.models import GeminiBatchJob
 
         try:
@@ -717,6 +839,13 @@ class Command(BaseCommand):
             limit=limit,
             parent_folder_id=parent_folder_id,
             workers=workers,
+            force=options.get("force", False),
+            retry_failed=options.get("retry_failed", False),
+            failed_only=options.get("failed_only", False),
+            shuffle=options.get("shuffle", False),
+            integrity=options.get("integrity", False),
+            birth_year_filter=options.get("birth_year_filter", False),
+            birth_year_value=options.get("birth_year"),
         )
         elapsed = time.time() - t0
 
@@ -829,6 +958,27 @@ class Command(BaseCommand):
             self.stdout.write(f"Failed: {result['failed']}")
         self.stdout.write(f"Time: {elapsed:.1f}s")
         self.stdout.write(self.style.SUCCESS(f"\nJob #{job.id} ingestion complete."))
+        return job
+
+    def _batch_next(self, options):
+        from data_extraction.services.batch.integrity_chain import (
+            prepare_next_integrity_job,
+        )
+
+        job = self._get_job(options["job_id"])
+        if (job.metadata or {}).get("pipeline") != "integrity":
+            raise CommandError(f"Job #{job.id} is not an integrity batch job")
+
+        self.stdout.write(f"\n=== Batch Next (Job #{job.id}) ===")
+        next_job = prepare_next_integrity_job(job)
+        if next_job is None:
+            self.stdout.write(self.style.SUCCESS("Integrity batch chain finalized."))
+            return None
+        self.stdout.write(f"Prepared next job: {next_job.id}")
+        self.stdout.write(f"Stage: {(next_job.metadata or {}).get('stage')}")
+        self.stdout.write(f"Requests: {next_job.total_requests}")
+        self.stdout.write(f"Request file: {next_job.request_file_path}")
+        return next_job
 
     def _batch_full(self, options):
         """Run all batch steps sequentially: prepare -> submit -> poll -> ingest."""
@@ -845,10 +995,33 @@ class Command(BaseCommand):
         options["job_id"] = job.id
         job = self._batch_submit(options)
 
-        # Step 3: Poll until complete
+        job = self._poll_until_batch_complete(options)
+        if job is None:
+            return
+
+        # Step 4: Ingest
+        self._batch_ingest(options)
+
+        if options.get("integrity"):
+            step2_job = self._batch_next({"job_id": job.id})
+            if step2_job is None:
+                self.stdout.write(self.style.SUCCESS("\nFull batch pipeline complete."))
+                return
+            options["job_id"] = step2_job.id
+            step2_job = self._batch_submit(options)
+            step2_job = self._poll_until_batch_complete(options)
+            if step2_job is None:
+                return
+            self._batch_ingest(options)
+            self._batch_next({"job_id": step2_job.id})
+
+        self.stdout.write(self.style.SUCCESS("\nFull batch pipeline complete."))
+
+    def _poll_until_batch_complete(self, options):
         self.stdout.write("\nPolling for completion...")
         poll_interval = 30
         max_polls = 120  # 1 hour max
+        job = None
         for i in range(max_polls):
             time.sleep(poll_interval)
             job = self._batch_poll(options)
@@ -856,17 +1029,15 @@ class Command(BaseCommand):
                 break
             self.stdout.write(f"  Poll {i + 1}: still running...")
 
-        if job.status == job.Status.FAILED:
+        if job is None or job.status == job.Status.FAILED:
             self.stderr.write(self.style.ERROR("Batch job failed. Stopping."))
-            return
+            return None
 
         if job.status != job.Status.SUCCEEDED:
             self.stderr.write(self.style.WARNING("Batch job did not complete in time."))
-            return
+            return None
 
-        # Step 4: Ingest
-        self._batch_ingest(options)
-        self.stdout.write(self.style.SUCCESS("\nFull batch pipeline complete."))
+        return job
 
     # ------------------------------------------------------------------
     # Status
@@ -904,6 +1075,13 @@ class Command(BaseCommand):
         self.stdout.write(f"Status: {job.get_status_display()}")
         self.stdout.write(f"Model: {job.model_name}")
         self.stdout.write(f"Source: {job.source}")
+        metadata = job.metadata or {}
+        if metadata.get("pipeline"):
+            self.stdout.write(f"Pipeline: {metadata.get('pipeline')}")
+        if metadata.get("stage"):
+            self.stdout.write(f"Stage: {metadata.get('stage')}")
+        if metadata.get("parent_job_id"):
+            self.stdout.write(f"Parent job: {metadata.get('parent_job_id')}")
         self.stdout.write(f"Category filter: {job.category_filter or '(all)'}")
         self.stdout.write(f"Parent folder: {job.parent_folder_id or '(not set)'}")
         self.stdout.write(f"Total requests: {job.total_requests}")

@@ -1,4 +1,4 @@
-"""Google Drive service: OAuth token management, folder navigation, file download, parallel discovery."""
+"""Google Drive service: credential management, folder navigation, file download."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 from django.conf import settings
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
@@ -17,6 +18,7 @@ from googleapiclient.http import MediaIoBaseDownload
 
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
+SERVICE_ACCOUNT_PATH = Path(settings.GOOGLE_SERVICE_ACCOUNT_PATH)
 TOKEN_PATH = Path(settings.GOOGLE_TOKEN_PATH)
 CLIENT_SECRET_PATH = Path(settings.GOOGLE_CLIENT_SECRET_PATH)
 
@@ -47,7 +49,22 @@ def _save_token(creds: Credentials) -> None:
         f.write(creds.to_json())
 
 
-def _get_credentials() -> Credentials:
+def _get_service_account_credentials():
+    """Load service account credentials if configured.
+
+    Service accounts are preferred for server-side Drive reads because they do
+    not depend on a user refresh token. The target Drive folder must be shared
+    with the service account email.
+    """
+    if not SERVICE_ACCOUNT_PATH.exists():
+        return None
+    return service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_PATH,
+        scopes=SCOPES,
+    )
+
+
+def _get_oauth_credentials() -> Credentials:
     """Load OAuth token from TOKEN_PATH, auto-refresh if expired, save refreshed token.
 
     Raises RuntimeError if credentials are invalid and cannot be refreshed.
@@ -77,6 +94,14 @@ def _get_credentials() -> Credentials:
     raise RuntimeError(
         "Invalid Google credentials. Please re-authenticate via OAuth flow."
     )
+
+
+def _get_credentials():
+    """Load Drive credentials, preferring service account over user OAuth."""
+    creds = _get_service_account_credentials()
+    if creds is not None:
+        return creds
+    return _get_oauth_credentials()
 
 
 # ---------------------------------------------------------------------------

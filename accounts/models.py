@@ -8,6 +8,7 @@ from common.mixins import BaseModel
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    avatar = models.ImageField(upload_to="accounts/avatars/", blank=True)
     phone = models.CharField(max_length=20, blank=True)
     company_name = models.CharField(max_length=100, blank=True)
     industry = models.CharField(max_length=100, blank=True)
@@ -33,6 +34,19 @@ class User(AbstractUser):
 
     class Meta:
         db_table = "users"
+
+    @property
+    def display_name(self) -> str:
+        """Korean display name: last_name + first_name, then username fallback."""
+        name = f"{(self.last_name or '').strip()}{(self.first_name or '').strip()}"
+        if name:
+            return name
+        full_name = (self.get_full_name() or "").strip()
+        return full_name or self.username
+
+    @property
+    def display_initial(self) -> str:
+        return self.display_name[:1].upper()
 
 
 class TelegramBinding(BaseModel):

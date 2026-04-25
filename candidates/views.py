@@ -17,6 +17,7 @@ from .models import (
     DiscrepancyReport,
     ExtractionLog,
     REASON_CODES,
+    Resume,
     SearchSession,
     SearchTurn,
 )
@@ -134,6 +135,11 @@ def review_detail(request, pk):
         or candidate.resumes.filter(is_primary=True).first()
         or candidate.resumes.first()
     )
+    primary_resume_has_error = bool(
+        primary_resume
+        and primary_resume.error_message
+        and primary_resume.processing_status == Resume.ProcessingStatus.TEXT_ONLY
+    )
     careers = candidate.careers.all()
     educations = candidate.educations.all()
     certifications = candidate.certifications.all()
@@ -191,6 +197,7 @@ def review_detail(request, pk):
         {
             "candidate": candidate,
             "primary_resume": primary_resume,
+            "primary_resume_has_error": primary_resume_has_error,
             "careers": careers,
             "educations": educations,
             "certifications": certifications,
@@ -556,6 +563,11 @@ def candidate_detail(request, pk):
         or candidate.resumes.filter(is_primary=True).first()
         or candidate.resumes.first()
     )
+    primary_resume_has_error = bool(
+        primary_resume
+        and primary_resume.error_message
+        and primary_resume.processing_status == Resume.ProcessingStatus.TEXT_ONLY
+    )
 
     # Compute field confidences in real-time from current candidate data
     from data_extraction.services.validation import (
@@ -626,6 +638,7 @@ def candidate_detail(request, pk):
             "certifications": certifications,
             "language_skills": language_skills,
             "primary_resume": primary_resume,
+            "primary_resume_has_error": primary_resume_has_error,
             "fc": fc,
             "category_scores": category_scores,
             "live_score": live_score,

@@ -4,6 +4,8 @@ import os
 import re
 import subprocess
 import tempfile
+from dataclasses import dataclass
+from datetime import date
 
 from docx import Document
 
@@ -340,6 +342,147 @@ def classify_text_quality(text: str) -> str:
         return "too_short"
 
     return "ok"
+
+
+@dataclass(frozen=True)
+class BirthYearFilterResult:
+    passed: bool
+    active: bool
+    cutoff_year: int | None = None
+    detected_year: int | None = None
+    source: str = ""
+    evidence: str = ""
+    reason: str = ""
+
+
+def normalize_birth_year_filter_value(value: int, *, today: date | None = None) -> int:
+    """Normalize a 2-digit age or 4-digit birth year into a cutoff birth year."""
+    today = today or date.today()
+    if 10 <= value <= 99:
+        return today.year - value
+    if 1900 <= value <= today.year:
+        return value
+    raise ValueError("birth-year filter must be a 2-digit age or 4-digit birth year")
+
+
+def extract_birth_year_from_text(text: str, *, today: date | None = None) -> dict | None:
+    """Extract a likely birth year from resume text using contextual patterns."""
+    today = today or date.today()
+    if not text:
+        return None
+
+    patterns = [
+        (
+            "text_dob",
+            re.compile(
+                r"(?:생년월일|출생(?:년도|연도)?|출생일|birthday|birth|dob|date\s+of\s+birth)"
+                r"[\s:：\-]*"
+                r"(?P<year>(?:19|20)\d{2})[.\-/년\s]*(?:\d{1,2})?",
+                re.IGNORECASE,
+            ),
+        ),
+        (
+            "text_birth_year",
+            re.compile(r"(?P<year>(?:19|20)\d{2})\s*년\s*생"),
+        ),
+        (
+            "text_short_birth_year",
+            re.compile(r"(?P<yy>\d{2})\s*년\s*생"),
+        ),
+    ]
+    for source, pattern in patterns:
+        match = pattern.search(text)
+        if not match:
+            continue
+        year = _normalize_birth_match(match, today=today)
+        if year:
+            return {
+                "birth_year": year,
+                "source": source,
+                "evidence": match.group(0).strip()[:120],
+            }
+
+    rrn = re.search(r"(?<!\d)(?P<yy>\d{2})(?P<mm>0[1-9]|1[0-2])(?P<dd>[0-3]\d)[-\s]?(?P<gender>[1-4])", text)
+    if rrn:
+        yy = int(rrn.group("yy"))
+        gender = rrn.group("gender")
+        year = (1900 + yy) if gender in {"1", "2"} else (2000 + yy)
+        if 1900 <= year <= today.year:
+            return {
+                "birth_year": year,
+                "source": "resident_registration_number",
+                "evidence": rrn.group(0).strip()[:120],
+            }
+
+    age_match = re.search(
+        r"(?:나이|연령|age)[\s:：\-]*(?:만\s*)?(?P<age>\d{2})\s*(?:세|years?\s+old)?",
+        text,
+        re.IGNORECASE,
+    )
+    if age_match:
+        age = int(age_match.group("age"))
+        if 10 <= age <= 99:
+            return {
+                "birth_year": today.year - age,
+                "source": "age",
+                "evidence": age_match.group(0).strip()[:120],
+            }
+
+    return None
+
+
+def passes_birth_year_filter(
+    text: str,
+    filter_value: int | None,
+    *,
+    enabled: bool = False,
+    today: date | None = None,
+) -> BirthYearFilterResult:
+    """Return whether text passes the pre-LLM birth-year cutoff filter.
+
+    The filter passes resumes whose detected birth year is greater than or equal
+    to the cutoff. A 2-digit value is interpreted as age and converted to a
+    birth-year cutoff using the current year.
+    """
+    if not enabled or filter_value is None:
+        return BirthYearFilterResult(passed=True, active=False)
+
+    cutoff = normalize_birth_year_filter_value(filter_value, today=today)
+    extracted = extract_birth_year_from_text(text, today=today)
+    if not extracted:
+        return BirthYearFilterResult(
+            passed=False,
+            active=True,
+            cutoff_year=cutoff,
+            reason="birth year not found in extracted text",
+        )
+
+    detected = extracted["birth_year"]
+    passed = detected >= cutoff
+    return BirthYearFilterResult(
+        passed=passed,
+        active=True,
+        cutoff_year=cutoff,
+        detected_year=detected,
+        source=extracted["source"],
+        evidence=extracted["evidence"],
+        reason=(
+            ""
+            if passed
+            else f"detected birth year {detected} is before cutoff {cutoff}"
+        ),
+    )
+
+
+def _normalize_birth_match(match: re.Match, *, today: date) -> int | None:
+    if match.groupdict().get("year"):
+        year = int(match.group("year"))
+    else:
+        yy = int(match.group("yy"))
+        year = 1900 + yy if yy >= 50 else 2000 + yy
+    if 1900 <= year <= today.year:
+        return year
+    return None
 
 
 def extract_text_libreoffice(file_path: str) -> str:

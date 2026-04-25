@@ -4,6 +4,9 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from data_extraction.models import GeminiBatchItem, GeminiBatchJob
+from data_extraction.services.batch.integrity_request_builder import (
+    build_step1_request_line,
+)
 from data_extraction.services.batch.artifacts import raw_text_path, request_file_path
 from data_extraction.services.batch.request_builder import build_request_line
 from candidates.models import Resume
@@ -14,7 +17,11 @@ from data_extraction.services.drive import (
     list_files_in_folder,
 )
 from data_extraction.services.filename import group_by_person
-from data_extraction.services.text import extract_text, preprocess_resume_text
+from data_extraction.services.text import (
+    extract_text,
+    passes_birth_year_filter,
+    preprocess_resume_text,
+)
 
 
 def prepare_drive_job(
@@ -24,6 +31,13 @@ def prepare_drive_job(
     limit: int = 0,
     parent_folder_id: str = "root",
     workers: int = 4,
+    force: bool = False,
+    retry_failed: bool = False,
+    failed_only: bool = False,
+    shuffle: bool = False,
+    integrity: bool = False,
+    birth_year_filter: bool = False,
+    birth_year_value: int | None = None,
 ) -> GeminiBatchJob:
     service = get_drive_service()
     discovered = discover_folders(service, parent_folder_id)
@@ -31,80 +45,126 @@ def prepare_drive_job(
     if folder_name:
         discovered = [f for f in discovered if f["name"] == folder_name]
 
-    collected = []
+    candidates = []
     prepare_failures = []
+    skipped_existing = 0
+    skipped_active_batch = 0
+    total_groups = 0
+    total_files = 0
+    skipped_birth_year_filter = 0
 
     for folder_info in discovered:
         current_folder = folder_info["name"]
         folder_id = folder_info["id"]
 
-        normalized_files = _list_normalized_files(service, folder_id, limit=limit)
+        normalized_files = _list_normalized_files(service, folder_id)
+        if shuffle:
+            import random
+
+            random.shuffle(normalized_files)
+        total_files += len(normalized_files)
         groups = group_by_person(normalized_files)
+        total_groups += len(groups)
         all_ids = {
             file_info["file_id"]
             for group in groups
             for file_info in [group["primary"], *group["others"]]
         }
-        existing_ids = set(
+        resume_statuses = dict(
             Resume.objects.filter(drive_file_id__in=all_ids).values_list(
                 "drive_file_id",
-                flat=True,
+                "processing_status",
             )
         )
-        pending_groups = [
-            group for group in groups if group["primary"]["file_id"] not in existing_ids
-        ]
+        active_batch_ids = set(
+            GeminiBatchItem.objects.filter(drive_file_id__in=all_ids)
+            .exclude(status=GeminiBatchItem.Status.FAILED)
+            .values_list("drive_file_id", flat=True)
+        )
 
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {
-                executor.submit(
-                    _prepare_group_payload,
-                    job.id,
-                    current_folder,
-                    group,
-                ): group
-                for group in pending_groups
-            }
-            for future in as_completed(futures):
-                group = futures[future]
+        for group in groups:
+            primary_id = group["primary"]["file_id"]
+            is_existing = primary_id in resume_statuses
+            is_retryable_failed = (
+                (retry_failed or failed_only)
+                and resume_statuses.get(primary_id) == Resume.ProcessingStatus.FAILED
+            )
+            is_active_batch = primary_id in active_batch_ids
+
+            if failed_only and not is_retryable_failed:
+                if is_existing:
+                    skipped_existing += 1
+                elif is_active_batch:
+                    skipped_active_batch += 1
+                continue
+            if is_active_batch and not force and not is_retryable_failed:
+                skipped_active_batch += 1
+                continue
+            if is_existing and not force and not is_retryable_failed:
+                skipped_existing += 1
+                continue
+
+            candidates.append((current_folder, group))
+
+    if limit:
+        candidates = candidates[:limit]
+
+    collected = []
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(
+                _prepare_group_payload,
+                job.id,
+                current_folder,
+                group,
+                integrity,
+                birth_year_filter,
+                birth_year_value,
+            ): (current_folder, group)
+            for current_folder, group in candidates
+        }
+        for future in as_completed(futures):
+            current_folder, group = futures[future]
+            try:
+                payload = future.result()
+                if payload.get("skipped"):
+                    skipped_birth_year_filter += 1
+                    continue
+                collected.append(payload)
+            except Exception as exc:
+                primary = group["primary"]
+                prepare_failures.append(
+                    {
+                        "category": current_folder,
+                        "file_id": primary["file_id"],
+                        "file_name": primary["file_name"],
+                        "error": str(exc),
+                    }
+                )
+                GeminiBatchItem.objects.create(
+                    job=job,
+                    request_key=primary["file_id"],
+                    drive_file_id=primary["file_id"],
+                    file_name=primary["file_name"],
+                    category_name=current_folder,
+                    status=GeminiBatchItem.Status.FAILED,
+                    primary_file=primary,
+                    other_files=group["others"],
+                    filename_meta=group["parsed"],
+                    error_message=str(exc),
+                )
+                # Track the failed file without surfacing it as a Candidate.
+                from data_extraction.services.save import save_failed_resume
+
                 try:
-                    payload = future.result()
-                    collected.append(payload)
-                except Exception as exc:
-                    primary = group["primary"]
-                    prepare_failures.append(
-                        {
-                            "category": current_folder,
-                            "file_id": primary["file_id"],
-                            "file_name": primary["file_name"],
-                            "error": str(exc),
-                        }
-                    )
-                    GeminiBatchItem.objects.create(
-                        job=job,
-                        request_key=primary["file_id"],
-                        drive_file_id=primary["file_id"],
-                        file_name=primary["file_name"],
-                        category_name=current_folder,
-                        status=GeminiBatchItem.Status.FAILED,
-                        primary_file=primary,
-                        other_files=group["others"],
+                    save_failed_resume(
+                        primary,
+                        current_folder,
+                        f"Batch prepare failed: {exc}",
                         filename_meta=group["parsed"],
-                        error_message=str(exc),
                     )
-                    # Create placeholder Candidate + Resume so the file
-                    # is visible in the candidate list even if batch prep fails
-                    from data_extraction.services.save import save_failed_resume
-
-                    try:
-                        save_failed_resume(
-                            primary,
-                            current_folder,
-                            f"Batch prepare failed: {exc}",
-                            filename_meta=group["parsed"],
-                        )
-                    except Exception:
-                        pass
+                except Exception:
+                    pass
 
     request_path = request_file_path(str(job.id))
     prepared_count = 0
@@ -137,6 +197,18 @@ def prepare_drive_job(
         "prepare_failures": prepare_failures,
         "workers": workers,
         "limit": limit,
+        "force": force,
+        "retry_failed": retry_failed,
+        "failed_only": failed_only,
+        "shuffle": shuffle,
+        "pipeline": "integrity" if integrity else "legacy",
+        "stage": "step1" if integrity else "legacy",
+        "total_files": total_files,
+        "total_groups": total_groups,
+        "selected_groups": len(candidates),
+        "skipped_existing": skipped_existing,
+        "skipped_active_batch": skipped_active_batch,
+        "skipped_birth_year_filter": skipped_birth_year_filter,
         "folders": [f["name"] for f in discovered],
     }
     job.save(
@@ -154,9 +226,9 @@ def prepare_drive_job(
     return job
 
 
-def _list_normalized_files(service, folder_id: str, *, limit: int) -> list[dict]:
+def _list_normalized_files(service, folder_id: str) -> list[dict]:
     files = list_files_in_folder(service, folder_id)
-    normalized = [
+    return [
         {
             "file_name": file_info["name"],
             "file_id": file_info["id"],
@@ -166,12 +238,16 @@ def _list_normalized_files(service, folder_id: str, *, limit: int) -> list[dict]
         }
         for file_info in files
     ]
-    if limit:
-        return normalized[:limit]
-    return normalized
 
 
-def _prepare_group_payload(job_id, category_name: str, group: dict) -> dict:
+def _prepare_group_payload(
+    job_id,
+    category_name: str,
+    group: dict,
+    integrity: bool = False,
+    birth_year_filter: bool = False,
+    birth_year_value: int | None = None,
+) -> dict:
     primary = group["primary"]
     # Drive API client objects are not safe to share across worker threads.
     service = get_drive_service()
@@ -187,8 +263,35 @@ def _prepare_group_payload(job_id, category_name: str, group: dict) -> dict:
         if not raw_text.strip():
             raise RuntimeError("Empty text extraction")
 
+    if birth_year_filter:
+        birth_filter = passes_birth_year_filter(
+            raw_text,
+            birth_year_value,
+            enabled=True,
+        )
+        if not birth_filter.passed:
+            return {
+                "skipped": True,
+                "reason": birth_filter.reason,
+                "request_key": primary["file_id"],
+                "drive_file_id": primary["file_id"],
+            }
+
     text_path = raw_text_path(str(job_id), primary["file_id"])
     text_path.write_text(raw_text, encoding="utf-8")
+
+    if integrity:
+        request_line = build_step1_request_line(
+            request_key=primary["file_id"],
+            resume_text=raw_text,
+            file_name=primary["file_name"],
+        )
+    else:
+        request_line = build_request_line(
+            request_key=primary["file_id"],
+            resume_text=raw_text,
+            file_reference_date=primary.get("modified_time"),
+        )
 
     return {
         "request_key": primary["file_id"],
@@ -199,9 +302,5 @@ def _prepare_group_payload(job_id, category_name: str, group: dict) -> dict:
         "primary_file": primary,
         "other_files": group["others"],
         "filename_meta": group["parsed"],
-        "request_line": build_request_line(
-            request_key=primary["file_id"],
-            resume_text=raw_text,
-            file_reference_date=primary.get("modified_time"),
-        ),
+        "request_line": request_line,
     }

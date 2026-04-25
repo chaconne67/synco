@@ -24,6 +24,8 @@ from candidates.services.discrepancy import (
     scan_candidate_discrepancies,
     _build_summary,
 )
+from data_extraction.models import ResumeExtractionState
+from data_extraction.services.state import mark_completed
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +197,15 @@ def save_pipeline_result(
                 "is_primary": True,
                 "version": next_version,
                 "processing_status": Resume.ProcessingStatus.STRUCTURED,
+                "error_message": "",
+            },
+        )
+        mark_completed(
+            primary_resume,
+            status=ResumeExtractionState.Status.STRUCTURED,
+            metadata={
+                "attempts": pipeline_result.get("attempts", 1),
+                "retry_action": pipeline_result.get("retry_action", "none"),
             },
         )
 
@@ -372,11 +383,12 @@ def save_placeholder_candidate(
     error_msg: str,
     raw_text: str = "",
     filename_meta: dict | None = None,
-) -> Candidate:
-    """Create a placeholder Candidate + Resume for failed extractions.
+) -> Candidate | None:
+    """Create a review Candidate only when extracted text exists.
 
-    Ensures every file produces at least a Candidate visible in the UI,
-    regardless of extraction success or failure.
+    Files whose text extraction failed are tracked as Resume/ResumeExtractionState
+    records without a Candidate. Files with usable raw text but incomplete
+    structured extraction are visible for human review.
     """
     category, _ = Category.objects.get_or_create(
         name=folder_name,
@@ -404,6 +416,23 @@ def save_placeholder_candidate(
                 "error_message": error_msg,
             },
         )
+        state_status = (
+            ResumeExtractionState.Status.FAILED
+            if processing_status == Resume.ProcessingStatus.FAILED
+            else ResumeExtractionState.Status.TEXT_ONLY
+        )
+        mark_completed(
+            resume,
+            status=state_status,
+            error=error_msg,
+        )
+
+        if processing_status == Resume.ProcessingStatus.FAILED:
+            if resume.candidate_id:
+                resume.candidate = None
+                resume.is_primary = False
+                resume.save(update_fields=["candidate", "is_primary", "updated_at"])
+            return None
 
         if resume.candidate_id:
             candidate = resume.candidate
@@ -433,7 +462,7 @@ def save_failed_resume(
     error_msg: str,
     *,
     filename_meta: dict | None = None,
-) -> Candidate:
+) -> Candidate | None:
     return save_placeholder_candidate(
         file_info,
         folder_name,
@@ -450,7 +479,7 @@ def save_text_only_resume(
     raw_text: str,
     error_msg: str,
     filename_meta: dict | None = None,
-) -> Candidate:
+) -> Candidate | None:
     return save_placeholder_candidate(
         file_info,
         folder_name,

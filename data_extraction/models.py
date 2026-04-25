@@ -5,6 +5,55 @@ from django.db import models
 from common.mixins import BaseModel
 
 
+class ResumeExtractionState(BaseModel):
+    """Per-resume extraction state and attempt tracking.
+
+    Resume remains the file/version record. This model tracks extraction lifecycle
+    so batch/resume import can distinguish discovered, attempted, completed,
+    failed, and skipped files without adding more operational fields to Resume.
+    """
+
+    class Status(models.TextChoices):
+        DISCOVERED = "discovered", "Discovered"
+        DOWNLOADING = "downloading", "Downloading"
+        DOWNLOADED = "downloaded", "Downloaded"
+        TEXT_EXTRACTED = "text_extracted", "Text extracted"
+        EXTRACTING = "extracting", "Extracting"
+        STRUCTURED = "structured", "Structured"
+        TEXT_ONLY = "text_only", "Text only"
+        FAILED = "failed", "Failed"
+        SKIPPED = "skipped", "Skipped"
+
+    resume = models.OneToOneField(
+        "candidates.Resume",
+        on_delete=models.CASCADE,
+        related_name="extraction_state",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DISCOVERED,
+    )
+    discovered_at = models.DateTimeField(null=True, blank=True)
+    downloaded_at = models.DateTimeField(null=True, blank=True)
+    text_extracted_at = models.DateTimeField(null=True, blank=True)
+    extraction_started_at = models.DateTimeField(null=True, blank=True)
+    extraction_completed_at = models.DateTimeField(null=True, blank=True)
+    last_attempted_at = models.DateTimeField(null=True, blank=True)
+    attempt_count = models.PositiveIntegerField(default=0)
+    provider = models.CharField(max_length=50, blank=True)
+    pipeline = models.CharField(max_length=50, blank=True)
+    last_error = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = "resume_extraction_states"
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.resume.file_name} ({self.get_status_display()})"
+
+
 class GeminiBatchJob(BaseModel):
     class Status(models.TextChoices):
         PREPARING = "preparing", "Preparing"

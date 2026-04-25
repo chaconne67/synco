@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from .forms import ProfileForm
 from .models import User
 
 
@@ -109,9 +110,20 @@ def _is_tab_switch(request):
 
 @login_required
 def settings_profile(request):
-    """GET /accounts/settings/profile/ — Profile tab."""
-    context = {"active_tab": "profile"}
-    if _is_tab_switch(request):
+    """GET/POST /accounts/settings/profile/ — Profile tab."""
+    user = request.user
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect("settings_profile")
+    else:
+        form = ProfileForm(instance=user)
+
+    context = {"active_tab": "profile", "form": form}
+    if _is_tab_switch(request) or (
+        getattr(request, "htmx", None) and request.method == "POST"
+    ):
         return render(request, "accounts/partials/settings_content.html", context)
     return render(request, "accounts/settings.html", context)
 

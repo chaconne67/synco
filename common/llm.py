@@ -1,15 +1,18 @@
 """Multi-provider LLM client.
 
-Supports: claude_cli (subprocess), kimi (Moonshot API), minimax (OpenRouter),
-openrouter (any model). All OpenAI-compatible providers use the openai SDK.
+Supports: codex_cli (subprocess), claude_cli (subprocess), kimi (Moonshot API),
+minimax (OpenRouter), openrouter (any model). All OpenAI-compatible providers
+use the openai SDK.
 
-Default: claude_cli. Switch via LLM_PROVIDER env var.
+Default: codex_cli. Switch via LLM_PROVIDER env var.
 Fallback chain for future testing: kimi > minimax.
 """
 
 import json
 import logging
+import os
 import subprocess
+import tempfile
 
 from django.conf import settings
 
@@ -19,7 +22,7 @@ _openai_client = None
 
 
 def _get_provider() -> str:
-    return getattr(settings, "LLM_PROVIDER", "claude_cli")
+    return getattr(settings, "LLM_PROVIDER", "codex_cli")
 
 
 def _get_openai_client():
@@ -52,6 +55,44 @@ def call_llm(
 ) -> str:
     """Call LLM and return raw text response."""
     provider = _get_provider()
+
+    if provider == "codex_cli":
+        full_prompt = f"{system}\n\n{prompt}" if system else prompt
+        with tempfile.NamedTemporaryFile("r", encoding="utf-8", delete=False) as out:
+            output_path = out.name
+        try:
+            cmd = [
+                getattr(settings, "CODEX_CLI_COMMAND", "codex"),
+                "exec",
+                "--skip-git-repo-check",
+                "--sandbox",
+                "read-only",
+                "--ephemeral",
+                "--output-last-message",
+                output_path,
+                "-",
+            ]
+            model = getattr(settings, "CODEX_CLI_MODEL", "")
+            if model:
+                cmd[2:2] = ["--model", model]
+            result = subprocess.run(
+                cmd,
+                input=full_prompt,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                cwd=getattr(settings, "BASE_DIR", None),
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"Codex CLI error: {result.stderr}")
+            with open(output_path, encoding="utf-8") as f:
+                text = f.read().strip()
+            return text or result.stdout.strip()
+        finally:
+            try:
+                os.unlink(output_path)
+            except OSError:
+                pass
 
     if provider == "claude_cli":
         full_prompt = f"{system}\n\n{prompt}" if system else prompt

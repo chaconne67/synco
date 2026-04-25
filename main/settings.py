@@ -157,6 +157,10 @@ SITE_URL = os.environ.get("SITE_URL", "https://office.exdigm.com")
 TELEGRAM_WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
 
 # Google Drive OAuth files
+GOOGLE_SERVICE_ACCOUNT_PATH = os.environ.get(
+    "GOOGLE_SERVICE_ACCOUNT_PATH",
+    str(BASE_DIR / ".secrets" / "google_service_account.json"),
+)
 GOOGLE_TOKEN_PATH = os.environ.get(
     "GOOGLE_TOKEN_PATH", str(BASE_DIR / ".secrets" / "google_token.json")
 )
@@ -202,8 +206,15 @@ MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if RUNNING_TESTS
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
     },
 }
 
@@ -220,14 +231,23 @@ CACHES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # LLM Provider Configuration
-# Default: claude_cli (uses Claude Code subscription, no API key needed)
+# Default: codex_cli (uses Codex CLI auth, no API key needed)
 # Fallback chain: kimi > minimax (configured but not active until tested)
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "claude_cli")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "codex_cli")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
 LLM_MODEL = os.environ.get("LLM_MODEL", "")
+CODEX_CLI_COMMAND = os.environ.get("CODEX_CLI_COMMAND", "codex")
+CODEX_CLI_MODEL = os.environ.get("CODEX_CLI_MODEL", "")
+VOICE_INTENT_PROVIDER = os.environ.get("VOICE_INTENT_PROVIDER", "llm")
+VOICE_MEETING_ANALYSIS_PROVIDER = os.environ.get(
+    "VOICE_MEETING_ANALYSIS_PROVIDER", "llm"
+)
 
 # Provider-specific configs (options ready for future testing)
 LLM_PROVIDERS = {
+    "codex_cli": {
+        "model": CODEX_CLI_MODEL,
+    },
     "claude_cli": {
         "model": "",
     },

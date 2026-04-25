@@ -16,6 +16,13 @@ from data_extraction.services.validation import validate_extraction
 
 
 def ingest_job_results(job: GeminiBatchJob, *, workers: int = 1) -> dict:
+    if (job.metadata or {}).get("pipeline") == "integrity":
+        from data_extraction.services.batch.integrity_chain import (
+            ingest_integrity_job_results,
+        )
+
+        return ingest_integrity_job_results(job, workers=workers)
+
     result_path = Path(job.result_file_path)
     if not result_path.exists():
         raise RuntimeError(f"Result file not found: {result_path}")
@@ -217,7 +224,7 @@ def _save_placeholder_for_item(
     *,
     include_raw_text: bool = False,
 ) -> None:
-    """Create placeholder Candidate + Resume for a failed batch item."""
+    """Persist failed/text-only batch state according to extraction quality."""
     from data_extraction.services.save import save_failed_resume, save_text_only_resume
 
     try:

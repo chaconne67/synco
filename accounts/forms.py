@@ -1,11 +1,75 @@
 # accounts/forms.py
 
+import io
+
 from django import forms
+from django.core.files.base import ContentFile
+from PIL import Image, ImageOps
+
+from .models import User
 
 
 # ---------------------------------------------------------------------------
 # Active forms
 # ---------------------------------------------------------------------------
+
+MAX_AVATAR_UPLOAD_SIZE = 5 * 1024 * 1024
+AVATAR_SIZE = 512
+AVATAR_JPEG_QUALITY = 85
+
+
+class AvatarImageField(forms.ImageField):
+    def to_python(self, data):
+        if data and getattr(data, "size", 0) > MAX_AVATAR_UPLOAD_SIZE:
+            raise forms.ValidationError("프로필 이미지는 5MB 이하만 업로드할 수 있습니다.")
+        return super().to_python(data)
+
+
+class ProfileForm(forms.ModelForm):
+    """Profile settings form."""
+
+    avatar = AvatarImageField(required=False)
+
+    class Meta:
+        model = User
+        fields = ["avatar", "last_name", "first_name", "company_name", "phone"]
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get("avatar")
+        if not avatar:
+            return avatar
+        if getattr(avatar, "size", 0) > MAX_AVATAR_UPLOAD_SIZE:
+            raise forms.ValidationError("프로필 이미지는 5MB 이하만 업로드할 수 있습니다.")
+        return avatar
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        avatar = self.cleaned_data.get("avatar")
+        if avatar and hasattr(avatar, "file"):
+            user.avatar.save(
+                "avatar.jpg",
+                _optimize_avatar(avatar),
+                save=False,
+            )
+        if commit:
+            user.save()
+        return user
+
+
+def _optimize_avatar(avatar) -> ContentFile:
+    image = Image.open(avatar)
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGB")
+    image.thumbnail((AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS)
+
+    canvas = Image.new("RGB", (AVATAR_SIZE, AVATAR_SIZE), (248, 250, 252))
+    left = (AVATAR_SIZE - image.width) // 2
+    top = (AVATAR_SIZE - image.height) // 2
+    canvas.paste(image, (left, top))
+
+    output = io.BytesIO()
+    canvas.save(output, format="JPEG", quality=AVATAR_JPEG_QUALITY, optimize=True)
+    return ContentFile(output.getvalue())
 
 
 class NotificationPreferenceForm(forms.Form):

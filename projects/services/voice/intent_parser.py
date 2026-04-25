@@ -1,4 +1,4 @@
-"""Gemini-based intent parsing + entity extraction."""
+"""LLM-based intent parsing + entity extraction."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from typing import Any
 
 from django.conf import settings
 
+from common.llm import call_llm
 from data_extraction.services.extraction.sanitizers import parse_llm_json
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,32 @@ def _get_gemini_client():
     return _gemini_client
 
 
+def _call_gemini_intent(user_prompt: str) -> str:
+    client = _get_gemini_client()
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=[
+            {
+                "role": "user",
+                "parts": [{"text": INTENT_SYSTEM_PROMPT + "\n\n" + user_prompt}],
+            },
+        ],
+    )
+    return response.text.strip()
+
+
+def _call_llm_intent(user_prompt: str) -> str:
+    provider = getattr(settings, "VOICE_INTENT_PROVIDER", "llm")
+    if provider == "gemini":
+        return _call_gemini_intent(user_prompt)
+    return call_llm(
+        user_prompt,
+        system=INTENT_SYSTEM_PROMPT,
+        timeout=30,
+        max_tokens=500,
+    )
+
+
 @dataclasses.dataclass
 class IntentResult:
     intent: str
@@ -86,7 +113,7 @@ def parse_intent(
     text: str,
     context: dict[str, Any],
 ) -> IntentResult:
-    """Parse user text into intent + entities using Gemini.
+    """Parse user text into intent + entities using the configured LLM.
 
     Args:
         text: Transcribed user speech.
@@ -101,17 +128,7 @@ def parse_intent(
     user_prompt += f"\n사용자 발화: {text}"
 
     try:
-        client = _get_gemini_client()
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[
-                {
-                    "role": "user",
-                    "parts": [{"text": INTENT_SYSTEM_PROMPT + "\n\n" + user_prompt}],
-                },
-            ],
-        )
-        raw = response.text.strip()
+        raw = _call_llm_intent(user_prompt)
         parsed = parse_llm_json(raw)
 
         if parsed is None:

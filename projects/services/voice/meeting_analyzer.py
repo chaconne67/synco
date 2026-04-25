@@ -8,6 +8,7 @@ import subprocess
 from django.conf import settings
 from django.utils import timezone
 
+from common.llm import call_llm
 from data_extraction.services.extraction.sanitizers import parse_llm_json
 from projects.models import MeetingRecord
 from projects.services.voice.transcriber import TranscribeMode, transcribe
@@ -81,6 +82,22 @@ def _get_gemini_client():
             raise RuntimeError("GEMINI_API_KEY not set")
         _gemini_client = genai.Client(api_key=api_key)
     return _gemini_client
+
+
+def _call_gemini_analysis(prompt: str) -> str:
+    client = _get_gemini_client()
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=[prompt],
+    )
+    return response.text
+
+
+def _call_meeting_analysis(prompt: str) -> str:
+    provider = getattr(settings, "VOICE_MEETING_ANALYSIS_PROVIDER", "llm")
+    if provider == "gemini":
+        return _call_gemini_analysis(prompt)
+    return call_llm(prompt, timeout=120, max_tokens=1200)
 
 
 # ---------------------------------------------------------------------------
@@ -172,14 +189,10 @@ def analyze_meeting(meeting_record_id: int | str) -> None:
         record.status = MeetingRecord.Status.ANALYZING
         record.save(update_fields=["status"])
 
-        client = _get_gemini_client()
         prompt = ANALYSIS_PROMPT.format(transcript=transcript_text)
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[prompt],
-        )
+        raw_analysis = _call_meeting_analysis(prompt)
 
-        analysis = parse_llm_json(response.text)
+        analysis = parse_llm_json(raw_analysis)
         if analysis is None:
             record.status = MeetingRecord.Status.FAILED
             record.error_message = "분석 결과를 파싱할 수 없습니다."

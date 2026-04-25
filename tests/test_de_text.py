@@ -88,6 +88,56 @@ class TestExtractText:
         assert text.strip() == ""
 
 
+class TestBirthYearTextFilter:
+    def test_extract_birth_year_from_dob(self):
+        from data_extraction.services.text import extract_birth_year_from_text
+
+        result = extract_birth_year_from_text("생년월일: 1985.03.12")
+
+        assert result["birth_year"] == 1985
+        assert result["source"] == "text_dob"
+
+    def test_extract_birth_year_from_rrn(self):
+        from data_extraction.services.text import extract_birth_year_from_text
+
+        result = extract_birth_year_from_text("주민등록번호 850312-1******")
+
+        assert result["birth_year"] == 1985
+        assert result["source"] == "resident_registration_number"
+
+    def test_two_digit_age_converts_to_cutoff_year(self):
+        from datetime import date
+
+        from data_extraction.services.text import normalize_birth_year_filter_value
+
+        assert normalize_birth_year_filter_value(41, today=date(2026, 4, 25)) == 1985
+
+    def test_passes_birth_year_filter_with_four_digit_cutoff(self):
+        from data_extraction.services.text import passes_birth_year_filter
+
+        result = passes_birth_year_filter(
+            "생년월일: 1986.01.01",
+            1985,
+            enabled=True,
+        )
+
+        assert result.passed is True
+        assert result.detected_year == 1986
+        assert result.cutoff_year == 1985
+
+    def test_birth_year_filter_blocks_older_candidate(self):
+        from data_extraction.services.text import passes_birth_year_filter
+
+        result = passes_birth_year_filter(
+            "1984년생",
+            1985,
+            enabled=True,
+        )
+
+        assert result.passed is False
+        assert result.detected_year == 1984
+
+
 class TestExtractTextLibreoffice:
     @pytest.mark.skipif(
         shutil.which("libreoffice") is None,

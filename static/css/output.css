@@ -2216,6 +2216,10 @@ a.bg-ink.rounded-card:hover,
   height: 5rem;
 }
 
+.h-24 {
+  height: 6rem;
+}
+
 .h-28 {
   height: 7rem;
 }
@@ -4544,6 +4548,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   margin-right: 0.75rem;
 }
 
+.file\:mr-4::file-selector-button {
+  margin-right: 1rem;
+}
+
 .file\:cursor-pointer::file-selector-button {
   cursor: pointer;
 }
@@ -4594,6 +4602,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .file\:text-xs::file-selector-button {
   font-size: 0.75rem;
   line-height: 1rem;
+}
+
+.file\:font-bold::file-selector-button {
+  font-weight: 700;
 }
 
 .file\:font-medium::file-selector-button {
@@ -4977,6 +4989,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
+.hover\:file\:bg-ink2::file-selector-button:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(30 41 59 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:file\:bg-slate-200::file-selector-button:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
@@ -5164,6 +5181,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
   .sm\:items-center {
     align-items: center;
+  }
+
+  .sm\:gap-5 {
+    gap: 1.25rem;
   }
 }
 

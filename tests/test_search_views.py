@@ -326,8 +326,40 @@ def test_search_chat_saves_structured_filters(mock_parse, auth_client):
 
 
 @pytest.mark.django_db
-def test_candidate_detail_shows_error_message_for_failed_resume(auth_client, category):
-    """Failed placeholder candidate shows error_message and Drive link on detail page."""
+def test_candidate_detail_shows_review_notice_for_text_only_resume(
+    auth_client, category
+):
+    candidate = Candidate.objects.create(
+        name="텍스트후보",
+        primary_category=category,
+        validation_status=Candidate.ValidationStatus.NEEDS_REVIEW,
+    )
+    candidate.categories.add(category)
+    resume = Resume.objects.create(
+        candidate=candidate,
+        file_name="text-only.pdf",
+        drive_file_id="text_ui_001",
+        drive_folder="Accounting",
+        is_primary=True,
+        version=1,
+        processing_status=Resume.ProcessingStatus.TEXT_ONLY,
+        raw_text="원문 텍스트",
+        error_message="Structured extraction unavailable",
+    )
+    candidate.current_resume = resume
+    candidate.save(update_fields=["current_resume"])
+
+    resp = auth_client.get(f"/candidates/{candidate.pk}/")
+    body = resp.content.decode()
+
+    assert resp.status_code == 200
+    assert "구조화 데이터 확인 필요" in body
+    assert "Structured extraction unavailable" in body
+    assert "text_ui_001" in body  # Drive link present
+
+
+@pytest.mark.django_db
+def test_candidate_detail_hides_failed_resume_error(auth_client, category):
     candidate = Candidate.objects.create(
         name="실패후보",
         primary_category=category,
@@ -342,7 +374,7 @@ def test_candidate_detail_shows_error_message_for_failed_resume(auth_client, cat
         is_primary=True,
         version=1,
         processing_status=Resume.ProcessingStatus.FAILED,
-        error_message="Download failed: 404 Not Found",
+        error_message="Text quality: empty",
     )
     candidate.current_resume = resume
     candidate.save(update_fields=["current_resume"])
@@ -351,6 +383,34 @@ def test_candidate_detail_shows_error_message_for_failed_resume(auth_client, cat
     body = resp.content.decode()
 
     assert resp.status_code == 200
-    assert "데이터 추출 실패" in body
-    assert "Download failed: 404 Not Found" in body
-    assert "fail_ui_001" in body  # Drive link present
+    assert "구조화 데이터 확인 필요" not in body
+    assert "Text quality: empty" not in body
+
+
+@pytest.mark.django_db
+def test_candidate_detail_hides_stale_error_for_structured_resume(auth_client, category):
+    candidate = Candidate.objects.create(
+        name="성공후보",
+        primary_category=category,
+        validation_status=Candidate.ValidationStatus.AUTO_CONFIRMED,
+    )
+    candidate.categories.add(category)
+    resume = Resume.objects.create(
+        candidate=candidate,
+        file_name="success.doc",
+        drive_file_id="success_ui_001",
+        drive_folder="Accounting",
+        is_primary=True,
+        version=1,
+        processing_status=Resume.ProcessingStatus.STRUCTURED,
+        error_message="Text quality: empty",
+    )
+    candidate.current_resume = resume
+    candidate.save(update_fields=["current_resume"])
+
+    resp = auth_client.get(f"/candidates/{candidate.pk}/")
+    body = resp.content.decode()
+
+    assert resp.status_code == 200
+    assert "구조화 데이터 확인 필요" not in body
+    assert "Text quality: empty" not in body

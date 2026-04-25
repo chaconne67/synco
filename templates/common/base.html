@@ -64,14 +64,20 @@
           </div>
           <a href="{% url 'settings' %}" hx-get="{% url 'settings' %}" hx-target="#main-content" hx-push-url="true"
              class="flex items-center gap-3 pl-4 group"
-             title="{{ request.user.first_name|default:request.user.username }}">
+             title="{{ request.user.display_name }}">
             <div class="text-right hidden md:block">
-              <p class="text-sm font-bold text-slate-900 leading-tight">{{ request.user.first_name|default:request.user.username }}</p>
+              <p class="text-sm font-bold text-slate-900 leading-tight">{{ request.user.display_name }}</p>
               <p class="text-xs font-bold text-faint uppercase tracking-widest leading-tight mt-0.5">{% if request.user.level == 2 %}ceo{% elif request.user.level == 1 %}manager{% else %}pending{% endif %}</p>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-ink3 to-ink2 text-white text-sm font-bold flex items-center justify-center border-2 border-slate-100 group-hover:border-ink3/30 transition-colors">
-              {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
-            </div>
+            {% if request.user.avatar %}
+              <img src="{{ request.user.avatar.url }}"
+                   alt="{{ request.user.display_name }}"
+                   class="w-10 h-10 rounded-lg object-cover border-2 border-slate-100 group-hover:border-ink3/30 transition-colors">
+            {% else %}
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-ink3 to-ink2 text-white text-sm font-bold flex items-center justify-center border-2 border-slate-100 group-hover:border-ink3/30 transition-colors">
+                {{ request.user.display_initial }}
+              </div>
+            {% endif %}
           </a>
         </div>
       </header>

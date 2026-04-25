@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, mock_open, patch
+from pathlib import Path
 
 import pytest
 
@@ -64,7 +65,10 @@ class TestGetCredentials:
         mock_creds.valid = True
         mock_from_info.return_value = mock_creds
 
-        with patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)):
+        with (
+            patch("data_extraction.services.drive.SERVICE_ACCOUNT_PATH", Path("/missing")),
+            patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)),
+        ):
             result = _get_credentials()
         assert result == mock_creds
         mock_save.assert_not_called()
@@ -78,7 +82,10 @@ class TestGetCredentials:
         mock_creds.refresh_token = "refresh-token"
         mock_from_info.return_value = mock_creds
 
-        with patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)):
+        with (
+            patch("data_extraction.services.drive.SERVICE_ACCOUNT_PATH", Path("/missing")),
+            patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)),
+        ):
             result = _get_credentials()
         mock_creds.refresh.assert_called_once()
         mock_save.assert_called_once_with(mock_creds)
@@ -92,7 +99,10 @@ class TestGetCredentials:
         mock_creds.refresh_token = None
         mock_from_info.return_value = mock_creds
 
-        with patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)):
+        with (
+            patch("data_extraction.services.drive.SERVICE_ACCOUNT_PATH", Path("/missing")),
+            patch("builtins.open", mock_open(read_data=_FAKE_TOKEN_JSON)),
+        ):
             with pytest.raises(RuntimeError, match="Invalid Google credentials"):
                 _get_credentials()
 
