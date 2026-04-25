@@ -16,8 +16,9 @@ from data_extraction.services.extraction.prompts import (
 )
 
 _KO_PRIORITY = (
-    "\n7. 이름(name)은 반드시 한국어로 반환하세요. 영문 이름은 name_en에만 넣으세요."
-    "\n8. 회사명, 학교명 등 한국어 원본이 있으면 한국어를 우선 사용하세요."
+    "\n\n## 한국어 우선 규칙 (위 1~10번 규칙에 추가):"
+    "\n- 이름(name)은 반드시 한국어로 반환하세요. 영문 이름은 name_en에만 넣으세요."
+    "\n- 회사명, 학교명 등 한국어 원본이 있으면 한국어를 우선 사용하세요."
 )
 OPENAI_SYSTEM_PROMPT = EXTRACTION_SYSTEM_PROMPT + _KO_PRIORITY
 

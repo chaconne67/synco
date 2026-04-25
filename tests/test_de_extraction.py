@@ -339,6 +339,54 @@ class TestNormalizeSkills:
         assert result["language_skills"] == []
 
 
+class TestCarryForwardEducationStatus:
+    """학력 status는 위조 단서이므로 Step 2가 떨어뜨려도 Step 1 raw에서 복원되어야 한다."""
+
+    def test_status_carried_forward_when_step2_drops_it(self):
+        from data_extraction.services.extraction.integrity import (
+            _carry_forward_education_fields,
+        )
+
+        normalized = [
+            {"institution": "서울대", "degree": "학사", "end_year": 2014, "status": ""}
+        ]
+        raw = [
+            {
+                "institution": "서울대",
+                "degree": "학사",
+                "end_year": 2014,
+                "status": "중퇴",
+                "gpa": "3.8/4.5",
+            }
+        ]
+        _carry_forward_education_fields(normalized, raw)
+        assert normalized[0]["status"] == "중퇴"
+        assert normalized[0]["gpa"] == "3.8/4.5"
+
+    def test_status_not_overwritten_when_step2_provides_it(self):
+        from data_extraction.services.extraction.integrity import (
+            _carry_forward_education_fields,
+        )
+
+        normalized = [
+            {
+                "institution": "서울대",
+                "end_year": 2014,
+                "status": "졸업",
+            }
+        ]
+        raw = [
+            {
+                "institution": "서울대",
+                "end_year": 2014,
+                "status": "수료",
+            }
+        ]
+        _carry_forward_education_fields(normalized, raw)
+        # Step 2 명시값이 우선 — Step 2가 의도적으로 normalize한 결과를 신뢰
+        assert normalized[0]["status"] == "졸업"
+
+
 # ===========================================================================
 # Step 3a: Period overlap tests
 # ===========================================================================

@@ -246,7 +246,33 @@ class TestCandidate:
 
         assert candidate.computed_total_experience_months is None
         assert candidate.total_experience_display == "11년"
-        assert candidate.ignored_career_count == 1
+
+    @pytest.mark.django_db
+    def test_extracted_experience_display_renders_year_and_month_for_fractional(self):
+        """11.5년이 11년 6개월로 표시되어야 한다 (FloatField + _format_duration_months)."""
+        candidate = Candidate.objects.create(
+            name="실수경력", total_experience_years=11.5
+        )
+        assert candidate.extracted_total_experience_months == 138
+        assert candidate.extracted_total_experience_display == "11년 6개월"
+
+    @pytest.mark.django_db
+    def test_extracted_experience_display_handles_sub_year_fraction(self):
+        """0.5년이 6개월로 표시되어야 한다."""
+        candidate = Candidate.objects.create(
+            name="6개월경력", total_experience_years=0.5
+        )
+        assert candidate.extracted_total_experience_months == 6
+        assert candidate.extracted_total_experience_display == "6개월"
+
+    @pytest.mark.django_db
+    def test_extracted_experience_display_handles_quarter_year(self):
+        """1.25년 (1년 3개월)도 정확히 표시되어야 한다."""
+        candidate = Candidate.objects.create(
+            name="1년3개월", total_experience_years=1.25
+        )
+        assert candidate.extracted_total_experience_months == 15
+        assert candidate.extracted_total_experience_display == "1년 3개월"
 
     @pytest.mark.django_db
     def test_total_experience_uses_duration_hint_from_raw_text(self):

@@ -133,6 +133,10 @@ def save_pipeline_result(
         },
         "issues": diagnosis.get("issues", []),
     }
+    quality_routing = pipeline_result.get("quality_routing") or extracted.get(
+        "quality_routing",
+        {},
+    )
 
     other_files = other_files or []
     existing_ids = existing_ids or set()
@@ -206,6 +210,7 @@ def save_pipeline_result(
             metadata={
                 "attempts": pipeline_result.get("attempts", 1),
                 "retry_action": pipeline_result.get("retry_action", "none"),
+                "quality_routing": quality_routing,
             },
         )
 
@@ -383,6 +388,7 @@ def save_placeholder_candidate(
     error_msg: str,
     raw_text: str = "",
     filename_meta: dict | None = None,
+    routing: dict | None = None,
 ) -> Candidate | None:
     """Create a review Candidate only when extracted text exists.
 
@@ -425,6 +431,7 @@ def save_placeholder_candidate(
             resume,
             status=state_status,
             error=error_msg,
+            metadata={"quality_routing": routing} if routing else None,
         )
 
         if processing_status == Resume.ProcessingStatus.FAILED:
@@ -463,12 +470,16 @@ def save_failed_resume(
     *,
     filename_meta: dict | None = None,
 ) -> Candidate | None:
+    from data_extraction.services.extraction.routing import route_error
+
+    routing = route_error(error_msg, has_raw_text=False)
     return save_placeholder_candidate(
         file_info,
         folder_name,
         processing_status=Resume.ProcessingStatus.FAILED,
         error_msg=error_msg,
         filename_meta=filename_meta,
+        routing=routing,
     )
 
 
@@ -480,6 +491,9 @@ def save_text_only_resume(
     error_msg: str,
     filename_meta: dict | None = None,
 ) -> Candidate | None:
+    from data_extraction.services.extraction.routing import route_error
+
+    routing = route_error(error_msg, has_raw_text=bool(raw_text.strip()))
     return save_placeholder_candidate(
         file_info,
         folder_name,
@@ -487,6 +501,7 @@ def save_text_only_resume(
         error_msg=error_msg,
         raw_text=raw_text,
         filename_meta=filename_meta,
+        routing=routing,
     )
 
 
@@ -713,6 +728,7 @@ def _create_educations(candidate: Candidate, educations: list[dict]):
             start_year=edu.get("start_year"),
             end_year=edu.get("end_year"),
             is_abroad=edu.get("is_abroad", False),
+            status=_t(edu.get("status"), 50),
         )
 
 

@@ -16,7 +16,10 @@ def build_embedding_text(candidate: Candidate) -> str:
         )
 
     if candidate.total_experience_years:
-        parts.append(f"경력 {candidate.total_experience_years}년")
+        display = candidate.extracted_total_experience_display or (
+            f"{candidate.total_experience_years}년"
+        )
+        parts.append(f"경력 {display}")
 
     if candidate.summary:
         parts.append(candidate.summary)

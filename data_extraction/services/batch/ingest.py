@@ -10,9 +10,9 @@ from django.db import transaction
 from data_extraction.models import GeminiBatchItem, GeminiBatchJob
 from data_extraction.services.batch.request_builder import extract_text_response
 from candidates.models import Category, Resume
-from data_extraction.services.filters import apply_regex_field_filters
+from data_extraction.services.extraction.routing import route_error
+from data_extraction.services.pipeline import build_legacy_pipeline_result
 from data_extraction.services.save import save_pipeline_result
-from data_extraction.services.validation import validate_extraction
 
 
 def ingest_job_results(job: GeminiBatchJob, *, workers: int = 1) -> dict:
@@ -104,8 +104,18 @@ def _handle_result_payload(
         if parsed.get("error"):
             item.status = GeminiBatchItem.Status.FAILED
             item.error_message = json.dumps(parsed["error"], ensure_ascii=False)
+            item.metadata = {
+                **(item.metadata or {}),
+                "quality_routing": route_error(item.error_message, has_raw_text=False),
+            }
             item.save(
-                update_fields=["response_json", "status", "error_message", "updated_at"]
+                update_fields=[
+                    "response_json",
+                    "status",
+                    "error_message",
+                    "metadata",
+                    "updated_at",
+                ]
             )
             _save_placeholder_for_item(item, item.error_message)
             return "failed"
@@ -114,8 +124,18 @@ def _handle_result_payload(
         if not response_text:
             item.status = GeminiBatchItem.Status.FAILED
             item.error_message = "Missing text response in batch output"
+            item.metadata = {
+                **(item.metadata or {}),
+                "quality_routing": route_error(item.error_message, has_raw_text=True),
+            }
             item.save(
-                update_fields=["response_json", "status", "error_message", "updated_at"]
+                update_fields=[
+                    "response_json",
+                    "status",
+                    "error_message",
+                    "metadata",
+                    "updated_at",
+                ]
             )
             _save_placeholder_for_item(item, item.error_message)
             return "failed"
@@ -130,28 +150,20 @@ def _handle_result_payload(
 
 def _ingest_item_response(item: GeminiBatchItem, response_text: str):
     extracted = _load_extracted_json(response_text)
-    if not extracted:
+    if not isinstance(extracted, dict) or "name" not in extracted:
         item.status = GeminiBatchItem.Status.FAILED
         item.error_message = "Failed to parse JSON extraction output"
-        item.save(update_fields=["status", "error_message", "updated_at"])
+        item.metadata = {
+            **(item.metadata or {}),
+            "quality_routing": route_error(item.error_message, has_raw_text=True),
+        }
+        item.save(update_fields=["status", "error_message", "metadata", "updated_at"])
         _save_placeholder_for_item(
             item,
             item.error_message,
             include_raw_text=True,
         )
         return None
-    extracted = apply_regex_field_filters(extracted)
-
-    rule_result = validate_extraction(extracted, item.filename_meta or {})
-    diagnosis = {
-        "verdict": "pass"
-        if rule_result["validation_status"] == "auto_confirmed"
-        else "fail",
-        "issues": rule_result["issues"],
-        "field_scores": rule_result["field_confidences"],
-        "overall_score": rule_result["confidence_score"],
-    }
-    retry_action = "none" if diagnosis["verdict"] == "pass" else "human_review"
     raw_text = Path(item.raw_text_path).read_text(encoding="utf-8")
     category, _ = Category.objects.get_or_create(
         name=item.category_name,
@@ -169,14 +181,11 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
         )
     )
 
-    pipeline_result = {
-        "extracted": extracted,
-        "diagnosis": diagnosis,
-        "attempts": 1,
-        "retry_action": retry_action,
-        "raw_text_used": raw_text,
-        "integrity_flags": [],
-    }
+    pipeline_result = build_legacy_pipeline_result(
+        extracted,
+        raw_text=raw_text,
+        filename_meta=item.filename_meta,
+    )
 
     with transaction.atomic():
         candidate = save_pipeline_result(
@@ -186,6 +195,7 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
             primary_file=item.primary_file,
             other_files=item.other_files or [],
             existing_ids=existing_ids,
+            filename_meta=item.filename_meta,
         )
         if not candidate:
             item.status = GeminiBatchItem.Status.FAILED
@@ -199,12 +209,17 @@ def _ingest_item_response(item: GeminiBatchItem, response_text: str):
             **(item.response_json or {}),
             "parsed_extracted": extracted,
         }
+        item.metadata = {
+            **(item.metadata or {}),
+            "quality_routing": pipeline_result.get("quality_routing", {}),
+        }
         item.error_message = ""
         item.save(
             update_fields=[
                 "status",
                 "candidate",
                 "response_json",
+                "metadata",
                 "error_message",
                 "updated_at",
             ]

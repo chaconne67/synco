@@ -7,7 +7,7 @@
 
   <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-2">
     <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">양식</span> <span class="text-slate-900 font-semibold ml-2">{{ submission.get_template_display|default:"미선택" }}</span></p>
-    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">경력</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.total_experience_years|default:"–" }}년</span></p>
+    <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">경력</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.total_experience_display|default:"–" }}</span></p>
     <p class="text-xs"><span class="text-xs font-bold uppercase tracking-widest text-faint">현재</span> <span class="text-slate-900 font-semibold ml-2">{{ candidate.current_company|default:"–" }} {{ candidate.current_position|default:"" }}</span></p>
   </div>
 

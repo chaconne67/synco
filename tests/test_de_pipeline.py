@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from data_extraction.services.pipeline import (
+    _build_integrity_diagnosis,
     apply_cross_version_comparison,
     run_extraction_with_retry,
 )
@@ -141,3 +142,20 @@ def test_apply_cross_version_comparison_updates_flags_and_score():
     assert len(updated["integrity_flags"]) == 1
     assert updated["integrity_flags"][0]["type"] == "CAREER_DELETED"
     assert updated["diagnosis"]["overall_score"] < 1.0
+
+
+def test_integrity_diagnosis_fails_when_profile_core_fields_missing():
+    diagnosis = _build_integrity_diagnosis(
+        [],
+        {
+            "name": 1.0,
+            "careers": 0.0,
+            "educations": 0.0,
+            "email": 1.0,
+            "phone": 1.0,
+        },
+    )
+
+    assert diagnosis["verdict"] == "fail"
+    assert diagnosis["overall_score"] <= 0.5
+    assert any("경력과 학력" in issue["message"] for issue in diagnosis["issues"])

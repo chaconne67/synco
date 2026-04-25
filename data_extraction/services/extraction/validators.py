@@ -237,3 +237,52 @@ def validate_step2(
                 )
 
     return issues
+
+
+# ---------------------------------------------------------------------------
+# Shared helper — convert validator issues into integrity flags.
+# Used by both realtime (extraction.integrity) and batch (batch.integrity_chain)
+# so the same validate_step1 / validate_step2 results surface as flags in
+# both modes. Without this, realtime would silently drop validation issues
+# whenever a retry didn't fully resolve them, and batch would fall behind on
+# any future validators that add new severity levels.
+# ---------------------------------------------------------------------------
+
+
+def validation_issues_to_flags(
+    issues: list[dict],
+    *,
+    stage: str,
+    default_severity: str = "YELLOW",
+) -> list[dict]:
+    """Translate validator issues to integrity_flags.
+
+    severity mapping:
+        - "error"   -> "RED"
+        - "warning" -> "YELLOW"
+        - "info"    -> filtered out
+        - other     -> default_severity
+    """
+    flags: list[dict] = []
+    for issue in issues:
+        severity = issue.get("severity")
+        if severity == "info":
+            continue
+        if severity == "error":
+            flag_severity = "RED"
+        elif severity == "warning":
+            flag_severity = "YELLOW"
+        else:
+            flag_severity = default_severity
+        flags.append(
+            {
+                "type": f"{stage.upper()}_VALIDATION",
+                "severity": flag_severity,
+                "field": "raw_extraction" if stage == "step1" else "careers",
+                "detail": issue.get("message", ""),
+                "chosen": None,
+                "alternative": None,
+                "reasoning": "리얼 모드와 같은 integrity 검증 기준에서 감지된 품질 이슈",
+            }
+        )
+    return flags

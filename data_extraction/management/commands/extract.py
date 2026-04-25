@@ -180,10 +180,21 @@ class Command(BaseCommand):
         status = options.get("status")
         birth_year_filter = options.get("birth_year_filter")
         birth_year = options.get("birth_year")
+        provider = options.get("provider", "gemini")
 
         # --status doesn't require --drive
         if status:
             return
+
+        # Batch mode runs through the Gemini Batch API; OpenAI has no equivalent
+        # endpoint here. Reject the combination loudly instead of silently
+        # falling back to Gemini and producing results inconsistent with what
+        # `--provider openai` produces in realtime.
+        if batch and provider != "gemini":
+            raise CommandError(
+                "--provider 'openai' is not supported with --batch (Gemini Batch API only). "
+                "Use realtime mode or run with --provider gemini."
+            )
 
         if birth_year_filter and birth_year is None:
             raise CommandError("--birth-year is required with --birth-year-filter")
@@ -412,12 +423,9 @@ class Command(BaseCommand):
                 primary_id = g["primary"]["file_id"]
                 is_existing = primary_id in existing_ids
                 is_retryable_failed = (
-                    (
-                        getattr(self, "retry_failed", False)
-                        or getattr(self, "failed_only", False)
-                    )
-                    and resume_statuses.get(primary_id) == Resume.ProcessingStatus.FAILED
-                )
+                    getattr(self, "retry_failed", False)
+                    or getattr(self, "failed_only", False)
+                ) and resume_statuses.get(primary_id) == Resume.ProcessingStatus.FAILED
                 if getattr(self, "failed_only", False) and not is_retryable_failed:
                     if is_existing:
                         total_skipped += 1
@@ -606,9 +614,7 @@ class Command(BaseCommand):
                             status=ResumeExtractionState.Status.SKIPPED,
                             error=f"Birth year filter: {birth_filter.reason}",
                             provider=self.provider,
-                            pipeline=(
-                                "integrity" if self.use_integrity else "legacy"
-                            ),
+                            pipeline=("integrity" if self.use_integrity else "legacy"),
                             metadata={
                                 "birth_year_filter": {
                                     "cutoff_year": birth_filter.cutoff_year,
@@ -1003,17 +1009,20 @@ class Command(BaseCommand):
         self._batch_ingest(options)
 
         if options.get("integrity"):
-            step2_job = self._batch_next({"job_id": job.id})
-            if step2_job is None:
-                self.stdout.write(self.style.SUCCESS("\nFull batch pipeline complete."))
-                return
-            options["job_id"] = step2_job.id
-            step2_job = self._batch_submit(options)
-            step2_job = self._poll_until_batch_complete(options)
-            if step2_job is None:
-                return
-            self._batch_ingest(options)
-            self._batch_next({"job_id": step2_job.id})
+            current_job = job
+            while True:
+                next_job = self._batch_next({"job_id": current_job.id})
+                if next_job is None:
+                    self.stdout.write(
+                        self.style.SUCCESS("\nFull batch pipeline complete.")
+                    )
+                    return
+                options["job_id"] = next_job.id
+                current_job = self._batch_submit(options)
+                current_job = self._poll_until_batch_complete(options)
+                if current_job is None:
+                    return
+                self._batch_ingest(options)
 
         self.stdout.write(self.style.SUCCESS("\nFull batch pipeline complete."))
 

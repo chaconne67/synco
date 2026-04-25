@@ -31,6 +31,7 @@ from data_extraction.services.extraction.prompts import (
 from data_extraction.services.extraction.validators import (
     validate_step1,
     validate_step2,
+    validation_issues_to_flags,
 )
 from data_extraction.services.filters import apply_regex_field_filters
 
@@ -42,13 +43,11 @@ GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 # ===========================================================================
 # Matching utilities (shared with backfill commands)
 # ===========================================================================
-
-_COMPANY_NOISE = re.compile(r"\(주\)|㈜|주식회사|\s+")
-
-
-def _normalize_company(name: str) -> str:
-    """Normalize company name for matching."""
-    return _COMPANY_NOISE.sub("", name).strip().lower()
+# NOTE: `_normalize_company` is defined further down (Step 3c section) since
+# both layers (carry-forward + cross-version comparison) need consistent
+# company-name normalization. Keeping a single definition prevents the
+# silent shadowing bug where two competing definitions yielded different
+# match keys for the same input.
 
 
 def _normalize_date_to_ym(date_str: str) -> str | None:
@@ -82,6 +81,12 @@ _CAREER_CARRY_FIELDS = [
     "salary",
     "duration_text",
     "company_en",
+    # Step 2 LLM이 통합 과정에서 떨어뜨릴 수 있는 핵심 식별·내용 필드 안전망.
+    # CAREER_SYSTEM_PROMPT의 "필드 보존 원칙"과 정렬되어 있어, LLM이 잘 따르면
+    # 무영향이고 떨어뜨리면 코드가 raw에서 복원한다.
+    "position",
+    "department",
+    "duties",
 ]
 
 
@@ -116,11 +121,17 @@ def _carry_forward_career_fields(
                 career[field] = best[field]
 
 
+_EDUCATION_CARRY_FIELDS = ["gpa", "status"]
+
+
 def _carry_forward_education_fields(
     normalized: list[dict],
     raw_educations: list[dict],
 ) -> None:
-    """Restore gpa from Step 1 if Step 2 dropped it."""
+    """Restore gpa/status from Step 1 if Step 2 dropped them.
+
+    status는 위조 단서(중퇴/수료/편입)이므로 정규화 단계에서 떨어지면 안 됩니다.
+    """
     raw_index: dict[tuple[str, int | None], dict] = {}
     for raw in raw_educations:
         key = (
@@ -136,8 +147,11 @@ def _carry_forward_education_fields(
             edu.get("end_year"),
         )
         raw = raw_index.get(key)
-        if raw and not edu.get("gpa") and raw.get("gpa"):
-            edu["gpa"] = raw["gpa"]
+        if not raw:
+            continue
+        for field in _EDUCATION_CARRY_FIELDS:
+            if not edu.get(field) and raw.get(field):
+                edu[field] = raw[field]
 
 
 # ===========================================================================
@@ -251,9 +265,15 @@ def normalize_career_group(
     if feedback:
         feedback_block = f"\n## 피드백\n{feedback}\n"
 
+    count_note = (
+        "입력 항목이 0개이면 careers는 빈 배열, flags도 빈 배열로 반환하세요."
+        if len(entries) == 0
+        else f"입력 항목은 총 {len(entries)}개입니다."
+    )
     prompt = (
-        f"아래 {len(entries)}개 경력 항목을 정규화하세요. "
-        f"같은 회사의 중복 항목은 하나로 통합하세요.{feedback_block}\n\n"
+        "아래 Step 1 경력 항목들에 대해 시스템 지시(통합·날짜 정규화·"
+        "종료일 추정·필드 보존·flag 작성)를 모두 수행하여 결과를 반환하세요.\n"
+        f"{count_note}{feedback_block}\n\n"
         f"## 출력 스키마\n```\n{CAREER_OUTPUT_SCHEMA}\n```\n\n"
         f"## 입력 항목\n```json\n{entries_json}\n```\n\n"
         "JSON만 출력하세요."
@@ -286,9 +306,15 @@ def normalize_education_group(
     if feedback:
         feedback_block = f"\n## 피드백\n{feedback}\n"
 
+    count_note = (
+        "입력 항목이 0개이면 educations는 빈 배열, flags도 빈 배열로 반환하세요."
+        if len(entries) == 0
+        else f"입력 항목은 총 {len(entries)}개입니다."
+    )
     prompt = (
-        f"아래 {len(entries)}개 학력 항목을 정규화하고 위조 의심을 탐지하세요."
-        f"{feedback_block}\n\n"
+        "아래 Step 1 학력 항목들에 대해 시스템 지시(통합·status 보존·위조 의심 "
+        "탐지·flag 작성)를 모두 수행하여 결과를 반환하세요.\n"
+        f"{count_note}{feedback_block}\n\n"
         f"## 출력 스키마\n```\n{EDUCATION_OUTPUT_SCHEMA}\n```\n\n"
         f"## 입력 항목\n```json\n{entries_json}\n```\n\n"
         "JSON만 출력하세요."
@@ -1045,7 +1071,13 @@ def compare_versions(current: dict, previous: dict) -> list[dict]:
 
 
 def _is_current_end_date_flag(flag: dict, autocorrected_companies: set[str]) -> bool:
-    """Check if a flag is about is_current/end_date contradiction for an auto-corrected company."""
+    """Check if a flag is about is_current/end_date contradiction for an auto-corrected company.
+
+    Only returns True when the flag both (a) describes the is_current/end_date
+    contradiction we just auto-corrected AND (b) references one of the
+    auto-corrected companies. If we cannot tie the flag to a specific company,
+    we keep it — dropping unrelated flags would silently hide other problems.
+    """
     detail = (flag.get("detail") or "").lower()
     field = (flag.get("field") or "").lower()
 
@@ -1066,9 +1098,10 @@ def _is_current_end_date_flag(flag: dict, autocorrected_companies: set[str]) -> 
         if company in flag_text:
             return True
 
-    # Flag is about is_current but we can't match a specific company — still remove it
-    # since the contradiction has been auto-corrected
-    return True
+    # Flag is about is_current/end_date but doesn't reference any of the
+    # companies we just auto-corrected. Keep it — it likely refers to a
+    # different career we did not touch.
+    return False
 
 
 # ===========================================================================
@@ -1105,7 +1138,10 @@ def run_integrity_pipeline(
         logger.error("Step 1 extraction failed")
         return None
 
-    # Step 1 validation + retry
+    # Step 1 validation + retry. We re-run validation on the post-retry result
+    # so the issues we surface as flags reflect the *final* extraction we keep,
+    # matching how integrity batch records step1_validation_issues from the
+    # latest stage (step1 or step1_retry).
     step1_issues = validate_step1(raw_data, resume_text)
     if any(i["severity"] == "warning" for i in step1_issues):
         feedback = ". ".join(
@@ -1116,6 +1152,7 @@ def run_integrity_pipeline(
         if retry and "name" in retry:
             raw_data = retry
             retries += 1
+            step1_issues = validate_step1(raw_data, resume_text)
 
     careers_raw = raw_data.get("careers", [])
     educations_raw = raw_data.get("educations", [])
@@ -1124,11 +1161,15 @@ def run_integrity_pipeline(
     all_flags: list[dict] = []
     normalized_careers: list[dict] = []
     normalized_educations: list[dict] = []
+    # Final career validation issues reflecting the result we ultimately keep,
+    # so the flags we emit here mirror integrity batch's STEP2_VALIDATION flags.
+    career_validation_issues: list[dict] = []
 
     def _normalize_careers():
+        nonlocal career_validation_issues
         result = normalize_career_group(careers_raw, "전체 경력")
         if result is None:
-            return
+            return None
         # Validate
         issues = validate_step2(result, raw_careers=careers_raw)
         if any(i["severity"] == "error" for i in issues):
@@ -1137,7 +1178,11 @@ def run_integrity_pipeline(
             )
             retry = normalize_career_group(careers_raw, "전체 경력", feedback=feedback)
             if retry:
+                career_validation_issues = validate_step2(
+                    retry, raw_careers=careers_raw
+                )
                 return retry
+        career_validation_issues = issues
         return result
 
     def _normalize_educations():
@@ -1150,6 +1195,20 @@ def run_integrity_pipeline(
 
         career_result = career_future.result()
         edu_result = edu_future.result()
+
+    # Surface validator issues as integrity_flags (parity with integrity batch).
+    # Without this, the realtime path silently drops warnings/errors that the
+    # retry didn't fully resolve, so reviewers wouldn't see them.
+    all_flags.extend(
+        validation_issues_to_flags(
+            step1_issues, stage="step1", default_severity="YELLOW"
+        )
+    )
+    all_flags.extend(
+        validation_issues_to_flags(
+            career_validation_issues, stage="step2", default_severity="RED"
+        )
+    )
 
     if career_result:
         careers_list = career_result.get("careers", [])
@@ -1247,6 +1306,11 @@ def run_integrity_pipeline(
             "pipeline_meta": {
                 "step1_items": len(careers_raw) + len(educations_raw),
                 "retries": retries,
+                # Validator audit trail mirrors integrity batch's pipeline_meta
+                # so downstream tools (review queue, diagnostics) see the same
+                # shape regardless of execution mode.
+                "step1_validation_issues": step1_issues,
+                "step2_career_validation_issues": career_validation_issues,
                 # Carry-forward audit trail: Step 1 raw data preserved here.
                 # NOTE: This is a temporary preservation strategy. Long-term direction
                 # is to restructure raw_extracted_json as {step1, step2, final}.

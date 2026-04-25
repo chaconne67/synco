@@ -239,7 +239,11 @@ class Candidate(BaseModel):
     )
 
     # Professional info
-    total_experience_years = models.SmallIntegerField(null=True, blank=True)
+    total_experience_years = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="총 경력 연수 (실수, 0.5 = 6개월). 표시 시 X년 Y개월로 변환",
+    )
     resume_reference_date = models.CharField(max_length=255, blank=True)
     resume_reference_date_source = models.CharField(
         max_length=30,
@@ -605,13 +609,11 @@ class Candidate(BaseModel):
     def extracted_total_experience_months(self) -> int | None:
         if self.total_experience_years is None:
             return None
-        return self.total_experience_years * 12
+        return int(round(self.total_experience_years * 12))
 
     @property
     def extracted_total_experience_display(self) -> str:
-        if self.total_experience_years is None:
-            return ""
-        return f"{self.total_experience_years}년"
+        return _format_duration_months(self.extracted_total_experience_months)
 
     @property
     def total_experience_display(self) -> str:
@@ -898,6 +900,11 @@ class Education(BaseModel):
     start_year = models.IntegerField(null=True, blank=True)
     end_year = models.IntegerField(null=True, blank=True)
     is_abroad = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="졸업/중퇴/수료/재학중/편입 등 원문 상태",
+    )
 
     class Meta:
         db_table = "educations"

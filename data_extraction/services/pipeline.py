@@ -137,7 +137,7 @@ def _run_integrity_pipeline(
     field_scores, category_scores = compute_field_confidences(result, {})
     result["field_confidences"] = field_scores
 
-    return {
+    pipeline_result = {
         "extracted": result,
         "diagnosis": _build_integrity_diagnosis(flags, field_scores),
         "attempts": 1 + retries,
@@ -147,6 +147,7 @@ def _run_integrity_pipeline(
         "raw_text_used": raw_text,
         "integrity_flags": flags,
     }
+    return attach_quality_routing(pipeline_result)
 
 
 def _run_legacy_pipeline(
@@ -162,7 +163,6 @@ def _run_legacy_pipeline(
         raw_text,
         file_reference_date=file_reference_date,
     )
-    extracted = apply_regex_field_filters(extracted)
     if not extracted:
         logger.warning("LLM extraction returned None")
         return {
@@ -179,7 +179,23 @@ def _run_legacy_pipeline(
             "integrity_flags": [],
         }
 
-    rule_result = validate_extraction(extracted, filename_meta)
+    return build_legacy_pipeline_result(
+        extracted,
+        raw_text=raw_text,
+        filename_meta=filename_meta,
+    )
+
+
+def build_legacy_pipeline_result(
+    extracted: dict,
+    *,
+    raw_text: str,
+    filename_meta: dict | None = None,
+    attempts: int = 1,
+) -> dict:
+    """Build the shared legacy pipeline result for realtime and batch modes."""
+    extracted = apply_regex_field_filters(extracted)
+    rule_result = validate_extraction(extracted, filename_meta or {})
     diagnosis = {
         "verdict": "pass"
         if rule_result["validation_status"] == "auto_confirmed"
@@ -191,14 +207,15 @@ def _run_legacy_pipeline(
 
     retry_action = "none" if diagnosis["verdict"] == "pass" else "human_review"
 
-    return {
+    pipeline_result = {
         "extracted": extracted,
         "diagnosis": diagnosis,
-        "attempts": 1,
+        "attempts": attempts,
         "retry_action": retry_action,
         "raw_text_used": raw_text,
         "integrity_flags": [],
     }
+    return attach_quality_routing(pipeline_result)
 
 
 def apply_cross_version_comparison(
@@ -248,6 +265,20 @@ def apply_cross_version_comparison(
         if any(f.get("severity") == "RED" for f in combined_flags)
         else "none"
     )
+    return attach_quality_routing(pipeline_result)
+
+
+def attach_quality_routing(pipeline_result: dict) -> dict:
+    """Attach next-action routing used by batch and review queues."""
+    if not pipeline_result.get("extracted"):
+        return pipeline_result
+
+    from data_extraction.services.extraction.routing import route_pipeline_result
+
+    routing = route_pipeline_result(pipeline_result)
+    pipeline_result["quality_routing"] = routing
+    extracted = pipeline_result.get("extracted") or {}
+    extracted["quality_routing"] = routing
     return pipeline_result
 
 
@@ -257,20 +288,43 @@ def _build_integrity_diagnosis(flags: list[dict], field_scores: dict) -> dict:
     red_count = sum(1 for f in flags if f.get("severity") == "RED")
     yellow_count = sum(1 for f in flags if f.get("severity") == "YELLOW")
     score = max(0.0, 1.0 - (red_count * 0.25) - (yellow_count * 0.1))
+    issues = [{"severity": f["severity"], "message": f["detail"]} for f in flags]
+
+    if field_scores.get("name", 0.0) == 0.0:
+        score = min(score, 0.5)
+        issues.append(
+            {
+                "severity": "RED",
+                "message": "핵심 필드 name이 누락되어 자동 통과할 수 없음",
+            }
+        )
+
+    if (
+        field_scores.get("careers", 0.0) == 0.0
+        and field_scores.get("educations", 0.0) == 0.0
+    ):
+        score = min(score, 0.5)
+        issues.append(
+            {
+                "severity": "RED",
+                "message": "경력과 학력 정보가 모두 누락되어 자동 통과할 수 없음",
+            }
+        )
 
     # Apply critical field gates via compute_overall_confidence
     _, gated_status = compute_overall_confidence({"_": score}, [], field_scores)
 
-    if gated_status == "failed":
+    if gated_status == "failed" or any(i.get("severity") == "RED" for i in issues):
         verdict = "fail"
     elif red_count:
         verdict = "fail"
     else:
         verdict = "pass"
 
-    return {
+    pipeline_result = {
         "verdict": verdict,
-        "issues": [{"severity": f["severity"], "message": f["detail"]} for f in flags],
+        "issues": issues,
         "field_scores": field_scores,
         "overall_score": round(score, 3),
     }
+    return pipeline_result

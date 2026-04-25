@@ -273,6 +273,57 @@ class TestSaveUpdateExisting:
         )
         assert Career.objects.filter(candidate=c2).count() == 2
 
+    def test_education_status_persisted_from_extracted(self, category):
+        """이력서의 학력 상태(졸업/중퇴/수료/편입)가 Education.status에 저장된다."""
+        from candidates.models import Education
+        from data_extraction.services.save import save_pipeline_result
+
+        result = _make_pipeline_result()
+        result["extracted"]["educations"] = [
+            {
+                "institution": "서울대",
+                "degree": "학사",
+                "major": "컴퓨터",
+                "start_year": 2010,
+                "end_year": 2014,
+                "status": "졸업",
+            },
+            {
+                "institution": "연세대",
+                "degree": "석사",
+                "major": "AI",
+                "start_year": 2014,
+                "end_year": 2015,
+                "status": "수료",
+            },
+        ]
+        candidate = save_pipeline_result(
+            pipeline_result=result,
+            raw_text="이력서 텍스트",
+            category=category,
+            primary_file=_make_primary_file("drive_status"),
+        )
+        statuses = dict(
+            Education.objects.filter(candidate=candidate).values_list(
+                "institution", "status"
+            )
+        )
+        assert statuses == {"서울대": "졸업", "연세대": "수료"}
+
+    def test_education_status_blank_when_missing(self, category):
+        """status가 누락된 경우 빈 문자열로 저장된다 (마이그레이션 default)."""
+        from candidates.models import Education
+        from data_extraction.services.save import save_pipeline_result
+
+        candidate = save_pipeline_result(
+            pipeline_result=_make_pipeline_result(),
+            raw_text="이력서 텍스트",
+            category=category,
+            primary_file=_make_primary_file("drive_no_status"),
+        )
+        edu = Education.objects.get(candidate=candidate)
+        assert edu.status == ""
+
     def test_validation_diagnosis_per_resume(self, category):
         from data_extraction.services.save import save_pipeline_result
 

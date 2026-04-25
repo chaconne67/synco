@@ -4,12 +4,15 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from data_extraction.models import GeminiBatchItem, GeminiBatchJob
+from data_extraction.services.extraction.routing import route_error
+from data_extraction.services.state import mark_completed
 from data_extraction.services.batch.integrity_request_builder import (
     build_step1_request_line,
 )
 from data_extraction.services.batch.artifacts import raw_text_path, request_file_path
 from data_extraction.services.batch.request_builder import build_request_line
 from candidates.models import Resume
+from data_extraction.models import ResumeExtractionState
 from data_extraction.services.drive import (
     discover_folders,
     download_file,
@@ -18,6 +21,7 @@ from data_extraction.services.drive import (
 )
 from data_extraction.services.filename import group_by_person
 from data_extraction.services.text import (
+    classify_text_quality,
     extract_text,
     passes_birth_year_filter,
     preprocess_resume_text,
@@ -76,6 +80,11 @@ def prepare_drive_job(
                 "processing_status",
             )
         )
+        retryable_routing_ids = set(
+            ResumeExtractionState.objects.filter(resume__drive_file_id__in=all_ids)
+            .filter(metadata__quality_routing__next_action="retry_batch")
+            .values_list("resume__drive_file_id", flat=True)
+        )
         active_batch_ids = set(
             GeminiBatchItem.objects.filter(drive_file_id__in=all_ids)
             .exclude(status=GeminiBatchItem.Status.FAILED)
@@ -85,9 +94,9 @@ def prepare_drive_job(
         for group in groups:
             primary_id = group["primary"]["file_id"]
             is_existing = primary_id in resume_statuses
-            is_retryable_failed = (
-                (retry_failed or failed_only)
-                and resume_statuses.get(primary_id) == Resume.ProcessingStatus.FAILED
+            is_retryable_failed = (retry_failed or failed_only) and (
+                resume_statuses.get(primary_id) == Resume.ProcessingStatus.FAILED
+                or primary_id in retryable_routing_ids
             )
             is_active_batch = primary_id in active_batch_ids
 
@@ -129,16 +138,19 @@ def prepare_drive_job(
                 payload = future.result()
                 if payload.get("skipped"):
                     skipped_birth_year_filter += 1
+                    _save_birth_filter_skip(payload)
                     continue
                 collected.append(payload)
             except Exception as exc:
                 primary = group["primary"]
+                routing = route_error(str(exc), has_raw_text=False)
                 prepare_failures.append(
                     {
                         "category": current_folder,
                         "file_id": primary["file_id"],
                         "file_name": primary["file_name"],
                         "error": str(exc),
+                        "quality_routing": routing,
                     }
                 )
                 GeminiBatchItem.objects.create(
@@ -152,6 +164,7 @@ def prepare_drive_job(
                     other_files=group["others"],
                     filename_meta=group["parsed"],
                     error_message=str(exc),
+                    metadata={"quality_routing": routing},
                 )
                 # Track the failed file without surfacing it as a Candidate.
                 from data_extraction.services.save import save_failed_resume
@@ -260,8 +273,9 @@ def _prepare_group_payload(
         download_path.close()
         download_file(service, primary["file_id"], download_path.name)
         raw_text = preprocess_resume_text(extract_text(download_path.name))
-        if not raw_text.strip():
-            raise RuntimeError("Empty text extraction")
+        quality = classify_text_quality(raw_text)
+        if quality != "ok":
+            raise RuntimeError(f"Text quality: {quality}")
 
     if birth_year_filter:
         birth_filter = passes_birth_year_filter(
@@ -272,9 +286,22 @@ def _prepare_group_payload(
         if not birth_filter.passed:
             return {
                 "skipped": True,
+                "skip_type": "birth_year_filter",
                 "reason": birth_filter.reason,
                 "request_key": primary["file_id"],
                 "drive_file_id": primary["file_id"],
+                "file_name": primary["file_name"],
+                "category_name": category_name,
+                "primary_file": primary,
+                "filename_meta": group["parsed"],
+                "integrity": integrity,
+                "birth_year_filter": {
+                    "cutoff_year": birth_filter.cutoff_year,
+                    "detected_year": birth_filter.detected_year,
+                    "source": birth_filter.source,
+                    "evidence": birth_filter.evidence,
+                    "reason": birth_filter.reason,
+                },
             }
 
     text_path = raw_text_path(str(job_id), primary["file_id"])
@@ -304,3 +331,33 @@ def _prepare_group_payload(
         "filename_meta": group["parsed"],
         "request_line": request_line,
     }
+
+
+def _save_birth_filter_skip(payload: dict) -> None:
+    primary = payload["primary_file"]
+    resume, _created = Resume.objects.update_or_create(
+        drive_file_id=primary["file_id"],
+        defaults={
+            "file_name": primary["file_name"],
+            "drive_folder": payload["category_name"],
+            "mime_type": primary.get("mime_type", ""),
+            "file_size": primary.get("file_size"),
+            "processing_status": Resume.ProcessingStatus.PENDING,
+            "error_message": f"Birth year filter: {payload['reason']}",
+        },
+    )
+    mark_completed(
+        resume,
+        status=ResumeExtractionState.Status.SKIPPED,
+        error=f"Birth year filter: {payload['reason']}",
+        pipeline="integrity" if payload.get("integrity") else "legacy",
+        metadata={
+            "birth_year_filter": payload["birth_year_filter"],
+            "quality_routing": {
+                "reason_class": "permanent",
+                "next_action": "skip",
+                "review_priority": 0,
+                "reason": "생년 필터 기준 미충족으로 배치 제외",
+            },
+        },
+    )
