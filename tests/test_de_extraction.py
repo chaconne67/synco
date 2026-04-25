@@ -1265,6 +1265,10 @@ class TestEducationChanged:
             ("Korea Maritime and Ocean University", "한국해양대학교"),
             ("이화여자대학교", "Ewha Womans University"),
             ("KAIST", "한국과학기술원"),
+            # 한글 사이 띄어쓰기 차이는 정규화 시 흡수
+            ("청주 대학교", "청주대학교"),
+            ("동국 대학교", "Dongguk University"),
+            ("한양 대학교", "Hanyang University"),
         ],
     )
     def test_institution_alias_treated_same(self, prev_inst, cur_inst):

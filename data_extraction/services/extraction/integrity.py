@@ -945,6 +945,14 @@ for _canonical, _aliases in _INSTITUTION_ALIASES.items():
         _INSTITUTION_REVERSE[_alias.lower()] = _canonical
 
 
+def _strip_korean_spaces(s: str) -> str:
+    """Remove whitespace between Hangul characters only — preserves spaces in
+    English text. "청주 대학교" → "청주대학교" but "Seoul National University"
+    stays "seoul national university" (lowercase).
+    """
+    return re.sub(r"(?<=[가-힣])\s+(?=[가-힣])", "", s)
+
+
 def _normalize_education(edu: dict) -> str:
     """Normalize institution name for comparison.
 
@@ -956,12 +964,13 @@ def _normalize_education(edu: dict) -> str:
     if not raw:
         return ""
     norm = re.sub(r"\s+", " ", raw.lower())
+    norm = _strip_korean_spaces(norm)
     # Strip trailing parenthetical bilingual annotation: "X (Y)" → "X" / "Y"
     no_paren = re.sub(r"\s*\([^)]*\)\s*$", "", norm).strip()
     paren_inner = None
     paren_match = re.search(r"\(([^)]+)\)", norm)
     if paren_match:
-        paren_inner = paren_match.group(1).strip()
+        paren_inner = _strip_korean_spaces(paren_match.group(1).strip())
 
     # Try canonical mapping on each form
     for candidate in (norm, no_paren, paren_inner):
