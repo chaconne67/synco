@@ -236,6 +236,7 @@ def apply_cross_version_comparison(
         {
             "careers": extracted.get("careers", []),
             "educations": extracted.get("educations", []),
+            "career_etc": extracted.get("career_etc", []),
         },
         previous_data,
     )

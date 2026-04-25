@@ -1503,7 +1503,11 @@ def run_integrity_pipeline(
     # 3c: Cross-version comparison
     if previous_data:
         cv_flags = compare_versions(
-            {"careers": normalized_careers, "educations": normalized_educations},
+            {
+                "careers": normalized_careers,
+                "educations": normalized_educations,
+                "career_etc": raw_data.get("career_etc", []),
+            },
             previous_data,
         )
         all_flags.extend(cv_flags)
