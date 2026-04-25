@@ -14,6 +14,28 @@ import re
 # Pre-processing: input text → LLM
 # ===========================================================================
 
+# Microsoft Word field-code expressions. These are instruction text leaked
+# from .doc/.docx that have no semantic value to a resume reader, but waste
+# tokens and can confuse the model into treating them as candidate names.
+# Pattern matches a known field-code keyword followed by its typical argument
+# (quoted path, escape sequence, internal reference) up to end of line.
+_FIELD_CODE = re.compile(
+    r"\b(?:"
+    r"INCLUDEPICTURE|HYPERLINK|MERGEFIELD|MERGEFORMAT|"
+    r"FORMTEXT|FORMCHECKBOX|FORMDROPDOWN|"
+    r"HTMLCONTROL|HTMLDIRECT|EMBED\s+\w+|"
+    r"PAGEREF\s+_\S+|REF\s+_\S+|SEQ\s+\w+|LISTNUM|"
+    r"TOC\s+\\|FILENAME\s+\\|"
+    r"NUMPAGES|SECTIONPAGES|"
+    r"DATE\s+\\@|PRINTDATE|SAVEDATE|CREATEDATE"
+    r")\b[^\n]*",
+    re.IGNORECASE,
+)
+
+# Long hex blobs leaking from embedded objects, image data or document IDs.
+# 40+ hex chars in a row is almost never legitimate resume content.
+_HEX_BLOB = re.compile(r"\b[0-9A-Fa-f]{40,}\b")
+
 
 def sanitize_input_text(text: str) -> str:
     """Clean resume text before sending to LLM.
@@ -32,6 +54,10 @@ def sanitize_input_text(text: str) -> str:
 
     # 3) Null-like patterns in extracted tables
     text = re.sub(r"\x00", "", text)
+
+    # 4) Word field-code expressions and embedded-data blobs
+    text = _FIELD_CODE.sub("", text)
+    text = _HEX_BLOB.sub("", text)
 
     # 5) Excessive whitespace (but preserve single newlines for structure)
     text = re.sub(r"[ \t]+", " ", text)  # multiple spaces/tabs → single space

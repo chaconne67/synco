@@ -73,3 +73,8 @@ logs/ui-compare/
 *.pdf
 !docs/**/*.pdf
 .tts-base-sha
+
+# Extraction pipeline verification artifacts (raw resume text + JSON snapshots,
+# may contain candidate PII — keep local only)
+snapshots/
+logs/extraction-test/

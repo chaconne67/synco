@@ -9,6 +9,7 @@ Combined from:
 - tests/test_integrity_validators.py
 """
 
+import pytest
 from unittest.mock import patch
 
 from data_extraction.services.extraction.prompts import (
@@ -725,6 +726,61 @@ class TestCareerDeleted:
         flags = compare_versions(current, previous)
         assert len(flags) == 0
 
+    def test_korean_to_english_company_match_via_company_en(self):
+        """이전이 한국어, 현재가 영문 + company_en에 한국어가 있으면 같은 회사로."""
+        previous = {
+            "careers": [
+                {
+                    "company": "한국법령정보원",
+                    "start_date": "2020-03",
+                    "end_date": "2021-12",
+                },
+            ],
+            "educations": [],
+        }
+        current = {
+            "careers": [
+                {
+                    "company": "Korea Law Information Service",
+                    "company_en": "Korea Law Information Service",
+                    "start_date": "2020-03",
+                    "end_date": "2021-12",
+                },
+            ],
+            "educations": [],
+        }
+        # 한국어 표기와 영문 표기가 회사 키 교집합 0이지만 시작일 매칭으로 같은 회사로 인식
+        flags = compare_versions(current, previous)
+        assert len(flags) == 0
+
+    def test_company_en_overlap_matches_across_versions(self):
+        """양 버전 모두 company_en을 가지고 있고 영문이 같으면 같은 회사로."""
+        previous = {
+            "careers": [
+                {
+                    "company": "삼성전자",
+                    "company_en": "Samsung Electronics",
+                    "start_date": "2018-03",
+                    "end_date": "2021-06",
+                },
+            ],
+            "educations": [],
+        }
+        current = {
+            "careers": [
+                {
+                    "company": "Samsung Electronics",
+                    "company_en": None,
+                    "start_date": "2018-03",
+                    "end_date": "2021-06",
+                },
+            ],
+            "educations": [],
+        }
+        # 이전의 company_en과 현재의 company가 둘 다 'samsungelectronics' normalize → 매칭
+        flags = compare_versions(current, previous)
+        assert len(flags) == 0
+
 
 class TestCareerPeriodChanged:
     def test_minor_date_change_no_flag(self):
@@ -1111,6 +1167,88 @@ class TestEducationChanged:
         }
         flags = compare_versions(current, previous)
         assert len(flags) == 0
+
+    @pytest.mark.parametrize(
+        "prev_degree,cur_degree",
+        [
+            ("BA, BSC", "학사"),
+            ("학사", "BA, BSC"),
+            ("MA", "석사"),
+            ("MA", "Master"),
+            ("MBA", "석사"),
+            ("BSc", "Bachelor"),
+            ("PhD", "박사"),
+            ("Ph.D.", "박사"),
+            ("Bachelor of Arts", "학사"),
+            ("Master of Engineering", "석사"),
+            ("Diploma", "전문학사"),
+            ("학부", "Bachelor"),
+        ],
+    )
+    def test_degree_abbreviation_treated_same(self, prev_degree, cur_degree):
+        """동일 학위 한국어 표기 ↔ 영문 약어/풀네임은 학위 변경으로 잡지 않는다.
+
+        근본 원인: LLM Step 1이 같은 영문 이력서를 추출할 때 degree 표기가
+        20% 비결정성으로 한글/영문 사이를 오간다 (verify 결과 — 상대현 케이스).
+        _normalize_degree가 이 변형을 모두 같은 토큰으로 매핑해야 cross-version
+        false positive RED를 방지한다.
+        """
+        previous = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": "단국대학교",
+                    "degree": prev_degree,
+                    "start_year": 2007,
+                    "end_year": 2011,
+                },
+            ],
+        }
+        current = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": "단국대학교",
+                    "degree": cur_degree,
+                    "start_year": 2007,
+                    "end_year": 2011,
+                },
+            ],
+        }
+        flags = compare_versions(current, previous)
+        education_changed = [f for f in flags if f["type"] == "EDUCATION_CHANGED"]
+        assert education_changed == [], (
+            f"{prev_degree!r} ↔ {cur_degree!r} 는 같은 학위인데 변경으로 분류됨"
+        )
+
+    def test_real_degree_change_still_detected(self):
+        """약어 매핑 강화 후에도 진짜 학위 변경은 RED로 잡혀야 한다."""
+        previous = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": "서울대학교",
+                    "degree": "Bachelor",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
+            ],
+        }
+        current = {
+            "careers": [],
+            "educations": [
+                {
+                    "institution": "서울대학교",
+                    "degree": "PhD",
+                    "start_year": 2014,
+                    "end_year": 2018,
+                },
+            ],
+        }
+        flags = compare_versions(current, previous)
+        education_changed = [f for f in flags if f["type"] == "EDUCATION_CHANGED"]
+        assert len(education_changed) == 1
+        assert education_changed[0]["severity"] == "RED"
 
 
 class TestCrossVersionComprehensive:

@@ -10,6 +10,7 @@ from django.db import transaction
 from data_extraction.models import GeminiBatchItem, GeminiBatchJob
 from data_extraction.services.batch.request_builder import extract_text_response
 from candidates.models import Category, Resume
+from data_extraction.services.extraction import telemetry
 from data_extraction.services.extraction.routing import route_error
 from data_extraction.services.pipeline import build_legacy_pipeline_result
 from data_extraction.services.save import save_pipeline_result
@@ -91,6 +92,7 @@ def _handle_result_payload(
 ) -> str:
     close_old_connections()
     try:
+        telemetry.add_from_batch_result_line(parsed)
         key = parsed.get("key")
         if not key:
             return "failed"

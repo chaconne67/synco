@@ -55,6 +55,8 @@ def extract_candidate_data(
         file_reference_date=file_reference_date,
     )
 
+    from data_extraction.services.extraction import telemetry
+
     for attempt in range(max_retries):
         try:
             response = client.chat.completions.create(
@@ -67,6 +69,7 @@ def extract_candidate_data(
                 temperature=0.3,
                 response_format={"type": "json_object"},
             )
+            telemetry.add_from_openai_response(response)
 
             result = parse_llm_json(response.choices[0].message.content)
 
@@ -95,6 +98,8 @@ def call_openai(
     system: str, prompt: str, max_completion_tokens: int = 6000
 ) -> dict | None:
     """Generic OpenAI call with JSON response — used by integrity pipeline."""
+    from data_extraction.services.extraction import telemetry
+
     client = _get_openai_client()
     try:
         response = client.chat.completions.create(
@@ -107,6 +112,7 @@ def call_openai(
             temperature=0.2,
             response_format={"type": "json_object"},
         )
+        telemetry.add_from_openai_response(response)
         return parse_llm_json(response.choices[0].message.content)
     except Exception:
         logger.warning("OpenAI call failed", exc_info=True)

@@ -89,6 +89,8 @@ def ingest_integrity_job_results(job: GeminiBatchJob, *, workers: int = 1) -> di
     ingested = 0
     failed = 0
 
+    from data_extraction.services.extraction import telemetry
+
     with result_path.open(encoding="utf-8") as handle:
         for raw_line in handle:
             line = raw_line.strip()
@@ -96,6 +98,7 @@ def ingest_integrity_job_results(job: GeminiBatchJob, *, workers: int = 1) -> di
                 continue
             processed += 1
             parsed = json.loads(line)
+            telemetry.add_from_batch_result_line(parsed)
             item = items_by_key.get(parsed.get("key"))
             if not item:
                 failed += 1

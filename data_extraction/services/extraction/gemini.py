@@ -55,6 +55,8 @@ def extract_candidate_data(
         file_reference_date=file_reference_date,
     )
 
+    from data_extraction.services.extraction import telemetry
+
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
@@ -67,6 +69,7 @@ def extract_candidate_data(
                     response_mime_type="application/json",
                 ),
             )
+            telemetry.add_from_gemini_response(response)
 
             result = parse_llm_json(response.text)
 

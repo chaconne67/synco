@@ -200,13 +200,192 @@ def _extract_doc_libreoffice(file_path: str) -> str:
         return raw.decode("latin-1")
 
 
+# Lines that are nothing but a personal-info form label without a value
+# (e.g. "이름:", "Email:", "주소"). LLM 입력에서 정보 가치 0.
+#
+# IMPORTANT: do NOT include section headers like "학력/Education", "경력/Career",
+# "자격증/Certification", "어학/Language" here — those signal the start of a
+# structured section to both the LLM and the self-intro region detector. If we
+# strip them, _compress_self_intro_region loses its exit cue and ends up
+# eating real Education/Career rows.
+_FORM_LABEL_ONLY = re.compile(
+    r"^\s*(?:이름|성명|name|성별|gender|나이|age|연락처|tel|phone|email|"
+    r"이메일|주소|address|특기|취미|병역|military|"
+    r"본적|현주소|등록기준지)"
+    r"\s*[:：]?\s*$",
+    re.IGNORECASE,
+)
+
+# Korean resume signature line at end of document
+# (e.g. "2024년 3월 22일 / 성명: 홍길동 (인)")
+_SIGNATURE_DATE_LINE = re.compile(
+    r"^\s*\d{4}\s*[년.\-/]\s*\d{1,2}\s*[월.\-/]\s*\d{1,2}\s*일?\s*$"
+)
+_SIGNATURE_NAME_LINE = re.compile(
+    r"\b(?:서명|성명|날인|signature)\s*[:：]?\s*[가-힣A-Za-z\s]{2,15}\s*[\(（]\s*인\s*[\)）]",
+    re.IGNORECASE,
+)
+
+# Self-introduction / cover-letter section headers — content after these
+# headers is mostly free prose with low signal-density for structured fields.
+_SELF_INTRO_HEADER = re.compile(
+    r"자기\s*소개(?:서)?|지원\s*동기|성장\s*과정|입사\s*포부|"
+    r"성격(?:의)?\s*장단점|장단점|"
+    r"personal\s*statement|cover\s*letter|career\s*objective|"
+    r"about\s+me|professional\s+summary",
+    re.IGNORECASE,
+)
+
+# Headers that mark the END of a self-intro region. When we hit one of these,
+# we resume verbatim copying — protects Education/Career/Certificates that
+# follow a free-prose About-Me block.
+_STRUCTURED_SECTION_HEADER = re.compile(
+    r"^\s*(?:"
+    r"학력(?:\s*사항)?|education(?:al\s+background)?|"
+    r"경력(?:\s*사항)?|경력\s*기술서|career(?:\s+history|\s+summary)?|"
+    r"experience|work\s*history|employment(?:\s+history)?|"
+    r"professional\s+experience|employment(?:\s+record)?|"
+    r"자격(?:\s*사항|\s*증)?|certification|license|qualification|certificates?|"
+    r"기술(?:\s*스택)?|skills?|expertise|technical\s+skills?|core\s+competenc(?:y|ies)|"
+    r"어학(?:\s*능력)?|language(?:\s+skills?)?|"
+    r"수상(?:\s*경력)?|awards?|honors?|"
+    r"출판|publications?|논문|"
+    r"프로젝트|projects?|"
+    r"활동|activities|extracurricular|"
+    r"참고|references?|"
+    r"교육(?:\s*이수)?|training|courses?"
+    r")\s*[:：]?\s*$",
+    re.IGNORECASE,
+)
+
+# Lines worth preserving inside the self-intro region: company names,
+# year markers, education institutions. Anything matched here keeps the
+# integrity-comparison signal alive even after compression.
+_COMPANY_OR_YEAR_LINE = re.compile(
+    # 4자리 연도
+    r"(?:19|20)\d{2}|"
+    # 한국식 회사 표기
+    r"㈜|\(주\)|주식회사|"
+    # 영문 회사 접미사
+    r"\b(?:co\.|corp\.|inc\.|llc|gmbh|ltd\.|company|group)\b|"
+    # 한국어 회사·기관 접미사가 붙은 단어
+    r"[가-힣]{2,}(?:전자|화학|중공업|건설|상사|컴퍼니|코리아|은행|증권|카드|보험|"
+    r"제약|병원|연구소|대학교|대학원|대학|학교|회사|호텔|에너지|시스템|텔레콤|"
+    r"커뮤니케이션|엔터테인먼트|네트워크|솔루션|테크|레저|미디어|모터스)",
+    re.IGNORECASE,
+)
+
+
+def _drop_form_label_lines(lines: list[str]) -> list[str]:
+    return [ln for ln in lines if not _FORM_LABEL_ONLY.match(ln)]
+
+
+def _drop_trailing_signature(lines: list[str]) -> list[str]:
+    """Drop signature/date lines that appear in the last 5 lines of the document.
+
+    Restricting to the tail avoids removing legitimate dates from the body
+    (career start dates, certification dates, etc.).
+    """
+    if len(lines) < 2:
+        return lines
+    out = list(lines)
+    tail_window = 5
+    for _ in range(tail_window):
+        if not out:
+            break
+        last = out[-1]
+        if _SIGNATURE_DATE_LINE.match(last) or _SIGNATURE_NAME_LINE.search(last):
+            out.pop()
+            continue
+        break
+    return out
+
+
+def _merge_fragmented_lines(lines: list[str]) -> list[str]:
+    """Merge consecutive very-short lines (table-cell fragmentation).
+
+    Heuristic: if a line is < 5 non-whitespace chars and the next line is also
+    short (< 30 chars), join them with a single space. This recovers semantic
+    units that .doc/.docx extraction split into per-cell rows.
+    """
+    if len(lines) < 2:
+        return lines
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        cur = lines[i]
+        cur_short = len(cur.strip()) < 5
+        if cur_short and i + 1 < len(lines):
+            nxt = lines[i + 1]
+            if len(nxt.strip()) < 30:
+                out.append(f"{cur} {nxt}".strip())
+                i += 2
+                continue
+        out.append(cur)
+        i += 1
+    return out
+
+
+def _compress_self_intro_region(lines: list[str]) -> list[str]:
+    """Compress free-prose self-intro regions while preserving structured sections.
+
+    State machine over lines:
+      - default: copy verbatim. Switch to compressing when a self-intro header
+        appears.
+      - compressing: drop lines unless they mention a company/year (keeps
+        integrity signals). Exit back to verbatim when a structured-section
+        header appears (Education / Career / Skills / etc.) — this prevents
+        accidentally swallowing the structured part of the resume that comes
+        after a short About-Me block.
+    """
+    out: list[str] = []
+    compressing = False
+    skipped = 0
+
+    def flush_skipped():
+        nonlocal skipped
+        if skipped > 0:
+            out.append(f"[자기소개 산문 {skipped}줄 생략]")
+            skipped = 0
+
+    for ln in lines:
+        if compressing:
+            if _STRUCTURED_SECTION_HEADER.match(ln):
+                flush_skipped()
+                compressing = False
+                out.append(ln)
+                continue
+            if _COMPANY_OR_YEAR_LINE.search(ln):
+                flush_skipped()
+                out.append(ln)
+            else:
+                skipped += 1
+            continue
+
+        # not compressing
+        if _SELF_INTRO_HEADER.search(ln):
+            out.append(ln)
+            compressing = True
+            continue
+        out.append(ln)
+
+    flush_skipped()
+    return out
+
+
 def preprocess_resume_text(text: str) -> str:
     """Clean and deduplicate resume text to reduce LLM token usage.
 
-    First applies sanitize_input_text for encoding/control char cleanup,
-    then removes blank lines, compresses whitespace, deduplicates identical
-    and similar lines (70%+ word overlap), and strips noise patterns.
-    Typically reduces text by 25-40%.
+    Pipeline:
+      1) sanitize encoding/control chars + Word field codes
+      2) remove blank lines, compress whitespace
+      3) remove exact-duplicate lines
+      4) remove near-duplicate lines (70% word overlap)
+      5) drop generic noise lines (PC skills only, no company/date)
+      6) drop form-label-only lines
+      7) drop trailing signature/date lines
+      8) merge fragmented short lines (table cell recovery)
+      9) compress self-intro region — keep only company/year lines
     """
     from data_extraction.services.extraction.sanitizers import sanitize_input_text
 
@@ -246,8 +425,6 @@ def preprocess_resume_text(text: str) -> str:
             final.append(line)
 
     # 4) Remove noise patterns (basic PC skills, etc.)
-    # Only remove short lines that are purely noise — skip lines with dates
-    # or company-name suffixes to avoid deleting career history.
     noise = [
         "워드/엑셀",
         "ms-office",
@@ -262,15 +439,19 @@ def preprocess_resume_text(text: str) -> str:
     for line in final:
         lower = line.lower()
         if any(n in lower for n in noise):
-            # Preserve lines that look like career entries
             if date_pattern.search(line) or any(s in lower for s in company_suffixes):
                 cleaned.append(line)
                 continue
-            # Only drop short noise lines (< 40 chars)
             if len(line.strip()) < 40:
                 continue
         cleaned.append(line)
     final = cleaned
+
+    # 5) New conservative passes
+    final = _drop_form_label_lines(final)
+    final = _drop_trailing_signature(final)
+    final = _merge_fragmented_lines(final)
+    final = _compress_self_intro_region(final)
 
     return "\n".join(final)
 
@@ -375,15 +556,38 @@ def extract_birth_year_from_text(text: str, *, today: date | None = None) -> dic
         (
             "text_dob",
             re.compile(
-                r"(?:생년월일|출생(?:년도|연도)?|출생일|birthday|birth|dob|date\s+of\s+birth)"
+                r"(?:생년월일|출생(?:년도|연도)?|출생일|birthday|birth|d\.?o\.?b\.?|"
+                r"date\s+of\s+birth|born)"
                 r"[\s:：\-]*"
                 r"(?P<year>(?:19|20)\d{2})[.\-/년\s]*(?:\d{1,2})?",
                 re.IGNORECASE,
             ),
         ),
         (
+            # "1981년생" 또는 "1981년 1월 9일생" — 한국어 표준 표기
             "text_birth_year",
-            re.compile(r"(?P<year>(?:19|20)\d{2})\s*년\s*생"),
+            re.compile(
+                r"(?P<year>(?:19|20)\d{2})\s*년"
+                r"(?:\s*\d{1,2}\s*월(?:\s*\d{1,2}\s*일)?)?"
+                r"\s*생"
+            ),
+        ),
+        (
+            # "1981.01.09생" / "1981-01-09 생" / "1981/01/09생"
+            "text_date_birth",
+            re.compile(
+                r"(?P<year>(?:19|20)\d{2})[.\-/]\d{1,2}[.\-/]\d{1,2}\s*생"
+            ),
+        ),
+        (
+            # "D.O.B. 01.09.1981" / "DOB: 12/15/1985" — 영문 DMY 형식
+            "text_dob_dmy",
+            re.compile(
+                r"(?:d\.?o\.?b\.?|date\s+of\s+birth|birthday|born)"
+                r"[\s:：\-]*"
+                r"\d{1,2}[.\-/]\d{1,2}[.\-/](?P<year>(?:19|20)\d{2})",
+                re.IGNORECASE,
+            ),
         ),
         (
             "text_short_birth_year",
@@ -437,24 +641,41 @@ def passes_birth_year_filter(
     *,
     enabled: bool = False,
     today: date | None = None,
+    file_name: str | None = None,
 ) -> BirthYearFilterResult:
     """Return whether text passes the pre-LLM birth-year cutoff filter.
 
-    The filter passes resumes whose detected birth year is greater than or equal
-    to the cutoff. A 2-digit value is interpreted as age and converted to a
-    birth-year cutoff using the current year.
+    Lookup order:
+    1. Resume body (regex patterns over preprocessed text).
+    2. Filename (only when text lookup misses) — Korean resume convention
+       often encodes year in filename like "이름.85.회사.학교.docx".
+    3. If both fail, pass conservatively. Dropping a resume on missing data
+       has higher false-negative cost than processing one extra resume.
     """
     if not enabled or filter_value is None:
         return BirthYearFilterResult(passed=True, active=False)
 
     cutoff = normalize_birth_year_filter_value(filter_value, today=today)
     extracted = extract_birth_year_from_text(text, today=today)
+
+    if not extracted and file_name:
+        from data_extraction.services.filename import parse_filename
+
+        parsed = parse_filename(file_name)
+        if parsed.get("birth_year"):
+            extracted = {
+                "birth_year": parsed["birth_year"],
+                "source": "filename",
+                "evidence": file_name[:120],
+            }
+
     if not extracted:
         return BirthYearFilterResult(
-            passed=False,
+            passed=True,
             active=True,
             cutoff_year=cutoff,
-            reason="birth year not found in extracted text",
+            source="not_detected",
+            reason="birth year not found; passed conservatively",
         )
 
     detected = extracted["birth_year"]

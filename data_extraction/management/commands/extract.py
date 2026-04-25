@@ -155,6 +155,15 @@ class Command(BaseCommand):
             default="gemini",
             help="LLM provider for extraction (default: gemini)",
         )
+        parser.add_argument(
+            "--token-usage-output",
+            type=str,
+            default="",
+            help=(
+                "이 명령 실행 동안 누적된 LLM 토큰 사용량을 JSON으로 저장할 경로. "
+                "리얼타임/배치 비용 비교 테스트용."
+            ),
+        )
 
     def handle(self, *args, **options):
         self._validate_options(options)
@@ -162,11 +171,63 @@ class Command(BaseCommand):
         if options.get("status"):
             return self._handle_status(options)
 
-        if options.get("batch"):
-            self._handle_batch(options)
-            return None
+        from data_extraction.services.extraction import telemetry
 
-        return self._handle_realtime(options)
+        token_output = options.get("token_usage_output") or ""
+        if token_output:
+            telemetry.reset()
+        start_time = time.time()
+
+        try:
+            if options.get("batch"):
+                self._handle_batch(options)
+                return None
+            return self._handle_realtime(options)
+        finally:
+            if token_output:
+                self._write_token_usage(token_output, start_time)
+
+    def _write_token_usage(self, output_path: str, start_time: float) -> None:
+        import json
+        from pathlib import Path
+
+        from data_extraction.services.extraction import telemetry
+
+        snap = telemetry.snapshot()
+        elapsed = time.time() - start_time
+        # Gemini 3.1 Flash Lite 추정 단가 (USD/1M tokens, 2026-04 기준).
+        # 정확한 단가는 Google Cloud 공식 페이지에서 갱신.
+        input_per_million_usd = 0.10
+        output_per_million_usd = 0.40
+        usd_to_krw = 1380
+        cost_usd = (
+            snap["input_tokens"] / 1_000_000 * input_per_million_usd
+            + snap["output_tokens"] / 1_000_000 * output_per_million_usd
+        )
+        payload = {
+            "elapsed_seconds": round(elapsed, 2),
+            "input_tokens": snap["input_tokens"],
+            "output_tokens": snap["output_tokens"],
+            "total_tokens": snap["input_tokens"] + snap["output_tokens"],
+            "llm_calls": snap["calls"],
+            "cost_usd_estimate": round(cost_usd, 4),
+            "cost_krw_estimate": round(cost_usd * usd_to_krw, 0),
+            "pricing_note": (
+                f"input ${input_per_million_usd}/M, "
+                f"output ${output_per_million_usd}/M, "
+                f"USD/KRW {usd_to_krw}"
+            ),
+        }
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(output_path).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        self.stdout.write(
+            f"\n[Token usage] {snap['calls']} calls, "
+            f"in={snap['input_tokens']:,}, out={snap['output_tokens']:,}, "
+            f"~${payload['cost_usd_estimate']} (saved to {output_path})"
+        )
 
     # ------------------------------------------------------------------
     # Validation
@@ -605,6 +666,7 @@ class Command(BaseCommand):
                         raw_text,
                         self.birth_year_value,
                         enabled=True,
+                        file_name=primary.get("file_name"),
                     )
                     if not birth_filter.passed:
                         from data_extraction.services.state import mark_completed

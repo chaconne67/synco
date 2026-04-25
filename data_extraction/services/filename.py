@@ -41,12 +41,19 @@ def _strip_extension(file_name: str) -> str:
 
 
 def _split_tokens(stem: str) -> list[str]:
-    """Split a filename stem into tokens, handling dot/hyphen/underscore separators
-    and parenthesized groups like '강솔찬(85)'."""
-    # First, expand parenthesized groups: "강솔찬(85)" → "강솔찬.85"
-    stem = re.sub(r"\(([^)]+)\)", r".\1", stem)
-    # Split on dots, hyphens, underscores
-    tokens = re.split(r"[.\-_]", stem)
+    """Split a filename stem into tokens, handling dot/hyphen/underscore/comma/
+    semicolon/whitespace separators and parenthesized groups like '강솔찬(85)'.
+
+    Whitespace and comma are real-world separators in Korean recruiter
+    filenames (e.g. '김영덕-56 충북대 코카콜라', '강병배(SK)68,한양대,...').
+    Without them, the year token gets buried in a multi-word string and the
+    birth-year heuristic fails.
+    """
+    # First, expand parenthesized groups with separators on both sides:
+    # "강솔찬(85)" → ".강솔찬.85.", "(SK)68" → ".SK.68" (so adjacent digits split off).
+    stem = re.sub(r"\(([^)]+)\)", r".\1.", stem)
+    # Split on dots, hyphens, underscores, commas, semicolons, whitespace
+    tokens = re.split(r"[.\-_,;\s]+", stem)
     return [t for t in tokens if t]
 
 

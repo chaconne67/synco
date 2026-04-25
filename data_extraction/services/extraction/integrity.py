@@ -189,6 +189,7 @@ def _call_llm(system: str, prompt: str, max_tokens: int = 6000) -> dict | None:
         return call_openai(system, prompt, max_tokens)
 
     from data_extraction.services.extraction.sanitizers import parse_llm_json
+    from data_extraction.services.extraction import telemetry
 
     client = _get_client()
     try:
@@ -202,6 +203,7 @@ def _call_llm(system: str, prompt: str, max_tokens: int = 6000) -> dict | None:
                 response_mime_type="application/json",
             ),
         )
+        telemetry.add_from_gemini_response(response)
         return parse_llm_json(response.text)
     except Exception:
         logger.warning("Gemini call failed", exc_info=True)
@@ -806,48 +808,148 @@ def _latest_career_end(careers: list[dict]) -> int | None:
     return latest
 
 
+def _company_keys(career: dict) -> set[str]:
+    """Return all match keys for a career — covers Korean and English variants.
+
+    Includes both `company` and `company_en` (each normalized) so that the
+    same company recorded as `삼성전자` in one version and `Samsung Electronics`
+    in another still matches as a single entity.
+    """
+    keys = set()
+    for k in ("company", "company_en"):
+        v = career.get(k)
+        if v:
+            n = _normalize_company(v)
+            if n:
+                keys.add(n)
+    return keys
+
+
 def _match_careers(
     current: list[dict], previous: list[dict]
 ) -> tuple[list[tuple[dict, dict]], list[dict], list[dict]]:
-    """Match careers between current and previous by normalized company name.
+    """Match careers between current and previous versions.
+
+    Match strategy (in priority order):
+      1. Any normalized company key (company OR company_en) overlap.
+         Handles 한국어 ↔ 영문 표기 variants of the same company.
+      2. start_date YYYY-MM equal.
+         Backup for legitimate cases where a company changed names entirely
+         (merger, rebrand) — same person rarely starts two jobs in the same
+         month.
 
     Returns:
         (matched_pairs, unmatched_current, unmatched_previous)
     """
-    cur_by_name: dict[str, list[dict]] = {}
-    for c in current:
-        key = _normalize_company(c.get("company", ""))
-        cur_by_name.setdefault(key, []).append(c)
-
-    prev_by_name: dict[str, list[dict]] = {}
-    for p in previous:
-        key = _normalize_company(p.get("company", ""))
-        prev_by_name.setdefault(key, []).append(p)
-
     matched = []
+    matched_prev_idx: set[int] = set()
     unmatched_current = []
-    unmatched_previous = []
 
-    all_keys = set(cur_by_name.keys()) | set(prev_by_name.keys())
-    for key in all_keys:
-        cur_list = cur_by_name.get(key, [])
-        prev_list = prev_by_name.get(key, [])
+    for cur in current:
+        cur_keys = _company_keys(cur)
+        cur_start = _parse_ym_to_months(cur.get("start_date"))
+        match_idx = None
 
-        # Pair up by index (simplest approach for same-company entries)
-        for i in range(max(len(cur_list), len(prev_list))):
-            if i < len(cur_list) and i < len(prev_list):
-                matched.append((cur_list[i], prev_list[i]))
-            elif i < len(cur_list):
-                unmatched_current.append(cur_list[i])
-            else:
-                unmatched_previous.append(prev_list[i])
+        # Pass 1 — company key overlap
+        for i, prev in enumerate(previous):
+            if i in matched_prev_idx:
+                continue
+            if cur_keys & _company_keys(prev):
+                match_idx = i
+                break
 
+        # Pass 2 — same start month (different company name = renaming/merger)
+        if match_idx is None and cur_start is not None:
+            for i, prev in enumerate(previous):
+                if i in matched_prev_idx:
+                    continue
+                prev_start = _parse_ym_to_months(prev.get("start_date"))
+                if prev_start == cur_start:
+                    match_idx = i
+                    break
+
+        if match_idx is not None:
+            matched.append((cur, previous[match_idx]))
+            matched_prev_idx.add(match_idx)
+        else:
+            unmatched_current.append(cur)
+
+    unmatched_previous = [
+        p for i, p in enumerate(previous) if i not in matched_prev_idx
+    ]
     return matched, unmatched_current, unmatched_previous
 
 
 def _normalize_education(edu: dict) -> str:
     """Normalize institution name for comparison."""
     return re.sub(r"\s+", " ", edu.get("institution", "").strip().lower())
+
+
+_DEGREE_PHD_RE = re.compile(
+    r"\b(?:phd|ph\.?d|d\.?phil|doctor|doctorate|ed\.?d|sc\.?d|dr\.?)\b"
+)
+_DEGREE_MASTER_RE = re.compile(
+    r"\b(?:master|mba|m\.?b\.?a|msc|m\.?sc|m\.?s|m\.?a|m\.?eng|m\.?ed|m\.?phil|llm)\b"
+)
+_DEGREE_BACHELOR_RE = re.compile(
+    r"\b(?:bachelor|bsc|b\.?sc|b\.?s|b\.?a|b\.?eng|b\.?ed|llb|ba|bs)\b"
+)
+_DEGREE_ASSOCIATE_RE = re.compile(
+    r"\b(?:associate|diploma|hnd|foundation|aa|as)\b"
+)
+
+
+def _normalize_degree(degree: str | None) -> str:
+    """Map degree variants to a canonical token for cross-language matching.
+
+    Handles:
+      - 한국어: 박사/석사/학사/전문학사/학부
+      - 영문 풀네임: doctor/master/bachelor/associate/diploma 등
+      - 영문 약어 (점 유무 무관): PhD/MA/MS/MBA/BA/BS/BSc/Diploma 등
+
+    Word-boundary regex로 약어를 안전하게 매칭하여 false match를 방지한다
+    (예: "Cuba"의 "ba" 같은 우연한 substring 제외).
+    """
+    d = (degree or "").lower().strip()
+    if not d:
+        return ""
+    # 한국어 키워드는 substring 매치 — "전문학사"가 "학사"의 substring이므로
+    # 더 긴 키워드부터 순서대로 체크해야 한다.
+    if "박사" in d:
+        return "phd"
+    if "석사" in d:
+        return "master"
+    if "전문학사" in d:
+        return "associate"
+    if "학사" in d or "학부" in d:
+        return "bachelor"
+    # 영문 약어/풀네임은 word boundary 매치
+    if _DEGREE_PHD_RE.search(d):
+        return "phd"
+    if _DEGREE_MASTER_RE.search(d):
+        return "master"
+    if _DEGREE_BACHELOR_RE.search(d):
+        return "bachelor"
+    if _DEGREE_ASSOCIATE_RE.search(d):
+        return "associate"
+    return d
+
+
+def _education_match_keys(edu: dict) -> set[str]:
+    """Match keys for an education entry — currently institution name only.
+
+    A "year:degree" composite key was attempted to bridge Korean ↔ English
+    institution variants (e.g., "USC GOULD" ↔ "USC대학원" both 2018 master),
+    but it suppressed legitimate institution-change detection (e.g.,
+    고려대 → 서울대 same year/degree = real fraud signal). Until we have a
+    transliteration map, fall back to institution-name match only and accept
+    that 음역(transliterated) variants will surface as EDUCATION_CHANGED.
+    """
+    keys = set()
+    inst_norm = _normalize_education(edu)
+    if inst_norm:
+        keys.add(inst_norm)
+    return keys
 
 
 def _check_career_deleted(unmatched_previous: list[dict]) -> list[dict]:
@@ -974,53 +1076,63 @@ def _check_education_changed(
     current_educations: list[dict],
     previous_educations: list[dict],
 ) -> list[dict]:
-    """Detect EDUCATION_CHANGED: institution or degree changed between versions."""
-    # Match educations by normalized institution name
-    cur_by_inst: dict[str, list[dict]] = {}
-    for e in current_educations:
-        key = _normalize_education(e)
-        cur_by_inst.setdefault(key, []).append(e)
+    """Detect EDUCATION_CHANGED: institution or degree changed between versions.
 
-    prev_by_inst: dict[str, list[dict]] = {}
-    for e in previous_educations:
-        key = _normalize_education(e)
-        prev_by_inst.setdefault(key, []).append(e)
+    Matches educations across versions by either:
+      - normalized institution name (exact string match), or
+      - "year:degree" composite (handles 한국어 ↔ 영문 institution variants
+        of the same degree-year, e.g., 가천대학교 ↔ Gachon University 2017 학사)
+    """
+    matched_prev_idx: set[int] = set()
+    matched_pairs: list[tuple[dict, dict]] = []
+    cur_unmatched: list[dict] = []
 
-    flags = []
+    for cur in current_educations:
+        cur_keys = _education_match_keys(cur)
+        match_idx = None
+        for i, prev in enumerate(previous_educations):
+            if i in matched_prev_idx:
+                continue
+            if cur_keys & _education_match_keys(prev):
+                match_idx = i
+                break
+        if match_idx is not None:
+            matched_pairs.append((cur, previous_educations[match_idx]))
+            matched_prev_idx.add(match_idx)
+        else:
+            cur_unmatched.append(cur)
+    prev_unmatched = [
+        p for i, p in enumerate(previous_educations)
+        if i not in matched_prev_idx
+    ]
 
-    # Check matched institutions for degree changes
-    for inst_key in set(cur_by_inst.keys()) & set(prev_by_inst.keys()):
-        cur_list = cur_by_inst[inst_key]
-        prev_list = prev_by_inst[inst_key]
+    flags: list[dict] = []
 
-        for i in range(min(len(cur_list), len(prev_list))):
-            cur_deg = (cur_list[i].get("degree") or "").strip()
-            prev_deg = (prev_list[i].get("degree") or "").strip()
+    # Matched pair: only flag if degree differs after canonicalization
+    for cur_edu, prev_edu in matched_pairs:
+        cur_deg = _normalize_degree(cur_edu.get("degree"))
+        prev_deg = _normalize_degree(prev_edu.get("degree"))
+        if cur_deg and prev_deg and cur_deg != prev_deg:
+            institution = cur_edu.get("institution", "?")
+            flags.append(
+                {
+                    "type": "EDUCATION_CHANGED",
+                    "severity": "RED",
+                    "field": "educations",
+                    "detail": (
+                        f"{institution} 학위 변경: "
+                        f"{prev_edu.get('degree')} → {cur_edu.get('degree')}"
+                    ),
+                    "chosen": cur_edu.get("degree"),
+                    "alternative": prev_edu.get("degree"),
+                    "reasoning": "학위 변경은 정당한 사유가 거의 없음 — 학력 위조 가능성",
+                }
+            )
 
-            if cur_deg and prev_deg and cur_deg != prev_deg:
-                institution = cur_list[i].get("institution", "?")
-                flags.append(
-                    {
-                        "type": "EDUCATION_CHANGED",
-                        "severity": "RED",
-                        "field": "educations",
-                        "detail": f"{institution} 학위 변경: {prev_deg} → {cur_deg}",
-                        "chosen": cur_deg,
-                        "alternative": prev_deg,
-                        "reasoning": "학위 변경은 정당한 사유가 거의 없음 — 학력 위조 가능성",
-                    }
-                )
-
-    # Check institution changes: previous institution completely gone, new one appeared
-    removed = set(prev_by_inst.keys()) - set(cur_by_inst.keys())
-    added = set(cur_by_inst.keys()) - set(prev_by_inst.keys())
-
-    # If institutions were both removed and added, flag as institution change
-    if removed and added:
-        for rem_key in removed:
-            for add_key in added:
-                rem_edu = prev_by_inst[rem_key][0]
-                add_edu = cur_by_inst[add_key][0]
+    # Genuine institution changes: both an unmatched current AND an unmatched previous
+    if cur_unmatched and prev_unmatched:
+        for rem_edu in prev_unmatched:
+            for add_edu in cur_unmatched:
                 flags.append(
                     {
                         "type": "EDUCATION_CHANGED",

@@ -282,6 +282,7 @@ def _prepare_group_payload(
             raw_text,
             birth_year_value,
             enabled=True,
+            file_name=primary.get("file_name"),
         )
         if not birth_filter.passed:
             return {
