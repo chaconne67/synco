@@ -42,6 +42,7 @@ from data_extraction.models import ResumeExtractionState
 from data_extraction.services.drive import (
     discover_folders,
     download_file,
+    download_to_cache,
     get_drive_service,
     list_all_files_parallel,
     parse_drive_id,
@@ -618,11 +619,14 @@ class Command(BaseCommand):
         )
 
         try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                # Step 1: Download primary file
+            with tempfile.TemporaryDirectory() as _tmpdir:  # noqa: F841 (placeholder — file actually goes to RESUME_CACHE_ROOT)
+                # Step 1: Download primary file (cached at RESUME_CACHE_ROOT —
+                # cache hit returns immediately on re-extraction of same file_id)
                 try:
-                    dest_path = os.path.join(tmpdir, primary["file_name"])
-                    download_file(service, primary["file_id"], dest_path)
+                    cache_path = download_to_cache(
+                        service, primary["file_id"], primary["file_name"]
+                    )
+                    dest_path = str(cache_path)
                     mark_downloaded(resume)
                 except Exception as e:
                     self._save_failed_resume(

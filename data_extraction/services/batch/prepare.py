@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from data_extraction.models import GeminiBatchItem, GeminiBatchJob
@@ -15,7 +14,7 @@ from candidates.models import Resume
 from data_extraction.models import ResumeExtractionState
 from data_extraction.services.drive import (
     discover_folders,
-    download_file,
+    download_to_cache,
     get_drive_service,
     list_files_in_folder,
 )
@@ -264,18 +263,13 @@ def _prepare_group_payload(
     primary = group["primary"]
     # Drive API client objects are not safe to share across worker threads.
     service = get_drive_service()
-    with tempfile.TemporaryDirectory() as tmpdir:
-        download_path = tempfile.NamedTemporaryFile(
-            dir=tmpdir,
-            suffix=primary["file_name"],
-            delete=False,
-        )
-        download_path.close()
-        download_file(service, primary["file_id"], download_path.name)
-        raw_text = preprocess_resume_text(extract_text(download_path.name))
-        quality = classify_text_quality(raw_text)
-        if quality != "ok":
-            raise RuntimeError(f"Text quality: {quality}")
+    cache_path = download_to_cache(
+        service, primary["file_id"], primary["file_name"]
+    )
+    raw_text = preprocess_resume_text(extract_text(str(cache_path)))
+    quality = classify_text_quality(raw_text)
+    if quality != "ok":
+        raise RuntimeError(f"Text quality: {quality}")
 
     if birth_year_filter:
         birth_filter = passes_birth_year_filter(

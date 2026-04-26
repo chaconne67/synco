@@ -148,6 +148,13 @@ SYNCO_SUPERUSER_PASSWORD = os.environ.get("SYNCO_SUPERUSER_PASSWORD", "")
 # Gemini Embedding
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
+# Resume cache — single source of truth for downloaded resume files.
+# Production: shared mounted storage (운영/dev 서버의 /mnt/pgdata/synco/resume-cache).
+# Override via env for other hosts (Mac dev, CI 등).
+RESUME_CACHE_ROOT = Path(
+    os.environ.get("RESUME_CACHE_ROOT", "/mnt/pgdata/synco/resume-cache")
+)
+
 # OpenAI (Whisper API)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 

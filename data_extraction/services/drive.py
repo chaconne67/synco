@@ -199,6 +199,40 @@ def download_file(service, file_id: str, dest_path: str, max_retries: int = 3) -
             raise
 
 
+def get_resume_cache_path(file_id: str, file_name: str) -> Path:
+    """Canonical cache path for a Drive resume file.
+
+    Layout: <RESUME_CACHE_ROOT>/<file_id><ext>
+    file_id is globally unique on Drive so collision is impossible.
+    Original file_name's extension is preserved so extract_text can dispatch
+    by suffix. Flat layout — Drive total is ~2K files (no need for sharding
+    yet; revisit if cache grows past ~50K).
+    """
+    from django.conf import settings
+
+    root = Path(settings.RESUME_CACHE_ROOT)
+    suffix = Path(file_name or "").suffix
+    return root / f"{file_id}{suffix}"
+
+
+def download_to_cache(service, file_id: str, file_name: str) -> Path:
+    """Download a Drive file to the shared resume cache. Idempotent.
+
+    Skips download entirely if the file is already present (cache hit).
+    Used by both production extraction (extract.py, batch/prepare.py) and
+    verification (verify_download.py) so the same Drive file reaches disk
+    only once across re-runs and is preserved as an asset.
+
+    Returns the cache path (always within RESUME_CACHE_ROOT).
+    """
+    cache_path = get_resume_cache_path(file_id, file_name)
+    if cache_path.exists() and cache_path.stat().st_size > 0:
+        return cache_path
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    download_file(service, file_id, str(cache_path))
+    return cache_path
+
+
 def list_root_folders(service) -> list[dict]:
     """List folders at the Drive root."""
     query = (
