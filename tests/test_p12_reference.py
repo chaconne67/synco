@@ -43,6 +43,14 @@ def normal_client(normal_user):
     return c
 
 
+@pytest.fixture(autouse=True)
+def clean_reference_data(db):
+    """Keep P12 reference tests independent from migration-seeded master data."""
+    UniversityTier.objects.all().delete()
+    CompanyProfile.objects.all().delete()
+    PreferredCert.objects.all().delete()
+
+
 # --- CSV Import Tests ---
 
 

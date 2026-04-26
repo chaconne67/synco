@@ -86,8 +86,8 @@ def _patch_prepare_io(monkeypatch, tmp_path, files):
         ],
     )
     monkeypatch.setattr(
-        "data_extraction.services.batch.prepare.download_file",
-        lambda service, file_id, dest_path: None,
+        "data_extraction.services.batch.prepare.download_to_cache",
+        lambda service, file_id, file_name: tmp_path / file_name,
     )
     monkeypatch.setattr(
         "data_extraction.services.batch.prepare.extract_text",
