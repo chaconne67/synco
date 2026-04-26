@@ -55,7 +55,7 @@
              hx-get="/candidates/{% if target_project %}?project={{ target_project.pk }}{% endif %}"
              hx-target="#main-content"
              hx-push-url="true"
-             class="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition
+             class="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-sm font-semibold transition
                     {% if not active_category %}bg-ink3 text-white shadow-sm{% else %}text-muted hover:bg-line{% endif %}">
             전체 <span class="tnum opacity-75">· {{ total_candidates }}</span>
           </a>
@@ -64,7 +64,7 @@
              hx-get="/candidates/?category={{ cat.name }}{% if target_project %}&project={{ target_project.pk }}{% endif %}"
              hx-target="#main-content"
              hx-push-url="true"
-             class="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition
+             class="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-sm font-semibold transition
                     {% if active_category == cat.name %}bg-ink3 text-white shadow-sm{% else %}text-muted hover:bg-line{% endif %}">
             {{ cat.name_ko|default:cat.name }} <span class="tnum opacity-75">· {{ cat.candidate_count }}</span>
           </a>

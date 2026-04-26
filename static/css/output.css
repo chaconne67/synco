@@ -2933,6 +2933,10 @@ a.bg-ink.rounded-card:hover,
   border-radius: 0.75rem;
 }
 
+.rounded-\[10px\] {
+  border-radius: 10px;
+}
+
 .rounded-tl-sm {
   border-top-left-radius: 0.125rem;
 }
